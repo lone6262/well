@@ -1,0 +1,43 @@
+# 微信开发者工具本地配置
+.project
+.idea
+*.local.json
+*.log
+
+# 云开发本地缓存
+cloudfunctions/**/node_modules/
+cloudfunctions/**/package-lock.json
+cloudfunctions/**/.env
+
+# 依赖目录（如果本地有 npm 包）
+node_modules/
+miniprogram_npm/
+
+# 环境变量文件
+.env
+.env.production
+.env.development
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 测试和临时文件
+*.tmp
+*.swp
+*.swo
+*~
+
+# 日志文件
+*.log
+npm-debug.log*
+
+# 打包/构建产物（如果有）
+dist/
+build/
+
+# 敏感信息（微信 AppID 等不要提交）
+project.config.json   # 可选，但建议保留通用配置，去掉敏感字段
+
+# 微信小程序特有的临时文件
+.spec-workflow/
