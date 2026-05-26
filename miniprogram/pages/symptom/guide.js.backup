@@ -1,0 +1,256 @@
+// 症状向导页面逻辑 - ES5完全兼容版本
+var app = getApp()
+
+// 本地症状分类数据
+var SYMPTOM_CATEGORIES = [
+  {
+    name: "消化系统",
+    symptoms: [
+      { label: "呕吐", key: "呕吐" },
+      { label: "腹泻", key: "腹泻" },
+      { label: "便秘", key: "便秘" },
+      { label: "食欲不振", key: "食欲不振" }
+    ]
+  },
+  {
+    name: "呼吸系统",
+    symptoms: [
+      { label: "咳嗽", key: "咳嗽" },
+      { label: "打喷嚏", key: "打喷嚏" },
+      { label: "呼吸困难", key: "呼吸困难" }
+    ]
+  },
+  {
+    name: "泌尿系统",
+    symptoms: [
+      { label: "尿频", key: "尿频" },
+      { label: "尿血", key: "尿血" },
+      { label: "排尿困难", key: "排尿困难" }
+    ]
+  },
+  {
+    name: "皮肤/被毛",
+    symptoms: [
+      { label: "瘙痒", key: "瘙痒" },
+      { label: "脱毛", key: "脱毛" },
+      { label: "皮疹/红肿", key: "皮疹/红肿" }
+    ]
+  },
+  {
+    name: "眼部",
+    symptoms: [
+      { label: "流泪/眼屎多", key: "流泪/眼屎多" },
+      { label: "眼睛红肿", key: "眼睛红肿" }
+    ]
+  },
+  {
+    name: "耳部",
+    symptoms: [
+      { label: "耳垢多/异味", key: "耳垢多/异味" },
+      { label: "甩头/抓耳", key: "甩头/抓耳" }
+    ]
+  },
+  {
+    name: "神经/行为",
+    symptoms: [
+      { label: "抽搐", key: "抽搐" },
+      { label: "精神萎靡", key: "精神萎靡" }
+    ]
+  },
+  {
+    name: "口腔",
+    symptoms: [
+      { label: "流口水", key: "流口水" },
+      {label: "牙龈红肿/出血", key: "牙龈红肿/出血" }
+    ]
+  }
+]
+
+Page({
+  data: {
+    currentStep: 1,
+    petList: [],
+    selectedPet: '',
+    symptomCategories: SYMPTOM_CATEGORIES,
+    selectedSymptoms: [],
+    description: ''
+  },
+
+  onLoad: function() {
+    console.log('症状向导页面加载')
+    this.loadMockPetList()
+  },
+
+  // 加载模拟宠物数据
+  loadMockPetList: function() {
+    var mockPets = [
+      { petId: 'mock_001', name: '测试宠物1', type: 'cat', age: 12, breed: '英短' },
+      { petId: 'mock_002', name: '测试宠物2', type: 'dog', age: 24, breed: '金毛' }
+    ]
+
+    this.setData({
+      petList: mockPets
+    })
+  },
+
+  // 选择宠物
+  selectPet: function(e) {
+    var petId = e.currentTarget.dataset.petId
+    this.setData({
+      selectedPet: petId
+    })
+  },
+
+  // 添加新宠物
+  addPet: function() {
+    wx.navigateTo({
+      url: '/pages/pet/profile?action=add'
+    })
+  },
+
+  // 切换症状选择（ES5完全兼容版本）
+  toggleSymptom: function(e) {
+    var symptomKey = e.currentTarget.dataset.symptomKey;
+    var selectedSymptoms = this.data.selectedSymptoms.slice(); // ES5兼容的数组复制
+
+    // 查找症状索引
+    var index = -1;
+    for (var i = 0; i < selectedSymptoms.length; i++) {
+      if (selectedSymptoms[i] === symptomKey) {
+        index = i;
+        break;
+      }
+    }
+
+    if (index > -1) {
+      // 已选择，移除
+      selectedSymptoms.splice(index, 1);
+    } else {
+      // 未选择，添加
+      selectedSymptoms.push(symptomKey);
+    }
+
+    this.setData({
+      selectedSymptoms: selectedSymptoms
+    });
+  },
+
+  // 描述输入
+  onDescriptionInput: function(e) {
+    this.setData({
+      description: e.detail.value
+    })
+  },
+
+  // 下一步
+  nextStep: function() {
+    // 验证当前步骤
+    if (this.data.currentStep === 1) {
+      if (!this.data.selectedPet) {
+        wx.showToast({
+          title: '请选择宠物',
+          icon: 'none'
+        })
+        return
+      }
+    } else if (this.data.currentStep === 2) {
+      if (this.data.selectedSymptoms.length === 0) {
+        wx.showToast({
+          title: '请至少选择一个症状',
+          icon: 'none'
+        })
+        return
+      }
+    } else if (this.data.currentStep === 3) {
+      this.submitAssessment()
+      return
+    }
+
+    // 进入下一步
+    this.setData({
+      currentStep: this.data.currentStep + 1
+    })
+  },
+
+  // 上一步
+  prevStep: function() {
+    if (this.data.currentStep > 1) {
+      this.setData({
+        currentStep: this.data.currentStep - 1
+      })
+    }
+  },
+
+  // 提交评估（使用模拟逻辑）
+  submitAssessment: function() {
+    if (this.data.selectedSymptoms.length === 0) {
+      wx.showToast({
+        title: '请至少选择一个症状',
+        icon: 'none'
+      })
+      return
+    }
+
+    try {
+      wx.showLoading({ title: '评估中...' })
+
+      // 模拟评估结果
+      setTimeout(function() {
+        wx.hideLoading()
+
+        // 简单的本地风险评估逻辑
+        var riskLevel = 'low'
+        var highRiskSymptoms = ['抽搐', '呼吸困难', '尿血', '排尿困难']
+        var midRiskSymptoms = ['呕吐', '腹泻', '咳嗽', '食欲不振', '精神萎靡']
+
+        // 检查高风险症状（ES5兼容）
+        for (var i = 0; i < this.data.selectedSymptoms.length; i++) {
+          var symptom = this.data.selectedSymptoms[i];
+          // 检查高风险症状
+          for (var j = 0; j < highRiskSymptoms.length; j++) {
+            if (symptom === highRiskSymptoms[j]) {
+              riskLevel = 'high'
+              break
+            }
+          }
+          // 如果还不是高风险，检查中风险症状
+          if (riskLevel === 'low') {
+            for (var k = 0; k < midRiskSymptoms.length; k++) {
+              if (symptom === midRiskSymptoms[k]) {
+                riskLevel = 'mid'
+                break
+              }
+            }
+          }
+          // 如果已经是高风险，不需要继续检查
+          if (riskLevel === 'high') {
+            break
+          }
+        }
+
+        // 跳转到结果页面（ES5兼容版本）
+        var foundPet = null;
+        for (var i = 0; i < this.data.petList.length; i++) {
+          if (this.data.petList[i].petId === this.data.selectedPet) {
+            foundPet = this.data.petList[i];
+            break;
+          }
+        }
+        var petName = foundPet ? foundPet.name : '宠物';
+
+        wx.navigateTo({
+          url: '/pages/risk/result?riskLevel=' + riskLevel + '&petName=' + petName
+        })
+
+      }.bind(this), 1000)
+
+    } catch (error) {
+      wx.hideLoading()
+      console.error('提交评估失败:', error)
+      wx.showToast({
+        title: '提交失败，请重试',
+        icon: 'none'
+      })
+    }
+  }
+})

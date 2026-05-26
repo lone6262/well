@@ -1,142 +1,315 @@
-/**index.wxss**/
-
-page {
-  padding-top: 54rpx;
-  background-color: #f6f6f6;
-  padding-bottom: 60rpx;
-}
-
+/* 首页样式 - 完整版本 */
 .container {
-  font-family: PingFang SC;
-}
-
-.title {
-  font-family: PingFang SC;
-  font-weight: 500;
-  color: #000000;
-  font-size: 44rpx;
-  margin-bottom: 40rpx;
-}
-.function_title {
-  font-family: PingFang SC;
-  font-weight: 500;
-  color: #000000;
-  font-size: 36rpx;
-  text-align: left;
-  width: 93%;
-  margin-top: 50rpx;
-}
-
-.top_tip {
-  font-size: 28rpx;
-  font-family: PingFang SC;
-  font-weight: 400;
-  color: #888888;
-  margin-bottom: 28rpx;
-}
-
-.examples_container {
-  display: flex;
-  flex-direction: column;
-  gap: 16rpx;
+  padding: 20rpx;
+  background-color: #f5f5f5;
+  min-height: 100vh;
   width: 100%;
-  align-items: center;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
-.example_item {
-  border: 3rpx solid #e5e5e5;
-  border-radius: 10rpx;
-  padding: 24rpx;
-  width: 90%;
-  background-color: #fff;
+/* 急诊按钮 - 重新设计版本 */
+.emergency-section {
+  margin-bottom: 30rpx;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.emergency-btn {
+  background: linear-gradient(135deg, #f5222d 0%, #ff4d4f 100%);
+  color: white;
+  border-radius: 20rpx;
+  padding: 0;
+  display: block;
+  box-shadow: 0 4rpx 16rpx rgba(245, 34, 45, 0.4);
+  border: none;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 28rpx;
+  min-height: 120rpx;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.emergency-btn::after {
+  border: none;
+}
+
+.emergency-btn-hover {
+  box-shadow: 0 6rpx 20rpx rgba(245, 34, 45, 0.6);
+  transform: scale(1.02);
+}
+
+.emergency-content {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  padding: 24rpx 20rpx;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.power {
-  margin-top: 30rpx;
-  border-radius: 5px;
-  background-color: white;
-  width: 93%;
-  padding-bottom: 1rpx;
+.emergency-icon {
+  font-size: 56rpx;
+  margin-right: 16rpx;
+  flex-shrink: 0;
+  animation: pulse 2s infinite;
 }
 
-.power_info {
-  display: flex;
-  padding: 30rpx 25rpx;
-  align-items: center;
-  justify-content: space-between;
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
 }
 
-.power_info_more {
-  width: 30rpx;
-  height: 30rpx;
-  transform: rotate(90deg);
-}
-
-.power_info_less {
-  width: 30rpx;
-  height: 30rpx;
-  transform: rotate(270deg);
-}
-
-.power_info_text {
+.emergency-text-group {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
 }
 
-.power_info_text_title {
-  margin-bottom: 10rpx;
-  font-weight: 400;
+.emergency-title {
   font-size: 32rpx;
+  font-weight: bold;
+  line-height: 1.3;
+  color: #ffffff;
+  margin-bottom: 4rpx;
+  word-break: break-all;
+}
+
+.emergency-subtitle {
+  font-size: 24rpx;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.9);
+  word-break: break-all;
+}
+
+/* 小屏幕适配 */
+@media (max-width: 375px) {
+  .emergency-btn {
+    min-height: 100rpx;
+  }
+
+  .emergency-content {
+    padding: 20rpx 16rpx;
+  }
+
+  .emergency-icon {
+    font-size: 48rpx;
+    margin-right: 12rpx;
+  }
+
+  .emergency-title {
+    font-size: 28rpx;
+  }
+
+  .emergency-subtitle {
+    font-size: 22rpx;
+  }
+}
+
+/* 超小屏幕适配 */
+@media (max-width: 320px) {
+  .emergency-btn {
+    min-height: 90rpx;
+  }
+
+  .emergency-content {
+    padding: 16rpx 12rpx;
+    flex-direction: column;
+    gap: 8rpx;
+  }
+
+  .emergency-icon {
+    font-size: 40rpx;
+    margin-right: 0;
+    margin-bottom: 4rpx;
+  }
+
+  .emergency-text-group {
+    align-items: center;
+    text-align: center;
+  }
+
+  .emergency-title {
+    font-size: 26rpx;
+    text-align: center;
+  }
+
+  .emergency-subtitle {
+    font-size: 20rpx;
+    text-align: center;
+  }
+}
+
+/* 卡片区域 */
+.card-section {
+  margin-bottom: 24rpx;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.card {
+  background: white;
+  border-radius: 16rpx;
+  padding: 32rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.card-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.card-content {
   display: flex;
-  align-items: center;
-  font-family: 'PingFang SC';
-  color: #000;
+  flex-direction: column;
+  margin-bottom: 24rpx;
 }
 
-.power_info_text_tag {
-  margin-left: 20rpx;
-  background-color: #fbe0e0;
-  color: #e54545;
-  padding: 0 7px;
-  font-size: 14px;
-  vertical-align: middle;
-  border-radius: 3px;
-}
-
-.power_info_text_tip {
-  color: rgba(0, 0, 0, 0.6);
+.card-desc {
   font-size: 28rpx;
-  padding-right: 30rpx;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 8rpx;
 }
 
-.power_item {
-  padding: 30rpx 25rpx;
+/* 按钮样式 - 重新设计 */
+.primary-btn {
+  background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+  color: white;
+  border-radius: 16rpx;
+  padding: 28rpx 24rpx;
+  font-size: 32rpx;
+  border: none;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  font-weight: bold;
+  box-shadow: 0 4rpx 12rpx rgba(74, 144, 226, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.primary-btn::after {
+  border: none;
+}
+
+.secondary-btn {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  color: #495057;
+  border-radius: 16rpx;
+  padding: 28rpx 24rpx;
+  font-size: 32rpx;
+  border: none;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  font-weight: bold;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.secondary-btn::after {
+  border: none;
+}
+
+.btn-hover {
+  transform: scale(1.02);
+  box-shadow: 0 6rpx 16rpx rgba(0, 0, 0, 0.15);
+}
+
+/* 小屏幕按钮适配 */
+@media (max-width: 375px) {
+  .primary-btn, .secondary-btn {
+    padding: 24rpx 20rpx;
+    font-size: 28rpx;
+  }
+}
+
+/* 医院预览 */
+.hospital-preview {
+  background: white;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.preview-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.hospital-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.hospital-item {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.power_item_title {
+.hospital-item:last-child {
+  border-bottom: none;
+}
+
+.hospital-name {
   font-size: 28rpx;
-  color: rgba(0, 0, 0, 0.9);
+  color: #333;
+  flex: 1;
+  word-break: break-all;
 }
 
-.power_item_icon {
-  width: 30rpx;
-  height: 30rpx;
-}
-
-.line {
-  width: 95%;
-  margin: 0 auto;
-  height: 2rpx;
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-.environment {
-  color: rgba(0, 0, 0, 0.4);
+.hospital-distance {
   font-size: 24rpx;
-  margin-top: 25%;
+  color: #999;
+  margin-left: 16rpx;
+  white-space: nowrap;
+}
+
+/* 响应式优化 */
+@media (max-width: 375px) {
+  .emergency-text {
+    font-size: 28rpx;
+  }
+
+  .card-title {
+    font-size: 32rpx;
+  }
+
+  .primary-btn, .secondary-btn {
+    font-size: 28rpx;
+    padding: 20rpx;
+  }
+}
+
+/* 防止横向滚动 */
+.container, .emergency-section, .card-section, .card,
+.hospital-preview, .hospital-list, .hospital-item {
+  overflow-x: hidden;
 }

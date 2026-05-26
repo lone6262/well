@@ -1,0 +1,87 @@
+<!--急救通道页面 - 集成地图显示-->
+<view class="container emergency-container">
+  <view class="emergency-header">
+    <!-- 返回按钮 -->
+    <view class="back-btn" bindtap="goBack">
+      <text class="back-icon">←</text>
+      <text class="back-text">返回</text>
+    </view>
+
+    <view class="emergency-icon">🚨</view>
+    <view class="emergency-title">紧急求助</view>
+    <view class="emergency-subtitle">为您的宠物找到最近的24小时急诊</view>
+  </view>
+
+  <!-- 地图显示 -->
+  <view class="map-section" wx:if="{{showMap}}">
+    <map
+      class="emergency-map"
+      latitude="{{latitude}}"
+      longitude="{{longitude}}"
+      markers="{{hospitalMarkers}}"
+      show-location="{{true}}"
+      bindmarkertap="onMarkerTap"
+    >
+      <view class="map-cover">
+        <view class="location-btn" bindtap="getLocation">
+          {{isLoading ? '定位中...' : '📍 重新定位'}}
+        </view>
+      </view>
+    </map>
+  </view>
+
+  <!-- 医院列表 -->
+  <view class="hospital-section" wx:if="{{hospitals.length > 0}}">
+    <view class="section-title">附近的24小时宠物医院 ({{hospitals.length}}家)</view>
+    <scroll-view class="hospital-scroll" scroll-y="{{true}}">
+      <view class="hospital-list">
+        <view class="hospital-card" wx:for="{{hospitals}}" wx:key="hospitalId" bindtap="highlightHospital" data-hospital="{{item}}">
+          <view class="hospital-header">
+            <view class="hospital-name">{{item.name}}</view>
+            <view class="hospital-badge">24h</view>
+          </view>
+
+          <view class="hospital-info">
+            <view class="info-row">
+              <text class="info-icon">📍</text>
+              <text class="info-text">{{item.address}}</text>
+            </view>
+            <view class="info-row">
+              <text class="info-icon">📞</text>
+              <text class="info-text">{{item.phone}}</text>
+            </view>
+            <view class="info-row">
+              <text class="info-icon">🚗</text>
+              <text class="info-text">{{item.distance}}m</text>
+            </view>
+            <view class="info-row" wx:if="{{item.rating}}">
+              <text class="info-icon">⭐</text>
+              <text class="info-text">{{item.rating}}分</text>
+            </view>
+          </view>
+
+          <view class="hospital-actions">
+            <button class="action-btn call-btn" bindtap="callHospital" data-phone="{{item.phone}}" catchtap="true">
+              📞 拨打
+            </button>
+            <button class="action-btn navigate-btn" bindtap="navigateToHospital" data-hospital="{{item}}" catchtap="true">
+              📍 导航
+            </button>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{hasLocation && hospitals.length === 0}}">
+    <view class="empty-icon">😢</view>
+    <view class="empty-text">附近暂无24小时宠物医院</view>
+    <button class="retry-btn" bindtap="searchAllHospitals">查看所有宠物医院</button>
+  </view>
+
+  <!-- 免责声明 -->
+  <view class="disclaimer">
+    <text>⚠️ 紧急情况请直接前往最近的宠物医院，本工具仅提供导航辅助。</text>
+  </view>
+</view>

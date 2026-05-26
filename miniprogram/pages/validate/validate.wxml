@@ -1,0 +1,73 @@
+<!--pages/validate/validate.wxml-->
+<view class="container">
+  <view class="header">
+    <text class="title">云开发环境验证</text>
+    <text class="subtitle">快速诊断配置问题</text>
+  </view>
+
+  <!-- 环境ID显示 -->
+  <view class="env-section">
+    <view class="section-title">当前环境ID</view>
+    <view class="env-id-container">
+      <text class="env-id">{{envId}}</text>
+      <button class="copy-btn" bindtap="copyEnvId">复制</button>
+    </view>
+    <view class="help-text">
+      <text bindtap="showGuide" class="link">如何获取环境ID？</text>
+    </view>
+  </view>
+
+  <!-- 验证结果 -->
+  <view class="result-section" wx:if="{{validationResult}}">
+    <view class="result-card {{validationResult.success ? 'success' : 'error'}}">
+      <view class="result-icon">
+        <text>{{validationResult.success ? '✅' : '❌'}}</text>
+      </view>
+      <view class="result-content">
+        <view class="result-title">
+          {{validationResult.success ? '验证通过' : '验证失败'}}
+        </view>
+        <view class="result-message">{{validationResult.message}}</view>
+        <view class="result-suggestion" wx:if="{{validationResult.suggestion}}">
+          💡 {{validationResult.suggestion}}
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="action-section">
+    <button
+      class="validate-btn"
+      bindtap="startValidation"
+      disabled="{{validating}}"
+      loading="{{validating}}"
+    >
+      {{validating ? '验证中...' : '开始验证'}}
+    </button>
+    <button class="clear-btn" bindtap="clearLogs" wx:if="{{logs.length > 0}}">
+      清空日志
+    </button>
+  </view>
+
+  <!-- 验证日志 -->
+  <view class="log-section" wx:if="{{logs.length > 0}}">
+    <view class="section-title">验证日志</view>
+    <scroll-view class="log-container" scroll-y>
+      <view class="log-item" wx:for="{{logs}}" wx:key="index">
+        <text>{{item}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 使用说明 -->
+  <view class="guide-section">
+    <view class="section-title">使用说明</view>
+    <view class="guide-content">
+      <view class="guide-item">1. 点击"开始验证"按钮测试云开发连接</view>
+      <view class="guide-item">2. 查看验证结果和详细日志</view>
+      <view class="guide-item">3. 如果验证失败，根据建议修复配置</view>
+      <view class="guide-item">4. 修复后重新验证直到成功</view>
+    </view>
+  </view>
+</view>

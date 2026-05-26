@@ -1,0 +1,63 @@
+<!--风险结果页面-->
+<view class="container">
+  <!-- 风险等级卡片 -->
+  <view class="risk-card" style="background-color: {{riskDisplayInfo.color}};">
+    <view class="risk-icon">{{riskDisplayInfo.icon}}</view>
+    <view class="risk-title">{{riskDisplayInfo.title}}</view>
+    <view class="risk-description">{{riskDisplayInfo.description}}</view>
+  </view>
+
+  <!-- 匹配规则说明 -->
+  <view class="info-section">
+    <view class="section-title">评估依据</view>
+    <view class="rule-info">{{matchedRule}}</view>
+  </view>
+
+  <!-- 宠物信息 -->
+  <view class="info-section">
+    <view class="section-title">宠物信息</view>
+    <view class="pet-info">
+      <view class="info-item">
+        <text class="info-label">宠物名称：</text>
+        <text class="info-value">{{petInfo.name}}</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">宠物类型：</text>
+        <text class="info-value">{{petInfo.type === 'cat' ? '猫' : '狗'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 已选症状 -->
+  <view class="info-section">
+    <view class="section-title">已选症状</view>
+    <view class="symptom-tags">
+      <view class="symptom-tag" wx:for="{{selectedSymptoms}}" wx:key="*this">
+        {{item}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 免责声明 -->
+  <view class="disclaimer-section">
+    <view class="disclaimer-title">⚠️ 免责声明</view>
+    <view class="disclaimer-content">
+      本评估结果基于您提供的症状信息，由规则引擎辅助生成，不能作为最终诊断依据。若宠物出现持续恶化、痛苦加剧或高风险提示，请务必及时就医。
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="action-section">
+    <button class="emergency-btn" wx:if="{{riskLevel === 'high'}}" bindtap="goToEmergency">
+      🚨 前往急救通道
+    </button>
+
+    <button class="primary-btn" wx:if="{{riskLevel !== 'high'}}" bindtap="viewReport">
+      查看详细建议
+    </button>
+
+    <button class="secondary-btn" bindtap="goHome">
+      返回首页
+    </button>
+  </view>
+</view>

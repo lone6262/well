@@ -1,0 +1,35 @@
+<!--云开发测试页面-->
+<view class="container">
+  <view class="header">
+    <text class="title">🚀 云开发测试</text>
+  </view>
+
+  <!-- 云开发状态 -->
+  <view class="status-card">
+    <view class="status-title">云开发状态</view>
+    <view class="status-text">{{cloudStatus}}</view>
+  </view>
+
+  <!-- 测试按钮 -->
+  <view class="test-buttons">
+    <button class="test-btn" bindtap="viewCloudInfo">📋 查看云开发信息</button>
+    <button class="test-btn" bindtap="testGetPetList">🐾 测试获取宠物</button>
+    <button class="test-btn" bindtap="testLogin">🔑 测试登录</button>
+  </view>
+
+  <!-- 测试结果 -->
+  <view class="result-card" wx:if="{{testResult}}">
+    <view class="result-title">测试结果</view>
+    <view class="result-text">{{testResult}}</view>
+  </view>
+
+  <!-- 使用说明 -->
+  <view class="info-card">
+    <view class="info-title">📖 使用说明</view>
+    <view class="info-text">
+      1. 确保"云开发状态"显示为"✅ 云开发已启动"
+      2. 点击测试按钮验证云函数是否正常
+      3. 查看测试结果了解云函数调用情况
+    </view>
+  </view>
+</view>

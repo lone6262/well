@@ -45,9 +45,9 @@
     "disableSWC": true
   },
   "appid": "wxee33a0c47421db2c",
-  "projectname": "quickstart-wx-cloud",
-  "libVersion": "2.20.1",
-  "cloudfunctionTemplateRoot": "cloudfunctionTemplate/",
+  "projectname": "pet-symptom-check",
+  "libVersion": "3.0.0",
+  "cloudfunctionTemplateRoot": "",
   "condition": {
     "search": {
       "list": []
@@ -62,13 +62,7 @@
       "list": []
     },
     "miniprogram": {
-      "list": [
-        {
-          "id": -1,
-          "name": "db guide",
-          "pathName": "pages/databaseGuide/databaseGuide"
-        }
-      ]
+      "list": []
     }
   },
   "compileType": "miniprogram",

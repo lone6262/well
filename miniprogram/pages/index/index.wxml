@@ -1,29 +1,54 @@
-<!--index.wxml-->
+<!--首页-->
 <view class="container">
-  <view class="title">快速了解云开发</view>
-  <view class="top_tip">免鉴权接口调用 免部署后台 高并发</view>
-  <view class="power" wx:key="title" wx:for="{{powerList}}" wx:for-item="power">
-    <view class="power_info" data-index="{{index}}" data-type="{{ power.type }}" bindtap="onClickPowerInfo">
-      <view class="power_info_text">
-        <view class="power_info_text_title">
-          {{power.title}}
-          <view class="power_info_text_tag" wx:if="{{power.tag}}">{{power.tag}}</view>
+  <!-- 顶部急救按钮 -->
+  <view class="emergency-section">
+    <button class="emergency-btn" bindtap="toEmergency" hover-class="emergency-btn-hover">
+      <view class="emergency-content">
+        <text class="emergency-icon">🚨</text>
+        <view class="emergency-text-group">
+          <text class="emergency-title">宠物急症/误食</text>
+          <text class="emergency-subtitle">一键救命通道</text>
         </view>
-        <view class="power_info_text_tip">{{power.tip}}</view>
       </view>
-      <image wx:if="{{!power.showItem && power.item.length}}" class="power_info_more" src="../../images/arrow.svg"></image>
-      <image wx:if="{{power.showItem && power.item.length}}" class="power_info_less" src="../../images/arrow.svg"></image>
-      <image wx:if="{{!power.item.length}}" class="power_item_icon" src="../../images/arrow.svg"></image>
+    </button>
+  </view>
+
+  <!-- 症状自查卡片 -->
+  <view class="card-section">
+    <view class="card">
+      <view class="card-title">🩺 症状自查</view>
+      <view class="card-content">
+        <text class="card-desc">快速评估宠物健康状况</text>
+        <text class="card-desc">获取专业建议和风险分级</text>
+      </view>
+      <button class="primary-btn" bindtap="toSymptom" hover-class="btn-hover">
+        <text>开始自查 →</text>
+      </button>
     </view>
-    <view wx:if="{{power.showItem}}">
-      <view wx:key="title" wx:for="{{power.item}}">
-        <view class="line"></view>
-        <view class="power_item" bindtap="jumpPage" data-type="{{ item.type }}" data-page="{{item.page}}">
-          <view class="power_item_title">{{item.title}}</view>
-          <image class="power_item_icon" src="../../images/arrow.svg"></image>
-        </view>
+  </view>
+
+  <!-- 就医导航卡片 -->
+  <view class="card-section">
+    <view class="card">
+      <view class="card-title">🏥 附近宠物医院</view>
+      <view class="card-content">
+        <text class="card-desc">快速找到附近的宠物医院</text>
+        <text class="card-desc">获取导航和联系方式</text>
+      </view>
+      <button class="secondary-btn" bindtap="toHospital" hover-class="btn-hover">
+        <text>查看医院 →</text>
+      </button>
+    </view>
+  </view>
+
+  <!-- 附近医院预览（占位） -->
+  <view class="hospital-preview">
+    <view class="preview-title">附近24小时医院</view>
+    <view class="hospital-list">
+      <view class="hospital-item" wx:for="{{nearbyHospitals}}" wx:key="id">
+        <view class="hospital-name">{{item.name}}</view>
+        <view class="hospital-distance">{{item.distance}}km</view>
       </view>
     </view>
   </view>
-  <cloud-tip-modal showTipProps="{{showTip}}" title="{{title}}" content="{{content}}"></cloud-tip-modal>
 </view>

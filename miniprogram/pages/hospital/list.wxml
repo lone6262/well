@@ -1,0 +1,53 @@
+<!--医院列表页面-->
+<view class="container">
+  <!-- 搜索和筛选 -->
+  <view class="search-section">
+    <view class="search-bar">
+      <input class="search-input" placeholder="搜索宠物医院" />
+    </view>
+    <view class="filter-tabs">
+      <view class="filter-tab active">距离优先</view>
+      <view class="filter-tab">24小时</view>
+      <view class="filter-tab">评分最高</view>
+    </view>
+  </view>
+
+  <!-- 医院列表 -->
+  <view class="hospital-list">
+    <view class="hospital-item" wx:for="{{hospitals}}" wx:key="hospitalId">
+      <view class="hospital-header">
+        <view class="hospital-name">{{item.name}}</view>
+        <view class="hospital-badge {{item.is24h ? 'active' : ''}}" wx:if="{{item.is24h}}">24h</view>
+      </view>
+
+      <view class="hospital-info">
+        <view class="info-row">
+          <text class="info-icon">📍</text>
+          <text class="info-text">{{item.distanceDisplay}} · {{item.address}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-icon">⭐</text>
+          <text class="info-text">{{item.rating}}分</text>
+        </view>
+        <view class="info-row">
+          <text class="info-icon">📞</text>
+          <text class="info-text">{{item.phone}}</text>
+        </view>
+      </view>
+
+      <view class="hospital-actions">
+        <button class="action-btn call-btn" data-phone="{{item.phone}}" bindtap="callHospital">
+          电话
+        </button>
+        <button class="action-btn navigate-btn" data-hospital="{{item}}" bindtap="navigateToHospital">
+          导航
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载更多 -->
+  <view class="load-more" wx:if="{{hasMore}}">
+    <button class="load-more-btn" bindtap="loadMore">加载更多</button>
+  </view>
+</view>

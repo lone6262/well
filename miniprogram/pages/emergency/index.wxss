@@ -1,0 +1,228 @@
+/* 急救通道页面样式 - 集成地图 */
+.emergency-container {
+  background: linear-gradient(135deg, #f5222d 0%, #ff4d4f 100%);
+  min-height: 100vh;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 急救头部 */
+.emergency-header {
+  padding: 40rpx 20rpx 20rpx 20rpx;
+  color: white;
+  position: relative;
+}
+
+.emergency-icon {
+  font-size: 120rpx;
+  margin-bottom: 24rpx;
+}
+
+/* 返回按钮 */
+.back-btn {
+  position: absolute;
+  top: 40rpx;
+  left: 20rpx;
+  display: flex;
+  align-items: center;
+  color: white;
+  font-size: 28rpx;
+  z-index: 10;
+}
+
+.back-icon {
+  font-size: 36rpx;
+  margin-right: 8rpx;
+}
+
+.back-text {
+  font-size: 26rpx;
+}
+
+.emergency-title {
+  font-size: 48rpx;
+  font-weight: bold;
+  margin-bottom: 16rpx;
+  text-align: center;
+}
+
+.emergency-subtitle {
+  font-size: 28rpx;
+  opacity: 0.9;
+}
+
+/* 地图区域 */
+.map-section {
+  height: 500rpx;
+  width: 100%;
+  position: relative;
+}
+
+.emergency-map {
+  width: 100%;
+  height: 100%;
+}
+
+.map-cover {
+  position: absolute;
+  top: 20rpx;
+  right: 20rpx;
+  z-index: 100;
+}
+
+.location-btn {
+  background: white;
+  color: #f5222d;
+  border-radius: 12rpx;
+  padding: 16rpx 24rpx;
+  font-size: 24rpx;
+  font-weight: bold;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
+}
+
+/* 医院区域 */
+.hospital-section {
+  background: white;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 32rpx;
+  min-height: 60vh;
+  position: relative;
+  top: -20rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 24rpx;
+}
+
+.hospital-scroll {
+  height: 60vh;
+}
+
+.hospital-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  padding-bottom: 40rpx;
+}
+
+.hospital-card {
+  background: #f9f9f9;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  border: 2rpx solid #e0e0e0;
+}
+
+.hospital-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.hospital-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.hospital-badge {
+  background: #f5222d;
+  color: white;
+  padding: 4rpx 12rpx;
+  border-radius: 4rpx;
+  font-size: 20rpx;
+  font-weight: bold;
+}
+
+.hospital-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  font-size: 26rpx;
+}
+
+.info-icon {
+  margin-right: 8rpx;
+  font-size: 24rpx;
+}
+
+.info-text {
+  color: #666;
+}
+
+.hospital-actions {
+  display: flex;
+  gap: 12rpx;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 16rpx;
+  border-radius: 8rpx;
+  font-size: 26rpx;
+  border: none;
+}
+
+.call-btn {
+  background: #52c41a;
+  color: white;
+}
+
+.navigate-btn {
+  background: #4A90E2;
+  color: white;
+}
+
+/* 空状态 */
+.empty-state {
+  background: white;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 80rpx 40rpx;
+  text-align: center;
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  top: -20rpx;
+}
+
+.empty-icon {
+  font-size: 120rpx;
+  margin-bottom: 24rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 32rpx;
+}
+
+.retry-btn {
+  background: #4A90E2;
+  color: white;
+  border-radius: 12rpx;
+  padding: 24rpx 48rpx;
+  font-size: 28rpx;
+  border: none;
+}
+
+/* 免责声明 */
+.disclaimer {
+  background: white;
+  padding: 24rpx 40rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: #999;
+  line-height: 1.6;
+}

@@ -1,0 +1,273 @@
+/* 症状向导页面样式 - 增强版本 */
+.container {
+  padding: 20rpx;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  padding-bottom: 120rpx;
+}
+
+/* 步骤指示器 */
+.steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40rpx;
+  padding: 20rpx;
+}
+
+.step {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  font-weight: bold;
+}
+
+.step.active {
+  background-color: #4A90E2;
+  color: white;
+}
+
+.step-line {
+  width: 80rpx;
+  height: 4rpx;
+  background-color: #e0e0e0;
+  margin: 0 10rpx;
+}
+
+.step-line.active {
+  background-color: #4A90E2;
+}
+
+/* 步骤内容 */
+.step-content {
+  background: white;
+  border-radius: 16rpx;
+  padding: 32rpx;
+  margin-bottom: 20rpx;
+}
+
+.step-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 24rpx;
+  text-align: center;
+}
+
+/* 宠物列表 */
+.pet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.pet-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 12rpx;
+  background-color: #fafafa;
+}
+
+.pet-item.active {
+  border-color: #4A90E2;
+  background-color: #f0f7ff;
+}
+
+.pet-avatar {
+  font-size: 48rpx;
+  margin-right: 16rpx;
+}
+
+.pet-info {
+  flex: 1;
+}
+
+.pet-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.pet-detail {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.pet-check {
+  font-size: 32rpx;
+  color: #4A90E2;
+  font-weight: bold;
+}
+
+.add-pet-btn {
+  margin-top: 24rpx;
+  background-color: #f0f0f0;
+  color: #666;
+  border: 2rpx dashed #ccc;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  font-size: 28rpx;
+}
+
+/* 症状分类 */
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.category-item {
+  margin-bottom: 16rpx;
+}
+
+.category-name {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #666;
+  margin-bottom: 16rpx;
+}
+
+.symptom-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+/* 症状项 - 增强版本 */
+.symptom-item {
+  padding: 16rpx 24rpx;
+  background-color: #f5f5f5;
+  border-radius: 8rpx;
+  font-size: 26rpx;
+  color: #666;
+  border: 2rpx solid #e0e0e0;
+  position: relative;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+/* 选中状态 - 极其突出的样式 */
+.symptom-item.active {
+  background-color: #4A90E2 !important;  /* 蓝色背景 */
+  color: white !important;               /* 白色文字 */
+  border-color: #2E7CB2 !important;     /* 深蓝色边框 */
+  font-weight: bold;
+  transform: scale(1.05);
+  box-shadow: 0 4rpx 12rpx rgba(74, 144, 226, 0.3);
+}
+
+/* 选中标记 */
+.check-mark {
+  position: absolute;
+  top: 4rpx;
+  right: 4rpx;
+  font-size: 20rpx;
+  color: #4A90E2;
+  font-weight: bold;
+}
+
+/* 选中状态下的标记 */
+.symptom-item.active .check-mark {
+  color: white !important;
+  font-size: 24rpx;
+  font-weight: bold;
+}
+
+/* 表单区域 */
+.form-section {
+  margin-bottom: 24rpx;
+}
+
+.form-label {
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 16rpx;
+  font-weight: bold;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 200rpx;
+  padding: 16rpx;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  background-color: #fafafa;
+}
+
+.word-count {
+  text-align: right;
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 8rpx;
+}
+
+/* 已选症状 */
+.selected-symptoms {
+  margin-top: 32rpx;
+  padding: 24rpx;
+  background-color: #f9f9f9;
+  border-radius: 8rpx;
+}
+
+.selected-title {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 16rpx;
+}
+
+.symptom-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.symptom-tag {
+  padding: 8rpx 16rpx;
+  background-color: #4A90E2;
+  color: white;
+  border-radius: 4rpx;
+  font-size: 24rpx;
+}
+
+/* 底部操作按钮 */
+.bottom-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 16rpx;
+  padding: 20rpx;
+  background-color: white;
+  box-shadow: 0 -2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.primary-btn {
+  flex: 1;
+  background-color: #4A90E2;
+  color: white;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  font-size: 32rpx;
+  border: none;
+}
+
+.secondary-btn {
+  flex: 1;
+  background-color: #f0f0f0;
+  color: #333;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  font-size: 32rpx;
+  border: none;
+}

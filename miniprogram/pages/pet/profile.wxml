@@ -1,0 +1,105 @@
+<!--宠物档案页面-->
+<view class="container">
+  <!-- 宠物列表 -->
+  <view class="pet-list" wx:if="{{petList.length > 0}}">
+    <view class="pet-card" wx:for="{{petList}}" wx:key="petId">
+      <view class="pet-header">
+        <view class="pet-avatar">{{item.type === 'cat' ? '🐱' : '🐶'}}</view>
+        <view class="pet-info">
+          <view class="pet-name">{{item.name}}</view>
+          <view class="pet-detail">{{item.type === 'cat' ? '猫' : '狗'}} · {{item.age}}个月</view>
+        </view>
+        <view class="pet-actions">
+          <button class="action-btn edit-btn" data-pet-id="{{item.petId}}" bindtap="editPet">编辑</button>
+          <button class="action-btn delete-btn" data-pet-id="{{item.petId}}" bindtap="deletePet">删除</button>
+        </view>
+      </view>
+
+      <view class="pet-details">
+        <view class="detail-item">
+          <text class="detail-label">品种：</text>
+          <text class="detail-value">{{item.breed}}</text>
+        </view>
+        <view class="detail-item" wx:if="{{item.weight}}">
+          <text class="detail-label">体重：</text>
+          <text class="detail-value">{{item.weight}}kg</text>
+        </view>
+        <view class="detail-item" wx:if="{{item.vaccineDate}}">
+          <text class="detail-label">上次疫苗：</text>
+          <text class="detail-value">{{item.vaccineDate}}</text>
+        </view>
+        <view class="detail-item" wx:if="{{item.dewormDate}}">
+          <text class="detail-label">上次驱虫：</text>
+          <text class="detail-value">{{item.dewormDate}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{petList.length === 0}}">
+    <view class="empty-icon">🐾</view>
+    <view class="empty-text">还没有添加宠物</view>
+    <view class="empty-desc">添加您的宠物信息，开始健康管理</view>
+  </view>
+
+  <!-- 添加按钮 -->
+  <view class="add-section">
+    <button class="add-btn" bindtap="addPet">+ 添加宠物</button>
+  </view>
+</view>
+
+<!-- 添加/编辑宠物弹窗 -->
+<view class="modal {{showModal ? 'active' : ''}}" wx:if="{{showModal}}">
+  <view class="modal-mask" bindtap="closeModal"></view>
+  <view class="modal-content">
+    <view class="modal-title">{{isEdit ? '编辑宠物' : '添加宠物'}}</view>
+
+    <view class="form-section">
+      <view class="form-label">宠物昵称 *</view>
+      <input class="form-input" placeholder="请输入宠物昵称" value="{{formData.name}}" bindinput="onNameInput"/>
+    </view>
+
+    <view class="form-section">
+      <view class="form-label">宠物类型 *</view>
+      <view class="type-selector">
+        <view class="type-option {{formData.type === 'cat' ? 'active' : ''}}" bindtap="selectType" data-type="cat">🐱 猫</view>
+        <view class="type-option {{formData.type === 'dog' ? 'active' : ''}}" bindtap="selectType" data-type="dog">🐶 狗</view>
+      </view>
+    </view>
+
+    <view class="form-section">
+      <view class="form-label">品种</view>
+      <input class="form-input" placeholder="如：英短、金毛等" value="{{formData.breed}}" bindinput="onBreedInput"/>
+    </view>
+
+    <view class="form-section">
+      <view class="form-label">年龄（月）*</view>
+      <input class="form-input" type="number" placeholder="请输入年龄" value="{{formData.age}}" bindinput="onAgeInput"/>
+    </view>
+
+    <view class="form-section">
+      <view class="form-label">体重（kg）</view>
+      <input class="form-input" type="digit" placeholder="请输入体重" value="{{formData.weight}}" bindinput="onWeightInput"/>
+    </view>
+
+    <view class="form-section">
+      <view class="form-label">上次疫苗日期</view>
+      <picker mode="date" value="{{formData.vaccineDate}}" bindchange="onVaccineDateChange">
+        <view class="picker-input">{{formData.vaccineDate || '请选择日期'}}</view>
+      </picker>
+    </view>
+
+    <view class="form-section">
+      <view class="form-label">上次驱虫日期</view>
+      <picker mode="date" value="{{formData.dewormDate}}" bindchange="onDewormDateChange">
+        <view class="picker-input">{{formData.dewormDate || '请选择日期'}}</view>
+      </picker>
+    </view>
+
+    <view class="modal-actions">
+      <button class="modal-btn cancel-btn" bindtap="closeModal">取消</button>
+      <button class="modal-btn confirm-btn" bindtap="savePet">保存</button>
+    </view>
+  </view>
+</view>

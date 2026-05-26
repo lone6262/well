@@ -1,0 +1,77 @@
+<!--用户中心页面-->
+<view class="container">
+  <!-- 用户信息卡片 -->
+  <view class="user-card">
+    <view class="user-avatar">
+      <image class="avatar-img" src="{{userInfo.avatar || '/images/avatar.png'}}"/>
+    </view>
+    <view class="user-info">
+      <view class="user-name">{{userInfo.nickname || '宠物爱好者'}}</view>
+      <view class="user-status">
+        <text class="member-badge {{userInfo.isMember ? 'active' : ''}}">
+          {{userInfo.isMember ? '会员' : '普通用户'}}
+        </text>
+      </view>
+    </view>
+
+    <!-- 登录/退出按钮 -->
+    <view class="user-actions">
+      <button wx:if="{{!userInfo.isLoggedIn}}" class="login-btn" bindtap="login">
+        📱 微信登录
+      </button>
+      <button wx:else class="logout-btn" bindtap="logout">
+        📴 退出登录
+      </button>
+    </view>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="menu-section">
+    <view class="menu-item" bindtap="viewHistory">
+      <view class="menu-icon">📋</view>
+      <view class="menu-text">自查记录</view>
+      <view class="menu-arrow">›</view>
+    </view>
+
+    <view class="menu-item" bindtap="viewReports">
+      <view class="menu-icon">📄</view>
+      <view class="menu-text">我的报告</view>
+      <view class="menu-arrow">›</view>
+    </view>
+
+    <view class="menu-item" bindtap="viewOrders">
+      <view class="menu-icon">💰</view>
+      <view class="menu-text">我的订单</view>
+      <view class="menu-arrow">›</view>
+    </view>
+  </view>
+
+  <!-- 其他功能 -->
+  <view class="menu-section">
+    <view class="menu-item" bindtap="shareApp">
+      <view class="menu-icon">📤</view>
+      <view class="menu-text">分享给好友</view>
+      <view class="menu-arrow">›</view>
+    </view>
+
+    <view class="menu-item" bindtap="contactUs">
+      <view class="menu-icon">💬</view>
+      <view class="menu-text">联系我们</view>
+      <view class="menu-arrow">›</view>
+    </view>
+
+    <view class="menu-item" bindtap="about">
+      <view class="menu-icon">ℹ️</view>
+      <view class="menu-text">关于我们</view>
+      <view class="menu-arrow">›</view>
+    </view>
+  </view>
+
+  <!-- 免责声明 -->
+  <view class="disclaimer-section">
+    <view class="disclaimer-title">⚠️ 重要提示</view>
+    <view class="disclaimer-content">
+      本工具仅为宠物健康风险评估参考，不能替代执业兽医的专业诊断与治疗。
+    </view>
+  </view>
+</view>

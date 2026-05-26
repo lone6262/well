@@ -1,0 +1,9 @@
+{
+  "name": "silentLogin",
+  "version": "1.0.0",
+  "description": "静默登录云函数 - 按照用户专业方案实现",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

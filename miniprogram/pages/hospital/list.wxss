@@ -1,0 +1,142 @@
+/* 医院列表页面样式 */
+.container {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+/* 搜索区域 */
+.search-section {
+  background: white;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+}
+
+.search-bar {
+  margin-bottom: 16rpx;
+}
+
+.search-input {
+  background: #f5f5f5;
+  border-radius: 8rpx;
+  padding: 16rpx;
+  font-size: 28rpx;
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 12rpx;
+}
+
+.filter-tab {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx;
+  background: #f5f5f5;
+  border-radius: 8rpx;
+  font-size: 26rpx;
+  color: #666;
+}
+
+.filter-tab.active {
+  background: #4A90E2;
+  color: white;
+}
+
+/* 医院列表 */
+.hospital-list {
+  padding: 0 20rpx;
+}
+
+.hospital-item {
+  background: white;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.hospital-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.hospital-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.hospital-badge {
+  background: #e0e0e0;
+  color: #666;
+  padding: 4rpx 12rpx;
+  border-radius: 4rpx;
+  font-size: 20rpx;
+}
+
+.hospital-badge.active {
+  background: #f5222d;
+  color: white;
+}
+
+.hospital-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  font-size: 26rpx;
+}
+
+.info-icon {
+  margin-right: 8rpx;
+  font-size: 24rpx;
+}
+
+.info-text {
+  color: #666;
+}
+
+.hospital-actions {
+  display: flex;
+  gap: 12rpx;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 16rpx;
+  border-radius: 8rpx;
+  font-size: 26rpx;
+  border: none;
+}
+
+.call-btn {
+  background: #52c41a;
+  color: white;
+}
+
+.navigate-btn {
+  background: #4A90E2;
+  color: white;
+}
+
+/* 加载更多 */
+.load-more {
+  padding: 24rpx;
+  text-align: center;
+}
+
+.load-more-btn {
+  background: #f0f0f0;
+  color: #666;
+  border-radius: 8rpx;
+  padding: 16rpx 32rpx;
+  font-size: 26rpx;
+  border: none;
+}

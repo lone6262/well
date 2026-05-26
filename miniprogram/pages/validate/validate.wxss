@@ -1,0 +1,201 @@
+/* pages/validate/validate.wxss */
+.container {
+  padding: 20rpx;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 40rpx;
+}
+
+.title {
+  display: block;
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+.subtitle {
+  display: block;
+  font-size: 28rpx;
+  color: #666;
+}
+
+/* 环境ID区域 */
+.env-section {
+  background: white;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.env-id-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8f8f8;
+  padding: 20rpx;
+  border-radius: 8rpx;
+  margin-bottom: 20rpx;
+}
+
+.env-id {
+  font-family: monospace;
+  font-size: 28rpx;
+  color: #333;
+  word-break: break-all;
+}
+
+.copy-btn {
+  font-size: 24rpx;
+  padding: 10rpx 20rpx;
+  background: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 6rpx;
+}
+
+.help-text {
+  text-align: center;
+}
+
+.link {
+  color: #1890ff;
+  font-size: 26rpx;
+  text-decoration: underline;
+}
+
+/* 验证结果 */
+.result-section {
+  margin-bottom: 30rpx;
+}
+
+.result-card {
+  background: white;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  display: flex;
+  align-items: flex-start;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+}
+
+.result-card.success {
+  border-left: 6rpx solid #52c41a;
+}
+
+.result-card.error {
+  border-left: 6rpx solid #ff4d4f;
+}
+
+.result-icon {
+  font-size: 48rpx;
+  margin-right: 20rpx;
+}
+
+.result-content {
+  flex: 1;
+}
+
+.result-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+.result-message {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 10rpx;
+}
+
+.result-suggestion {
+  font-size: 26rpx;
+  color: #faad14;
+  background: #fffbe6;
+  padding: 15rpx;
+  border-radius: 8rpx;
+  margin-top: 10rpx;
+}
+
+/* 操作按钮 */
+.action-section {
+  margin-bottom: 30rpx;
+}
+
+.validate-btn {
+  background: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 12rpx;
+  font-size: 32rpx;
+  padding: 25rpx;
+  margin-bottom: 20rpx;
+}
+
+.validate-btn[disabled] {
+  background: #ccc;
+}
+
+.clear-btn {
+  background: white;
+  color: #666;
+  border: 1rpx solid #ddd;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  padding: 20rpx;
+}
+
+/* 日志区域 */
+.log-section {
+  background: white;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+}
+
+.log-container {
+  max-height: 500rpx;
+  background: #1e1e1e;
+  border-radius: 8rpx;
+  padding: 15rpx;
+}
+
+.log-item {
+  font-family: monospace;
+  font-size: 24rpx;
+  color: #d4d4d4;
+  margin-bottom: 8rpx;
+  line-height: 1.4;
+}
+
+/* 使用说明 */
+.guide-section {
+  background: white;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+}
+
+.guide-content {
+  margin-top: 20rpx;
+}
+
+.guide-item {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 15rpx;
+  padding-left: 20rpx;
+}
