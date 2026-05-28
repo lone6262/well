@@ -7,7 +7,16 @@ Page({
       nickname: '',
       avatar: '',
       isMember: false
-    }
+    },
+    userStats: {
+      checkCount: 0,
+      reportCount: 0,
+      petCount: 0,
+      orderCount: 0,
+      favoriteCount: 0
+    },
+    userPets: [],
+    appVersion: '1.0.0'
   },
 
   onLoad: function() {
@@ -29,6 +38,36 @@ Page({
         isMember: userInfo.isMember || false,
         isLoggedIn: !!userInfo.nickname
       }
+    })
+
+    // 加载用户统计数据
+    this.loadUserStats()
+
+    // 加载用户宠物信息
+    this.loadUserPets()
+  },
+
+  // 加载用户统计数据
+  loadUserStats: function() {
+    var userStats = wx.getStorageSync('userStats') || {
+      checkCount: 0,
+      reportCount: 0,
+      petCount: 0,
+      orderCount: 0,
+      favoriteCount: 0
+    }
+
+    this.setData({
+      userStats: userStats
+    })
+  },
+
+  // 加载用户宠物信息
+  loadUserPets: function() {
+    var userPets = wx.getStorageSync('userPets') || []
+
+    this.setData({
+      userPets: userPets
     })
   },
 
@@ -140,6 +179,101 @@ Page({
 
   // 查看我的报告
   viewReports: function() {
+    wx.showToast({
+      title: '功能开发中',
+      icon: 'none'
+    })
+  },
+
+  // 查看宠物档案
+  viewPets: function() {
+    if (!this.data.userInfo.isLoggedIn) {
+      wx.showModal({
+        title: '提示',
+        content: '请先登录',
+        showCancel: false
+      })
+      return
+    }
+
+    wx.navigateTo({
+      url: '/pages/pet/profile'
+    })
+  },
+
+  // 查看收藏医院
+  viewFavorites: function() {
+    wx.showToast({
+      title: '功能开发中',
+      icon: 'none'
+    })
+  },
+
+  // 更换头像
+  changeAvatar: function() {
+    if (!this.data.userInfo.isLoggedIn) {
+      wx.showModal({
+        title: '提示',
+        content: '请先登录',
+        showCancel: false
+      })
+      return
+    }
+
+    var self = this
+
+    wx.chooseImage({
+      count: 1,
+      sizeType: ['compressed'],
+      sourceType: ['album', 'camera'],
+      success: function(res) {
+        var tempFilePath = res.tempFilePaths[0]
+
+        // 更新头像
+        var userInfo = self.data.userInfo
+        userInfo.avatar = tempFilePath
+
+        self.setData({
+          userInfo: userInfo
+        })
+
+        // 保存到本地存储
+        wx.setStorageSync('userInfo', userInfo)
+        app.globalData.userInfo = userInfo
+
+        wx.showToast({
+          title: '头像已更新',
+          icon: 'success'
+        })
+      }
+    })
+  },
+
+  // 查看所有宠物
+  viewAllPets: function() {
+    wx.navigateTo({
+      url: '/pages/pet/profile'
+    })
+  },
+
+  // 查看宠物详情
+  viewPetDetail: function(e) {
+    var pet = e.currentTarget.dataset.pet
+
+    wx.navigateTo({
+      url: '/pages/pet/profile?petId=' + pet.petId
+    })
+  },
+
+  // 添加新宠物
+  addNewPet: function() {
+    wx.navigateTo({
+      url: '/pages/pet/profile?action=add'
+    })
+  },
+
+  // 设置
+  settings: function() {
     wx.showToast({
       title: '功能开发中',
       icon: 'none'

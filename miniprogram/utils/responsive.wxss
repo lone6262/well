@@ -1,0 +1,291 @@
+/* 全局自适应基础样式 - 修复所有页面自适应问题 */
+
+/* === 全局重置和基础设置 === */
+page {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  font-size: 28rpx;
+  line-height: 1.6;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* === 全局容器自适应 === */
+.container {
+  width: 100%;
+  max-width: 750rpx;
+  margin: 0 auto;
+  padding: 20rpx;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* === 通用自适应工具类 === */
+.flex-container {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.text-overflow {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* === 按钮自适应修复 === */
+button {
+  width: auto;
+  max-width: 100%;
+  box-sizing: border-box;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  padding: 16rpx 24rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+button::after {
+  border: none;
+}
+
+/* === 输入框自适应 === */
+input, textarea, picker {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+}
+
+/* === 图片自适应 === */
+image {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* === 固定底部按钮自适应修复 === */
+.bottom-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 16rpx;
+  padding: 20rpx;
+  background: white;
+  box-shadow: 0 -2rpx 8rpx rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  max-width: 750rpx;
+  margin: 0 auto;
+}
+
+/* === 弹窗自适应 === */
+.modal-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 32rpx;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 750rpx;
+  margin: 0 auto;
+}
+
+/* === 屏幕适配媒体查询 === */
+
+/* 超小屏幕 (<320px) */
+@media (max-width: 320px) {
+  page {
+    font-size: 26rpx;
+  }
+
+  .container {
+    padding: 16rpx;
+  }
+
+  button {
+    font-size: 26rpx;
+    padding: 12rpx 20rpx;
+  }
+}
+
+/* 小屏幕 (320px - 375px) */
+@media (min-width: 320px) and (max-width: 375px) {
+  .emergency-btn {
+    min-height: 100rpx;
+    font-size: 26rpx;
+  }
+
+  .bottom-actions {
+    padding: 16rpx;
+  }
+
+  .modal-content {
+    padding: 24rpx;
+  }
+}
+
+/* 中等屏幕 (375px - 414px) - 标准手机 */
+@media (min-width: 375px) and (max-width: 414px) {
+  .container {
+    padding: 20rpx;
+  }
+
+  .emergency-btn {
+    min-height: 120rpx;
+  }
+}
+
+/* 大屏幕 (>414px) - 大屏手机 */
+@media (min-width: 414px) {
+  .container {
+    padding: 24rpx;
+    max-width: 750rpx;
+  }
+
+  .bottom-actions {
+    max-width: 750rpx;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .modal-content {
+    max-width: 750rpx;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* === 横屏适配 === */
+@media (orientation: landscape) {
+  .modal-content {
+    max-height: 60vh;
+  }
+
+  .bottom-actions {
+    padding: 12rpx 20rpx;
+  }
+}
+
+/* === 安全区域适配（iPhone X等） === */
+.safe-area-bottom {
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-top {
+  padding-top: constant(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top);
+}
+
+/* === 防止内容溢出 === */
+.prevent-overflow {
+  overflow: hidden;
+  word-wrap: break-word;
+  word-break: break-all;
+}
+
+/* === Flex布局自适应工具 === */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.flex-end {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* === 网格布局自适应 === */
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16rpx;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16rpx;
+}
+
+@media (max-width: 375px) {
+  .grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* === 文字大小自适应 === */
+.text-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  line-height: 1.3;
+}
+
+@media (max-width: 375px) {
+  .text-title {
+    font-size: 32rpx;
+  }
+}
+
+.text-subtitle {
+  font-size: 28rpx;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+@media (max-width: 375px) {
+  .text-subtitle {
+    font-size: 26rpx;
+  }
+}
+
+.text-body {
+  font-size: 28rpx;
+  line-height: 1.6;
+}
+
+@media (max-width: 375px) {
+  .text-body {
+    font-size: 26rpx;
+  }
+}
