@@ -1,85 +1,155 @@
-<!--症状向导页面 - 最终修复版本-->
-<view class="container">
-  <!-- 步骤指示器 -->
-  <view class="steps">
-    <view class="step {{currentStep >= 1 ? 'active' : ''}}">1</view>
-    <view class="step-line {{currentStep >= 2 ? 'active' : ''}}"></view>
-    <view class="step {{currentStep >= 2 ? 'active' : ''}}">2</view>
-    <view class="step-line {{currentStep >= 3 ? 'active' : ''}}"></view>
-    <view class="step {{currentStep >= 3 ? 'active' : ''}}">3</view>
+<!-- 症状自查页面 - 现代化UI设计 -->
+<view class="page">
+
+  <!-- 顶部导航 -->
+  <view class="nav-bar">
+    <view class="nav-back" bindtap="goBack">
+      <text>←</text>
+    </view>
+    <view class="nav-title">症状自查</view>
+    <view class="nav-step">{{currentStep}}/3</view>
+  </view>
+
+  <!-- 进度条 -->
+  <view class="progress-bar">
+    <view class="progress-fill" style="width: {{(currentStep / 3) * 100}}%"></view>
   </view>
 
   <!-- 步骤1：选择宠物 -->
-  <view class="step-content" wx:if="{{currentStep === 1}}">
-    <view class="step-title">选择宠物</view>
-    <view class="pet-list">
-      <view class="pet-item {{selectedPet === item.petId ? 'active' : ''}}"
-            wx:for="{{petList}}"
-            wx:key="petId"
-            bindtap="selectPet"
-            data-pet-id="{{item.petId}}">
-        <view class="pet-avatar">{{item.type === 'cat' ? '🐱' : '🐶'}}</view>
-        <view class="pet-info">
-          <view class="pet-name">{{item.name}}</view>
-          <view class="pet-detail">{{item.type === 'cat' ? '猫' : '狗'}} · {{item.age}}个月</view>
-        </view>
-        <view class="pet-check" wx:if="{{selectedPet === item.petId}}">✓</view>
+  <view class="content" wx:if="{{currentStep === 1}}">
+    <view class="step-header">
+      <text class="step-icon">🐾</text>
+      <view class="step-info">
+        <text class="step-title">选择您的宠物</text>
+        <text class="step-desc">为哪只宠物进行症状自查？</text>
       </view>
     </view>
-    <button class="add-pet-btn" bindtap="addPet">+ 添加新宠物</button>
+
+    <view class="pet-list">
+      <view class="pet-card {{selectedPet === item.id ? 'active' : ''}}"
+            wx:for="{{petList}}"
+            wx:key="id"
+            bindtap="selectPet"
+            data-id="{{item.id}}">
+        <text class="pet-emoji">{{item.emoji}}</text>
+        <text class="pet-name">{{item.name}}</text>
+        <text class="pet-info">{{item.age}} · {{item.gender}}</text>
+      </view>
+
+      <view class="pet-card add" bindtap="addNewPet">
+        <text class="pet-emoji">+</text>
+        <text class="pet-name">添加新宠物</text>
+      </view>
+    </view>
   </view>
 
-  <!-- 步骤2：选择症状 - 最终修复版本 -->
-  <view class="step-content" wx:if="{{currentStep === 2}}">
-    <view class="step-title">选择症状（可多选）</view>
-    <view class="category-list">
-      <view class="category-item" wx:for="{{symptomCategories}}" wx:key="name" wx:for-index="catIndex">
-        <view class="category-name">{{item.name}}</view>
+  <!-- 步骤2：选择症状 -->
+  <view class="content" wx:if="{{currentStep === 2}}">
+    <view class="step-header">
+      <text class="step-icon">🩺</text>
+      <view class="step-info">
+        <text class="step-title">选择症状</text>
+        <text class="step-desc">请选择宠物的症状表现，可多选</text>
+      </view>
+    </view>
+
+    <view class="selected-info" wx:if="{{selectedSymptoms.length > 0}}">
+      <text>已选 {{selectedSymptoms.length}} 个症状</text>
+      <text class="clear-btn" bindtap="clearAllSymptoms">清空</text>
+    </view>
+
+    <scroll-view class="scroll-area" scroll-y="{{true}}">
+      <view class="category-block" wx:for="{{symptomCategories}}" wx:key="name" wx:for-item="category" wx:for-index="catIndex">
+        <view class="category-title">
+          <text>{{category.emoji}} {{category.name}}</text>
+          <text class="count">({{category.selectedCount}}/{{category.symptoms.length}})</text>
+        </view>
+
         <view class="symptom-list">
-          <view class="symptom-item {{symptom.selected ? 'active' : ''}}"
-                wx:for="{{item.symptoms}}"
+          <view class="symptom-item {{symptom.selected ? 'selected' : ''}}"
+                wx:for="{{category.symptoms}}"
                 wx:for-item="symptom"
-                wx:for-index="symptomIndex"
                 wx:key="key"
                 bindtap="toggleSymptom"
-                data-symptom-key="{{symptom.key}}"
                 data-category-index="{{catIndex}}"
-                data-symptom-index="{{symptomIndex}}">
-            {{symptom.label}}
-            <view class="check-mark" wx:if="{{symptom.selected}}">✓</view>
+                data-key="{{symptom.key}}">
+            <text class="symptom-emoji">{{symptom.emoji}}</text>
+            <text class="symptom-name">{{symptom.name}}</text>
+            <text class="symptom-check" wx:if="{{symptom.selected}}">✓</text>
           </view>
         </view>
       </view>
+    </scroll-view>
+
+    <view class="selected-tags" wx:if="{{selectedSymptoms.length > 0}}">
+      <scroll-view class="tags-scroll" scroll-x="{{true}}" show-scrollbar="{{false}}">
+        <view class="tag" wx:for="{{selectedSymptoms}}" wx:key="*this">
+          <text>{{item}}</text>
+          <text class="tag-close" catchtap="removeSymptom" data-symptom="{{item}}">×</text>
+        </view>
+      </scroll-view>
     </view>
   </view>
 
   <!-- 步骤3：补充描述 -->
-  <view class="step-content" wx:if="{{currentStep === 3}}">
-    <view class="step-title">补充描述</view>
-    <view class="form-section">
-      <view class="form-label">症状详情</view>
-      <textarea class="textarea"
-                placeholder="请详细描述宠物的症状，比如持续的时间、严重程度等"
-                value="{{description}}"
-                bindinput="onDescriptionInput"/>
-      <view class="word-count">{{description.length}}/200</view>
+  <view class="content" wx:if="{{currentStep === 3}}">
+    <view class="step-header">
+      <text class="step-icon">📝</text>
+      <view class="step-info">
+        <text class="step-title">补充描述</text>
+        <text class="step-desc">提供更多细节帮助准确评估</text>
+      </view>
     </view>
 
-    <view class="selected-symptoms">
-      <view class="selected-title">已选择的症状：</view>
-      <view class="symptom-tags">
-        <view class="symptom-tag" wx:for="{{selectedSymptoms}}" wx:key="*this">
-          {{item}}
-        </view>
+    <view class="form-block">
+      <view class="form-title">
+        <text>详细描述</text>
+        <text class="required">*</text>
+      </view>
+      <textarea class="textarea"
+                placeholder="请详细描述宠物的症状表现、持续时间、严重程度等..."
+                value="{{description}}"
+                bindinput="onDescriptionInput"
+                maxlength="300"/>
+      <text class="char-count">{{description.length}}/300</text>
+    </view>
+
+    <view class="form-block">
+      <view class="form-title">症状持续多久？</view>
+      <view class="option-group">
+        <view class="option-btn {{duration === 'acute' ? 'active' : ''}}"
+              bindtap="selectDuration"
+              data-value="acute">急性</view>
+        <view class="option-btn {{duration === 'chronic' ? 'active' : ''}}"
+              bindtap="selectDuration"
+              data-value="chronic">慢性</view>
+      </view>
+    </view>
+
+    <view class="form-block">
+      <view class="form-title">症状严重程度？</view>
+      <view class="option-group">
+        <view class="option-btn {{severity === 'mild' ? 'active' : ''}}"
+              bindtap="selectSeverity"
+              data-value="mild">轻微</view>
+        <view class="option-btn {{severity === 'moderate' ? 'active' : ''}}"
+              bindtap="selectSeverity"
+              data-value="moderate">中度</view>
+        <view class="option-btn {{severity === 'severe' ? 'active' : ''}}"
+              bindtap="selectSeverity"
+              data-value="severe">严重</view>
       </view>
     </view>
   </view>
 
-  <!-- 底部操作按钮 -->
-  <view class="bottom-actions">
-    <button class="secondary-btn" wx:if="{{currentStep > 1}}" bindtap="prevStep">上一步</button>
-    <button class="primary-btn" bindtap="nextStep">
+  <!-- 底部按钮 -->
+  <view class="bottom-bar">
+    <button class="btn btn-secondary" wx:if="{{currentStep > 1}}" bindtap="prevStep">
+      上一步
+    </button>
+    <button class="btn btn-primary {{currentStep > 1 ? 'flex-1' : ''}}" bindtap="nextStep" disabled="{{!canNext}}">
       {{currentStep === 3 ? '提交评估' : '下一步'}}
     </button>
   </view>
+
 </view>
