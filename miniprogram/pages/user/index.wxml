@@ -11,7 +11,12 @@
         </view>
 
         <view class="user-details-wrapper">
-          <view class="user-name-text">{{userInfo.nickname || '宠物爱好者'}}</view>
+          <view class="user-name-row">
+            <view class="user-name-text">{{userInfo.nickname || '宠物爱好者'}}</view>
+            <view class="edit-name-btn" bindtap="editNickname" wx:if="{{userInfo.isLoggedIn}}">
+              <text class="edit-icon">✏️</text>
+            </view>
+          </view>
           <view class="user-status-badge">
             <text class="status-text">{{userInfo.isMember ? '会员用户' : '普通用户'}}</text>
           </view>

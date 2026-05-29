@@ -1,54 +1,176 @@
-<!--首页-->
-<view class="container">
-  <!-- 顶部急救按钮 -->
-  <view class="emergency-section">
-    <button class="emergency-btn" bindtap="toEmergency" hover-class="emergency-btn-hover">
+<!--现代化首页设计 Modern Homepage Design-->
+<view class="page-container">
+
+  <!-- 顶部欢迎区域 -->
+  <view class="welcome-section">
+    <view class="welcome-content">
+      <view class="welcome-greeting">
+        <text class="greeting-emoji">👋</text>
+        <text class="greeting-text">你好，宠物主人</text>
+      </view>
+      <view class="welcome-subtitle">
+        <text>保护爱宠健康，从日常关注开始</text>
+      </view>
+    </view>
+
+    <!-- 用户头像 -->
+    <view class="user-avatar-section" bindtap="toUser">
+      <image class="user-avatar" src="{{userInfo.avatarUrl || '/images/avatar.png'}}" />
+      <view class="avatar-badge">🐾</view>
+    </view>
+  </view>
+
+  <!-- 紧急呼叫按钮 - 优化排版 -->
+  <view class="emergency-modern">
+    <button class="emergency-btn-modern" bindtap="toEmergency" hover-class="emergency-btn-pressed">
       <view class="emergency-content">
-        <text class="emergency-icon">🚨</text>
-        <view class="emergency-text-group">
-          <text class="emergency-title">宠物急症/误食</text>
-          <text class="emergency-subtitle">一键救命通道</text>
+        <view class="emergency-left">
+          <view class="emergency-icon-wrapper">
+            <text class="emergency-icon-large pulse-animation">🚨</text>
+          </view>
+          <view class="emergency-text-group">
+            <text class="emergency-title">紧急救助通道</text>
+            <text class="emergency-desc">24小时急救 · 一键求助</text>
+          </view>
+        </view>
+        <view class="emergency-arrow-wrapper">
+          <text class="emergency-arrow-text">立即求助</text>
+          <text class="emergency-arrow">→</text>
         </view>
       </view>
     </button>
   </view>
 
-  <!-- 症状自查卡片 -->
-  <view class="card-section">
-    <view class="card">
-      <view class="card-title">🩺 症状自查</view>
-      <view class="card-content">
-        <text class="card-desc">快速评估宠物健康状况</text>
-        <text class="card-desc">获取专业建议和风险分级</text>
+  <!-- 主要功能网格 -->
+  <view class="main-features">
+    <view class="section-header">
+      <text class="section-title">快速服务</text>
+      <text class="section-more" bindtap="showMoreFeatures">查看全部 →</text>
+    </view>
+
+    <view class="features-grid">
+      <!-- 症状自查 -->
+      <view class="feature-card primary-gradient" bindtap="toSymptom" hover-class="feature-card-pressed">
+        <view class="feature-icon-large">🩺</view>
+        <view class="feature-content">
+          <text class="feature-title">症状自查</text>
+          <text class="feature-desc">智能评估健康</text>
+        </view>
+        <view class="feature-badge">AI</view>
       </view>
-      <button class="primary-btn" bindtap="toSymptom" hover-class="btn-hover">
-        <text>开始自查 →</text>
-      </button>
+
+      <!-- 附近医院 -->
+      <view class="feature-card success-gradient" bindtap="toHospital" hover-class="feature-card-pressed">
+        <view class="feature-icon-large">🏥</view>
+        <view class="feature-content">
+          <text class="feature-title">附近医院</text>
+          <text class="feature-desc">快速定位导航</text>
+        </view>
+        <view class="feature-badge">MAP</view>
+      </view>
+
+      <!-- 健康档案 -->
+      <view class="feature-card warning-gradient" bindtap="toPetProfile" hover-class="feature-card-pressed">
+        <view class="feature-icon-large">📋</view>
+        <view class="feature-content">
+          <text class="feature-title">健康档案</text>
+          <text class="feature-desc">记录成长点滴</text>
+        </view>
+        <view class="feature-badge">NEW</view>
+      </view>
+
+      <!-- 科普知识 -->
+      <view class="feature-card info-gradient" bindtap="toKnowledge" hover-class="feature-card-pressed">
+        <view class="feature-icon-large">📚</view>
+        <view class="feature-content">
+          <text class="feature-title">科普知识</text>
+          <text class="feature-desc">专业养宠指南</text>
+        </view>
+        <view class="feature-badge">HOT</view>
+      </view>
     </view>
   </view>
 
-  <!-- 就医导航卡片 -->
-  <view class="card-section">
-    <view class="card">
-      <view class="card-title">🏥 附近宠物医院</view>
-      <view class="card-content">
-        <text class="card-desc">快速找到附近的宠物医院</text>
-        <text class="card-desc">获取导航和联系方式</text>
+  <!-- 宠物健康状态卡片 -->
+  <view class="health-status-card">
+    <view class="health-header">
+      <view class="health-title-section">
+        <text class="health-icon">💚</text>
+        <text class="health-title">宠物健康状态</text>
       </view>
-      <button class="secondary-btn" bindtap="toHospital" hover-class="btn-hover">
-        <text>查看医院 →</text>
-      </button>
+      <text class="health-refresh" bindtap="refreshHealthStatus">刷新</text>
+    </view>
+
+    <view class="pets-scroll">
+      <scroll-view class="pets-horizontal" scroll-x="true" show-scrollbar="false">
+        <view class="pet-health-card" wx:for="{{petsList}}" wx:key="id" bindtap="viewPetDetail" data-pet-id="{{item.id}}" data-pet-name="{{item.name}}" hover-class="pet-health-card-hover">
+          <view class="pet-avatar-wrapper">
+            <!-- 真实头像或emoji头像 -->
+            <image wx:if="{{item.isRealAvatar}}" class="pet-avatar-image" src="{{item.avatar}}" mode="aspectFill"/>
+            <text wx:else class="pet-avatar-card">{{item.avatar}}</text>
+            <view class="pet-health-dot {{item.healthStatus === 'good' ? 'health-good' : 'health-warning'}}"></view>
+          </view>
+          <text class="pet-name-card">{{item.name}}</text>
+          <text class="pet-status-card {{item.healthStatus === 'good' ? 'status-good' : 'status-warning'}}">
+            {{item.healthStatus === 'good' ? '状态良好' : '需要关注'}}
+          </text>
+        </view>
+
+        <!-- 添加宠物按钮 -->
+        <view class="pet-add-card" bindtap="addPet">
+          <view class="add-icon-large">+</view>
+          <text class="add-pet-text">添加宠物</text>
+        </view>
+      </scroll-view>
     </view>
   </view>
 
-  <!-- 附近医院预览（占位） -->
-  <view class="hospital-preview">
-    <view class="preview-title">附近24小时医院</view>
-    <view class="hospital-list">
-      <view class="hospital-item" wx:for="{{nearbyHospitals}}" wx:key="id">
-        <view class="hospital-name">{{item.name}}</view>
-        <view class="hospital-distance">{{item.distance}}km</view>
+  <!-- 附近医院快捷预览 -->
+  <view class="nearby-hospitals-section">
+    <view class="section-header-nearby">
+      <view class="hospital-header-left">
+        <text class="section-icon">📍</text>
+        <text class="section-title-nearby">附近24小时医院</text>
+        <view class="live-indicator">
+          <view class="live-dot"></view>
+          <text class="live-text">实时</text>
+        </view>
+      </view>
+      <view class="hospital-header-right">
+        <text class="update-time-text">{{lastUpdateTime || '更新中...'}}</text>
+        <text class="section-more-nearby" bindtap="toHospital">查看更多 →</text>
+      </view>
+    </view>
+
+    <view class="hospitals-preview-list">
+      <view class="hospital-preview-card" wx:for="{{nearbyHospitals}}" wx:key="id" bindtap="navigateToHospital" data-hospital="{{item}}">
+        <view class="hospital-info-compact">
+          <view class="hospital-name-row">
+            <text class="hospital-name-compact">{{item.name}}</text>
+            <view class="hospital-badge-compact {{item.is24h ? 'badge-24h' : 'badge-normal'}}">{{item.is24h ? '24H' : '常规'}}</view>
+          </view>
+          <view class="hospital-details-compact">
+            <text class="hospital-distance-compact">{{item.distance}}</text>
+            <text class="hospital-separator">·</text>
+            <text class="hospital-address-compact">{{item.address}}</text>
+          </view>
+        </view>
+        <view class="hospital-action-compact">
+          <view class="navigate-icon-compact">🧭</view>
+        </view>
       </view>
     </view>
   </view>
+
+  <!-- 底部健康提示 -->
+  <view class="health-tip-card">
+    <view class="tip-header">
+      <text class="tip-icon">💡</text>
+      <text class="tip-title">今日健康提示</text>
+    </view>
+    <view class="tip-content">
+      <text class="tip-text">{{dailyTip}}</text>
+    </view>
+  </view>
+
 </view>

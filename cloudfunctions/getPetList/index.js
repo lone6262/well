@@ -26,6 +26,31 @@ cloud.init({
 const db = cloud.database();
 
 /**
+ * 计算宠物健康状态
+ */
+function calculateHealthStatus(pet) {
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  const hasRecentVaccine = pet.vaccine_date && new Date(pet.vaccine_date) >= thirtyDaysAgo;
+  const hasRecentDeworming = pet.deworm_date && new Date(pet.deworm_date) >= thirtyDaysAgo;
+
+  if (hasRecentVaccine && hasRecentDeworming) {
+    return 'good';
+  } else if (!hasRecentVaccine || !hasRecentDeworming) {
+    return 'warning';
+  }
+  return 'good';
+}
+
+/**
+ * 获取健康状态文本
+ */
+function getHealthStatusText(status) {
+  return status === 'good' ? '状态良好' : '需要关注';
+}
+
+/**
  * 获取用户的宠物列表
  */
 exports.main = async (event, context) => {
@@ -49,18 +74,27 @@ exports.main = async (event, context) => {
       .orderBy('created_at', 'desc')
       .get();
 
-    // 3. 格式化返回数据
-    const petList = result.data.map(pet => ({
-      petId: pet._id,
-      name: pet.name,
-      type: pet.type,
-      breed: pet.breed,
-      age: pet.age,
-      weight: pet.weight,
-      vaccineDate: pet.vaccine_date,
-      dewormDate: pet.deworm_date,
-      createdAt: pet.created_at
-    }));
+    // 3. 格式化返回数据并计算健康状态
+    const petList = result.data.map(pet => {
+      const healthStatus = calculateHealthStatus(pet);
+      return {
+        _id: pet._id, // 保留原始_id，用于前端操作
+        petId: pet._id, // 同时提供petId，兼容性字段
+        name: pet.name,
+        type: pet.type,
+        breed: pet.breed,
+        age: pet.age,
+        weight: pet.weight,
+        gender: pet.gender || 'male',
+        vaccineDate: pet.vaccine_date,
+        dewormDate: pet.deworm_date,
+        avatar: pet.avatar || '', // 新增头像字段
+        createdAt: pet.created_at,
+        // 新增健康状态字段
+        healthStatus: healthStatus,
+        healthStatusText: getHealthStatusText(healthStatus)
+      };
+    });
 
     return {
       code: RESPONSE_CODE.SUCCESS,

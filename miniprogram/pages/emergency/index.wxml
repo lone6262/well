@@ -1,87 +1,144 @@
-<!--急救通道页面 - 集成地图显示-->
-<view class="container emergency-container">
-  <view class="emergency-header">
-    <!-- 返回按钮 -->
-    <view class="back-btn" bindtap="goBack">
-      <text class="back-icon">←</text>
-      <text class="back-text">返回</text>
+<!--紧急救助页面 - 极简设计-->
+<view class="emergency-page">
+
+  <!-- 顶部状态栏 -->
+  <view class="emergency-status">
+    <view class="status-dot"></view>
+    <text class="status-text">紧急救助中</text>
+  </view>
+
+  <!-- 最近医院卡片 -->
+  <view class="nearest-hospital-card" wx:if="{{nearestHospital}}">
+    <view class="hospital-badge">⚡ 最近</view>
+
+    <!-- 医院名称 -->
+    <view class="hospital-name">{{nearestHospital.name}}</view>
+
+    <!-- 关键信息 -->
+    <view class="hospital-info">
+      <text class="info-item">📍 {{nearestHospital.distanceDisplay}}</text>
+      <text class="info-item">🕐 24小时</text>
     </view>
 
-    <view class="emergency-icon">🚨</view>
-    <view class="emergency-title">紧急求助</view>
-    <view class="emergency-subtitle">为您的宠物找到最近的24小时急诊</view>
+    <!-- 地址 -->
+    <view class="hospital-address">{{nearestHospital.address}}</view>
+
+    <!-- 一键操作按钮 -->
+    <view class="emergency-actions">
+      <button class="action-btn primary-action"
+              bindtap="callHospital"
+              data-phone="{{nearestHospital.phone}}"
+              data-name="{{nearestHospital.name}}">
+        <text class="btn-icon">📞</text>
+        <text class="btn-text">立即拨打</text>
+      </button>
+
+      <button class="action-btn secondary-action"
+              bindtap="navigateToHospital"
+              data-hospital="{{nearestHospital}}">
+        <text class="btn-icon">🧭</text>
+        <text class="btn-text">开始导航</text>
+      </button>
+    </view>
   </view>
 
-  <!-- 地图显示 -->
-  <view class="map-section" wx:if="{{showMap}}">
-    <map
-      class="emergency-map"
-      latitude="{{latitude}}"
-      longitude="{{longitude}}"
-      markers="{{hospitalMarkers}}"
-      show-location="{{true}}"
-      bindmarkertap="onMarkerTap"
-    >
-      <view class="map-cover">
-        <view class="location-btn" bindtap="getLocation">
-          {{isLoading ? '定位中...' : '📍 重新定位'}}
+  <!-- 加载状态 -->
+  <view class="loading-state" wx:if="{{isLoading}}">
+    <view class="pulse-ring"></view>
+    <text class="loading-text">正在定位最近医院...</text>
+  </view>
+
+  <!-- 错误状态 -->
+  <view class="error-state" wx:if="{{!isLoading && !nearestHospital}}">
+    <text class="error-icon">❌</text>
+    <text class="error-title">定位失败</text>
+    <text class="error-desc">无法获取您的位置信息</text>
+    <button class="retry-btn" bindtap="retryLocation">
+      <text>🔄 重新定位</text>
+    </button>
+  </view>
+
+  <!-- 其他医院列表（全新设计） -->
+  <view class="other-hospitals-section" wx:if="{{otherHospitals.length > 0}}">
+    <!-- 展开按钮 -->
+    <view class="expand-header" bindtap="toggleOtherHospitals">
+      <view class="expand-content">
+        <text class="expand-icon-large">🏥</text>
+        <view class="expand-text-group">
+          <text class="expand-title">其他附近医院</text>
+          <text class="expand-subtitle">{{otherHospitals.length}}家可选择医院</text>
         </view>
       </view>
-    </map>
-  </view>
+      <view class="expand-arrow {{showOther ? 'arrow-up' : 'arrow-down'}}">
+        <text class="arrow-icon">{{showOther ? '▲' : '▼'}}</text>
+      </view>
+    </view>
 
-  <!-- 医院列表 -->
-  <view class="hospital-section" wx:if="{{hospitals.length > 0}}">
-    <view class="section-title">附近的24小时宠物医院 ({{hospitals.length}}家)</view>
-    <scroll-view class="hospital-scroll" scroll-y="{{true}}">
-      <view class="hospital-list">
-        <view class="hospital-card" wx:for="{{hospitals}}" wx:key="hospitalId" bindtap="highlightHospital" data-hospital="{{item}}">
-          <view class="hospital-header">
-            <view class="hospital-name">{{item.name}}</view>
-            <view class="hospital-badge">24h</view>
+    <!-- 医院卡片网格 -->
+    <view class="hospitals-grid" wx:if="{{showOther}}">
+      <view class="hospital-card-mini"
+            wx:for="{{otherHospitals}}"
+            wx:key="hospitalId"
+            bindtap="selectHospital"
+            data-hospital="{{item}}">
+
+        <!-- 卡片头部 -->
+        <view class="card-header-mini">
+          <view class="hospital-badge-group">
+            <text class="badge-24h" wx:if="{{item.is24h}}">24H</text>
+            <text class="badge-emergency" wx:if="{{item.hasEmergency}}">急诊</text>
           </view>
+          <text class="hospital-distance-mini">{{item.distanceDisplay}}</text>
+        </view>
 
-          <view class="hospital-info">
-            <view class="info-row">
-              <text class="info-icon">📍</text>
-              <text class="info-text">{{item.address}}</text>
-            </view>
-            <view class="info-row">
-              <text class="info-icon">📞</text>
-              <text class="info-text">{{item.phone}}</text>
-            </view>
-            <view class="info-row">
-              <text class="info-icon">🚗</text>
-              <text class="info-text">{{item.distance}}m</text>
-            </view>
-            <view class="info-row" wx:if="{{item.rating}}">
-              <text class="info-icon">⭐</text>
-              <text class="info-text">{{item.rating}}分</text>
-            </view>
-          </view>
-
-          <view class="hospital-actions">
-            <button class="action-btn call-btn" bindtap="callHospital" data-phone="{{item.phone}}" catchtap="true">
-              📞 拨打
-            </button>
-            <button class="action-btn navigate-btn" bindtap="navigateToHospital" data-hospital="{{item}}" catchtap="true">
-              📍 导航
-            </button>
+        <!-- 医院信息 -->
+        <view class="hospital-content-mini">
+          <text class="hospital-name-mini">{{item.name}}</text>
+          <view class="hospital-details-mini">
+            <text class="detail-text-mini">📍 {{item.address}}</text>
           </view>
         </view>
+
+        <!-- 快速操作 -->
+        <view class="card-actions-mini">
+          <button class="mini-action-btn call-mini"
+                  catchtap="callHospital"
+                  data-phone="{{item.phone}}"
+                  data-name="{{item.name}}">
+            <text class="mini-btn-icon">📞</text>
+            <text class="mini-btn-text">拨打</text>
+          </button>
+          <button class="mini-action-btn navigate-mini"
+                  catchtap="navigateToHospital"
+                  data-hospital="{{item}}">
+            <text class="mini-btn-icon">🧭</text>
+            <text class="mini-btn-text">导航</text>
+          </button>
+        </view>
       </view>
-    </scroll-view>
+    </view>
+
+    <!-- 展开提示 -->
+    <view class="expand-hint" bindtap="toggleOtherHospitals" wx:if="{{showOther}}">
+      <text class="hint-text">收起列表</text>
+      <text class="hint-icon">▲</text>
+    </view>
   </view>
 
-  <!-- 空状态 -->
-  <view class="empty-state" wx:if="{{hasLocation && hospitals.length === 0}}">
-    <view class="empty-icon">😢</view>
-    <view class="empty-text">附近暂无24小时宠物医院</view>
-    <button class="retry-btn" bindtap="searchAllHospitals">查看所有宠物医院</button>
+  <!-- 紧急提示 -->
+  <view class="emergency-tips">
+    <text class="tips-title">⚠️ 紧急处理建议</text>
+    <view class="tips-list">
+      <text class="tip-item">1. 保持冷静，观察宠物状态</text>
+      <text class="tip-item">2. 拨打医院电话告知情况</text>
+      <text class="tip-item">3. 准备宠物相关医疗记录</text>
+    </view>
   </view>
 
-  <!-- 免责声明 -->
-  <view class="disclaimer">
-    <text>⚠️ 紧急情况请直接前往最近的宠物医院，本工具仅提供导航辅助。</text>
+  <!-- 返回按钮 -->
+  <view class="back-btn" bindtap="goBack">
+    <text class="back-icon">←</text>
+    <text class="back-text">返回首页</text>
   </view>
+
 </view>

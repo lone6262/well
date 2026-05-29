@@ -7,34 +7,98 @@ App({
     openid: null,
     token: null,
     cloudInitialized: false,
-    isGuest: true // 游客模式标识
+    cloudDevelopmentAvailable: true, // 新增：云开发是否可用
+    isGuest: true, // 游客模式标识
+    loginCallbacks: [] // 登录完成回调函数列表
+  },
+
+  // 注册登录完成回调
+  onLoginComplete(callback) {
+    // 安全检查：确保 callback 是函数
+    if (typeof callback !== 'function') {
+      console.error('onLoginComplete 需要传入函数作为参数')
+      return
+    }
+
+    // 确保 loginCallbacks 存在
+    if (!this.globalData.loginCallbacks) {
+      this.globalData.loginCallbacks = []
+    }
+
+    if (this.globalData.openid) {
+      // 如果已经登录，立即执行回调
+      try {
+        callback(this.globalData.openid)
+      } catch (error) {
+        console.error('立即执行登录回调失败:', error)
+      }
+    } else {
+      // 否则添加到回调列表
+      this.globalData.loginCallbacks.push(callback)
+    }
+  },
+
+  // 触发登录完成回调
+  _notifyLoginComplete(openid) {
+    // 安全检查：确保 loginCallbacks 存在且为数组
+    if (!this.globalData.loginCallbacks || !Array.isArray(this.globalData.loginCallbacks)) {
+      console.warn('loginCallbacks 不存在或不是数组，跳过回调执行')
+      return
+    }
+
+    // 执行所有回调
+    this.globalData.loginCallbacks.forEach(callback => {
+      try {
+        callback(openid)
+      } catch (error) {
+        console.error('登录回调执行失败:', error)
+      }
+    })
+
+    // 清空回调列表
+    this.globalData.loginCallbacks = []
   },
 
   onLaunch: function () {
     console.log('=== 小程序启动 - 开始静默登录 ===');
 
-    // 1. 初始化全局数据
-    this.globalData = {
-      userInfo: null,
-      openid: null,
-      token: null,
-      cloudInitialized: false,
-      isGuest: true
-    };
+    // 1. 从本地存储恢复登录状态（优先级最高）
+    this.restoreLoginState();
 
-    // 2. 立即启动云开发
-    if (typeof wx !== 'undefined' && wx.cloud) {
-      this.initCloudDevelopment()
+    // 2. 重置全局数据（保留 loginCallbacks 和已恢复的登录状态）
+    this.globalData.userInfo = this.globalData.userInfo || null;
+    // 不重置openid，使用恢复的值
+    // this.globalData.openid = null; // 注释掉，保持恢复的openid
+    this.globalData.token = null;
+    this.globalData.cloudInitialized = false;
+    // this.globalData.isGuest = true; // 注释掉，保持恢复的登录状态
+    // 确保 loginCallbacks 存在
+    if (!this.globalData.loginCallbacks) {
+      this.globalData.loginCallbacks = [];
     }
 
-    // 3. 先创建模拟用户，解决数据库为空问题
-    this.createMockUser();
+    // 3. 异步初始化云开发（不阻塞启动）
+    if (typeof wx !== 'undefined' && wx.cloud) {
+      // 延迟初始化，让启动界面先显示
+      setTimeout(() => {
+        this.initCloudDevelopment()
+      }, 100);
+    }
 
-    // 4. 执行静默登录（用户方案步骤1-4）
+    // 4. 如果没有openid，才创建模拟用户
+    if (!this.globalData.openid) {
+      setTimeout(() => {
+        this.createMockUser();
+      }, 200);
+    }
+
+    // 5. 执行静默登录（用户方案步骤1-4）
     this.silentLogin();
 
-    // 5. 显示免责声明
-    this.checkFirstLaunch()
+    // 6. 异步检查首次启动（不阻塞启动）
+    setTimeout(() => {
+      this.checkFirstLaunch()
+    }, 300);
   },
 
   // === 先创建模拟用户，确保数据库不为空 ===
@@ -97,6 +161,13 @@ App({
 
     console.log('=== 准备调用silentLogin云函数 ===');
 
+    // 检查云开发是否可用
+    if (!this.globalData.cloudDevelopmentAvailable) {
+      console.log('⚠️ 云开发不可用，使用模拟登录');
+      this.simulatedLogin();
+      return;
+    }
+
     wx.cloud.callFunction({
       name: 'silentLogin',
       data: { code: code },
@@ -124,6 +195,9 @@ App({
           wx.setStorageSync('userInfo', result.data.userInfo);
           wx.setStorageSync('lastLoginTime', Date.now());
 
+          // 通知所有等待登录的页面
+          self._notifyLoginComplete(result.data.openid);
+
           console.log('=== 静默登录完成，用户可无感知使用小程序 ===');
         } else {
           console.error('云函数登录失败，返回结果:', result);
@@ -133,10 +207,49 @@ App({
       fail: function(err) {
         console.error('❌ 调用云函数失败:', err);
         console.error('错误详情:', err.errMsg);
-        console.log('⚠️ 云函数调用失败，进入游客模式，小程序仍可正常使用');
-        // 云函数调用失败，进入游客模式
-        self.enterGuestMode();
+        console.log('⚠️ 云函数调用失败，进入降级模式，小程序仍可正常使用');
+
+        // 标记云开发不可用
+        self.globalData.cloudDevelopmentAvailable = false;
+
+        // 进入降级模式
+        self.simulatedLogin();
       }
+    });
+  },
+
+  // === 新增：模拟登录（降级方案）===
+  simulatedLogin: function() {
+    console.log('=== 启动模拟登录（降级模式）===');
+
+    // 使用已有的模拟openid
+    var mockOpenid = this.globalData.openid || 'mock_' + Date.now() + '_fallback';
+
+    this.globalData.openid = mockOpenid;
+    this.globalData.userInfo = {
+      nickName: '宠物主人',
+      avatarUrl: '',
+      isMember: true  // 降级模式下认为是会员
+    };
+    this.globalData.isGuest = false;
+    this.globalData.cloudDevelopmentAvailable = false;
+
+    // 保存到本地存储
+    wx.setStorageSync('openid', mockOpenid);
+    wx.setStorageSync('userInfo', this.globalData.userInfo);
+    wx.setStorageSync('isGuest', false);
+    wx.setStorageSync('cloudDevelopmentAvailable', false);
+
+    // 通知所有等待登录的页面
+    this._notifyLoginComplete(mockOpenid);
+
+    console.log('✅ 模拟登录完成，降级模式启动');
+    console.log('⚠️ 云开发功能将使用本地模拟数据');
+
+    wx.showToast({
+      title: '启动本地模式',
+      icon: 'none',
+      duration: 2000
     });
   },
 
@@ -274,11 +387,21 @@ App({
         fail: function(err) {
           console.log('❌ 云开发初始化失败:', err);
           this.globalData.cloudInitialized = false;
+
+          // 云开发初始化失败时，确保降级模式可以工作
+          console.log('⚠️ 进入云开发降级模式，使用模拟数据');
+
+          // 通知其他页面云开发不可用
+          this.globalData.cloudDevelopmentAvailable = false;
         }.bind(this)
       });
     } catch (error) {
       console.log('❌ 云开发初始化异常:', error);
       this.globalData.cloudInitialized = false;
+      this.globalData.cloudDevelopmentAvailable = false;
+
+      // 异常时也要确保降级模式
+      console.log('⚠️ 云开发异常，确保降级模式可用');
     }
   },
 
@@ -296,5 +419,81 @@ App({
         }
       });
     }
+  },
+
+  // === 恢复登录状态 ===
+  restoreLoginState: function() {
+    console.log('=== 从本地存储恢复登录状态 ===');
+
+    try {
+      // 恢复openid
+      var storedOpenid = wx.getStorageSync('openid');
+      if (storedOpenid) {
+        this.globalData.openid = storedOpenid;
+        console.log('✅ 恢复openid:', storedOpenid);
+      }
+
+      // 恢复token
+      var storedToken = wx.getStorageSync('token');
+      if (storedToken) {
+        this.globalData.token = storedToken;
+        console.log('✅ 恢复token');
+      }
+
+      // 恢复用户信息
+      var storedUserInfo = wx.getStorageSync('userInfo');
+      if (storedUserInfo) {
+        this.globalData.userInfo = storedUserInfo;
+        console.log('✅ 恢复用户信息');
+      }
+
+      // 恢复游客模式状态
+      var isGuest = wx.getStorageSync('isGuest');
+      if (typeof isGuest === 'boolean') {
+        this.globalData.isGuest = isGuest;
+        console.log('✅ 恢复游客模式状态:', isGuest);
+      }
+
+      // 如果有任何登录信息恢复成功，通知等待登录的页面
+      if (this.globalData.openid) {
+        console.log('✅ 登录状态恢复完成，openid:', this.globalData.openid);
+        // 延迟通知，确保页面已准备好
+        setTimeout(() => {
+          this._notifyLoginComplete(this.globalData.openid);
+        }, 100);
+      }
+    } catch (error) {
+      console.error('❌ 恢复登录状态失败:', error);
+    }
+  },
+
+  // === 统一的登录状态检查方法 ===
+  isLoggedIn: function() {
+    return !!this.globalData.openid;
+  },
+
+  // === 统一的获取openid方法 ===
+  getOpenid: function() {
+    // 如果内存中有，直接返回
+    if (this.globalData.openid) {
+      return this.globalData.openid;
+    }
+
+    // 尝试从本地存储获取
+    var storedOpenid = wx.getStorageSync('openid');
+    if (storedOpenid) {
+      this.globalData.openid = storedOpenid;
+      return storedOpenid;
+    }
+
+    // 如果都没有，检查模拟openid
+    var mockOpenid = wx.getStorageSync('mockOpenid');
+    if (mockOpenid) {
+      this.globalData.openid = mockOpenid;
+      console.log('使用模拟openid:', mockOpenid);
+      return mockOpenid;
+    }
+
+    return null;
   }
 })

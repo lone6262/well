@@ -1,4 +1,4 @@
-// 风险结果页面逻辑 - ES5完全兼容版本
+// 风险结果页面逻辑 - 数据库版本
 var app = getApp()
 
 // 本地风险显示信息函数
@@ -29,19 +29,24 @@ function getRiskDisplayInfo(riskLevel) {
 
 Page({
   data: {
-    recordId: '',
+    assessmentId: '',
     riskLevel: '',
     riskDisplayInfo: {},
     matchedRule: '',
     petInfo: {},
-    selectedSymptoms: []
+    selectedSymptoms: [],
+    assessmentDetail: null,
+    loading: true
   },
 
   onLoad: function(options) {
-    var recordId = options.recordId
+    var assessmentId = options.assessmentId
     var riskLevel = options.riskLevel
+    var petId = options.petId
 
-    if (!recordId || !riskLevel) {
+    console.log('风险结果页面加载, assessmentId:', assessmentId, 'riskLevel:', riskLevel, 'petId:', petId)
+
+    if (!assessmentId || !riskLevel) {
       wx.showToast({
         title: '参数错误',
         icon: 'none'
@@ -57,42 +62,132 @@ Page({
     var riskDisplayInfo = getRiskDisplayInfo(riskLevel)
 
     this.setData({
-      recordId: recordId,
+      assessmentId: assessmentId,
       riskLevel: riskLevel,
-      riskDisplayInfo: riskDisplayInfo
+      riskDisplayInfo: riskDisplayInfo,
+      petId: petId
     })
 
     // 加载评估详情
     this.loadAssessmentDetail()
   },
 
-  // 加载评估详情（ES5兼容版本）
+  // 从云函数加载评估详情和宠物信息
   loadAssessmentDetail: function() {
-    try {
-      // 这里应该调用云函数获取详细信息
-      // 暂时使用模拟数据
-      var mockData = {
-        matchedRule: '高风险-呼吸困难',
-        petInfo: {
-          name: '咪咪',
-          type: 'cat'
-        },
-        selectedSymptoms: ['呼吸困难', '咳嗽']
-      }
+    var self = this
+    var assessmentId = self.data.assessmentId
 
-      this.setData(mockData)
-    } catch (error) {
-      console.error('加载评估详情失败:', error)
+    console.log('从云函数加载评估详情, assessmentId:', assessmentId)
+
+    // 检查云开发是否可用
+    if (!app.globalData.cloudDevelopmentAvailable) {
+      console.log('⚠️ 云开发不可用，使用本地模拟数据')
+      self.loadLocalMockData()
+      return
     }
+
+    wx.cloud.callFunction({
+      name: 'getRecordDetail',
+      data: {
+        openid: app.getOpenid(),
+        assessmentId: assessmentId
+      },
+      success: function(res) {
+        console.log('评估详情加载成功:', res.result)
+
+        if (res.result.code === 0) {
+          var data = res.result.data
+
+          self.setData({
+            assessmentDetail: data.assessmentDetail,
+            matchedRule: data.assessmentDetail.matchedRule || '',
+            selectedSymptoms: data.assessmentDetail.symptoms || [],
+            petInfo: data.petInfo || {},
+            loading: false
+          })
+
+        } else {
+          console.log('评估记录获取失败:', res.result.msg)
+          self.setData({
+            loading: false
+          })
+          wx.showToast({
+            title: res.result.msg || '获取失败',
+            icon: 'none'
+          })
+        }
+      },
+      fail: function(err) {
+        console.error('评估详情加载失败:', err)
+        self.setData({
+          loading: false
+        })
+
+        // 云函数调用失败，尝试本地模拟数据
+        console.log('⚠️ 云函数调用失败，尝试本地模拟数据')
+        app.globalData.cloudDevelopmentAvailable = false
+        self.loadLocalMockData()
+      }
+    })
+  },
+
+  // === 新增：加载本地模拟数据（降级方案）===
+  loadLocalMockData: function() {
+    var self = this
+
+    console.log('=== 使用本地模拟数据 ===')
+
+    var mockData = {
+      assessmentDetail: {
+        _id: self.data.assessmentId,
+        assessmentId: self.data.assessmentId,
+        symptoms: ['食欲不振', '精神萎靡'],
+        riskLevel: self.data.riskLevel,
+        matchedRule: '风险规则匹配示例',
+        assessmentDate: new Date().toISOString()
+      },
+      petInfo: {
+        name: '示例宠物',
+        type: 'cat',
+        breed: '英国短毛猫',
+        age: 2,
+        weight: 4.5
+      }
+    }
+
+    self.setData({
+      assessmentDetail: mockData.assessmentDetail,
+      matchedRule: mockData.assessmentDetail.matchedRule,
+      selectedSymptoms: mockData.assessmentDetail.symptoms,
+      petInfo: mockData.petInfo,
+      loading: false
+    })
+
+    wx.showToast({
+      title: '本地模式（演示数据）',
+      icon: 'none',
+      duration: 1500
+    })
   },
 
   // 查看详细建议
   viewReport: function() {
-    // V1.0版本暂时显示固定建议
+    var advice = this.getAdviceByRiskLevel()
+    var symptoms = this.data.selectedSymptoms
+
+    var content = advice + '\n\n检测到以下症状：\n'
+
+    if (symptoms && symptoms.length > 0) {
+      for (var i = 0; i < symptoms.length; i++) {
+        content += '• ' + symptoms[i] + '\n'
+      }
+    }
+
     wx.showModal({
-      title: '护理建议',
-      content: this.getAdviceByRiskLevel(),
-      showCancel: false
+      title: '详细评估报告',
+      content: content,
+      showCancel: false,
+      confirmText: '知道了'
     })
   },
 
@@ -119,5 +214,18 @@ Page({
     wx.reLaunch({
       url: '/pages/index/index'
     })
+  },
+
+  // 查看历史记录
+  viewHistory: function() {
+    wx.showToast({
+      title: '历史记录功能开发中',
+      icon: 'none'
+    })
+  },
+
+  // 重新评估
+  reassess: function() {
+    wx.navigateBack()
   }
 })

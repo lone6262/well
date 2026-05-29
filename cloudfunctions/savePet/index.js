@@ -43,8 +43,10 @@ exports.main = async (event, context) => {
     breed,
     age,
     weight,
+    gender = 'male',
     vaccineDate = '',
-    dewormDate = ''
+    dewormDate = '',
+    avatar = ''
   } = event;
 
   try {
@@ -87,8 +89,10 @@ exports.main = async (event, context) => {
       breed: breed ? breed.trim() : '未知',
       age: parseInt(age),
       weight: weight ? parseFloat(weight) : null,
+      gender: gender || 'male',
       vaccine_date: vaccineDate || null,
       deworm_date: dewormDate || null,
+      avatar: avatar || '', // 新增头像字段
       updated_at: new Date()
     };
 
@@ -121,7 +125,8 @@ exports.main = async (event, context) => {
         code: RESPONSE_CODE.SUCCESS,
         msg: '宠物信息更新成功',
         data: {
-          petId: petId,
+          _id: petId, // 保留原始_id
+          petId: petId, // 兼容性字段
           ...petData
         }
       };
@@ -142,7 +147,8 @@ exports.main = async (event, context) => {
         code: RESPONSE_CODE.SUCCESS,
         msg: '宠物添加成功',
         data: {
-          petId: insertResult._id,
+          _id: insertResult._id, // 保留原始_id
+          petId: insertResult._id, // 兼容性字段
           ...newPetData
         }
       };

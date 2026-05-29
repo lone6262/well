@@ -1,105 +1,339 @@
-<!--宠物档案页面-->
-<view class="container">
-  <!-- 宠物列表 -->
-  <view class="pet-list" wx:if="{{petList.length > 0}}">
-    <view class="pet-card" wx:for="{{petList}}" wx:key="petId">
-      <view class="pet-header">
-        <view class="pet-avatar">{{item.type === 'cat' ? '🐱' : '🐶'}}</view>
-        <view class="pet-info">
-          <view class="pet-name">{{item.name}}</view>
-          <view class="pet-detail">{{item.type === 'cat' ? '猫' : '狗'}} · {{item.age}}个月</view>
+<!--现代化宠物档案页面 - 强制刷新版本-->
+<view class="profile-page">
+
+  <!-- 顶部标题区域 -->
+  <view class="profile-header">
+    <view class="header-content">
+      <view class="header-left">
+        <text class="header-icon">🐾</text>
+        <view class="header-text">
+          <text class="header-title">宠物档案</text>
+          <text class="header-subtitle">管理爱宠信息，记录健康状态</text>
         </view>
-        <view class="pet-actions">
-          <button class="action-btn edit-btn" data-pet-id="{{item.petId}}" bindtap="editPet">编辑</button>
-          <button class="action-btn delete-btn" data-pet-id="{{item.petId}}" bindtap="deletePet">删除</button>
+      </view>
+      <view class="header-stats">
+        <text class="stats-number">{{petList.length}}</text>
+        <text class="stats-label">只宠物</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 宠物卡片列表 -->
+  <view class="pets-container" wx:if="{{petList.length > 0}}">
+    <view class="pet-card-modern" wx:for="{{petList}}" wx:key="petId">
+      <!-- 卡片头部 -->
+      <view class="pet-card-header">
+        <view class="pet-avatar-section">
+          <view class="pet-avatar-circle">
+            <!-- 真实头像或默认头像 -->
+            <image wx:if="{{item.avatar}}" class="pet-avatar-image" src="{{item.avatar}}" mode="aspectFill"/>
+            <text wx:else class="pet-avatar-large">{{item.type === 'cat' ? '🐱' : '🐶'}}</text>
+          </view>
+          <view class="pet-type-badge {{item.type === 'cat' ? 'cat-badge' : 'dog-badge'}}">
+            {{item.type === 'cat' ? '猫咪' : '狗狗'}}
+          </view>
+        </view>
+        <view class="pet-main-info">
+          <view class="pet-name-row">
+            <text class="pet-name-text">{{item.name}}</text>
+            <view class="pet-gender-badge">{{item.gender === 'male' ? '♂' : '♀'}}</view>
+          </view>
+          <view class="pet-basic-info">
+            <text class="info-tag">{{item.breed || '未知品种'}}</text>
+            <text class="info-separator">·</text>
+            <text class="info-text">{{item.age}}个月</text>
+            <text class="info-separator" wx:if="{{item.weight}}">·</text>
+            <text class="info-text" wx:if="{{item.weight}}">{{item.weight}}kg</text>
+          </view>
+        </view>
+        <view class="pet-card-actions">
+          <view class="action-circle-btn edit-circle" data-pet-id="{{item._id || item.petId}}" bindtap="editPet">
+            <text class="action-icon">✏️</text>
+          </view>
         </view>
       </view>
 
-      <view class="pet-details">
-        <view class="detail-item">
-          <text class="detail-label">品种：</text>
-          <text class="detail-value">{{item.breed}}</text>
+      <!-- 健康状态区域 -->
+      <view class="pet-health-section">
+        <view class="health-item {{item.vaccineDate ? 'health-valid' : 'health-expired'}}">
+          <text class="health-icon">{{item.vaccineDate ? '💉' : '⚠️'}}</text>
+          <view class="health-info">
+            <text class="health-label">疫苗状态</text>
+            <text class="health-date">{{item.vaccineDate || '未接种'}}</text>
+          </view>
         </view>
-        <view class="detail-item" wx:if="{{item.weight}}">
-          <text class="detail-label">体重：</text>
-          <text class="detail-value">{{item.weight}}kg</text>
+        <view class="health-item {{item.dewormDate ? 'health-valid' : 'health-expired'}}">
+          <text class="health-icon">{{item.dewormDate ? '💊' : '⚠️'}}</text>
+          <view class="health-info">
+            <text class="health-label">驱虫状态</text>
+            <text class="health-date">{{item.dewormDate || '未驱虫'}}</text>
+          </view>
         </view>
-        <view class="detail-item" wx:if="{{item.vaccineDate}}">
-          <text class="detail-label">上次疫苗：</text>
-          <text class="detail-value">{{item.vaccineDate}}</text>
+      </view>
+
+      <!-- 底部操作栏 -->
+      <view class="pet-card-footer">
+        <view class="footer-left">
+          <text class="update-time">档案ID: {{item.petId.substr(0, 8)}}...</text>
         </view>
-        <view class="detail-item" wx:if="{{item.dewormDate}}">
-          <text class="detail-label">上次驱虫：</text>
-          <text class="detail-value">{{item.dewormDate}}</text>
+        <view class="footer-right">
+          <view class="delete-force-btn" id="delete-btn-{{item._id || item.petId}}" data-pet-id="{{item._id || item.petId}}" catchtap="deletePet">
+            🗑️ 删除
+          </view>
         </view>
       </view>
     </view>
   </view>
 
-  <!-- 空状态 -->
-  <view class="empty-state" wx:if="{{petList.length === 0}}">
-    <view class="empty-icon">🐾</view>
-    <view class="empty-text">还没有添加宠物</view>
-    <view class="empty-desc">添加您的宠物信息，开始健康管理</view>
+  <!-- 空状态设计 -->
+  <view class="empty-state-modern" wx:if="{{petList.length === 0}}">
+    <view class="empty-illustration">
+      <view class="empty-circle-bg">
+        <text class="empty-emoji-large">🐾</text>
+      </view>
+    </view>
+    <view class="empty-content">
+      <text class="empty-title">还没有宠物档案</text>
+      <text class="empty-description">创建您的宠物档案，开始智能健康管理</text>
+    </view>
+    <view class="empty-features">
+      <view class="feature-item">
+        <text class="feature-icon">📋</text>
+        <text class="feature-text">健康记录</text>
+      </view>
+      <view class="feature-item">
+        <text class="feature-icon">⏰</text>
+        <text class="feature-text">疫苗提醒</text>
+      </view>
+      <view class="feature-item">
+        <text class="feature-icon">🩺</text>
+        <text class="feature-text">症状自查</text>
+      </view>
+    </view>
   </view>
 
-  <!-- 添加按钮 -->
-  <view class="add-section">
-    <button class="add-btn" bindtap="addPet">+ 添加宠物</button>
+  <!-- 浮动添加按钮 -->
+  <view class="floating-add-btn" bindtap="addPet">
+    <view class="add-btn-circle">
+      <text class="add-icon-large">+</text>
+    </view>
+    <text class="add-label">添加宠物</text>
   </view>
+
 </view>
 
-<!-- 添加/编辑宠物弹窗 -->
-<view class="modal {{showModal ? 'active' : ''}}" wx:if="{{showModal}}">
-  <view class="modal-mask" bindtap="closeModal"></view>
-  <view class="modal-content">
-    <view class="modal-title">{{isEdit ? '编辑宠物' : '添加宠物'}}</view>
-
-    <view class="form-section">
-      <view class="form-label">宠物昵称 *</view>
-      <input class="form-input" placeholder="请输入宠物昵称" value="{{formData.name}}" bindinput="onNameInput"/>
-    </view>
-
-    <view class="form-section">
-      <view class="form-label">宠物类型 *</view>
-      <view class="type-selector">
-        <view class="type-option {{formData.type === 'cat' ? 'active' : ''}}" bindtap="selectType" data-type="cat">🐱 猫</view>
-        <view class="type-option {{formData.type === 'dog' ? 'active' : ''}}" bindtap="selectType" data-type="dog">🐶 狗</view>
+<!-- 现代化添加/编辑弹窗 -->
+<view class="modal-overlay {{showModal ? 'modal-show' : ''}}" wx:if="{{showModal}}">
+  <view class="modal-backdrop" bindtap="hideModal"></view>
+  <view class="modal-container-modern">
+    <!-- 弹窗头部 -->
+    <view class="modal-header-modern">
+      <view class="modal-header-content">
+        <text class="modal-title-modern">{{isEdit ? '编辑宠物档案' : '添加宠物档案'}}</text>
+        <text class="modal-subtitle-modern">{{isEdit ? '更新宠物基本信息和健康记录' : '创建新的宠物健康档案'}}</text>
+      </view>
+      <view class="modal-close-btn" bindtap="hideModal">
+        <text class="close-icon">✕</text>
       </view>
     </view>
 
-    <view class="form-section">
-      <view class="form-label">品种</view>
-      <input class="form-input" placeholder="如：英短、金毛等" value="{{formData.breed}}" bindinput="onBreedInput"/>
-    </view>
+    <!-- 弹窗内容 -->
+    <scroll-view class="modal-scroll-content" scroll-y="{{true}}">
+      <!-- 基本信息 -->
+      <view class="form-section-modern">
+        <view class="section-title-modern">
+          <text class="section-icon">📝</text>
+          <text class="section-text">基本信息</text>
+        </view>
 
-    <view class="form-section">
-      <view class="form-label">年龄（月）*</view>
-      <input class="form-input" type="number" placeholder="请输入年龄" value="{{formData.age}}" bindinput="onAgeInput"/>
-    </view>
+        <!-- 宠物头像上传 -->
+        <view class="form-group-modern">
+          <view class="form-label-modern">
+            <text class="label-text">宠物头像</text>
+          </view>
+          <view class="avatar-upload-container">
+            <!-- 头像预览区域 -->
+            <view class="avatar-preview-section">
+              <view class="avatar-preview-box" wx:if="{{avatarPreview}}" bindtap="previewAvatar">
+                <image class="avatar-preview-image" src="{{avatarPreview}}" mode="aspectFill"/>
+                <view class="avatar-preview-overlay">
+                  <text class="preview-overlay-text">点击预览</text>
+                </view>
+              </view>
+              <view class="avatar-placeholder" wx:else>
+                <text class="placeholder-icon">📸</text>
+                <text class="avatar-placeholder-text">暂无头像</text>
+              </view>
+            </view>
 
-    <view class="form-section">
-      <view class="form-label">体重（kg）</view>
-      <input class="form-input" type="digit" placeholder="请输入体重" value="{{formData.weight}}" bindinput="onWeightInput"/>
-    </view>
+            <!-- 上传操作区域 -->
+            <view class="avatar-actions-section">
+              <view class="avatar-action-btn upload-btn" bindtap="chooseAvatar">
+                <text class="action-icon">{{uploadingImage ? '⏳' : '📷'}}</text>
+                <text class="action-text">{{uploadingImage ? '上传中...' : '选择头像'}}</text>
+              </view>
+              <view class="avatar-action-btn delete-btn" wx:if="{{avatarPreview}}" bindtap="removeAvatar">
+                <text class="action-icon">🗑️</text>
+                <text class="action-text">删除</text>
+              </view>
+            </view>
+          </view>
+          <view class="avatar-tips">
+            <text class="tips-text">支持JPG/PNG/WEBP格式，最大5MB，建议尺寸500x500</text>
+          </view>
+        </view>
 
-    <view class="form-section">
-      <view class="form-label">上次疫苗日期</view>
-      <picker mode="date" value="{{formData.vaccineDate}}" bindchange="onVaccineDateChange">
-        <view class="picker-input">{{formData.vaccineDate || '请选择日期'}}</view>
-      </picker>
-    </view>
+        <view class="form-group-modern">
+          <view class="form-label-modern">
+            <text class="label-text">宠物昵称</text>
+            <text class="label-required">*</text>
+          </view>
+          <input class="form-input-modern"
+                 placeholder="给宠物起个可爱的名字"
+                 placeholder-style="color: #999999;"
+                 placeholder-class="placeholder-text"
+                 value="{{formData.name}}"
+                 bindinput="onNameInput"
+                 bindfocus="onInputFocus"
+                 bindblur="onInputBlur"/>
+        </view>
 
-    <view class="form-section">
-      <view class="form-label">上次驱虫日期</view>
-      <picker mode="date" value="{{formData.dewormDate}}" bindchange="onDewormDateChange">
-        <view class="picker-input">{{formData.dewormDate || '请选择日期'}}</view>
-      </picker>
-    </view>
+        <view class="form-group-modern">
+          <view class="form-label-modern">
+            <text class="label-text">宠物类型</text>
+            <text class="label-required">*</text>
+          </view>
+          <view class="type-selector-modern">
+            <view class="type-card-modern {{formData.type === 'cat' ? 'type-active' : ''}}"
+                  bindtap="selectType"
+                  data-type="cat">
+              <text class="type-emoji">🐱</text>
+              <text class="type-name">猫咪</text>
+            </view>
+            <view class="type-card-modern {{formData.type === 'dog' ? 'type-active' : ''}}"
+                  bindtap="selectType"
+                  data-type="dog">
+              <text class="type-emoji">🐶</text>
+              <text class="type-name">狗狗</text>
+            </view>
+          </view>
+        </view>
 
-    <view class="modal-actions">
-      <button class="modal-btn cancel-btn" bindtap="closeModal">取消</button>
-      <button class="modal-btn confirm-btn" bindtap="savePet">保存</button>
+        <view class="form-row-modern">
+          <view class="form-group-modern form-half">
+            <view class="form-label-modern">
+              <text class="label-text">品种</text>
+            </view>
+            <input class="form-input-modern"
+                   placeholder="如：英短"
+                   placeholder-style="color: #999999;"
+                   placeholder-class="placeholder-text"
+                   value="{{formData.breed}}"
+                   bindinput="onBreedInput"
+                   bindfocus="onInputFocus"
+                   bindblur="onInputBlur"/>
+          </view>
+          <view class="form-group-modern form-half">
+            <view class="form-label-modern">
+              <text class="label-text">性别</text>
+            </view>
+            <view class="gender-selector-modern">
+              <view class="gender-option {{formData.gender === 'male' ? 'gender-active' : ''}}"
+                    bindtap="onGenderChange"
+                    data-value="male">
+                <text class="gender-icon">♂</text>
+                <text class="gender-text">公</text>
+              </view>
+              <view class="gender-option {{formData.gender === 'female' ? 'gender-active' : ''}}"
+                    bindtap="onGenderChange"
+                    data-value="female">
+                <text class="gender-icon">♀</text>
+                <text class="gender-text">母</text>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <view class="form-row-modern">
+          <view class="form-group-modern form-half">
+            <view class="form-label-modern">
+              <text class="label-text">年龄（月）</text>
+              <text class="label-required">*</text>
+            </view>
+            <input class="form-input-modern"
+                   type="number"
+                   placeholder="月数"
+                   placeholder-style="color: #999999;"
+                   placeholder-class="placeholder-text"
+                   value="{{formData.age}}"
+                   bindinput="onAgeInput"
+                   bindfocus="onInputFocus"
+                   bindblur="onInputBlur"/>
+          </view>
+          <view class="form-group-modern form-half">
+            <view class="form-label-modern">
+              <text class="label-text">体重（kg）</text>
+            </view>
+            <input class="form-input-modern"
+                   type="digit"
+                   placeholder="体重"
+                   placeholder-style="color: #999999;"
+                   placeholder-class="placeholder-text"
+                   value="{{formData.weight}}"
+                   bindinput="onWeightInput"
+                   bindfocus="onInputFocus"
+                   bindblur="onInputBlur"/>
+          </view>
+        </view>
+      </view>
+
+      <!-- 健康记录 -->
+      <view class="form-section-modern">
+        <view class="section-title-modern">
+          <text class="section-icon">💚</text>
+          <text class="section-text">健康记录</text>
+        </view>
+
+        <view class="form-group-modern">
+          <view class="form-label-modern">
+            <text class="label-text">上次疫苗日期</text>
+          </view>
+          <picker mode="date"
+                  value="{{formData.vaccineDate}}"
+                  bindchange="onVaccineDateChange">
+            <view class="picker-input-modern {{formData.vaccineDate ? 'picker-selected' : ''}}">
+              <text class="picker-text">{{formData.vaccineDate || '请选择疫苗日期'}}</text>
+              <text class="picker-arrow">→</text>
+            </view>
+          </picker>
+        </view>
+
+        <view class="form-group-modern">
+          <view class="form-label-modern">
+            <text class="label-text">上次驱虫日期</text>
+          </view>
+          <picker mode="date"
+                  value="{{formData.dewormDate}}"
+                  bindchange="onDewormDateChange">
+            <view class="picker-input-modern {{formData.dewormDate ? 'picker-selected' : ''}}">
+              <text class="picker-text">{{formData.dewormDate || '请选择驱虫日期'}}</text>
+              <text class="picker-arrow">→</text>
+            </view>
+          </picker>
+        </view>
+      </view>
+    </scroll-view>
+
+    <!-- 弹窗底部操作 -->
+    <view class="modal-footer-modern">
+      <view class="modal-btn-group">
+        <view class="modal-btn-modern modal-cancel" bindtap="hideModal">
+          <text class="modal-btn-text">取消</text>
+        </view>
+        <view class="modal-btn-modern modal-confirm" bindtap="savePet">
+          <text class="modal-btn-text">{{isEdit ? '保存修改' : '创建档案'}}</text>
+        </view>
+      </view>
     </view>
   </view>
 </view>

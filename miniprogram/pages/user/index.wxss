@@ -55,11 +55,39 @@
   width: 100%;
 }
 
+.user-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8rpx;
+}
+
 .user-name-text {
   font-size: var(--text-xl, 40rpx);
   font-weight: var(--font-bold, 700);
   color: var(--text-primary, #212121);
-  margin-bottom: 8rpx;
+  margin-right: 8rpx;
+}
+
+.edit-name-btn {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-gray-100, #f5f5f5);
+  transition: var(--transition, all 200ms ease);
+}
+
+.edit-name-btn:active {
+  transform: scale(0.95);
+  background: var(--bg-gray-200, #e0e0e0);
+}
+
+.edit-icon {
+  font-size: 20rpx;
+  color: var(--text-secondary, #666666);
 }
 
 .user-status-badge {
@@ -73,6 +101,25 @@
   font-size: var(--text-sm, 24rpx);
   color: var(--color-primary-600, #1976d2);
   font-weight: var(--font-medium, 500);
+}
+
+/* === 头像编辑提示 === */
+.avatar-edit-hint {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 0 0 12rpx 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hint-text {
+  font-size: 20rpx;
+  color: #ffffff;
+  font-weight: 500;
 }
 
 /* === 用户操作按钮 === */
