@@ -1,75 +1,108 @@
 // 症状向导页面 - 全新设计逻辑
 var app = getApp()
 
-// 带emoji图标的症状分类数据
+// 症状ID对照表（按文档要求使用英文ID）
+var SYMPTOM_ID_MAP = {
+  // 消化系统
+  '呕吐': 'vomit',
+  '腹泻': 'diarrhea',
+  '便秘': 'constipation',
+  '食欲不振': 'loss_appetite',
+  // 呼吸系统
+  '咳嗽': 'cough',
+  '打喷嚏': 'sneeze',
+  '呼吸困难': 'dyspnea',
+  // 泌尿系统
+  '尿频': 'frequent_urination',
+  '尿血': 'hematuria',
+  '排尿困难': 'difficulty_urination',
+  // 皮肤问题
+  '瘙痒': 'itch',
+  '脱毛': 'hair_loss',
+  '皮疹': 'redness',
+  // 眼部症状
+  '流泪': 'tearing',
+  '眼睛红肿': 'eye_redness',
+  // 耳部问题
+  '耳垢多': 'ear_odor',
+  '甩头抓耳': 'head_shake',
+  // 神经行为
+  '抽搐': 'seizure',
+  '精神萎靡': 'lethargy',
+  // 口腔问题
+  '流口水': 'drool',
+  '牙龈红肿': 'gum_redness'
+}
+
+// 带emoji图标的症状分类数据（使用英文ID）
 var SYMPTOM_CATEGORIES = [
   {
     name: "消化系统",
     emoji: "🍽️",
     symptoms: [
-      { name: "呕吐", key: "呕吐", emoji: "🤮", selected: false },
-      { name: "腹泻", key: "腹泻", emoji: "💩", selected: false },
-      { name: "便秘", key: "便秘", emoji: "🚫", selected: false },
-      { name: "食欲不振", key: "食欲不振", emoji: "🍽️", selected: false }
+      { name: "呕吐", id: "vomit", emoji: "🤮", selected: false },
+      { name: "腹泻", id: "diarrhea", emoji: "💩", selected: false },
+      { name: "便秘", id: "constipation", emoji: "🚫", selected: false },
+      { name: "食欲不振", id: "loss_appetite", emoji: "🍽️", selected: false }
     ]
   },
   {
     name: "呼吸系统",
     emoji: "🫁",
     symptoms: [
-      { name: "咳嗽", key: "咳嗽", emoji: "😷", selected: false },
-      { name: "打喷嚏", key: "打喷嚏", emoji: "🤧", selected: false },
-      { name: "呼吸困难", key: "呼吸困难", emoji: "😮", selected: false }
+      { name: "咳嗽", id: "cough", emoji: "😷", selected: false },
+      { name: "打喷嚏", id: "sneeze", emoji: "🤧", selected: false },
+      { name: "呼吸困难", id: "dyspnea", emoji: "😮", selected: false }
     ]
   },
   {
     name: "泌尿系统",
     emoji: "💧",
     symptoms: [
-      { name: "尿频", key: "尿频", emoji: "🚽", selected: false },
-      { name: "尿血", key: "尿血", emoji: "🩸", selected: false },
-      { name: "排尿困难", key: "排尿困难", emoji: "😣", selected: false }
+      { name: "尿频", id: "frequent_urination", emoji: "🚽", selected: false },
+      { name: "尿血", id: "hematuria", emoji: "🩸", selected: false },
+      { name: "排尿困难", id: "difficulty_urination", emoji: "😣", selected: false }
     ]
   },
   {
     name: "皮肤问题",
     emoji: "🧴",
     symptoms: [
-      { name: "瘙痒", key: "瘙痒", emoji: "🐕", selected: false },
-      { name: "脱毛", key: "脱毛", emoji: "🪮", selected: false },
-      { name: "皮疹", key: "皮疹", emoji: "🔴", selected: false }
+      { name: "瘙痒", id: "itch", emoji: "🐕", selected: false },
+      { name: "脱毛", id: "hair_loss", emoji: "🪮", selected: false },
+      { name: "皮疹", id: "redness", emoji: "🔴", selected: false }
     ]
   },
   {
     name: "眼部症状",
     emoji: "👁️",
     symptoms: [
-      { name: "流泪", key: "流泪", emoji: "😢", selected: false },
-      { name: "红肿", key: "眼睛红肿", emoji: "👁️", selected: false }
+      { name: "流泪", id: "tearing", emoji: "😢", selected: false },
+      { name: "眼睛红肿", id: "eye_redness", emoji: "👁️", selected: false }
     ]
   },
   {
     name: "耳部问题",
     emoji: "👂",
     symptoms: [
-      { name: "耳垢多", key: "耳垢多", emoji: "👂", selected: false },
-      { name: "甩头抓耳", key: "甩头/抓耳", emoji: "👂", selected: false }
+      { name: "耳垢多", id: "ear_odor", emoji: "👂", selected: false },
+      { name: "甩头抓耳", id: "head_shake", emoji: "👂", selected: false }
     ]
   },
   {
     name: "神经行为",
     emoji: "🧠",
     symptoms: [
-      { name: "抽搐", key: "抽搐", emoji: "⚡", selected: false },
-      { name: "精神萎靡", key: "精神萎靡", emoji: "😴", selected: false }
+      { name: "抽搐", id: "seizure", emoji: "⚡", selected: false },
+      { name: "精神萎靡", id: "lethargy", emoji: "😴", selected: false }
     ]
   },
   {
     name: "口腔问题",
     emoji: "🦷",
     symptoms: [
-      { name: "流口水", key: "流口水", emoji: "💧", selected: false },
-      { name: "牙龈问题", key: "牙龈红肿", emoji: "🦷", selected: false }
+      { name: "流口水", id: "drool", emoji: "💧", selected: false },
+      { name: "牙龈红肿", id: "gum_redness", emoji: "🦷", selected: false }
     ]
   }
 ]
@@ -80,7 +113,8 @@ Page({
     petList: [],
     selectedPet: '',
     symptomCategories: SYMPTOM_CATEGORIES,
-    selectedSymptoms: [],
+    selectedSymptoms: [], // 英文ID数组，用于提交
+    selectedSymptomNames: [], // 中文名称数组，用于显示
     description: '',
     activeCategory: 0,
     duration: '',
@@ -225,16 +259,16 @@ Page({
   // === 切换症状选择 ===
   toggleSymptom: function(e) {
     var categoryIndex = parseInt(e.currentTarget.dataset.categoryIndex)
-    var symptomKey = e.currentTarget.dataset.key
+    var symptomId = e.currentTarget.dataset.id
 
     console.log('=== 症状选择操作 ===')
     console.log('分类索引:', categoryIndex)
-    console.log('症状key:', symptomKey)
+    console.log('症状ID:', symptomId)
 
     // 找到对应的症状并切换状态
     var categories = this.data.symptomCategories
     var targetSymptom = categories[categoryIndex].symptoms.find(function(s) {
-      return s.key === symptomKey
+      return s.id === symptomId
     })
 
     if (targetSymptom) {
@@ -245,24 +279,28 @@ Page({
       console.log('症状:', targetSymptom.name)
       console.log('选中状态:', newSelectedState)
 
-      // 更新已选症状列表（遍历所有分类和症状）
-      var selectedSymptoms = []
+      // 更新已选症状ID列表和名称列表
+      var selectedSymptoms = [] // 英文ID用于提交
+      var selectedSymptomNames = [] // 中文名称用于显示
       for (var i = 0; i < categories.length; i++) {
         for (var j = 0; j < categories[i].symptoms.length; j++) {
           if (categories[i].symptoms[j].selected) {
-            selectedSymptoms.push(categories[i].symptoms[j].name)
+            selectedSymptoms.push(categories[i].symptoms[j].id)
+            selectedSymptomNames.push(categories[i].symptoms[j].name)
           }
         }
       }
 
-      console.log('所有已选症状:', selectedSymptoms)
+      console.log('所有已选症状ID:', selectedSymptoms)
+      console.log('所有已选症状名称:', selectedSymptomNames)
 
       // 更新分类选中数量
       var updatedCategories = this.calculateSelectedCount(categories)
 
       this.setData({
         symptomCategories: updatedCategories,
-        selectedSymptoms: selectedSymptoms
+        selectedSymptoms: selectedSymptoms,
+        selectedSymptomNames: selectedSymptomNames
       })
 
       this.updateCanNext()
@@ -279,10 +317,12 @@ Page({
   // === 移除已选症状 ===
   removeSymptom: function(e) {
     var symptomName = e.currentTarget.dataset.symptom
+    var removeIndex = e.currentTarget.dataset.index
 
     // 找到对应的症状并取消选择
     var categories = this.data.symptomCategories
     var selectedSymptoms = this.data.selectedSymptoms
+    var selectedSymptomNames = this.data.selectedSymptomNames
 
     for (var i = 0; i < categories.length; i++) {
       for (var j = 0; j < categories[i].symptoms.length; j++) {
@@ -292,17 +332,17 @@ Page({
       }
     }
 
-    // 从已选列表中移除
-    selectedSymptoms = selectedSymptoms.filter(function(name) {
-      return name !== symptomName
-    })
+    // 从已选列表中移除（同时移除ID和名称）
+    selectedSymptoms.splice(removeIndex, 1)
+    selectedSymptomNames.splice(removeIndex, 1)
 
     // 更新分类选中数量
     var updatedCategories = this.calculateSelectedCount(categories)
 
     this.setData({
       symptomCategories: updatedCategories,
-      selectedSymptoms: selectedSymptoms
+      selectedSymptoms: selectedSymptoms,
+      selectedSymptomNames: selectedSymptomNames
     })
 
     this.updateCanNext()
@@ -327,7 +367,8 @@ Page({
 
     self.setData({
       symptomCategories: updatedCategories,
-      selectedSymptoms: []
+      selectedSymptoms: [],
+      selectedSymptomNames: []
     })
 
     self.updateCanNext()
@@ -342,8 +383,31 @@ Page({
 
   // === 描述输入 ===
   onDescriptionInput: function(e) {
+    var description = e.detail.value
+
+    // 字数限制：≤ 100字
+    if (description.length > 100) {
+      wx.showToast({
+        title: '描述不能超过100字',
+        icon: 'none'
+      })
+      return
+    }
+
+    // 敏感词检查
+    var sensitiveWords = ['激素', '抗生素', '处方药', '剧毒', '致命']
+    for (var i = 0; i < sensitiveWords.length; i++) {
+      if (description.indexOf(sensitiveWords[i]) !== -1) {
+        wx.showToast({
+          title: '描述中包含敏感词汇',
+          icon: 'none'
+        })
+        return
+      }
+    }
+
     this.setData({
-      description: e.detail.value
+      description: description
     })
     this.updateCanNext()
   },
@@ -419,6 +483,59 @@ Page({
   submitAssessment: function() {
     var self = this
 
+    console.log('=== 开始提交评估 ===')
+    console.log('当前步骤:', self.data.currentStep)
+    console.log('已选宠物:', self.data.selectedPet)
+    console.log('已选症状数量:', self.data.selectedSymptoms.length)
+    console.log('已选症状详情:', self.data.selectedSymptoms)
+    console.log('症状分类数据:', self.data.symptomCategories)
+
+    // 基础验证
+    if (!self.data.selectedPet) {
+      wx.showToast({
+        title: '请先选择宠物',
+        icon: 'none'
+      })
+      return
+    }
+
+    // 如果selectedSymptoms为空，尝试从symptomCategories中重新提取
+    if (self.data.selectedSymptoms.length === 0) {
+      console.log('检测到selectedSymptoms为空，尝试从symptomCategories中提取')
+
+      var extractedSymptoms = []
+      var extractedSymptomNames = []
+      var categories = self.data.symptomCategories
+
+      for (var i = 0; i < categories.length; i++) {
+        for (var j = 0; j < categories[i].symptoms.length; j++) {
+          if (categories[i].symptoms[j].selected) {
+            extractedSymptoms.push(categories[i].symptoms[j].id)
+            extractedSymptomNames.push(categories[i].symptoms[j].name)
+          }
+        }
+      }
+
+      console.log('重新提取的症状ID:', extractedSymptoms)
+      console.log('重新提取的症状名称:', extractedSymptomNames)
+
+      if (extractedSymptoms.length > 0) {
+        // 如果从symptomCategories中提取到了症状，更新selectedSymptoms和selectedSymptomNames
+        self.setData({
+          selectedSymptoms: extractedSymptoms,
+          selectedSymptomNames: extractedSymptomNames
+        })
+        console.log('已更新selectedSymptoms和selectedSymptomNames，继续提交')
+      } else {
+        // 如果确实没有选择症状，提示用户
+        wx.showToast({
+          title: '请至少选择一个症状',
+          icon: 'none'
+        })
+        return
+      }
+    }
+
     // 使用统一的登录状态检查
     var openid = app.getOpenid()
     if (!openid) {
@@ -441,34 +558,69 @@ Page({
     console.log('开始提交症状评估，openid:', openid)
 
     var submitData = {
-      openid: openid, // 添加openid字段
+      openid: openid, // 用户标识
       petId: self.data.selectedPet,
-      symptoms: self.data.selectedSymptoms,
-      description: self.data.description,
-      duration: self.data.duration,
-      severity: self.data.severity
+      symptomIds: self.data.selectedSymptoms, // 英文ID数组，用于规则引擎
+      symptomNames: self.data.selectedSymptomNames, // 中文名称数组，用于显示
+      description: self.data.description
     }
 
     console.log('提交数据:', submitData)
 
-    wx.showLoading({ title: '分析中...' })
+    wx.showLoading({ title: '正在评估风险，请稍候...' })
+
+    // 超时设置：5秒
+    var timeout = setTimeout(function() {
+      wx.hideLoading()
+      wx.showToast({
+        title: '网络繁忙，请重试',
+        icon: 'none'
+      })
+    }, 5000)
 
     wx.cloud.callFunction({
       name: 'submitSymptom',
       data: submitData,
       success: function(res) {
+        clearTimeout(timeout)
         wx.hideLoading()
         console.log('症状评估提交结果:', res.result)
 
         if (res.result.code === 0) {
-          wx.showModal({
-            title: '评估完成',
-            content: '症状已提交，AI正在为您分析，请稍候...',
-            showCancel: false,
-            success: function() {
-              self.goBack()
+          // 按照文档要求处理返回结果
+          var data = res.result.data
+          console.log('云函数返回数据:', data)
+
+          // 根据action字段决定跳转行为
+          if (data.action === 'emergency') {
+            // 高风险：直接跳转急救通道
+            try {
+              wx.setStorageSync('fromRiskResult', true)
+              wx.setStorageSync('riskLevel', 'high')
+              wx.setStorageSync('petId', self.data.selectedPet)
+            } catch (e) {
+              console.error('存储参数失败:', e)
             }
-          })
+
+            wx.showModal({
+              title: '高风险警告',
+              content: data.advice,
+              showCancel: false,
+              confirmText: '前往急救',
+              success: function() {
+                wx.switchTab({
+                  url: '/pages/emergency/index'
+                })
+              }
+            })
+          } else {
+            // 中/低风险：跳转到结果页面
+            wx.navigateTo({
+              url: '/pages/risk/result?assessmentId=' + data.recordId +
+                    '&riskLevel=' + data.riskLevel +
+                    '&petId=' + self.data.selectedPet
+            })
+          }
         } else {
           wx.showToast({
             title: res.result.msg || '提交失败',
@@ -477,10 +629,11 @@ Page({
         }
       },
       fail: function(err) {
+        clearTimeout(timeout)
         wx.hideLoading()
         console.error('症状评估提交失败:', err)
         wx.showToast({
-          title: '网络错误，请重试',
+          title: '网络繁忙，请重试',
           icon: 'none'
         })
       }

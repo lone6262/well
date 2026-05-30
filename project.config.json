@@ -42,11 +42,12 @@
     "useCompilerPlugins": false,
     "condition": false,
     "swc": false,
-    "disableSWC": true
+    "disableSWC": true,
+    "enableUpdateWxAppCode": true
   },
   "appid": "wxee33a0c47421db2c",
   "projectname": "pet-symptom-check",
-  "libVersion": "3.0.0",
+  "libVersion": "3.0.2",
   "cloudfunctionTemplateRoot": "",
   "condition": {
     "search": {

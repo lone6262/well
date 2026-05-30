@@ -20,24 +20,12 @@
     </view>
   </view>
 
-  <!-- 紧急呼叫按钮 - 优化排版 -->
-  <view class="emergency-modern">
-    <button class="emergency-btn-modern" bindtap="toEmergency" hover-class="emergency-btn-pressed">
-      <view class="emergency-content">
-        <view class="emergency-left">
-          <view class="emergency-icon-wrapper">
-            <text class="emergency-icon-large pulse-animation">🚨</text>
-          </view>
-          <view class="emergency-text-group">
-            <text class="emergency-title">紧急救助通道</text>
-            <text class="emergency-desc">24小时急救 · 一键求助</text>
-          </view>
-        </view>
-        <view class="emergency-arrow-wrapper">
-          <text class="emergency-arrow-text">立即求助</text>
-          <text class="emergency-arrow">→</text>
-        </view>
-      </view>
+  <!-- 紧急救助通道 - 重新设计版本：简洁大按钮 -->
+  <view class="emergency-wrapper">
+    <button class="emergency-big-btn" bindtap="toEmergency" hover-class="emergency-big-btn-press">
+      <view class="emergency-icon-large pulse-animation">🚨</view>
+      <view class="emergency-title-main">紧急救助</view>
+      <view class="emergency-desc-small">24小时一键求助</view>
     </button>
   </view>
 
@@ -143,6 +131,17 @@
     </view>
 
     <view class="hospitals-preview-list">
+      <!-- 加载状态显示 -->
+      <view wx:if="{{isLoadingHospitals && nearbyHospitals.length === 0}}" class="hospitals-loading">
+        <view class="loading-skeleton">
+          <view class="skeleton-line"></view>
+          <view class="skeleton-line short"></view>
+          <view class="skeleton-line"></view>
+        </view>
+        <text class="loading-text">正在定位附近医院...</text>
+      </view>
+
+      <!-- 医院列表显示 -->
       <view class="hospital-preview-card" wx:for="{{nearbyHospitals}}" wx:key="id" bindtap="navigateToHospital" data-hospital="{{item}}">
         <view class="hospital-info-compact">
           <view class="hospital-name-row">
@@ -158,6 +157,12 @@
         <view class="hospital-action-compact">
           <view class="navigate-icon-compact">🧭</view>
         </view>
+      </view>
+
+      <!-- 空状态显示 -->
+      <view wx:if="{{!isLoadingHospitals && nearbyHospitals.length === 0}}" class="hospitals-empty">
+        <text class="empty-text">暂无附近医院数据</text>
+        <text class="empty-hint">请检查定位权限或稍后重试</text>
       </view>
     </view>
   </view>

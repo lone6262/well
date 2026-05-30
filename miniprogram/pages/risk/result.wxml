@@ -48,15 +48,23 @@
 
   <!-- 操作按钮 -->
   <view class="action-section">
+    <!-- 高风险：只显示急救通道按钮 -->
     <button class="emergency-btn" wx:if="{{riskLevel === 'high'}}" bindtap="goToEmergency">
       🚨 前往急救通道
     </button>
 
-    <button class="primary-btn" wx:if="{{riskLevel !== 'high'}}" bindtap="viewReport">
-      查看详细建议
-    </button>
+    <!-- 中风险：显示查看医院和返回首页按钮 -->
+    <block wx:if="{{riskLevel === 'mid'}}">
+      <button class="primary-btn" bindtap="viewHospitals">
+        🏥 查看附近医院
+      </button>
+      <button class="secondary-btn" bindtap="goHome">
+        返回首页
+      </button>
+    </block>
 
-    <button class="secondary-btn" bindtap="goHome">
+    <!-- 低风险：只显示返回首页按钮 -->
+    <button class="secondary-btn" wx:if="{{riskLevel === 'low'}}" bindtap="goHome">
       返回首页
     </button>
   </view>

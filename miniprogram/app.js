@@ -9,7 +9,12 @@ App({
     cloudInitialized: false,
     cloudDevelopmentAvailable: true, // 新增：云开发是否可用
     isGuest: true, // 游客模式标识
-    loginCallbacks: [] // 登录完成回调函数列表
+    loginCallbacks: [], // 登录完成回调函数列表
+    // 新增：位置权限管理
+    locationPermission: 'unknown', // unknown/granted/denied
+    latitude: null,
+    longitude: null,
+    locationUpdateTime: 0
   },
 
   // 注册登录完成回调
@@ -462,6 +467,30 @@ App({
           this._notifyLoginComplete(this.globalData.openid);
         }, 100);
       }
+
+      // 恢复位置权限状态
+      const storedLocationPermission = wx.getStorageSync('locationPermission');
+      if (storedLocationPermission) {
+        this.globalData.locationPermission = storedLocationPermission;
+        console.log('✅ 恢复位置权限状态:', storedLocationPermission);
+      }
+
+      // 恢复位置缓存
+      const cachedLatitude = wx.getStorageSync('cachedLatitude');
+      const cachedLongitude = wx.getStorageSync('cachedLongitude');
+      const cachedLocationTime = wx.getStorageSync('cachedLocationTime');
+
+      if (cachedLatitude && cachedLongitude && cachedLocationTime) {
+        const LOCATION_CACHE_DURATION = 5 * 60 * 1000; // 5分钟缓存
+        const currentTime = Date.now();
+
+        if ((currentTime - cachedLocationTime) < LOCATION_CACHE_DURATION) {
+          this.globalData.latitude = cachedLatitude;
+          this.globalData.longitude = cachedLongitude;
+          this.globalData.locationUpdateTime = cachedLocationTime;
+          console.log('✅ 恢复位置缓存信息');
+        }
+      }
     } catch (error) {
       console.error('❌ 恢复登录状态失败:', error);
     }
@@ -495,5 +524,189 @@ App({
     }
 
     return null;
+  },
+
+  // === 统一的位置权限管理 ===
+  // 检查位置权限状态
+  checkLocationPermission: function() {
+    return this.globalData.locationPermission;
+  },
+
+  // 请求位置权限（统一入口，只请求一次）
+  requestLocationPermission: function() {
+    const self = this;
+
+    return new Promise(function(resolve) {
+      // 如果已经授权过，直接返回
+      if (self.globalData.locationPermission === 'granted') {
+        console.log('位置权限已授予，跳过请求');
+        resolve({ granted: true });
+        return;
+      }
+
+      // 如果已经拒绝过，不重复请求
+      if (self.globalData.locationPermission === 'denied') {
+        console.log('位置权限已拒绝，不重复请求');
+        resolve({ granted: false });
+        return;
+      }
+
+      console.log('首次请求位置权限...');
+
+      // 使用 wx.getSetting 检查权限状态
+      wx.getSetting({
+        success: (settingRes) => {
+          const hasPermission = settingRes.authSetting['scope.userLocation'];
+
+          if (hasPermission) {
+            // 已有权限
+            console.log('用户已授权位置权限');
+            self.globalData.locationPermission = 'granted';
+            wx.setStorageSync('locationPermission', 'granted');
+            resolve({ granted: true });
+          } else if (hasPermission === false) {
+            // 用户明确拒绝过
+            console.log('用户拒绝过位置权限');
+            self.globalData.locationPermission = 'denied';
+            wx.setStorageSync('locationPermission', 'denied');
+            resolve({ granted: false });
+          } else {
+            // 未请求过权限，发起请求
+            console.log('请求位置权限授权...');
+            wx.authorize({
+              scope: 'scope.userLocation',
+              success: () => {
+                console.log('位置权限授权成功');
+                self.globalData.locationPermission = 'granted';
+                wx.setStorageSync('locationPermission', 'granted');
+                resolve({ granted: true });
+              },
+              fail: () => {
+                console.log('位置权限授权失败');
+                self.globalData.locationPermission = 'denied';
+                wx.setStorageSync('locationPermission', 'denied');
+                resolve({ granted: false });
+              }
+            });
+          }
+        },
+        fail: () => {
+          console.log('获取权限设置失败，尝试直接请求');
+          // 直接尝试授权
+          wx.authorize({
+            scope: 'scope.userLocation',
+            success: () => {
+              console.log('位置权限授权成功');
+              self.globalData.locationPermission = 'granted';
+              wx.setStorageSync('locationPermission', 'granted');
+              resolve({ granted: true });
+            },
+            fail: () => {
+              console.log('位置权限授权失败');
+              self.globalData.locationPermission = 'denied';
+              wx.setStorageSync('locationPermission', 'denied');
+              resolve({ granted: false });
+            }
+          });
+        }
+      });
+    });
+  },
+
+  // 获取用户位置（带缓存）
+  getUserLocation: function(forceRefresh = false) {
+    const self = this;
+    const LOCATION_CACHE_DURATION = 5 * 60 * 1000; // 5分钟缓存
+    const currentTime = Date.now();
+
+    return new Promise(function(resolve) {
+      // 如果有缓存位置且未过期，直接返回
+      if (!forceRefresh &&
+          self.globalData.latitude &&
+          self.globalData.longitude &&
+          self.globalData.locationUpdateTime &&
+          (currentTime - self.globalData.locationUpdateTime) < LOCATION_CACHE_DURATION) {
+
+        console.log('使用缓存位置信息');
+        resolve({
+          latitude: self.globalData.latitude,
+          longitude: self.globalData.longitude
+        });
+        return;
+      }
+
+      // 先请求权限，再获取位置
+      self.requestLocationPermission().then(permissionResult => {
+        if (permissionResult.granted) {
+          // 有权限，获取位置
+          wx.getLocation({
+            type: 'gcj02',
+            success: function(res) {
+              // 保存位置信息到全局数据和本地存储
+              self.globalData.latitude = res.latitude;
+              self.globalData.longitude = res.longitude;
+              self.globalData.locationUpdateTime = currentTime;
+
+              // 持久化到本地存储
+              wx.setStorageSync('cachedLatitude', res.latitude);
+              wx.setStorageSync('cachedLongitude', res.longitude);
+              wx.setStorageSync('cachedLocationTime', currentTime);
+
+              console.log('位置获取成功:', {
+                latitude: res.latitude,
+                longitude: res.longitude,
+                accuracy: res.accuracy
+              });
+
+              resolve({
+                latitude: res.latitude,
+                longitude: res.longitude
+              });
+            },
+            fail: function(error) {
+              console.log('位置获取失败:', error);
+
+              // 使用默认位置（北京天安门）
+              const defaultLocation = {
+                latitude: 39.90469,
+                longitude: 116.40717
+              };
+
+              // 保存默认位置到全局数据和本地存储
+              self.globalData.latitude = defaultLocation.latitude;
+              self.globalData.longitude = defaultLocation.longitude;
+              self.globalData.locationUpdateTime = currentTime;
+
+              // 持久化到本地存储
+              wx.setStorageSync('cachedLatitude', defaultLocation.latitude);
+              wx.setStorageSync('cachedLongitude', defaultLocation.longitude);
+              wx.setStorageSync('cachedLocationTime', currentTime);
+
+              console.log('使用默认位置:', defaultLocation);
+              resolve(defaultLocation);
+            }
+          });
+        } else {
+          // 无权限，使用默认位置
+          const defaultLocation = {
+            latitude: 39.90469,
+            longitude: 116.40717
+          };
+
+          // 保存默认位置到全局数据和本地存储
+          self.globalData.latitude = defaultLocation.latitude;
+          self.globalData.longitude = defaultLocation.longitude;
+          self.globalData.locationUpdateTime = currentTime;
+
+          // 持久化到本地存储
+          wx.setStorageSync('cachedLatitude', defaultLocation.latitude);
+          wx.setStorageSync('cachedLongitude', defaultLocation.longitude);
+          wx.setStorageSync('cachedLocationTime', currentTime);
+
+          console.log('无位置权限，使用默认位置:', defaultLocation);
+          resolve(defaultLocation);
+        }
+      });
+    });
   }
 })

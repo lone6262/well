@@ -106,7 +106,8 @@ exports.main = async (event, context) => {
         assessmentId: recordData._id,
         petId: recordData.pet_id,
         userId: recordData.user_id,
-        symptoms: recordData.symptoms || [],
+        symptoms: recordData.symptoms || [],           // 英文ID（用于规则引擎）
+        symptom_names: recordData.symptom_names || recordData.symptoms || [],  // 中文名称（用于显示）
         riskLevel: recordData.risk_level,
         matchedRule: recordData.matched_rule || '',
         assessmentDate: recordData.created_at,

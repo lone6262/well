@@ -80,13 +80,33 @@ Page({
         console.log('宠物列表加载成功:', res.result)
 
         if (res.result.code === 0) {
+          // 数据映射：确保每个宠物都有petId字段
+          var petList = (res.result.data.petList || []).map(function(pet) {
+            return {
+              _id: pet._id || pet.petId,
+              petId: pet.petId || pet._id, // 确保petId字段存在
+              name: pet.name,
+              type: pet.type,
+              breed: pet.breed,
+              age: pet.age,
+              weight: pet.weight,
+              gender: pet.gender,
+              vaccineDate: pet.vaccineDate,
+              dewormDate: pet.dewormDate,
+              avatar: pet.avatar,
+              createdAt: pet.createdAt
+            }
+          })
+
+          console.log('✅ 数据映射完成，petList:', petList)
+
           self.setData({
-            petList: res.result.data.petList || [],
+            petList: petList,
             loading: false
           })
 
           // 如果没有宠物，显示添加提示
-          if ((res.result.data.petList || []).length === 0) {
+          if (petList.length === 0) {
             self.showEmptyState()
           }
 
@@ -132,8 +152,27 @@ Page({
 
     if (localPets.length > 0) {
       console.log('✅ 从本地存储加载宠物数据:', localPets)
+
+      // 数据映射：确保每个宠物都有petId字段
+      var mappedPets = localPets.map(function(pet) {
+        return {
+          _id: pet._id || pet.petId,
+          petId: pet.petId || pet._id, // 确保petId字段存在
+          name: pet.name,
+          type: pet.type,
+          breed: pet.breed,
+          age: pet.age,
+          weight: pet.weight,
+          gender: pet.gender,
+          vaccineDate: pet.vaccineDate,
+          dewormDate: pet.dewormDate,
+          avatar: pet.avatar,
+          createdAt: pet.createdAt
+        }
+      })
+
       self.setData({
-        petList: localPets,
+        petList: mappedPets,
         loading: false
       })
 

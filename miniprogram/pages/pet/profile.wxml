@@ -74,7 +74,7 @@
       <!-- 底部操作栏 -->
       <view class="pet-card-footer">
         <view class="footer-left">
-          <text class="update-time">档案ID: {{item.petId.substr(0, 8)}}...</text>
+          <text class="update-time">档案ID: {{item.petId ? item.petId.substr(0, 8) : '未设置'}}...</text>
         </view>
         <view class="footer-right">
           <view class="delete-force-btn" id="delete-btn-{{item._id || item.petId}}" data-pet-id="{{item._id || item.petId}}" catchtap="deletePet">

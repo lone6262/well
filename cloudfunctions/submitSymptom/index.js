@@ -1,194 +1,5 @@
-// 云函数入口文件
+// 云函数入口文件 - 严格按规则引擎文档实现
 const cloud = require('wx-server-sdk');
-
-// 本地常量定义
-const COLLECTIONS = {
-  USERS: 'users',
-  PETS: 'pets',
-  SYMPTOM_RECORDS: 'symptom_records',
-  AI_CACHE: 'ai_cache',
-  ORDERS: 'orders',
-  HOSPITALS: 'hospitals'
-};
-
-const RESPONSE_CODE = {
-  SUCCESS: 0,
-  ERROR: -1,
-  UNAUTHORIZED: 401,
-  NOT_FOUND: 404,
-  SERVER_ERROR: 500
-};
-
-// 本地规则引擎定义
-const riskRules = {
-  rules: [
-    {
-      name: "高风险-抽搐",
-      symptoms: ["抽搐"],
-      condition: "any",
-      risk: "high",
-      action: "emergency"
-    },
-    {
-      name: "高风险-呼吸困难",
-      symptoms: ["呼吸困难"],
-      condition: "any",
-      risk: "high",
-      action: "emergency"
-    },
-    {
-      name: "高风险-尿血或排尿困难",
-      symptoms: ["尿血", "排尿困难"],
-      condition: "any",
-      risk: "high",
-      action: "emergency"
-    },
-    {
-      name: "高风险-呕吐+腹泻+精神萎靡",
-      symptoms: ["呕吐", "腹泻", "精神萎靡"],
-      condition: "all",
-      risk: "high",
-      action: "emergency"
-    },
-    {
-      name: "中风险-单独呕吐",
-      symptoms: ["呕吐"],
-      condition: "any",
-      risk: "mid"
-    },
-    {
-      name: "中风险-单独腹泻",
-      symptoms: ["腹泻"],
-      condition: "any",
-      risk: "mid"
-    },
-    {
-      name: "中风险-咳嗽或打喷嚏",
-      symptoms: ["咳嗽", "打喷嚏"],
-      condition: "any",
-      risk: "mid"
-    },
-    {
-      name: "中风险-食欲不振",
-      symptoms: ["食欲不振"],
-      condition: "any",
-      risk: "mid"
-    },
-    {
-      name: "中风险-瘙痒+脱毛",
-      symptoms: ["瘙痒", "脱毛"],
-      condition: "all",
-      risk: "mid"
-    },
-    {
-      name: "中风险-耳垢多+甩头",
-      symptoms: ["耳垢多/异味", "甩头/抓耳"],
-      condition: "all",
-      risk: "mid"
-    },
-    {
-      name: "中风险-流泪多+眼睛红肿",
-      symptoms: ["流泪/眼屎多", "眼睛红肿"],
-      condition: "all",
-      risk: "mid"
-    },
-    {
-      name: "低风险-便秘",
-      symptoms: ["便秘"],
-      condition: "any",
-      risk: "low"
-    },
-    {
-      name: "低风险-流口水",
-      symptoms: ["流口水"],
-      condition: "any",
-      risk: "low"
-    },
-    {
-      name: "低风险-牙龈红肿",
-      symptoms: ["牙龈红肿/出血"],
-      condition: "any",
-      risk: "low"
-    },
-    {
-      name: "低风险-其他轻微症状",
-      symptoms: [],
-      condition: "default",
-      risk: "low"
-    }
-  ]
-};
-
-/**
- * 评估宠物症状风险等级
- */
-function evaluateRisk(symptomIds, petInfo = {}) {
-  // 按优先级顺序匹配规则（高风险优先）
-  for (let rule of riskRules.rules) {
-    if (rule.condition === 'any') {
-      // 任意症状匹配即触发
-      if (rule.symptoms.some(symptom => symptomIds.includes(symptom))) {
-        return {
-          riskLevel: rule.risk,
-          matchedRule: rule.name,
-          action: rule.action || 'normal'
-        };
-      }
-    } else if (rule.condition === 'all') {
-      // 所有症状必须同时存在
-      if (rule.symptoms.length > 0 &&
-          rule.symptoms.every(symptom => symptomIds.includes(symptom))) {
-        return {
-          riskLevel: rule.risk,
-          matchedRule: rule.name,
-          action: rule.action || 'normal'
-        };
-      }
-    } else if (rule.condition === 'default') {
-      // 默认规则（当其他规则都不匹配时）
-      return {
-        riskLevel: rule.risk,
-        matchedRule: rule.name,
-        action: rule.action || 'normal'
-      };
-    }
-  }
-
-  // 如果没有匹配到任何规则，默认低风险
-  return {
-    riskLevel: 'low',
-    matchedRule: '默认规则',
-    action: 'normal'
-  };
-}
-
-/**
- * 获取风险等级的显示信息
- */
-function getRiskDisplayInfo(riskLevel) {
-  const riskInfo = {
-    low: {
-      color: '#52c41a',  // 绿色
-      icon: '🟢',
-      title: '低风险',
-      description: '居家观察，注意宠物状态变化'
-    },
-    mid: {
-      color: '#faad14',  // 黄色
-      icon: '🟡',
-      title: '中风险',
-      description: '建议线上问诊或近期就医'
-    },
-    high: {
-      color: '#f5222d',  // 红色
-      icon: '🔴',
-      title: '高风险',
-      description: '立即就医，不要拖延'
-    }
-  };
-
-  return riskInfo[riskLevel] || riskInfo.low;
-}
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -196,115 +7,242 @@ cloud.init({
 
 const db = cloud.database();
 
+// ========== 常量定义 ==========
+
+// 高风险症状ID列表（熔断词表）
+const HIGH_RISK_SYMPTOMS = [
+  'seizure',           // 抽搐
+  'coma',             // 昏迷
+  'dyspnea',          // 呼吸困难
+  'bleeding',         // 持续出血
+  'hematuria',        // 尿血
+  'paralysis',        // 瘫痪
+  'collapse',         // 虚脱
+  'cyanosis'          // 发绀
+];
+
+// 中风险关键词（用于描述文本分析）
+const MID_RISK_KEYWORDS = [
+  '反复', '持续', '加重', '多次', '不断',
+  '频繁', '越来越', '恶化', '未见好转', '超过'
+];
+
+// 特定症状组（用于中风险判断）
+const SPECIFIC_SYMPTOMS = {
+  VOMIT_GROUP: ['vomit', 'diarrhea', 'fever'],  // 呕吐、腹泻、发热
+  LETHARGY: 'lethargy'  // 精神萎靡
+};
+
+// ========== 规则引擎核心函数 ==========
+
 /**
- * 提交症状自查记录
+ * 规则引擎 - 三步判断法
+ * 第一步：高风险熔断检查
+ * 第二步：中风险条件检查
+ * 第三步：默认低风险
  */
+function evaluateRisk(symptomIds, description = '') {
+  const symptomCount = symptomIds.length;
+
+  console.log('=== 规则引擎开始评估 ===');
+  console.log('症状ID列表:', symptomIds);
+  console.log('症状数量:', symptomCount);
+  console.log('描述:', description);
+
+  // 第一步：高风险熔断检查（优先级最高）
+  const hasHighRisk = symptomIds.some(id => HIGH_RISK_SYMPTOMS.includes(id));
+  if (hasHighRisk) {
+    // 找到具体的高风险症状名称
+    const highRiskSymptom = symptomIds.find(id => HIGH_RISK_SYMPTOMS.includes(id));
+    const symptomNames = {
+      'seizure': '抽搐',
+      'coma': '昏迷',
+      'dyspnea': '呼吸困难',
+      'bleeding': '持续出血',
+      'hematuria': '尿血',
+      'paralysis': '瘫痪',
+      'collapse': '虚脱',
+      'cyanosis': '发绀'
+    };
+
+    console.log('✗ 命中高风险规则');
+    return {
+      riskLevel: 'high',
+      advice: '高风险，建议立即就医！请勿拖延，尽快前往最近的宠物医院。',
+      action: 'emergency',
+      matchedRule: `检测到高风险症状：${symptomNames[highRiskSymptom] || '高风险症状'}`
+    };
+  }
+
+  // 第二步：中风险条件检查
+  let isMidRisk = false;
+  let matchedRuleText = '';
+
+  // R1: 症状数量 ≥3，且包含呕吐或腹泻或发热
+  if (symptomCount >= 3) {
+    const hasSpecificSymptom = symptomIds.some(id =>
+      SPECIFIC_SYMPTOMS.VOMIT_GROUP.includes(id)
+    );
+    if (hasSpecificSymptom) {
+      matchedRuleText = '中风险：症状数量≥3且包含呕吐/腹泻/发热';
+      console.log('✓ 命中中风险规则R1');
+      isMidRisk = true;
+    }
+  }
+
+  // R2: 症状数量 ≥3，且描述包含关键词
+  if (!isMidRisk && symptomCount >= 3) {
+    const hasKeyword = MID_RISK_KEYWORDS.some(keyword =>
+      description.includes(keyword)
+    );
+    if (hasKeyword) {
+      matchedRuleText = '中风险：症状数量≥3且描述包含反复/持续/加重等关键词';
+      console.log('✓ 命中中风险规则R2');
+      isMidRisk = true;
+    }
+  }
+
+  // R3: 症状数量 ≥4
+  if (!isMidRisk && symptomCount >= 4) {
+    matchedRuleText = '中风险：症状数量≥4（多系统症状）';
+    console.log('✓ 命中中风险规则R3');
+    isMidRisk = true;
+  }
+
+  // R4: 包含精神萎靡 + 任意2个其他症状
+  if (!isMidRisk) {
+    const hasLethargy = symptomIds.includes(SPECIFIC_SYMPTOMS.LETHARGY);
+    if (hasLethargy && symptomCount >= 2) {
+      matchedRuleText = '中风险：精神萎靡+其他症状（可能状况不佳）';
+      console.log('✓ 命中中风险规则R4');
+      isMidRisk = true;
+    }
+  }
+
+  if (isMidRisk) {
+    return {
+      riskLevel: 'mid',
+      advice: '中风险，建议24小时内就医观察。请记录症状变化，必要时拍照留存。',
+      action: 'hospital_list',
+      matchedRule: matchedRuleText || '中风险：多症状组合'
+    };
+  }
+
+  // 第三步：默认低风险
+  console.log('✓ 默认低风险');
+  const symptomText = symptomCount === 1 ? '单个症状' : `${symptomCount}个轻微症状`;
+  return {
+    riskLevel: 'low',
+    advice: '低风险，建议继续观察。保持正常饮食饮水，记录症状变化。如症状持续或加重，请及时就医。',
+    action: 'home',
+    matchedRule: `低风险：${symptomText}未达到中高风险标准`
+  };
+}
+
+/**
+ * 保存记录并返回结果
+ */
+async function saveAndReturn(openid, petId, symptomIds, symptomNames, description, evaluationResult) {
+  try {
+    // 构建记录数据（使用user_id字段与其他云函数保持一致）
+    const recordData = {
+      user_id: openid,  // 使用user_id而非openid，与getRecordDetail保持一致
+      pet_id: petId,
+      symptoms: symptomIds,  // 存储症状ID列表（英文）
+      symptom_names: symptomNames || symptomIds,  // 存储症状名称（中文），如果没有则使用ID
+      description: description,
+      risk_level: evaluationResult.riskLevel,
+      matched_rule: evaluationResult.matchedRule || '规则引擎评估',  // 使用规则引擎返回的具体规则名称
+      status: 'completed',
+      created_at: new Date()
+    };
+
+    console.log('=== 准备保存记录 ===');
+    console.log('记录数据:', recordData);
+
+    // 保存到数据库
+    const saveResult = await db.collection('symptom_records').add({
+      data: recordData
+    });
+
+    console.log('✅ 记录保存成功，ID:', saveResult._id);
+
+    // 返回结果（按文档格式，使用中文名称显示）
+    const displayName = symptomNames && symptomNames.length > 0 ? symptomNames : symptomIds;
+    return {
+      code: 0,
+      msg: '评估完成',
+      data: {
+        recordId: saveResult._id,
+        riskLevel: evaluationResult.riskLevel,
+        advice: evaluationResult.advice,
+        action: evaluationResult.action,
+        symptomSummary: displayName.join('、')  // 使用中文名称显示
+      }
+    };
+
+  } catch (error) {
+    console.error('❌ 记录保存失败:', error);
+    return {
+      code: 500,
+      msg: '系统繁忙，请重试',
+      data: {
+        error: error.message
+      }
+    };
+  }
+}
+
+// ========== 云函数入口 ==========
+
 exports.main = async (event, context) => {
-  const { petId, symptoms, description = '', openid } = event;
+  console.log('=== submitSymptom 云函数调用 ===');
+  console.log('入参:', event);
+
+  // 从前端传递的参数中获取所有数据
+  const { petId, symptomIds, symptomNames, description = '', openid } = event;
+
+  // 使用前端传递的openid，而不是重新获取
+  if (!openid) {
+    console.log('❌ 未获取到openid');
+    return {
+      code: 401,
+      msg: '用户未登录',
+      data: {}
+    };
+  }
+
+  console.log('✅ 用户openid:', openid);
 
   try {
     // 1. 参数校验
-    if (!openid) {
-      return {
-        code: RESPONSE_CODE.UNAUTHORIZED,
-        msg: '用户未登录',
-        data: {}
-      };
-    }
-
     if (!petId) {
       return {
-        code: RESPONSE_CODE.ERROR,
+        code: 400,
         msg: '请选择宠物',
         data: {}
       };
     }
 
-    if (!symptoms || symptoms.length === 0) {
+    if (!symptomIds || symptomIds.length === 0) {
       return {
-        code: RESPONSE_CODE.ERROR,
+        code: 400,
         msg: '请至少选择一个症状',
         data: {}
       };
     }
 
-    // 2. 获取宠物信息
-    const petResult = await db.collection(COLLECTIONS.PETS).doc(petId).get();
-    if (!petResult.data) {
-      return {
-        code: RESPONSE_CODE.NOT_FOUND,
-        msg: '宠物信息不存在',
-        data: {}
-      };
-    }
+    // 2. 调用规则引擎评估风险
+    const evaluationResult = evaluateRisk(symptomIds, description);
+    console.log('评估结果:', evaluationResult);
 
-    const petInfo = petResult.data;
-    // 验证宠物是否属于当前用户
-    if (petInfo.user_id !== openid) {
-      return {
-        code: RESPONSE_CODE.UNAUTHORIZED,
-        msg: '无权操作此宠物信息',
-        data: {}
-      };
-    }
-
-    // 3. 调用规则引擎评估风险
-    const evaluationResult = evaluateRisk(symptoms, {
-      species: petInfo.type,
-      ageMonths: petInfo.age
-    });
-
-    // 4. 获取风险显示信息
-    const riskDisplayInfo = getRiskDisplayInfo(evaluationResult.riskLevel);
-
-    // 5. 保存自查记录到数据库
-    const recordData = {
-      user_id: openid,
-      pet_id: petId,
-      pet_info: {
-        name: petInfo.name,
-        type: petInfo.type,
-        breed: petInfo.breed,
-        age: petInfo.age
-      },
-      symptoms: symptoms,
-      symptom_names: symptoms,
-      description: description,
-      risk_level: evaluationResult.riskLevel,
-      matched_rule: evaluationResult.matchedRule,
-      action: evaluationResult.action,
-      ai_response: null,
-      report_paid: false,
-      report_url: null,
-      created_at: new Date()
-    };
-
-    const insertResult = await db.collection(COLLECTIONS.SYMPTOM_RECORDS).add({
-      data: recordData
-    });
-
-    // 6. 返回评估结果
-    return {
-      code: RESPONSE_CODE.SUCCESS,
-      msg: '评估完成',
-      data: {
-        recordId: insertResult._id,
-        riskLevel: evaluationResult.riskLevel,
-        riskDisplayInfo: riskDisplayInfo,
-        matchedRule: evaluationResult.matchedRule,
-        action: evaluationResult.action,
-        petInfo: {
-          name: petInfo.name,
-          type: petInfo.type
-        },
-        createdAt: recordData.created_at
-      }
-    };
+    // 3. 保存记录并返回结果（传递symptomNames用于显示）
+    return await saveAndReturn(openid, petId, symptomIds, symptomNames, description, evaluationResult);
 
   } catch (error) {
-    console.error('提交症状评估失败:', error);
+    console.error('❌ 云函数执行失败:', error);
     return {
-      code: RESPONSE_CODE.SERVER_ERROR,
+      code: 500,
       msg: '服务器错误，请稍后重试',
       data: {
         error: error.message

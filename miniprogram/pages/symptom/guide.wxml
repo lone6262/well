@@ -53,8 +53,8 @@
       </view>
     </view>
 
-    <view class="selected-info" wx:if="{{selectedSymptoms.length > 0}}">
-      <text>已选 {{selectedSymptoms.length}} 个症状</text>
+    <view class="selected-info" wx:if="{{selectedSymptomNames.length > 0}}">
+      <text>已选 {{selectedSymptomNames.length}} 个症状</text>
       <text class="clear-btn" bindtap="clearAllSymptoms">清空</text>
     </view>
 
@@ -69,10 +69,10 @@
           <view class="symptom-item {{symptom.selected ? 'selected' : ''}}"
                 wx:for="{{category.symptoms}}"
                 wx:for-item="symptom"
-                wx:key="key"
+                wx:key="id"
                 bindtap="toggleSymptom"
                 data-category-index="{{catIndex}}"
-                data-key="{{symptom.key}}">
+                data-id="{{symptom.id}}">
             <text class="symptom-emoji">{{symptom.emoji}}</text>
             <text class="symptom-name">{{symptom.name}}</text>
             <text class="symptom-check" wx:if="{{symptom.selected}}">✓</text>
@@ -81,11 +81,11 @@
       </view>
     </scroll-view>
 
-    <view class="selected-tags" wx:if="{{selectedSymptoms.length > 0}}">
+    <view class="selected-tags" wx:if="{{selectedSymptomNames.length > 0}}">
       <scroll-view class="tags-scroll" scroll-x="{{true}}" show-scrollbar="{{false}}">
-        <view class="tag" wx:for="{{selectedSymptoms}}" wx:key="*this">
+        <view class="tag" wx:for="{{selectedSymptomNames}}" wx:key="*this">
           <text>{{item}}</text>
-          <text class="tag-close" catchtap="removeSymptom" data-symptom="{{item}}">×</text>
+          <text class="tag-close" catchtap="removeSymptom" data-symptom="{{item}}" data-index="{{index}}">×</text>
         </view>
       </scroll-view>
     </view>

@@ -101,7 +101,7 @@ Page({
           self.setData({
             assessmentDetail: data.assessmentDetail,
             matchedRule: data.assessmentDetail.matchedRule || '',
-            selectedSymptoms: data.assessmentDetail.symptoms || [],
+            selectedSymptoms: data.assessmentDetail.symptom_names || data.assessmentDetail.symptoms || [], // 优先使用symptom_names（中文名称）
             petInfo: data.petInfo || {},
             loading: false
           })
@@ -191,6 +191,13 @@ Page({
     })
   },
 
+  // 查看附近医院
+  viewHospitals: function() {
+    wx.switchTab({
+      url: '/pages/hospital/list'
+    })
+  },
+
   // 根据风险等级获取建议
   getAdviceByRiskLevel: function() {
     var adviceMap = {
@@ -202,8 +209,17 @@ Page({
     return adviceMap[this.data.riskLevel] || '请咨询专业兽医'
   },
 
-  // 前往急救通道
+  // 前往急救通道（高风险）
   goToEmergency: function() {
+    // 根据文档传递参数
+    try {
+      wx.setStorageSync('fromRiskResult', true)
+      wx.setStorageSync('riskLevel', 'high')
+      wx.setStorageSync('petId', this.data.petId)
+    } catch (e) {
+      console.error('存储参数失败:', e)
+    }
+
     wx.switchTab({
       url: '/pages/emergency/index'
     })
@@ -211,7 +227,7 @@ Page({
 
   // 返回首页
   goHome: function() {
-    wx.reLaunch({
+    wx.switchTab({
       url: '/pages/index/index'
     })
   },

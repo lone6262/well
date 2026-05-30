@@ -3,20 +3,17 @@ const app = getApp()
 
 Page({
   data: {
-    nearbyHospitals: [
-      { id: 1, name: '爱心宠物医院', distance: 0.5, address: '朝阳区望京街道', is24h: true },
-      { id: 2, name: '宠物中心医院', distance: 1.2, address: '海淀区中关村大街', is24h: true },
-      { id: 3, name: '萌宠宠物诊所', distance: 2.0, address: '丰台区方庄地区', is24h: false }
-    ],
+    nearbyHospitals: [],  // 第一次加载时不显示预置数据，避免误导用户
     petsList: [],
     dailyTip: '定期体检是预防疾病的关键，建议每年至少为宠物进行一次全面体检。',
     loadingPets: false,
     userInfo: {
       avatarUrl: ''
     },
-    lastUpdateTime: '更新中...',
-    isLoadingHospitals: false,
-    hospitalLoadTimer: null
+    lastUpdateTime: '正在加载...',  // 明确标注正在加载状态
+    isLoadingHospitals: true,  // 第一次加载时标记为加载中
+    isLoadingLocation: false,  // 防止重复请求位置权限
+    lastUpdateTimeTimestamp: 0  // 记录医院数据最后更新时间
   },
 
   onLoad() {
@@ -32,10 +29,8 @@ Page({
       self.lastLoadedOpenid = openid
     })
 
-    // 延迟加载附近医院，不阻塞首页显示
-    setTimeout(() => {
-      self.loadNearbyHospitals()
-    }, 500)
+    // 移除这里的重复调用，只在onShow中调用
+    console.log('首页加载完成，等待onShow触发医院数据加载')
   },
 
   onShow() {
@@ -54,18 +49,19 @@ Page({
       self.lastLoadedOpenid = app.globalData.openid
     }
 
-    // 防抖：避免频繁刷新附近医院数据
-    if (self.data.hospitalLoadTimer) {
-      clearTimeout(self.data.hospitalLoadTimer)
-    }
+    // 优化：只在首次加载或5分钟后才刷新医院数据
+    const now = Date.now()
+    const lastUpdateTime = self.data.lastUpdateTimeTimestamp || 0
+    const REFRESH_INTERVAL = 5 * 60 * 1000 // 5分钟刷新间隔
 
-    const timer = setTimeout(() => {
+    if (now - lastUpdateTime > REFRESH_INTERVAL || !self.data.nearbyHospitals.length) {
+      console.log('刷新附近医院数据')
       self.loadNearbyHospitals()
-    }, 2000) // 2秒防抖
-
-    self.setData({
-      hospitalLoadTimer: timer
-    })
+      // 记录刷新时间
+      self.setData({ lastUpdateTimeTimestamp: now })
+    } else {
+      console.log('医院数据仍在有效期内，跳过刷新')
+    }
   },
 
   // 加载用户信息
@@ -183,8 +179,7 @@ Page({
 
           console.log('✅ 首页宠物数据更新完成:', pets)
 
-          // 同时加载附近医院数据
-          self.loadNearbyHospitals()
+          // 移除重复调用，医院数据由onShow统一管理
         } else {
           console.error('❌ 宠物列表返回错误:', res.result.msg)
           self.setData({
@@ -213,21 +208,29 @@ Page({
     })
   },
 
-  // 加载附近医院数据（实时） - 增强版
+  // 加载附近医院数据（实时） - 使用统一权限管理，防止重复请求
   loadNearbyHospitals() {
     const self = this
+
+    // 防止重复请求位置权限
+    if (self.data.isLoadingLocation) {
+      console.log('⚠️ 位置请求正在进行中，跳过重复请求')
+      return
+    }
+
     const mapService = require('../../utils/mapService.js')
 
     console.log('🔄 开始加载实时附近医院数据...')
 
-    // 显示加载状态
+    // 标记正在请求位置
     self.setData({
+      isLoadingLocation: true,
       isLoadingHospitals: true,
-      lastUpdateTime: '更新中...'
+      lastUpdateTime: '正在定位...'
     })
 
-    // 首先获取用户位置
-    this.getUserLocationForHospitals().then(location => {
+    // 使用app.js的统一权限管理获取用户位置
+    app.getUserLocation().then(location => {
       console.log('✅ 用户位置获取成功:', location)
 
       // 调用地图服务搜索附近医院
@@ -285,7 +288,9 @@ Page({
       self.setData({
         nearbyHospitals: nearbyHospitals,
         lastUpdateTime: timeString,
-        isLoadingHospitals: false
+        isLoadingHospitals: false,
+        isLoadingLocation: false,  // 重置请求状态
+        lastUpdateTimeTimestamp: Date.now()  // 记录更新时间
       })
 
       console.log('✅ 附近医院数据实时加载完成:', nearbyHospitals)
@@ -300,6 +305,12 @@ Page({
     }).catch(error => {
       console.log('❌ 附近医院实时数据加载失败:', error)
 
+      // 重置请求状态
+      self.setData({
+        isLoadingLocation: false,
+        isLoadingHospitals: false
+      })
+
       // API失败时，使用优化后的默认数据
       const fallbackHospitals = [
         { id: Date.now(), name: '爱心宠物医院', distance: '0.5', address: '提供24小时急诊服务', is24h: true, phone: '请电话确认', latitude: 0, longitude: 0 },
@@ -312,8 +323,7 @@ Page({
 
       self.setData({
         nearbyHospitals: fallbackHospitals,
-        lastUpdateTime: timeString,
-        isLoadingHospitals: false
+        lastUpdateTime: timeString
       })
 
       wx.showToast({
@@ -329,156 +339,6 @@ Page({
     const hours = date.getHours().toString().padStart(2, '0')
     const minutes = date.getMinutes().toString().padStart(2, '0')
     return `今天 ${hours}:${minutes}`
-  },
-
-  // 获取用户位置（专门用于医院搜索）- 增强版，带缓存失效
-  getUserLocationForHospitals() {
-    const self = this
-    return new Promise(function(resolve, reject) {
-      const LOCATION_CACHE_DURATION = 5 * 60 * 1000 // 5分钟缓存
-      const currentTime = Date.now()
-
-      // 检查缓存的位置是否仍然有效
-      if (app.globalData.latitude &&
-          app.globalData.longitude &&
-          app.globalData.locationUpdateTime &&
-          (currentTime - app.globalData.locationUpdateTime) < LOCATION_CACHE_DURATION) {
-
-        console.log('使用缓存的位置信息（有效期内）')
-        resolve({
-          latitude: app.globalData.latitude,
-          longitude: app.globalData.longitude
-        })
-        return
-      }
-
-      // 需要重新获取位置
-      console.log('正在获取实时位置信息...')
-
-      // 先检查位置权限
-      wx.getSetting({
-        success: (settingRes) => {
-          if (!settingRes.authSetting['scope.userLocation']) {
-            // 没有权限，先请求权限
-            wx.authorize({
-              scope: 'scope.userLocation',
-              success: () => {
-                self.fetchRealTimeLocation(resolve)
-              },
-              fail: () => {
-                // 用户拒绝权限，引导用户开启
-                self.showLocationSettingDialog(resolve)
-              }
-            })
-          } else {
-            // 有权限，直接获取位置
-            self.fetchRealTimeLocation(resolve)
-          }
-        },
-        fail: () => {
-          // 获取设置失败，直接尝试获取位置
-          self.fetchRealTimeLocation(resolve)
-        }
-      })
-    })
-  },
-
-  // 获取实时位置的具体实现
-  fetchRealTimeLocation(resolve) {
-    wx.getLocation({
-      type: 'gcj02',
-      success: function(res) {
-        // 保存位置信息和更新时间
-        app.globalData.latitude = res.latitude
-        app.globalData.longitude = res.longitude
-        app.globalData.locationUpdateTime = Date.now()
-
-        console.log('实时位置获取成功:', {
-          latitude: res.latitude,
-          longitude: res.longitude,
-          accuracy: res.accuracy,
-          timestamp: new Date(app.globalData.locationUpdateTime).toLocaleTimeString()
-        })
-
-        resolve({
-          latitude: res.latitude,
-          longitude: res.longitude
-        })
-      },
-      fail: function(error) {
-        console.log('实时位置获取失败，使用默认位置:', error)
-
-        // 使用北京天安门作为默认位置
-        const defaultLocation = {
-          latitude: 39.90469,
-          longitude: 116.40717
-        }
-
-        app.globalData.latitude = defaultLocation.latitude
-        app.globalData.longitude = defaultLocation.longitude
-        app.globalData.locationUpdateTime = Date.now()
-
-        wx.showModal({
-          title: '位置服务提示',
-          content: '无法获取您的实时位置，将使用默认位置显示附近医院。如需准确距离，请在设置中开启位置权限。',
-          showCancel: false,
-          confirmText: '知道了'
-        })
-
-        resolve(defaultLocation)
-      }
-    })
-  },
-
-  // 显示位置设置引导对话框
-  showLocationSettingDialog(resolve) {
-    wx.showModal({
-      title: '需要位置权限',
-      content: '为了准确显示附近的24小时宠物医院，需要获取您的位置信息。是否前往设置开启位置权限？',
-      confirmText: '去设置',
-      cancelText: '使用默认位置',
-      success: (modalRes) => {
-        if (modalRes.confirm) {
-          wx.openSetting({
-            success: (settingRes) => {
-              if (settingRes.authSetting['scope.userLocation']) {
-                // 用户同意了位置权限，重新获取
-                this.fetchRealTimeLocation(resolve)
-              } else {
-                // 用户仍然拒绝，使用默认位置
-                this.resolveWithDefaultLocation(resolve)
-              }
-            },
-            fail: () => {
-              this.resolveWithDefaultLocation(resolve)
-            }
-          })
-        } else {
-          // 用户选择使用默认位置
-          this.resolveWithDefaultLocation(resolve)
-        }
-      }
-    })
-  },
-
-  // 使用默认位置解析
-  resolveWithDefaultLocation(resolve) {
-    const defaultLocation = {
-      latitude: 39.90469,
-      longitude: 116.40717
-    }
-
-    app.globalData.latitude = defaultLocation.latitude
-    app.globalData.longitude = defaultLocation.longitude
-    app.globalData.locationUpdateTime = Date.now()
-
-    wx.showToast({
-      title: '已使用默认位置',
-      icon: 'none',
-      duration: 2000
-    })
-
-    resolve(defaultLocation)
   },
 
   // 计算宠物健康状态（向后兼容）
@@ -793,10 +653,8 @@ Page({
     }
   },
 
-  // 页面卸载时清理定时器
+  // 页面卸载时清理资源
   onUnload() {
-    if (this.data.hospitalLoadTimer) {
-      clearTimeout(this.data.hospitalLoadTimer)
-    }
+    console.log('首页卸载，清理资源')
   }
 })
