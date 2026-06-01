@@ -1,23 +1,6 @@
 // 云函数入口文件
 const cloud = require('wx-server-sdk');
-
-// 本地常量定义
-const COLLECTIONS = {
-  USERS: 'users',
-  PETS: 'pets',
-  SYMPTOM_RECORDS: 'symptom_records',
-  AI_CACHE: 'ai_cache',
-  ORDERS: 'orders',
-  HOSPITALS: 'hospitals'
-};
-
-const RESPONSE_CODE = {
-  SUCCESS: 0,
-  ERROR: -1,
-  UNAUTHORIZED: 401,
-  NOT_FOUND: 404,
-  SERVER_ERROR: 500
-};
+const { COLLECTIONS, RESPONSE_CODE } = require('./constants');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -71,7 +54,7 @@ exports.main = async (event, context) => {
 
     const recordData = recordResult.data;
 
-    // 4. 查询关联的宠物信息
+    // 4. 查询关联的宠物信息（统一使用_id）
     let petData = null;
     if (recordData.pet_id) {
       try {
@@ -81,7 +64,6 @@ exports.main = async (event, context) => {
         if (petResult.data && petResult.data.user_id === openid) {
           petData = {
             _id: petResult.data._id,
-            petId: petResult.data._id,
             name: petResult.data.name,
             type: petResult.data.type,
             breed: petResult.data.breed,
@@ -99,13 +81,12 @@ exports.main = async (event, context) => {
       }
     }
 
-    // 5. 格式化返回数据
+    // 5. 格式化返回数据（统一使用_id）
     const responseData = {
       assessmentDetail: {
         _id: recordData._id,
-        assessmentId: recordData._id,
-        petId: recordData.pet_id,
-        userId: recordData.user_id,
+        pet_id: recordData.pet_id,
+        user_id: recordData.user_id,
         symptoms: recordData.symptoms || [],           // 英文ID（用于规则引擎）
         symptom_names: recordData.symptom_names || recordData.symptoms || [],  // 中文名称（用于显示）
         riskLevel: recordData.risk_level,

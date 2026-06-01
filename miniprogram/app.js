@@ -67,43 +67,157 @@ App({
   onLaunch: function () {
     console.log('=== 小程序启动 - 开始静默登录 ===');
 
-    // 1. 从本地存储恢复登录状态（优先级最高）
+    // 1. 从本地存储恢复登录状态（同步操作，优先级最高）
     this.restoreLoginState();
 
     // 2. 重置全局数据（保留 loginCallbacks 和已恢复的登录状态）
     this.globalData.userInfo = this.globalData.userInfo || null;
-    // 不重置openid，使用恢复的值
-    // this.globalData.openid = null; // 注释掉，保持恢复的openid
     this.globalData.token = null;
     this.globalData.cloudInitialized = false;
-    // this.globalData.isGuest = true; // 注释掉，保持恢复的登录状态
-    // 确保 loginCallbacks 存在
     if (!this.globalData.loginCallbacks) {
       this.globalData.loginCallbacks = [];
     }
 
-    // 3. 异步初始化云开发（不阻塞启动）
-    if (typeof wx !== 'undefined' && wx.cloud) {
-      // 延迟初始化，让启动界面先显示
-      setTimeout(() => {
-        this.initCloudDevelopment()
-      }, 100);
+    // 3. 启动链：云开发初始化 → 静默登录 → 首次启动检查
+    this._startupSequence();
+  },
+
+  /**
+   * 启动序列 — 使用Promise链保证正确顺序
+   * 替代之前的多个setTimeout竞态方案
+   */
+  _startupSequence: async function() {
+    const self = this;
+
+    try {
+      // 步骤1: 初始化云开发
+      if (typeof wx !== 'undefined' && wx.cloud) {
+        await self._initCloudAsync();
+      }
+
+      // 步骤2: 如果云开发可用，执行静默登录；否则使用降级模式
+      if (self.globalData.cloudDevelopmentAvailable) {
+        await self._silentLoginAsync();
+      } else if (!self.globalData.openid) {
+        self.createMockUser();
+      }
+
+      // 步骤2.5: 云初始化完成后，通知等待中的页面
+      if (self.globalData.openid) {
+        self._notifyLoginComplete(self.globalData.openid);
+      }
+
+      // 步骤3: 首次启动免责声明
+      this.checkFirstLaunch();
+
+    } catch (error) {
+      console.error('启动序列异常:', error);
+      // 最终降级：确保至少基本功能可用
+      if (!self.globalData.openid) {
+        self.createMockUser();
+      }
+    }
+  },
+
+  /**
+   * Promise化云开发初始化
+   */
+  _initCloudAsync: function() {
+    const self = this;
+    console.log('=== 开始初始化云开发 ===');
+
+    try {
+      // wx.cloud.init 是同步方法，不支持 success/fail 回调
+      wx.cloud.init({
+        env: 'cloud1-d8gdi44zqfec250b5',
+        traceUser: true
+      });
+      console.log('✅ 云开发初始化完成');
+      self.globalData.cloudInitialized = true;
+      self.globalData.cloudDevelopmentAvailable = true;
+    } catch (error) {
+      console.log('❌ 云开发初始化异常:', error);
+      self.globalData.cloudInitialized = false;
+      self.globalData.cloudDevelopmentAvailable = false;
     }
 
-    // 4. 如果没有openid，才创建模拟用户
-    if (!this.globalData.openid) {
-      setTimeout(() => {
-        this.createMockUser();
-      }, 200);
+    return Promise.resolve();
+  },
+
+  /**
+   * Promise化静默登录
+   */
+  _silentLoginAsync: function() {
+    const self = this;
+    return new Promise(function(resolve) {
+      console.log('=== 开始静默登录 ===');
+
+      wx.login({
+        success: function(res) {
+          if (res.code) {
+            console.log('获取code成功');
+            self._callLoginWithCallback(res.code, resolve);
+          } else {
+            console.error('wx.login失败:', res.errMsg);
+            self.enterGuestMode();
+            resolve();
+          }
+        },
+        fail: function(err) {
+          console.error('wx.login异常:', err);
+          self.enterGuestMode();
+          resolve();
+        }
+      });
+    });
+  },
+
+  /**
+   * 调用登录云函数（带完成回调的版本）
+   */
+  _callLoginWithCallback: function(code, resolveCallback) {
+    var self = this;
+
+    if (!this.globalData.cloudDevelopmentAvailable) {
+      console.log('⚠️ 云开发不可用，使用模拟登录');
+      this.simulatedLogin();
+      if (resolveCallback) resolveCallback();
+      return;
     }
 
-    // 5. 执行静默登录（用户方案步骤1-4）
-    this.silentLogin();
+    wx.cloud.callFunction({
+      name: 'silentLogin',
+      data: { code: code },
+      success: function(res) {
+        var result = res.result;
 
-    // 6. 异步检查首次启动（不阻塞启动）
-    setTimeout(() => {
-      this.checkFirstLaunch()
-    }, 300);
+        if (result && result.code === 0) {
+          console.log('✅ 静默登录成功');
+
+          self.globalData.token = result.data.token;
+          self.globalData.openid = result.data.openid;
+          self.globalData.userInfo = result.data.userInfo;
+          self.globalData.isGuest = !result.data.userInfo.isMember;
+
+          wx.setStorageSync('token', result.data.token);
+          wx.setStorageSync('openid', result.data.openid);
+          wx.setStorageSync('userInfo', result.data.userInfo);
+          wx.setStorageSync('lastLoginTime', Date.now());
+
+          self._notifyLoginComplete(result.data.openid);
+        } else {
+          console.error('云函数登录失败');
+          self.enterGuestMode();
+        }
+        if (resolveCallback) resolveCallback();
+      },
+      fail: function(err) {
+        console.error('❌ 调用云函数失败:', err);
+        self.globalData.cloudDevelopmentAvailable = false;
+        self.simulatedLogin();
+        if (resolveCallback) resolveCallback();
+      }
+    });
   },
 
   // === 先创建模拟用户，确保数据库不为空 ===
@@ -462,10 +576,8 @@ App({
       // 如果有任何登录信息恢复成功，通知等待登录的页面
       if (this.globalData.openid) {
         console.log('✅ 登录状态恢复完成，openid:', this.globalData.openid);
-        // 延迟通知，确保页面已准备好
-        setTimeout(() => {
-          this._notifyLoginComplete(this.globalData.openid);
-        }, 100);
+        // 注意：不在这里通知回调，等 _startupSequence 中云初始化完成后再通知
+        // 避免在云开发未初始化时触发云函数调用
       }
 
       // 恢复位置权限状态

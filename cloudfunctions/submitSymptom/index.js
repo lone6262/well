@@ -1,5 +1,6 @@
 // 云函数入口文件 - 严格按规则引擎文档实现
 const cloud = require('wx-server-sdk');
+const { COLLECTIONS, RESPONSE_CODE } = require('./constants');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -161,7 +162,7 @@ async function saveAndReturn(openid, petId, symptomIds, symptomNames, descriptio
     console.log('记录数据:', recordData);
 
     // 保存到数据库
-    const saveResult = await db.collection('symptom_records').add({
+    const saveResult = await db.collection(COLLECTIONS.SYMPTOM_RECORDS).add({
       data: recordData
     });
 
@@ -170,7 +171,7 @@ async function saveAndReturn(openid, petId, symptomIds, symptomNames, descriptio
     // 返回结果（按文档格式，使用中文名称显示）
     const displayName = symptomNames && symptomNames.length > 0 ? symptomNames : symptomIds;
     return {
-      code: 0,
+      code: RESPONSE_CODE.SUCCESS,
       msg: '评估完成',
       data: {
         recordId: saveResult._id,
@@ -184,7 +185,7 @@ async function saveAndReturn(openid, petId, symptomIds, symptomNames, descriptio
   } catch (error) {
     console.error('❌ 记录保存失败:', error);
     return {
-      code: 500,
+      code: RESPONSE_CODE.SERVER_ERROR,
       msg: '系统繁忙，请重试',
       data: {
         error: error.message
@@ -206,7 +207,7 @@ exports.main = async (event, context) => {
   if (!openid) {
     console.log('❌ 未获取到openid');
     return {
-      code: 401,
+      code: RESPONSE_CODE.UNAUTHORIZED,
       msg: '用户未登录',
       data: {}
     };
@@ -218,7 +219,7 @@ exports.main = async (event, context) => {
     // 1. 参数校验
     if (!petId) {
       return {
-        code: 400,
+        code: RESPONSE_CODE.ERROR,
         msg: '请选择宠物',
         data: {}
       };
@@ -226,7 +227,7 @@ exports.main = async (event, context) => {
 
     if (!symptomIds || symptomIds.length === 0) {
       return {
-        code: 400,
+        code: RESPONSE_CODE.ERROR,
         msg: '请至少选择一个症状',
         data: {}
       };
@@ -242,7 +243,7 @@ exports.main = async (event, context) => {
   } catch (error) {
     console.error('❌ 云函数执行失败:', error);
     return {
-      code: 500,
+      code: RESPONSE_CODE.SERVER_ERROR,
       msg: '服务器错误，请稍后重试',
       data: {
         error: error.message

@@ -348,20 +348,25 @@
 /* === 卡片操作 === */
 .card-actions-mini {
   display: flex;
-  gap: 15rpx;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 20rpx;
+  padding: 0 24rpx;
+  box-sizing: border-box;
 }
 
 .mini-action-btn {
-  flex: 1;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8rpx;
-  padding: 18rpx;
+  padding: 18rpx 28rpx;
   border-radius: 15rpx;
   font-size: 24rpx;
-  border: none;
+  line-height: 1;
   font-weight: 500;
+  width: auto;
+  flex-shrink: 0;
 }
 
 .call-mini {
@@ -386,7 +391,7 @@
 .expand-hint {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 10rpx;
   padding: 20rpx;
   background: rgba(255, 255, 255, 0.05);
@@ -436,7 +441,7 @@
 .back-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 10rpx;
   background: rgba(255, 255, 255, 0.2);
   padding: 20rpx;
@@ -454,3 +459,33 @@
   color: #fff;
   font-weight: 500;
 }
+/* === 加载更多按钮 === */
+.load-more-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8rpx;
+  padding: 24rpx;
+  margin: 10rpx 25rpx 25rpx;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 15rpx;
+  color: #fff;
+  font-size: 26rpx;
+  font-weight: 500;
+}
+
+.load-more-btn:active {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.load-more-text {
+  font-size: 26rpx;
+  color: #fff;
+}
+
+.load-more-arrow {
+  font-size: 20rpx;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+

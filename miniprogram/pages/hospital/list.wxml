@@ -97,7 +97,8 @@
         <view class="card-footer">
           <button class="footer-btn call-btn"
                   catchtap="callHospital"
-                  data-phone="{{item.phone}}">
+                  data-phone="{{item.phone}}"
+                  data-id="{{item.hospitalId}}">
             <text class="footer-icon">📞</text>
             <text>电话</text>
           </button>
@@ -115,6 +116,12 @@
           </button>
         </view>
       </view>
+    </view>
+
+    <!-- 加载更多按钮 -->
+    <view class="load-more-section" wx:if="{{displayCount < hospitals.length && !isLoading}}" bindtap="loadMoreHospitals">
+      <text class="load-more-text">查看更多医院（已显示{{displayCount}}/{{hospitals.length}}）</text>
+      <text class="load-more-icon">▼</text>
     </view>
   </view>
 

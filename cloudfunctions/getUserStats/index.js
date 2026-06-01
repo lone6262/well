@@ -1,5 +1,6 @@
 // 云函数入口文件
 const cloud = require('wx-server-sdk');
+const { COLLECTIONS, RESPONSE_CODE } = require('./constants');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -11,12 +12,12 @@ const db = cloud.database();
  * 获取用户统计数据
  * 统计用户的症状自查次数、问诊报告数、宠物数量、订单数和收藏数
  */
-exports.main = async (event, context) => {
+exports.main = async (event) => {
   const { openid } = event;
 
   if (!openid) {
     return {
-      code: -1,
+      code: RESPONSE_CODE.UNAUTHORIZED,
       msg: '缺少用户openid'
     };
   }
@@ -24,18 +25,15 @@ exports.main = async (event, context) => {
   try {
     // 并行查询各项统计数据
     const [petsResult, recordsResult, ordersResult] = await Promise.all([
-      // 查询宠物数量 - 修正字段名为user_id
-      db.collection('pets').where({
+      db.collection(COLLECTIONS.PETS).where({
         user_id: openid
       }).count(),
 
-      // 查询症状记录数量 - 使用user_id字段
-      db.collection('symptom_records').where({
+      db.collection(COLLECTIONS.SYMPTOM_RECORDS).where({
         user_id: openid
       }).count(),
 
-      // 查询订单数量 - 使用user_id字段
-      db.collection('orders').where({
+      db.collection(COLLECTIONS.ORDERS).where({
         user_id: openid
       }).count()
     ]);
@@ -49,7 +47,7 @@ exports.main = async (event, context) => {
     };
 
     return {
-      code: 0,
+      code: RESPONSE_CODE.SUCCESS,
       msg: '获取成功',
       data: stats
     };
@@ -57,7 +55,7 @@ exports.main = async (event, context) => {
   } catch (error) {
     console.error('获取用户统计数据失败:', error);
     return {
-      code: -1,
+      code: RESPONSE_CODE.SERVER_ERROR,
       msg: '获取统计数据失败',
       error: error.message
     };

@@ -1,5 +1,4 @@
-// 快速登录云函数 - 用于测试和创建用户
-const cloud = require('wx-server-sdk');
+// 蹇€熺櫥褰曚簯鍑芥暟 - 鐢ㄤ簬娴嬭瘯鍜屽垱寤虹敤鎴?const cloud = require('wx-server-sdk');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -8,30 +7,29 @@ cloud.init({
 const db = cloud.database();
 
 /**
- * 快速登录云函数 - 自动创建用户
+ * 蹇€熺櫥褰曚簯鍑芥暟 - 鑷姩鍒涘缓鐢ㄦ埛
  */
 exports.main = async (event, context) => {
   const { userInfo = {} } = event;
 
   try {
-    // 获取用户openid
+    // 鑾峰彇鐢ㄦ埛openid
     const { OPENID } = cloud.getWXContext();
 
-    console.log('用户OPENID:', OPENID);
-    console.log('用户信息:', userInfo);
+    console.log('鐢ㄦ埛OPENID:', OPENID);
+    console.log('鐢ㄦ埛淇℃伅:', userInfo);
 
-    // 检查用户是否已存在
+    // 妫€鏌ョ敤鎴锋槸鍚﹀凡瀛樺湪
     const userResult = await db.collection('users').where({
-      _openid: OPENID
+      user_id: OPENID
     }).get();
 
     let userData;
 
     if (userResult.data.length === 0) {
-      // 用户不存在，创建新用户
-      userData = {
-        _openid: OPENID,
-        nickName: userInfo.nickName || '测试用户',
+      // 鐢ㄦ埛涓嶅瓨鍦紝鍒涘缓鏂扮敤鎴?      userData = {
+        user_id: OPENID,
+        nickName: userInfo.nickName || '娴嬭瘯鐢ㄦ埛',
         avatarUrl: userInfo.avatarUrl || '',
         createTime: new Date(),
         updateTime: new Date(),
@@ -44,11 +42,11 @@ exports.main = async (event, context) => {
         data: userData
       });
 
-      console.log('创建用户成功:', addResult);
+      console.log('鍒涘缓鐢ㄦ埛鎴愬姛:', addResult);
 
       return {
         code: 0,
-        msg: '用户创建成功',
+        msg: '鐢ㄦ埛鍒涘缓鎴愬姛',
         data: {
           openid: OPENID,
           userId: addResult._id,
@@ -56,7 +54,7 @@ exports.main = async (event, context) => {
         }
       };
     } else {
-      // 用户已存在，更新登录信息
+      // 鐢ㄦ埛宸插瓨鍦紝鏇存柊鐧诲綍淇℃伅
       const existingUser = userResult.data[0];
 
       await db.collection('users').doc(existingUser._id).update({
@@ -67,11 +65,11 @@ exports.main = async (event, context) => {
         }
       });
 
-      console.log('用户登录成功:', existingUser);
+      console.log('鐢ㄦ埛鐧诲綍鎴愬姛:', existingUser);
 
       return {
         code: 0,
-        msg: '登录成功',
+        msg: '鐧诲綍鎴愬姛',
         data: {
           openid: OPENID,
           userId: existingUser._id,
@@ -80,11 +78,12 @@ exports.main = async (event, context) => {
       };
     }
   } catch (error) {
-    console.error('登录失败:', error);
+    console.error('鐧诲綍澶辫触:', error);
     return {
       code: -1,
-      msg: '登录失败: ' + error.message,
+      msg: '鐧诲綍澶辫触: ' + error.message,
       data: {}
     };
   }
 };
+

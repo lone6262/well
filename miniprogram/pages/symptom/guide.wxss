@@ -189,15 +189,18 @@ page {
   opacity: 0.9;
 }
 
-/* === 滚动区域 === */
-.scroll-area {
-  height: calc(100vh - 500rpx);
+/* === 症状展示区域 === */
+.symptom-area {
   padding: var(--spacing-sm) 0;
 }
 
 /* === 分类区块 === */
 .category-block {
   margin-bottom: var(--spacing-lg);
+}
+
+.category-block:last-child {
+  margin-bottom: 260rpx;
 }
 
 .category-title {

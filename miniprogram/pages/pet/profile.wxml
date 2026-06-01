@@ -71,10 +71,26 @@
         </view>
       </view>
 
+      <!-- 自查记录 & 健康报告入口 -->
+      <view class="pet-records-section">
+        <view class="record-entry" bindtap="showPetRecords" data-pet-id="{{item._id}}" data-pet-name="{{item.name}}">
+          <text class="record-entry-icon">📋</text>
+          <text class="record-entry-text">自查记录</text>
+          <text class="record-count-badge">{{item.recordCount || 0}}条</text>
+          <text class="record-entry-arrow">›</text>
+        </view>
+        <view class="record-entry" bindtap="showPetReports" data-pet-id="{{item._id}}" data-pet-name="{{item.name}}">
+          <text class="record-entry-icon">📊</text>
+          <text class="record-entry-text">健康报告</text>
+          <text class="record-count-badge">{{item.reportCount || 0}}条</text>
+          <text class="record-entry-arrow">›</text>
+        </view>
+      </view>
+
       <!-- 底部操作栏 -->
       <view class="pet-card-footer">
         <view class="footer-left">
-          <text class="update-time">档案ID: {{item.petId ? item.petId.substr(0, 8) : '未设置'}}...</text>
+          <text class="update-time">编号: {{item.petCode || '编号生成中'}}</text>
         </view>
         <view class="footer-right">
           <view class="delete-force-btn" id="delete-btn-{{item._id || item.petId}}" data-pet-id="{{item._id || item.petId}}" catchtap="deletePet">
@@ -189,7 +205,7 @@
             <text class="label-required">*</text>
           </view>
           <input class="form-input-modern"
-                 placeholder="给宠物起个可爱的名字"
+                 placeholder="请输入宠物昵称"
                  placeholder-style="color: #999999;"
                  placeholder-class="placeholder-text"
                  value="{{formData.name}}"
@@ -225,7 +241,7 @@
               <text class="label-text">品种</text>
             </view>
             <input class="form-input-modern"
-                   placeholder="如：英短"
+                   placeholder="请输入品种"
                    placeholder-style="color: #999999;"
                    placeholder-class="placeholder-text"
                    value="{{formData.breed}}"
@@ -262,7 +278,7 @@
             </view>
             <input class="form-input-modern"
                    type="number"
-                   placeholder="月数"
+                   placeholder="请输入月数"
                    placeholder-style="color: #999999;"
                    placeholder-class="placeholder-text"
                    value="{{formData.age}}"
@@ -276,7 +292,7 @@
             </view>
             <input class="form-input-modern"
                    type="digit"
-                   placeholder="体重"
+                   placeholder="请输入体重"
                    placeholder-style="color: #999999;"
                    placeholder-class="placeholder-text"
                    value="{{formData.weight}}"
@@ -334,6 +350,41 @@
           <text class="modal-btn-text">{{isEdit ? '保存修改' : '创建档案'}}</text>
         </view>
       </view>
+    </view>
+  </view>
+</view>
+
+<!-- 记录列表弹窗（独立于添加/编辑弹窗） -->
+<view class="record-modal-mask" wx:if="{{showRecordModal}}" bindtap="hideRecordModal"></view>
+<view class="record-modal-sheet" wx:if="{{showRecordModal}}">
+  <view class="record-modal-header">
+    <text class="record-modal-title">{{recordModalTitle}}</text>
+    <view class="record-modal-close" bindtap="hideRecordModal">✖</view>
+  </view>
+  <view class="record-modal-list">
+    <!-- 加载状态 -->
+    <view class="record-modal-loading" wx:if="{{recordLoading}}">
+      <text class="loading-icon">⏳</text>
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <!-- 记录列表 -->
+    <block wx:elif="{{recordList && recordList.length > 0}}">
+      <view class="record-list-item" wx:for="{{recordList}}" wx:key="_id" bindtap="viewRecordDetail" data-record-id="{{item._id}}">
+        <view class="record-item-icon" style="background: {{item.bgColor}};">{{item.icon}}</view>
+        <view class="record-item-info">
+          <text class="record-item-title">{{item.title}}</text>
+          <text class="record-item-desc">{{item.desc}}</text>
+        </view>
+        <text class="record-item-arrow">›</text>
+      </view>
+    </block>
+
+    <!-- 空状态 -->
+    <view class="record-modal-empty" wx:else>
+      <text class="empty-icon">📋</text>
+      <text class="empty-text">暂无记录</text>
+      <text class="empty-hint">进行症状自查后会在这里显示</text>
     </view>
   </view>
 </view>

@@ -14,7 +14,9 @@ Page({
 
     // 医院数据
     nearestHospital: null,   // 最近的医院
-    otherHospitals: []       // 其他医院
+    otherHospitals: [],      // 其他医院（全部）
+    displayOtherHospitals: [], // 当前显示的其他医院
+    displayCount: 5          // 当前显示数量
   },
 
   onLoad: function() {
@@ -78,11 +80,39 @@ Page({
     var self = this
     self.setData({ isLoading: true })
 
-    return mapService.searchNearbyHospitals(
-      this.data.latitude,
-      this.data.longitude,
-      5000
-    ).then(function(hospitals) {
+    var loadPromise
+    var app = getApp()
+
+    if (app.globalData.cloudDevelopmentAvailable) {
+      loadPromise = new Promise(function(resolve, reject) {
+        wx.cloud.callFunction({
+          name: 'searchHospitals',
+          data: {
+            latitude: self.data.latitude,
+            longitude: self.data.longitude,
+            radius: 5000
+          },
+          success: function(res) {
+            if (res.result && res.result.code === 0) {
+              resolve(res.result.data.hospitals || [])
+            } else {
+              reject('no_data')
+            }
+          },
+          fail: function(err) {
+            reject(err)
+          }
+        })
+      })
+    } else {
+      loadPromise = mapService.searchNearbyHospitals(
+        this.data.latitude,
+        this.data.longitude,
+        5000
+      )
+    }
+
+    return loadPromise.then(function(hospitals) {
       // 处理医院数据
       var processedHospitals = self.processHospitals(hospitals)
 
@@ -92,12 +122,14 @@ Page({
 
       if (processedHospitals.length > 0) {
         nearest = processedHospitals[0]  // 最近的一家
-        others = processedHospitals.slice(1)  // 其余的
+        others = processedHospitals.slice(1, 11)  // 最多取10家
       }
 
       self.setData({
         nearestHospital: nearest,
         otherHospitals: others,
+        displayOtherHospitals: others.slice(0, 5),
+        displayCount: 5,
         isLoading: false
       })
 
@@ -110,9 +142,12 @@ Page({
       // 使用离线急救数据
       var offlineHospitals = self.getEmergencyOfflineData()
 
+      var offlineOthers = offlineHospitals.slice(1)
       self.setData({
         nearestHospital: offlineHospitals[0],
-        otherHospitals: offlineHospitals.slice(1),
+        otherHospitals: offlineOthers,
+        displayOtherHospitals: offlineOthers.slice(0, 5),
+        displayCount: 5,
         isLoading: false
       })
 
@@ -169,9 +204,9 @@ Page({
     return [
       {
         hospitalId: 'emergency_001',
-        name: '宠物急救中心',
-        address: '24小时宠物急诊服务',
-        phone: '请电话确认',
+        name: '宠物急救中心（24小时）',
+        address: '北京市朝阳区建国路88号',
+        phone: '010-65012345',
         distance: 800,
         distanceDisplay: '800m',
         latitude: lat + 0.001,
@@ -181,9 +216,9 @@ Page({
       },
       {
         hospitalId: 'emergency_002',
-        name: '爱心宠物医院',
-        address: '提供24小时紧急服务',
-        phone: '请电话确认',
+        name: '爱心宠物医院（24小时急诊）',
+        address: '北京市海淀区中关村大街66号',
+        phone: '010-62087654',
         distance: 1200,
         distanceDisplay: '1km',
         latitude: lat - 0.001,
@@ -195,6 +230,18 @@ Page({
   },
 
   // === 用户交互方法 ===
+
+  // 提取单个电话号码（多个号码用分隔符分开时只取第一个）
+  extractSinglePhone: function(phone) {
+    if (!phone) return '';
+    var telStr = phone.toString();
+    // 多个号码可能用分号、逗号、斜杠、顿号等分隔，只取第一个
+    var parts = telStr.split(/[;；,，/\\、\n\r|]/);
+    var first = (parts[0] || '').trim();
+    // 清理：只保留数字、+、-、空格
+    var cleaned = first.replace(/[^0-9+\-\s]/g, '').trim();
+    return (cleaned && cleaned.length >= 7) ? cleaned : '';
+  },
 
   // 拨打电话 - 增强版
   callHospital: function(e) {
@@ -212,8 +259,8 @@ Page({
       return
     }
 
-    // 清理电话号码格式
-    var cleanPhone = phone.toString().replace(/[^0-9+*-]/g, '').trim()
+    // 提取单个电话号码（多个号码用分隔符分开时只取第一个）
+    var cleanPhone = this.extractSinglePhone(phone)
 
     if (!cleanPhone || cleanPhone === '请电话确认' || cleanPhone === '暂无电话') {
       wx.showModal({
@@ -348,6 +395,29 @@ Page({
           })
         }
       }
+    })
+  },
+
+  // 加载更多医院（瀑布流）
+  loadMoreHospitals: function() {
+    var self = this
+    var currentCount = self.data.displayCount
+    var allHospitals = self.data.otherHospitals
+    var newCount = currentCount + 5
+
+    if (newCount > allHospitals.length) {
+      newCount = allHospitals.length
+    }
+
+    self.setData({
+      displayOtherHospitals: allHospitals.slice(0, newCount),
+      displayCount: newCount
+    })
+
+    wx.showToast({
+      title: '已加载更多医院',
+      icon: 'none',
+      duration: 1000
     })
   },
 

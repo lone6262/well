@@ -1,8 +1,8 @@
 // 腾讯地图配置
-// 请在这里填写你的腾讯地图API密钥
+// API密钥建议配置在云函数侧，通过 searchHospitals 云函数调用，避免前端暴露
 const MAP_CONFIG = {
-  // 腾讯地图API密钥（需要在腾讯地图控制台申请小程序key）
-  key: 'FVZBZ-P2K3I-VXJGC-UUWOF-RSTAQ-BSFKQ', // 请替换为你的真实API密钥
+  // 腾讯地图API密钥（请在腾讯地图控制台申请小程序key，并绑定小程序APPID白名单）
+  key: 'YOUR_TENCENT_MAP_KEY',
 
   // 地图默认配置
   defaultCenter: {

@@ -13,9 +13,31 @@ const db = cloud.database();
  * 只有在需要显示昵称/头像时才调用（必须用户点击触发）
  */
 exports.main = async (event, context) => {
-  const { openid, userInfo } = event;
+  const { openid, userInfo, action } = event;
 
   try {
+    // 如果是获取用户信息
+    if (action === 'get') {
+      if (!openid) {
+        return { code: -1, msg: '缺少openid', data: {} };
+      }
+      const userResult = await db.collection('users').where({
+        user_id: openid
+      }).get();
+      if (userResult.data.length > 0) {
+        const userData = userResult.data[0];
+        return {
+          code: 0,
+          msg: '获取成功',
+          data: {
+            nickName: userData.nickName || '',
+            avatarUrl: userData.avatarUrl || ''
+          }
+        };
+      }
+      return { code: -1, msg: '用户不存在', data: {} };
+    }
+
     console.log('=== 保存用户资料 ===');
     console.log('OpenID:', openid);
     console.log('用户资料:', userInfo);
@@ -31,7 +53,7 @@ exports.main = async (event, context) => {
 
     // 查找用户
     const userResult = await db.collection('users').where({
-      _openid: openid
+      user_id: openid
     }).get();
 
     if (userResult.data.length === 0) {

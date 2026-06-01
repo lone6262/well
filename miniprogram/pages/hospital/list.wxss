@@ -420,3 +420,30 @@
 .fab-icon {
   font-size: 48rpx;
 }
+/* === 加载更多按钮 === */
+.load-more-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 28rpx 24rpx;
+  margin: 16rpx 16rpx 0;
+  background: #ffffff;
+  border-radius: 16rpx;
+  box-shadow: 0 1rpx 3rpx 0 rgba(0, 0, 0, 0.1);
+}
+
+.load-more-section:active {
+  background: #f5f5f5;
+}
+
+.load-more-text {
+  font-size: 26rpx;
+  color: #4A90E2;
+  font-weight: 500;
+}
+
+.load-more-icon {
+  font-size: 22rpx;
+  color: #4A90E2;
+}

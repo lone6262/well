@@ -66,7 +66,7 @@
         <text class="expand-icon-large">🏥</text>
         <view class="expand-text-group">
           <text class="expand-title">其他附近医院</text>
-          <text class="expand-subtitle">{{otherHospitals.length}}家可选择医院</text>
+          <text class="expand-subtitle">{{otherHospitals.length}}家可选择医院，已显示{{displayOtherHospitals.length}}家</text>
         </view>
       </view>
       <view class="expand-arrow {{showOther ? 'arrow-up' : 'arrow-down'}}">
@@ -77,7 +77,7 @@
     <!-- 医院卡片网格 -->
     <view class="hospitals-grid" wx:if="{{showOther}}">
       <view class="hospital-card-mini"
-            wx:for="{{otherHospitals}}"
+            wx:for="{{displayOtherHospitals}}"
             wx:key="hospitalId"
             bindtap="selectHospital"
             data-hospital="{{item}}">
@@ -101,21 +101,27 @@
 
         <!-- 快速操作 -->
         <view class="card-actions-mini">
-          <button class="mini-action-btn call-mini"
+          <view class="mini-action-btn call-mini"
                   catchtap="callHospital"
                   data-phone="{{item.phone}}"
                   data-name="{{item.name}}">
             <text class="mini-btn-icon">📞</text>
             <text class="mini-btn-text">拨打</text>
-          </button>
-          <button class="mini-action-btn navigate-mini"
+          </view>
+          <view class="mini-action-btn navigate-mini"
                   catchtap="navigateToHospital"
                   data-hospital="{{item}}">
             <text class="mini-btn-icon">🧭</text>
             <text class="mini-btn-text">导航</text>
-          </button>
+          </view>
         </view>
       </view>
+    </view>
+
+    <!-- 加载更多按钮 -->
+    <view class="load-more-btn" wx:if="{{showOther && displayCount < otherHospitals.length}}" bindtap="loadMoreHospitals">
+      <text class="load-more-text">查看更多医院（{{displayCount}}/{{otherHospitals.length}}）</text>
+      <text class="load-more-arrow">▼</text>
     </view>
 
     <!-- 展开提示 -->

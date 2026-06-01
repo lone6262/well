@@ -139,6 +139,16 @@ Page({
     this.initPage()
   },
 
+  onShow: function() {
+    // TabBar页面每次显示时检查宠物数据是否更新
+    var self = this
+    if (app.globalData.petsUpdated) {
+      console.log('检测到宠物数据更新，重新加载')
+      self.loadPetData()
+      app.globalData.petsUpdated = false
+    }
+  },
+
   // === 页面初始化 ===
   initPage: function() {
     var self = this
@@ -167,6 +177,24 @@ Page({
     var self = this
 
     var openid = app.getOpenid()
+
+    // 登录检查
+    if (!openid || (typeof openid === 'string' && openid.indexOf('mock_') === 0)) {
+      console.log('用户未登录，提示登录')
+      self.setData({ petList: [] })
+      wx.showModal({
+        title: '需要登录',
+        content: '使用症状自查需要先登录，是否立即登录？',
+        confirmText: '立即登录',
+        cancelText: '稍后再说',
+        success: function(res) {
+          if (res.confirm) {
+            wx.switchTab({ url: '/pages/user/index' })
+          }
+        }
+      })
+      return
+    }
 
     wx.cloud.callFunction({
       name: 'getPetList',
@@ -394,16 +422,16 @@ Page({
       return
     }
 
-    // 敏感词检查
-    var sensitiveWords = ['激素', '抗生素', '处方药', '剧毒', '致命']
-    for (var i = 0; i < sensitiveWords.length; i++) {
-      if (description.indexOf(sensitiveWords[i]) !== -1) {
-        wx.showToast({
-          title: '描述中包含敏感词汇',
-          icon: 'none'
-        })
-        return
-      }
+    // 敏感词检查（使用统一配置模块）
+    var sensitiveWords = require('../../config/sensitiveWords.js')
+    var checkResult = sensitiveWords.checkSensitiveWords(description)
+    if (checkResult.hasSensitive) {
+      wx.showToast({
+        title: checkResult.message,
+        icon: 'none',
+        duration: 2500
+      })
+      return
     }
 
     this.setData({

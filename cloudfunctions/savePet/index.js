@@ -1,29 +1,6 @@
 // 云函数入口文件
 const cloud = require('wx-server-sdk');
-
-// 本地常量定义
-const PET_TYPES = {
-  CAT: 'cat',
-  DOG: 'dog',
-  OTHER: 'other'
-};
-
-const COLLECTIONS = {
-  USERS: 'users',
-  PETS: 'pets',
-  SYMPTOM_RECORDS: 'symptom_records',
-  AI_CACHE: 'ai_cache',
-  ORDERS: 'orders',
-  HOSPITALS: 'hospitals'
-};
-
-const RESPONSE_CODE = {
-  SUCCESS: 0,
-  ERROR: -1,
-  UNAUTHORIZED: 401,
-  NOT_FOUND: 404,
-  SERVER_ERROR: 500
-};
+const { PET_TYPES, COLLECTIONS, RESPONSE_CODE } = require('./constants');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -97,7 +74,7 @@ exports.main = async (event, context) => {
     };
 
     if (petId) {
-      // 2. 编辑宠物信息
+      // 2. 编辑宠物信息（统一使用_id查询）
       const petResult = await db.collection(COLLECTIONS.PETS).doc(petId).get();
       if (!petResult.data) {
         return {
@@ -125,17 +102,38 @@ exports.main = async (event, context) => {
         code: RESPONSE_CODE.SUCCESS,
         msg: '宠物信息更新成功',
         data: {
-          _id: petId, // 保留原始_id
-          petId: petId, // 兼容性字段
+          _id: petId,
           ...petData
         }
       };
 
     } else {
       // 3. 添加新宠物
+      // 生成宠物编号：CAT-001, DOG-001 ...
+      const typePrefix = type === 'cat' ? 'CAT' : 'DOG';
+      const maxResult = await db.collection(COLLECTIONS.PETS)
+        .where({
+          petCode: db.RegExp({
+            regexp: '^' + typePrefix + '-\\d{3}$',
+            options: ''
+          })
+        })
+        .orderBy('petCode', 'desc')
+        .limit(1)
+        .get();
+      
+      let nextNum = 1;
+      if (maxResult.data.length > 0) {
+        const lastCode = maxResult.data[0].petCode;
+        const lastNum = parseInt(lastCode.split('-')[1]);
+        nextNum = lastNum + 1;
+      }
+      const petCode = typePrefix + '-' + String(nextNum).padStart(3, '0');
+      
       const newPetData = {
         user_id: openid,
         created_at: new Date(),
+        petCode: petCode,
         ...petData
       };
 
@@ -147,8 +145,7 @@ exports.main = async (event, context) => {
         code: RESPONSE_CODE.SUCCESS,
         msg: '宠物添加成功',
         data: {
-          _id: insertResult._id, // 保留原始_id
-          petId: insertResult._id, // 兼容性字段
+          _id: insertResult._id,
           ...newPetData
         }
       };

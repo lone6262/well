@@ -19,6 +19,11 @@ Page({
       dewormDate: '',
       avatar: '' // 新增头像字段
     },
+    showRecordModal: false,
+    recordModalTitle: '',
+    recordList: [],
+    currentRecordPetId: '',
+    recordLoading: false,
     loading: true,
     uploadingImage: false, // 图片上传状态
     avatarPreview: '' // 头像预览
@@ -53,12 +58,13 @@ Page({
     // 使用统一的登录状态检查方法
     var openid = app.getOpenid()
 
-    if (!openid) {
-      console.log('用户未登录')
+    if (!openid || (typeof openid === 'string' && openid.indexOf('mock_') === 0)) {
+      console.log('用户未登录，引导登录')
       self.setData({
         petList: [],
         loading: false
       })
+      self._requireLogin()
       return
     }
 
@@ -82,19 +88,25 @@ Page({
         if (res.result.code === 0) {
           // 数据映射：确保每个宠物都有petId字段
           var petList = (res.result.data.petList || []).map(function(pet) {
+            var id = pet._id || pet.petId || 'unknown'
             return {
-              _id: pet._id || pet.petId,
-              petId: pet.petId || pet._id, // 确保petId字段存在
-              name: pet.name,
-              type: pet.type,
-              breed: pet.breed,
-              age: pet.age,
-              weight: pet.weight,
-              gender: pet.gender,
-              vaccineDate: pet.vaccineDate,
-              dewormDate: pet.dewormDate,
-              avatar: pet.avatar,
-              createdAt: pet.createdAt
+              _id: id,
+              petId: pet.petId || pet._id || id,
+              petCode: pet.petCode || (function() {
+                var prefix = pet.type === 'cat' ? 'CAT' : 'DOG';
+                return prefix + '-NEW';
+              })(),
+              petIdDisplay: (pet.petId || pet._id || id).substring(0, 8),
+              name: pet.name || '未命名',
+              type: pet.type || 'cat',
+              breed: pet.breed || '',
+              age: pet.age || '',
+              weight: pet.weight || '',
+              gender: pet.gender || 'male',
+              vaccineDate: pet.vaccineDate || '',
+              dewormDate: pet.dewormDate || '',
+              avatar: pet.avatar || '',
+              createdAt: pet.createdAt || ''
             }
           })
 
@@ -109,6 +121,9 @@ Page({
           if (petList.length === 0) {
             self.showEmptyState()
           }
+
+          // 加载每个宠物的记录计数
+          self.loadRecordCounts(petList)
 
           // 检查是否有自动编辑请求
           if (self.autoEditPetId) {
@@ -155,19 +170,25 @@ Page({
 
       // 数据映射：确保每个宠物都有petId字段
       var mappedPets = localPets.map(function(pet) {
+        var id = pet._id || pet.petId || 'local_' + Date.now()
         return {
-          _id: pet._id || pet.petId,
-          petId: pet.petId || pet._id, // 确保petId字段存在
-          name: pet.name,
-          type: pet.type,
-          breed: pet.breed,
-          age: pet.age,
-          weight: pet.weight,
-          gender: pet.gender,
-          vaccineDate: pet.vaccineDate,
-          dewormDate: pet.dewormDate,
-          avatar: pet.avatar,
-          createdAt: pet.createdAt
+          _id: id,
+          petId: pet.petId || pet._id || id,
+          petCode: pet.petCode || (function() {
+                var prefix = pet.type === 'cat' ? 'CAT' : 'DOG';
+                return prefix + '-NEW';
+              })(),
+          petIdDisplay: (pet.petId || pet._id || id).substring(0, 8),
+          name: pet.name || '未命名',
+          type: pet.type || 'cat',
+          breed: pet.breed || '',
+          age: pet.age || '',
+          weight: pet.weight || '',
+          gender: pet.gender || 'male',
+          vaccineDate: pet.vaccineDate || '',
+          dewormDate: pet.dewormDate || '',
+          avatar: pet.avatar || '',
+          createdAt: pet.createdAt || ''
         }
       })
 
@@ -245,6 +266,13 @@ Page({
 
   // 显示添加宠物弹窗
   showAddModal: function() {
+    var self = this
+    // 登录检查：mock用户需要先登录
+    var openid = app.getOpenid()
+    if (!openid || (typeof openid === 'string' && openid.indexOf('mock_') === 0)) {
+      self._requireLogin()
+      return
+    }
     this.setData({
       showModal: true,
       isEdit: false,
@@ -298,10 +326,18 @@ Page({
 
   // 显示添加宠物弹窗
   addPet: function() {
+    var self = this
+    // 登录检查
+    var openid = app.getOpenid()
+    if (!openid || (typeof openid === 'string' && openid.indexOf('mock_') === 0)) {
+      self._requireLogin()
+      return
+    }
     this.setData({
       showModal: true,
       isEdit: false,
       currentPetId: '',
+      avatarPreview: '',
       formData: {
         name: '',
         type: 'cat',
@@ -310,7 +346,8 @@ Page({
         weight: '',
         gender: 'male',
         vaccineDate: '',
-        dewormDate: ''
+        dewormDate: '',
+        avatar: ''
       }
     })
   },
@@ -348,7 +385,68 @@ Page({
   // 关闭弹窗
   hideModal: function() {
     this.setData({
-      showModal: false
+      showModal: false,
+      isEdit: false,
+      currentPetId: '',
+      avatarPreview: '',
+      formData: {
+        name: '',
+        type: 'cat',
+        breed: '',
+        age: '',
+        weight: '',
+        gender: 'male',
+        vaccineDate: '',
+        dewormDate: '',
+        avatar: ''
+      }
+    })
+  },
+
+  // === 登录引导 ===
+  _requireLogin: function() {
+    var self = this
+    wx.showModal({
+      title: '需要登录',
+      content: '添加宠物需要先登录，是否立即登录？',
+      confirmText: '立即登录',
+      cancelText: '稍后再说',
+      success: function(res) {
+        if (res.confirm) {
+          self._doLogin()
+        }
+      }
+    })
+  },
+
+  // 执行登录（重新走静默登录流程）
+  _doLogin: function() {
+    var self = this
+    wx.showLoading({ title: '登录中...', mask: true })
+
+    // 清除旧的mock数据
+    wx.removeStorageSync('mockOpenid')
+    app.globalData.openid = null
+
+    // 触发静默登录
+    app.silentLogin()
+
+    // 监听登录完成
+    app.onLoginComplete(function(openid) {
+      wx.hideLoading()
+
+      if (openid && typeof openid === 'string' && openid.indexOf('mock_') !== 0) {
+        console.log('登录成功，刷新宠物列表')
+        wx.showToast({ title: '登录成功', icon: 'success' })
+        self.loadPetList()
+      } else {
+        console.log('登录失败')
+        wx.showModal({
+          title: '登录失败',
+          content: '登录未成功，请稍后重试或检查网络连接',
+          showCancel: false
+        })
+      }
     })
   },
 
@@ -532,9 +630,20 @@ Page({
     // 生成宠物ID
     var petId = self.data.isEdit ? self.data.currentPetId : 'local_pet_' + Date.now()
 
+    // 生成宠物编号
+    var typePrefix = formData.type === 'cat' ? 'CAT' : 'DOG';
+    var localPets = wx.getStorageSync('localPets') || [];
+    var existingCodes = localPets
+      .filter(function(p) { return p.petCode && p.petCode.startsWith(typePrefix); })
+      .map(function(p) { return parseInt(p.petCode.split('-')[1]); });
+    existingCodes.sort(function(a, b) { return b - a; });
+    var nextNum = existingCodes.length > 0 ? existingCodes[0] + 1 : 1;
+    var petCodeVal = typePrefix + '-' + String(nextNum).padStart(3, '0');
+
     var petData = {
       _id: petId,
       petId: petId,
+      petCode: petCodeVal,
       name: formData.name,
       type: formData.type,
       breed: formData.breed || '',
@@ -901,50 +1010,176 @@ Page({
     }
   },
 
-  // === 自动打开编辑弹窗（从首页跳转过来时使用）===
-  autoOpenEditModal: function(petId) {
-    var self = this
+  // === 自查记录 ===
+  showPetRecords: function(e) {
+    var petId = e.currentTarget.dataset.petId;
+    var petName = e.currentTarget.dataset.petName;
+    console.log('📋 点击自查记录，petId:', petId, 'petName:', petName);
+    this.loadRecordsByPet(petId, petName, 'record');
+  },
 
-    console.log('准备自动打开编辑弹窗，宠物ID:', petId)
+  // === 健康报告 ===
+  showPetReports: function(e) {
+    var petId = e.currentTarget.dataset.petId;
+    var petName = e.currentTarget.dataset.petName;
+    console.log('📊 点击健康报告，petId:', petId, 'petName:', petName);
+    this.loadRecordsByPet(petId, petName, 'report');
+  },
 
-    // 在当前宠物列表中查找对应的宠物
-    var pet = self.data.petList.find(function(p) {
-      return p._id === petId || p.petId === petId
-    })
+  // === 加载每个宠物的记录计数 ===
+  loadRecordCounts: function(petList) {
+    var self = this;
+    if (!app.globalData.cloudDevelopmentAvailable || !petList || petList.length === 0) return;
 
-    if (pet) {
-      console.log('找到宠物信息，自动打开编辑弹窗:', pet)
+    var openid = app.getOpenid();
+    if (!openid) return;
 
-      // 填充表单数据
-      self.setData({
-        showModal: true,
-        isEdit: true,
-        currentPetId: pet._id || pet.petId,
-        formData: {
-          name: pet.name || '',
-          type: pet.type || 'cat',
-          breed: pet.breed || '',
-          age: pet.age || '',
-          weight: pet.weight || '',
-          gender: pet.gender || 'male',
-          vaccineDate: pet.vaccineDate || '',
-          dewormDate: pet.dewormDate || '',
-          avatar: pet.avatar || ''
-        },
-        avatarPreview: pet.avatar || ''
-      })
+    wx.cloud.callFunction({
+      name: 'getRecordList',
+      data: {
+        openid: openid,
+        page: 1,
+        pageSize: 100
+      },
+      success: function(res) {
+        if (res.result.code === 0) {
+          var records = res.result.data.records || [];
+          // 按宠物ID统计记录数
+          var countMap = {};
+          records.forEach(function(r) {
+            var pid = r.petId || r.pet_id;
+            if (pid) {
+              countMap[pid] = (countMap[pid] || 0) + 1;
+            }
+          });
 
-      wx.showToast({
-        title: `正在编辑${pet.name}`,
-        icon: 'success',
-        duration: 1500
-      })
-    } else {
-      console.error('未找到对应的宠物信息，宠物ID:', petId)
-      wx.showToast({
-        title: '未找到宠物信息',
-        icon: 'none'
-      })
+          console.log('📋 记录计数映射:', countMap);
+
+          // 更新每个宠物的记录计数
+          var updatedList = petList.map(function(pet) {
+            var pid = pet._id || pet.petId;
+            var count = countMap[pid] || 0;
+            return {
+              _id: pet._id,
+              petId: pet.petId,
+              petCode: pet.petCode,
+              petIdDisplay: pet.petIdDisplay,
+              name: pet.name,
+              type: pet.type,
+              breed: pet.breed,
+              age: pet.age,
+              weight: pet.weight,
+              gender: pet.gender,
+              vaccineDate: pet.vaccineDate,
+              dewormDate: pet.dewormDate,
+              avatar: pet.avatar,
+              createdAt: pet.createdAt,
+              recordCount: count,
+              reportCount: count
+            };
+          });
+
+          self.setData({ petList: updatedList });
+        }
+      },
+      fail: function(err) {
+        console.error('❌ 加载记录计数失败:', err);
+      }
+    });
+  },
+
+  // === 加载宠物相关的记录 ===
+  loadRecordsByPet: function(petId, petName, type) {
+    var self = this;
+
+    if (!petId) {
+      wx.showToast({ title: '宠物信息异常', icon: 'none' });
+      return;
     }
-  }
+
+    self.setData({
+      currentRecordPetId: petId,
+      showRecordModal: true,
+      recordModalTitle: (type === 'record' ? '自查记录 - ' : '健康报告 - ') + petName,
+      recordList: [],
+      recordLoading: true
+    });
+
+    if (!app.globalData.cloudDevelopmentAvailable) {
+      self.setData({ recordList: [], recordLoading: false });
+      return;
+    }
+
+    var openid = app.getOpenid();
+    if (!openid) {
+      self.setData({ recordList: [], recordLoading: false });
+      return;
+    }
+
+    wx.cloud.callFunction({
+      name: 'getRecordList',
+      data: {
+        openid: openid,
+        page: 1,
+        pageSize: 50
+      },
+      success: function(res) {
+        if (res.result && res.result.code === 0) {
+          var allRecords = (res.result.data && res.result.data.records) || [];
+
+          // 兼容 petId 和 pet_id 两种字段名
+          var petRecords = allRecords.filter(function(r) {
+            return r.petId === petId || r.pet_id === petId;
+          });
+
+          console.log('📋 筛选记录: 共', allRecords.length, '条, 匹配', petRecords.length, '条, petId:', petId);
+
+          var list = petRecords.map(function(r) {
+            var level = r.riskLevel || r.risk_level || 'low';
+            var iconMap = { low: '✅', mid: '⚠️', high: '❌' };
+            var bgMap = { low: '#E8F5E9', mid: '#FFF3E0', high: '#FFEBEE' };
+            var levelText = { low: '低风险', mid: '中等风险', high: '高风险' };
+            var symptomNames = r.symptoms || r.symptom_names || [];
+            var createdAt = r.createdAt || r.created_at || '';
+            return {
+              _id: r._id,
+              icon: iconMap[level] || '✅',
+              bgColor: bgMap[level] || '#E8F5E9',
+              title: symptomNames.slice(0, 3).join('、') || '自查记录',
+              desc: (typeof createdAt === 'string' ? createdAt.substring(0, 10) : '') + ' · ' + (levelText[level] || '低风险'),
+              riskLevel: level
+            };
+          });
+
+          self.setData({ recordList: list, recordLoading: false });
+        } else {
+          console.error('❌ 获取记录失败:', res.result.msg);
+          self.setData({ recordList: [], recordLoading: false });
+          wx.showToast({ title: res.result.msg || '加载失败', icon: 'none' });
+        }
+      },
+      fail: function(err) {
+        console.error('❌ 云函数调用失败:', err);
+        self.setData({ recordList: [], recordLoading: false });
+        wx.showToast({ title: '网络异常，请重试', icon: 'none' });
+      }
+    });
+  },
+
+  // === 关闭弹窗 ===
+  hideRecordModal: function() {
+    this.setData({ showRecordModal: false });
+  },
+
+  // === 查看记录详情 ===
+  viewRecordDetail: function(e) {
+    var recordId = e.currentTarget.dataset.recordId;
+    if (!recordId) return;
+    var record = this.data.recordList.find(function(r) { return r._id === recordId; });
+    var riskLevel = record ? (record.riskLevel || 'low') : 'low';
+    wx.navigateTo({
+      url: '/pages/risk/result?assessmentId=' + recordId + '&riskLevel=' + riskLevel
+    });
+  },
+
 })

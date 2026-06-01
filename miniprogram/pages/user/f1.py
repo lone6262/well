@@ -1,0 +1,8 @@
+﻿f = open("records.wxml", encoding="utf-8")
+c = f.read()
+f.close()
+c = c.replace("</text>\n        <view class=\"delete-record-btn\" catchtap=\"deleteRecord\" data-id=\"{{item._id}}\">\u5220\u9664</view></text>", "</text>\n        <view class=\"delete-record-btn\" catchtap=\"deleteRecord\" data-id=\"{{item._id}}\">\u5220\u9664</view>")
+f = open("records.wxml", "w", encoding="utf-8")
+f.write(c)
+f.close()
+print("Fixed")

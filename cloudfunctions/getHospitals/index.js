@@ -1,23 +1,8 @@
 // 云函数入口文件
+// 注意: 此云函数当前返回模拟数据。生产环境请使用 searchHospitals 云函数，
+// 该函数通过服务端调用腾讯地图API获取实时数据并隐藏API密钥。
 const cloud = require('wx-server-sdk');
-
-// 本地常量定义
-const COLLECTIONS = {
-  USERS: 'users',
-  PETS: 'pets',
-  SYMPTOM_RECORDS: 'symptom_records',
-  AI_CACHE: 'ai_cache',
-  ORDERS: 'orders',
-  HOSPITALS: 'hospitals'
-};
-
-const RESPONSE_CODE = {
-  SUCCESS: 0,
-  ERROR: -1,
-  UNAUTHORIZED: 401,
-  NOT_FOUND: 404,
-  SERVER_ERROR: 500
-};
+const { COLLECTIONS, RESPONSE_CODE } = require('./constants');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -27,12 +12,14 @@ const db = cloud.database();
 
 /**
  * 获取附近的宠物医院列表
+ * V1.0: 返回模拟数据供开发测试
+ * TODO: 接入数据库中的真实医院数据
  */
-exports.main = async (event, context) => {
+exports.main = async (event) => {
   const { latitude, longitude, is24h = false, limit = 20 } = event;
 
   try {
-    // 1. 参数校验
+    // 参数校验
     if (!latitude || !longitude) {
       return {
         code: RESPONSE_CODE.ERROR,
@@ -41,97 +28,63 @@ exports.main = async (event, context) => {
       };
     }
 
-    // 2. V1.0版本：返回模拟数据
-    const mockHospitals = [
-      {
-        hospitalId: 'mock_001',
-        name: '爱心宠物医院',
-        address: 'xx市xx区xx路123号',
-        distance: 500,
-        phone: '010-12345678',
-        is24h: true,
-        rating: 4.5,
-        location: {
-          latitude: latitude + 0.001,
-          longitude: longitude + 0.001
-        },
-        businessHours: '24小时营业',
-        claimStatus: 'unclaimed'
-      },
-      {
-        hospitalId: 'mock_002',
-        name: '宠物中心医院',
-        address: 'xx市xx区xx路456号',
-        distance: 1200,
-        phone: '010-87654321',
-        is24h: true,
-        rating: 4.8,
-        location: {
-          latitude: latitude - 0.002,
-          longitude: longitude + 0.003
-        },
-        businessHours: '24小时营业',
-        claimStatus: 'claimed'
-      },
-      {
-        hospitalId: 'mock_003',
-        name: '萌宠宠物诊所',
-        address: 'xx市xx区xx路789号',
-        distance: 800,
-        phone: '010-11223344',
-        is24h: false,
-        rating: 4.2,
-        location: {
-          latitude: latitude + 0.002,
-          longitude: longitude - 0.001
-        },
-        businessHours: '09:00-21:00',
-        claimStatus: 'unclaimed'
-      },
-      {
-        hospitalId: 'mock_004',
-        name: '瑞派宠物医院',
-        address: 'xx市xx区xx路321号',
-        distance: 1500,
-        phone: '010-55667788',
-        is24h: true,
-        rating: 4.6,
-        location: {
-          latitude: latitude - 0.001,
-          longitude: longitude - 0.002
-        },
-        businessHours: '24小时营业',
-        claimStatus: 'claimed'
-      },
-      {
-        hospitalId: 'mock_005',
-        name: '乐乐宠物诊所',
-        address: 'xx市xx区xx路654号',
-        distance: 2000,
-        phone: '010-99887766',
-        is24h: false,
-        rating: 4.0,
-        location: {
-          latitude: latitude + 0.003,
-          longitude: longitude + 0.002
-        },
-        businessHours: '08:00-20:00',
-        claimStatus: 'unclaimed'
-      }
-    ];
-
-    // 3. 根据条件筛选
-    let filteredHospitals = mockHospitals;
-
-    if (is24h) {
-      // 只显示24小时医院
-      filteredHospitals = mockHospitals.filter(hospital => hospital.is24h);
+    // 尝试从数据库查询
+    let hospitals = [];
+    try {
+      const dbResult = await db.collection(COLLECTIONS.HOSPITALS)
+        .limit(limit)
+        .get();
+      hospitals = dbResult.data;
+    } catch (dbError) {
+      console.log('数据库查询失败，使用模拟数据:', dbError.message);
     }
 
-    // 4. 按距离排序
-    filteredHospitals.sort((a, b) => a.distance - b.distance);
+    // 如果没有数据库数据，返回模拟数据
+    if (hospitals.length === 0) {
+      hospitals = [
+        {
+          hospitalId: 'mock_001',
+          name: '爱心宠物医院',
+          address: 'xx市xx区xx路123号',
+          distance: 500,
+          phone: '010-12345678',
+          is24h: true,
+          rating: 4.5,
+          location: { latitude: latitude + 0.001, longitude: longitude + 0.001 }
+        },
+        {
+          hospitalId: 'mock_002',
+          name: '宠物中心医院',
+          address: 'xx市xx区xx路456号',
+          distance: 1200,
+          phone: '010-87654321',
+          is24h: true,
+          rating: 4.8,
+          location: { latitude: latitude - 0.002, longitude: longitude + 0.003 }
+        },
+        {
+          hospitalId: 'mock_003',
+          name: '萌宠宠物诊所',
+          address: 'xx市xx区xx路789号',
+          distance: 800,
+          phone: '010-11223344',
+          is24h: false,
+          rating: 4.2,
+          location: { latitude: latitude + 0.002, longitude: longitude - 0.001 }
+        }
+      ];
+    }
 
-    // 5. 限制返回数量
+    // 根据条件筛选
+    let filteredHospitals = hospitals;
+    if (is24h) {
+      filteredHospitals = hospitals.filter(h => h.is24h);
+    }
+
+    // 按距离排序
+    filteredHospitals.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+
+    // 限制返回数量
     const limitedHospitals = filteredHospitals.slice(0, limit);
 
     return {
@@ -140,11 +93,8 @@ exports.main = async (event, context) => {
       data: {
         hospitals: limitedHospitals,
         total: limitedHospitals.length,
-        userLocation: {
-          latitude: latitude,
-          longitude: longitude
-        },
-        isMockData: true  // 标识这是模拟数据
+        userLocation: { latitude, longitude },
+        isMockData: hospitals[0] && hospitals[0].hospitalId && hospitals[0].hospitalId.startsWith('mock')
       }
     };
 
@@ -153,9 +103,7 @@ exports.main = async (event, context) => {
     return {
       code: RESPONSE_CODE.SERVER_ERROR,
       msg: '服务器错误，请稍后重试',
-      data: {
-        error: error.message
-      }
+      data: { error: error.message }
     };
   }
 };

@@ -408,18 +408,12 @@ Page({
 
   // 查看自查记录
   viewHistory: function() {
-    wx.showToast({
-      title: '功能开发中',
-      icon: 'none'
-    })
+    wx.navigateTo({ url: '/pages/user/records?type=checkRecords' })
   },
 
   // 查看我的报告
   viewReports: function() {
-    wx.showToast({
-      title: '功能开发中',
-      icon: 'none'
-    })
+    wx.navigateTo({ url: '/pages/user/records?type=reports' })
   },
 
   // 查看宠物档案
@@ -619,7 +613,7 @@ Page({
     console.log('同步用户信息到云端:', userInfo)
 
     wx.cloud.callFunction({
-      name: 'updateUserInfo', // 需要创建这个云函数
+      name: 'saveUserProfile', // 需要创建这个云函数
       data: {
         openid: openid,
         userInfo: {

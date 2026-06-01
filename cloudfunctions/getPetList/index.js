@@ -1,23 +1,6 @@
 // 云函数入口文件
 const cloud = require('wx-server-sdk');
-
-// 本地常量定义
-const COLLECTIONS = {
-  USERS: 'users',
-  PETS: 'pets',
-  SYMPTOM_RECORDS: 'symptom_records',
-  AI_CACHE: 'ai_cache',
-  ORDERS: 'orders',
-  HOSPITALS: 'hospitals'
-};
-
-const RESPONSE_CODE = {
-  SUCCESS: 0,
-  ERROR: -1,
-  UNAUTHORIZED: 401,
-  NOT_FOUND: 404,
-  SERVER_ERROR: 500
-};
+const { COLLECTIONS, RESPONSE_CODE } = require('./constants');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -74,12 +57,13 @@ exports.main = async (event, context) => {
       .orderBy('created_at', 'desc')
       .get();
 
-    // 3. 格式化返回数据并计算健康状态
+    // 3. 格式化返回数据并计算健康状态（统一使用_id）
     const petList = result.data.map(pet => {
       const healthStatus = calculateHealthStatus(pet);
       return {
-        _id: pet._id, // 保留原始_id，用于前端操作
-        petId: pet._id, // 同时提供petId，兼容性字段
+        _id: pet._id,
+        petId: pet._id,
+        petCode: pet.petCode || '',
         name: pet.name,
         type: pet.type,
         breed: pet.breed,
@@ -88,9 +72,8 @@ exports.main = async (event, context) => {
         gender: pet.gender || 'male',
         vaccineDate: pet.vaccine_date,
         dewormDate: pet.deworm_date,
-        avatar: pet.avatar || '', // 新增头像字段
+        avatar: pet.avatar || '',
         createdAt: pet.created_at,
-        // 新增健康状态字段
         healthStatus: healthStatus,
         healthStatusText: getHealthStatusText(healthStatus)
       };

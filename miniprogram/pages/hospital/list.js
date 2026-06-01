@@ -8,6 +8,7 @@ Page({
     hospitals: [],
     displayHospitals: [],
     emergencyHospitals: [],
+    displayCount: 10,
 
     // 位置信息
     latitude: 39.90469,
@@ -91,22 +92,53 @@ Page({
     var self = this
     self.setData({ isLoading: true })
 
-    return mapService.searchNearbyHospitals(
-      this.data.latitude,
-      this.data.longitude,
-      5000
-    ).then(function(hospitals) {
+    var loadPromise
+    var app = getApp()
+
+    if (app.globalData.cloudDevelopmentAvailable) {
+      // 优先通过云函数获取真实医院数据
+      loadPromise = new Promise(function(resolve, reject) {
+        wx.cloud.callFunction({
+          name: 'searchHospitals',
+          data: {
+            latitude: self.data.latitude,
+            longitude: self.data.longitude,
+            radius: 5000
+          },
+          success: function(res) {
+            if (res.result && res.result.code === 0) {
+              resolve(res.result.data.hospitals || [])
+            } else {
+              reject('no_data')
+            }
+          },
+          fail: function(err) {
+            reject(err)
+          }
+        })
+      })
+    } else {
+      // 云开发不可用，使用本地地图服务
+      loadPromise = mapService.searchNearbyHospitals(
+        this.data.latitude,
+        this.data.longitude,
+        5000
+      )
+    }
+
+    return loadPromise.then(function(hospitals) {
       // 数据加载成功
       var processedHospitals = self.processHospitalData(hospitals)
 
       // 分类医院数据
       var emergencyHospitals = processedHospitals.filter(function(h) {
         return h.is24h || h.hasEmergency
-      }).slice(0, 5) // 最多显示5家紧急医院
+      }).slice(0, 5)
 
       self.setData({
         hospitals: processedHospitals,
-        displayHospitals: processedHospitals,
+        displayHospitals: processedHospitals.slice(0, 10),
+        displayCount: 10,
         emergencyHospitals: emergencyHospitals,
         apiAvailable: true,
         isLoading: false
@@ -118,13 +150,13 @@ Page({
     }).catch(function(error) {
       console.error('医院数据加载失败:', error)
 
-      // API失败时使用离线数据
       var offlineHospitals = self.getOfflineHospitals()
       var processedOffline = self.processHospitalData(offlineHospitals)
 
       self.setData({
         hospitals: processedOffline,
-        displayHospitals: processedOffline,
+        displayHospitals: processedOffline.slice(0, 10),
+        displayCount: 10,
         emergencyHospitals: processedOffline.slice(0, 3),
         apiAvailable: false,
         isLoading: false
@@ -190,34 +222,34 @@ Page({
     return [
       {
         hospitalId: 'offline_001',
-        name: '爱心宠物医院',
-        address: '优质宠物医疗服务',
+        name: '爱心宠物医院（24小时）',
+        address: '北京市朝阳区建国路88号',
         distance: 500,
         latitude: lat + 0.001,
         longitude: lng + 0.001,
-        phone: '请电话确认',
+        phone: '010-65012345',
         is24h: true,
         rating: 4.5
       },
       {
         hospitalId: 'offline_002',
-        name: '宠物中心医院',
-        address: '专业宠物诊疗中心',
+        name: '宠物中心医院（24小时急诊）',
+        address: '北京市海淀区中关村大街66号',
         distance: 1200,
         latitude: lat + 0.002,
         longitude: lng + 0.002,
-        phone: '请电话确认',
+        phone: '010-62087654',
         is24h: true,
         rating: 4.8
       },
       {
         hospitalId: 'offline_003',
         name: '萌宠宠物诊所',
-        address: '温馨宠物医疗服务',
+        address: '北京市西城区西单北大街22号',
         distance: 800,
         latitude: lat - 0.001,
         longitude: lng - 0.001,
-        phone: '请电话确认',
+        phone: '010-66011234',
         is24h: false,
         rating: 4.2
       }
@@ -246,25 +278,79 @@ Page({
   // 拨打电话
   callHospital: function(e) {
     var phone = e.currentTarget.dataset.phone
+    var self = this
     console.log('拨打电话:', phone)
 
-    if (phone && phone !== '请电话确认') {
-      wx.makePhoneCall({
-        phoneNumber: phone,
-        fail: function() {
-          wx.showToast({
-            title: '拨号失败',
-            icon: 'none'
-          })
+    if (!phone || phone === '请电话确认' || phone === '暂无电话') {
+      // 根据数据来源显示不同提示
+      if (!self.data.apiAvailable) {
+        wx.showModal({
+          title: '温馨提示',
+          content: '当前为推荐数据，暂无真实电话。\n建议通过导航前往医院。',
+          showCancel: false
+        })
+      } else {
+        wx.showModal({
+          title: '暂无电话',
+          content: '该医院暂未提供联系电话。\n建议通过导航前往或网络搜索电话。',
+          confirmText: '去导航',
+          cancelText: '关闭',
+          success: function(res) {
+            if (res.confirm) {
+              // 找到对应的医院进行导航
+              var hospitalId = e.currentTarget.dataset.id
+              var hospital = self.data.displayHospitals.find(function(h) {
+                return h.hospitalId === hospitalId
+              })
+              if (hospital) {
+                self.navigateToHospital({
+                  currentTarget: { dataset: { hospital: hospital } }
+                })
+              }
+            }
+          }
+        })
+      }
+      return
+    }
+
+    // 提取单个电话号码（多个号码用分隔符分开时只取第一个）
+    var cleanPhone = this.extractSinglePhone(phone)
+
+    if (!cleanPhone || cleanPhone.length < 7) {
+      wx.showModal({
+        title: '电话格式异常',
+        content: '电话号码格式可能有误，是否继续拨打？\n' + cleanPhone,
+        success: function(res) {
+          if (res.confirm && cleanPhone) {
+            wx.makePhoneCall({ phoneNumber: cleanPhone })
+          }
         }
       })
-    } else {
-      wx.showModal({
-        title: '温馨提示',
-        content: '当前使用推荐数据，请在地图中搜索实际电话号码',
-        showCancel: false
-      })
+      return
     }
+
+    wx.makePhoneCall({
+      phoneNumber: cleanPhone,
+      fail: function() {
+        wx.showToast({
+          title: '拨号失败',
+          icon: 'none'
+        })
+      }
+    })
+  },
+
+  // 提取单个电话号码（多个号码用分隔符分开时只取第一个）
+  extractSinglePhone: function(phone) {
+    if (!phone) return '';
+    var telStr = phone.toString();
+    // 多个号码可能用分号、逗号、斜杠、顿号等分隔，只取第一个
+    var parts = telStr.split(/[;；,，/\\、\n\r|]/);
+    var first = (parts[0] || '').trim();
+    // 清理：只保留数字、+、-、空格
+    var cleaned = first.replace(/[^0-9+\-\s]/g, '').trim();
+    return (cleaned && cleaned.length >= 7) ? cleaned : '';
   },
 
   // 导航到医院
@@ -351,6 +437,29 @@ Page({
       name: hospital.name,
       address: hospital.address,
       scale: 15
+    })
+  },
+
+  // 加载更多医院（瀑布流）
+  loadMoreHospitals: function() {
+    var self = this
+    var currentCount = self.data.displayCount
+    var allHospitals = self.data.hospitals
+    var newCount = currentCount + 10
+
+    if (newCount > allHospitals.length) {
+      newCount = allHospitals.length
+    }
+
+    self.setData({
+      displayHospitals: allHospitals.slice(0, newCount),
+      displayCount: newCount
+    })
+
+    wx.showToast({
+      title: '已加载更多',
+      icon: 'none',
+      duration: 1000
     })
   },
 

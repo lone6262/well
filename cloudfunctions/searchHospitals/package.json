@@ -1,0 +1,9 @@
+{
+  "name": "searchHospitals",
+  "version": "1.0.0",
+  "description": "搜索附近宠物医院（服务端调用腾讯地图API，隐藏API密钥）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

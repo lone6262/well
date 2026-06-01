@@ -58,7 +58,7 @@
       <text class="clear-btn" bindtap="clearAllSymptoms">清空</text>
     </view>
 
-    <scroll-view class="scroll-area" scroll-y="{{true}}">
+    <view class="symptom-area">
       <view class="category-block" wx:for="{{symptomCategories}}" wx:key="name" wx:for-item="category" wx:for-index="catIndex">
         <view class="category-title">
           <text>{{category.emoji}} {{category.name}}</text>
@@ -79,7 +79,7 @@
           </view>
         </view>
       </view>
-    </scroll-view>
+    </view>
 
     <view class="selected-tags" wx:if="{{selectedSymptomNames.length > 0}}">
       <scroll-view class="tags-scroll" scroll-x="{{true}}" show-scrollbar="{{false}}">
