@@ -1,5 +1,6 @@
 // 地图服务模块 - 集成腾讯地图API - 实时24小时医院搜索增强版
 const MAP_CONFIG = require('./mapConfig.js')
+const { MAP_CONFIG: MAP_CONSTANTS, TOAST_DURATION } = require('./constants.js')
 
 /**
  * 地图服务类 - 实时增强版
@@ -17,7 +18,7 @@ class MapService {
    * @param {number} radius 搜索半径（米）
    * @returns {Promise} 搜索结果
    */
-  searchNearbyHospitals(latitude, longitude, radius = 5000) {
+  searchNearbyHospitals(latitude, longitude, radius = MAP_CONSTANTS.SEARCH_RADIUS) {
     return new Promise((resolve, reject) => {
       // 如果还没有配置API密钥，使用模拟数据
       if (this.key === 'YOUR_TENCENT_MAP_KEY') {
@@ -78,7 +79,7 @@ class MapService {
           console.log('⏰ 搜索超时，返回已获取的结果')
           this.processSearchResults(results, latitude, longitude, resolve, true)
         }
-      }, 10000) // 10秒超时
+      }, MAP_CONSTANTS.API_TIMEOUT) // API超时
     })
   }
 
@@ -190,7 +191,7 @@ class MapService {
       wx.showToast({
         title: '部分搜索失败，显示可用结果',
         icon: 'none',
-        duration: 2000
+        duration: TOAST_DURATION.NORMAL
       })
     }
 

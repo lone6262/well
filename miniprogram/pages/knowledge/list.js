@@ -1,5 +1,6 @@
 // 宠物知识库列表页面
 let app = getApp()
+const { UNIT_CONVERSION } = require('../../utils/constants.js')
 
 // 分类映射表
 let CATEGORY_MAP = {
@@ -178,8 +179,8 @@ Page({
   // 格式化浏览量
   formatViewCount: function(count) {
     if (!count) return '0'
-    if (count >= 10000) {
-      return (count / 10000).toFixed(1) + 'w'
+    if (count >= UNIT_CONVERSION.COUNT_TO_WAN) {
+      return (count / UNIT_CONVERSION.COUNT_TO_WAN).toFixed(1) + 'w'
     }
     return String(count)
   }

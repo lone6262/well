@@ -1,5 +1,5 @@
 // 邀请排行榜云函数
-// 内存中聚合邀请数据，返回 Top 20
+// 内存中聚合邀请数据，返回 Top N（由 RANKING_CONFIG.TOP_N 配置）
 // 带5分钟内存缓存，减少重复聚合开销
 const cloud = require('wx-server-sdk');
 const {
@@ -7,6 +7,7 @@ const {
   RESPONSE_CODE,
   INVITE_STATUS,
   TIME,
+  RANKING_CONFIG,
   warmupConfig
 } = require('./common/constants');
 
@@ -43,7 +44,7 @@ exports.main = async (event, context) => {
       // 2. 缓存过期或无缓存，重新聚合
       // 分页查询所有已奖励记录（云数据库单次最多100条）
       countMap = {};
-      let batchSize = 100;
+      let batchSize = RANKING_CONFIG.BATCH_SIZE;
       let offset = 0;
       let hasMore = true;
 
@@ -78,7 +79,7 @@ exports.main = async (event, context) => {
       sorted.push({ userId: userId, count: countMap[userId] });
     }
     sorted.sort(function(a, b) { return b.count - a.count; });
-    const top20 = sorted.slice(0, 20);
+    const top20 = sorted.slice(0, RANKING_CONFIG.TOP_N);
 
     // 4. 批量查询用户信息
     let rankList = [];
@@ -86,7 +87,7 @@ exports.main = async (event, context) => {
       const topIds = top20.map(function(item) { return item.userId; });
       const usersResult = await db.collection(COLLECTIONS.USERS)
         .where({ user_id: db.command.in(topIds) })
-        .limit(100)
+        .limit(RANKING_CONFIG.MAX_QUERY_LIMIT)
         .get();
 
       const userMap = {};

@@ -1,6 +1,8 @@
 // app.js - 按照用户专业登录方案实现
 // 完全遵循：静默登录、游客模式、按需授权、token续期
 
+const { TOAST_DURATION, CACHE_DURATION } = require('./utils/constants.js')
+
 App({
   globalData: {
     userInfo: null,
@@ -244,7 +246,7 @@ App({
     wx.showToast({
       title: '网络不可用，部分功能受限',
       icon: 'none',
-      duration: 3000
+      duration: TOAST_DURATION.LONG
     });
 
     // 通知等待登录的页面（openid 为空）
@@ -565,7 +567,7 @@ App({
       const cachedLocationTime = wx.getStorageSync('cachedLocationTime');
 
       if (cachedLatitude && cachedLongitude && cachedLocationTime) {
-        const LOCATION_CACHE_DURATION = 5 * 60 * 1000; // 5分钟缓存
+        const LOCATION_CACHE_DURATION = CACHE_DURATION.LOCATION;
         const currentTime = Date.now();
 
         if ((currentTime - cachedLocationTime) < LOCATION_CACHE_DURATION) {
@@ -673,7 +675,7 @@ App({
   // 首次请求时直接通过 wx.getLocation 触发系统授权弹窗（不依赖 wx.authorize）
   getUserLocation: function(forceRefresh) {
     const self = this;
-    const LOCATION_CACHE_DURATION = 5 * 60 * 1000; // 5分钟缓存
+    const LOCATION_CACHE_DURATION = CACHE_DURATION.LOCATION;
     const currentTime = Date.now();
 
     if (forceRefresh === undefined) forceRefresh = false;

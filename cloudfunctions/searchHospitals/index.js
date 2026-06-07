@@ -1,7 +1,7 @@
 // 搜索附近宠物医院云函数
 // 将腾讯地图API调用从前端移至服务端，避免API密钥暴露
 const cloud = require('wx-server-sdk');
-const { RESPONSE_CODE, SERVER_CONFIG, warmupConfig } = require('./common/constants');
+const { RESPONSE_CODE, SERVER_CONFIG, MAP_SEARCH, warmupConfig } = require('./common/constants');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
@@ -19,15 +19,11 @@ const SEARCH_KEYWORDS = [
   '宠物医院'
 ];
 
-const SEARCH_RADIUS = 5000;   // 默认搜索半径5公里
-const SEARCH_TIMEOUT = 8000;  // 单次搜索超时8秒
-const PAGE_SIZE = 20;
-
 /**
  * 计算两点间距离（Haversine公式）
  */
 function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371000; // 地球半径（米）
+  const R = MAP_SEARCH.EARTH_RADIUS;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -76,7 +72,7 @@ async function searchByKeyword(latitude, longitude, radius, keyword) {
       key: getMapKey(),
       keyword: keyword,
       boundary: `nearby(${latitude},${longitude},${radius})`,
-      page_size: PAGE_SIZE,
+      page_size: MAP_SEARCH.PAGE_SIZE,
       page_index: 1
     });
 
@@ -113,7 +109,7 @@ async function searchByKeyword(latitude, longitude, radius, keyword) {
     });
 
     req.on('error', () => { resolve([]); });
-    req.setTimeout(SEARCH_TIMEOUT, () => { req.abort(); resolve([]); });
+    req.setTimeout(MAP_SEARCH.TIMEOUT_MS, () => { req.abort(); resolve([]); });
   });
 }
 
@@ -123,12 +119,40 @@ async function searchByKeyword(latitude, longitude, radius, keyword) {
 exports.main = async (event) => {
   await warmupConfig(db);
 
-  const { latitude, longitude, radius = SEARCH_RADIUS } = event;
+  const { latitude, longitude, radius = MAP_SEARCH.DEFAULT_RADIUS } = event;
 
   if (!latitude || !longitude) {
     return {
       code: RESPONSE_CODE.ERROR,
       msg: '缺少经纬度参数',
+      data: { hospitals: [] }
+    };
+  }
+
+  // 经纬度范围校验（防止无效输入）
+  const lat = parseFloat(latitude);
+  const lon = parseFloat(longitude);
+  if (isNaN(lat) || lat < -90 || lat > 90) {
+    return {
+      code: RESPONSE_CODE.ERROR,
+      msg: '纬度参数无效（范围：-90到90）',
+      data: { hospitals: [] }
+    };
+  }
+  if (isNaN(lon) || lon < -180 || lon > 180) {
+    return {
+      code: RESPONSE_CODE.ERROR,
+      msg: '经度参数无效（范围：-180到180）',
+      data: { hospitals: [] }
+    };
+  }
+
+  // 搜索半径限制（防止过大搜索范围导致性能问题）
+  const searchRadius = parseInt(radius) || MAP_SEARCH.DEFAULT_RADIUS;
+  if (searchRadius < 100 || searchRadius > 50000) {
+    return {
+      code: RESPONSE_CODE.ERROR,
+      msg: '搜索半径超出范围（100-50000米）',
       data: { hospitals: [] }
     };
   }
@@ -143,11 +167,11 @@ exports.main = async (event) => {
   }
 
   try {
-    console.log(`搜索附近医院: (${latitude}, ${longitude}), 半径: ${radius}m`);
+    console.log(`搜索附近医院: (${lat}, ${lon}), 半径: ${searchRadius}m`);
 
     // 并行搜索多个关键词
     const searchPromises = SEARCH_KEYWORDS.map((keyword, index) =>
-      searchByKeyword(latitude, longitude, radius, keyword)
+      searchByKeyword(lat, lon, searchRadius, keyword)
         .then(results => results.map(r => ({ ...r, searchPriority: index, searchKeyword: keyword })))
     );
 

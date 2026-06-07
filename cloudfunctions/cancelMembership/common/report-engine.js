@@ -18,7 +18,8 @@ const {
   CACHE_TTL,
   COLLECTIONS,
   REPORT_SOURCE,
-  SERVER_CONFIG
+  SERVER_CONFIG,
+  AI_CONFIG
 } = require('./constants');
 
 // ============================================
@@ -99,7 +100,7 @@ async function setCache(db, cacheKey, content, source, petInfo, ageRange, riskLe
   const now = new Date();
 
   // 概率性清理过期缓存（1% 概率）
-  if (Math.random() < 0.01) {
+  if (Math.random() < AI_CONFIG.CACHE_CLEANUP_PROBABILITY) {
     cleanExpiredCache(db).catch(function() {});
   }
 
@@ -161,8 +162,8 @@ function callDeepSeekAPI(systemPrompt, userPrompt) {
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
     ],
-    temperature: 0.7,
-    max_tokens: 4000,
+    temperature: AI_CONFIG.TEMPERATURE,
+    max_tokens: AI_CONFIG.MAX_TOKENS,
     response_format: { type: 'json_object' }
   });
 
@@ -172,7 +173,7 @@ function callDeepSeekAPI(systemPrompt, userPrompt) {
 
   const options = {
     hostname: urlObj.hostname,
-    port: 443,
+    port: AI_CONFIG.API_PORT,
     path: path,
     method: 'POST',
     headers: {
@@ -180,7 +181,7 @@ function callDeepSeekAPI(systemPrompt, userPrompt) {
       'Authorization': 'Bearer ' + apiKey,
       'Content-Length': Buffer.byteLength(body)
     },
-    timeout: 30000
+    timeout: AI_CONFIG.TIMEOUT_MS
   };
 
   return new Promise(function(resolve, reject) {
@@ -205,7 +206,7 @@ function callDeepSeekAPI(systemPrompt, userPrompt) {
     });
 
     req.on('error', function(err) { reject(err); });
-    req.setTimeout(30000, function() {
+    req.setTimeout(AI_CONFIG.TIMEOUT_MS, function() {
       req.destroy(new Error('DeepSeek API timeout'));
     });
     req.write(body);

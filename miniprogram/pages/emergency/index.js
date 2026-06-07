@@ -2,6 +2,7 @@
 let app = getApp()
 let mapService = require('../../utils/mapService.js')
 let phoneUtil = require('../../utils/phone.js')
+const { UNIT_CONVERSION, TOAST_DURATION, MAP_CONFIG } = require('../../utils/constants.js')
 
 Page({
   data: {
@@ -91,7 +92,7 @@ Page({
           data: {
             latitude: self.data.latitude,
             longitude: self.data.longitude,
-            radius: 5000
+            radius: MAP_CONFIG.SEARCH_RADIUS
           },
           success: function(res) {
             if (res.result && res.result.code === 0) {
@@ -109,7 +110,7 @@ Page({
       loadPromise = mapService.searchNearbyHospitals(
         this.data.latitude,
         this.data.longitude,
-        5000
+        MAP_CONFIG.SEARCH_RADIUS
       )
     }
 
@@ -155,7 +156,7 @@ Page({
       wx.showToast({
         title: '使用推荐急救数据',
         icon: 'none',
-        duration: 2000
+        duration: TOAST_DURATION.NORMAL
       })
 
       return offlineHospitals
@@ -190,8 +191,8 @@ Page({
 
   // === 格式化距离 ===
   formatDistance: function(meters) {
-    if (meters >= 1000) {
-      return Math.round(meters / 1000) + 'km'
+    if (meters >= UNIT_CONVERSION.METERS_TO_KM) {
+      return Math.round(meters / UNIT_CONVERSION.METERS_TO_KM) + 'km'
     } else {
       return Math.round(meters) + 'm'
     }
@@ -293,7 +294,7 @@ Page({
               wx.showToast({
                 title: '正在拨打...',
                 icon: 'success',
-                duration: 2000
+                duration: TOAST_DURATION.NORMAL
               })
             },
             fail: function(err) {
@@ -374,7 +375,7 @@ Page({
           wx.showToast({
             title: '✅ 已切换到：' + hospital.name,
             icon: 'success',
-            duration: 2000
+            duration: TOAST_DURATION.NORMAL
           })
 
           // 滚动到顶部
@@ -406,7 +407,7 @@ Page({
     wx.showToast({
       title: '已加载更多医院',
       icon: 'none',
-      duration: 1000
+      duration: TOAST_DURATION.SHORT
     })
   },
 

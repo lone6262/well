@@ -3,13 +3,13 @@
  * 基于用户 openid + 操作类型计数，防止 API 滥用
  *
  * 使用方式：
- *   const { checkRateLimit } = require('../common/rate-limiter');
- *   const ok = await checkRateLimit(db, openid, 'createOrder', 10, 60000, false);
+ *   const { checkRateLimit, RATE_LIMIT } = require('../common/rate-limiter');
+ *   const ok = await checkRateLimit(db, openid, 'createOrder', RATE_LIMIT.MAX_REQUESTS, RATE_LIMIT.WINDOW_MS, false);
  *   if (!ok) return error('操作过于频繁，请稍后再试');
  *
  * 限流记录存储在 rate_limits 集合中（需在 dbInit 中创建索引：openid + action + created_at）
  */
-const { COLLECTIONS } = require('./constants');
+const { COLLECTIONS, RATE_LIMIT } = require('./constants');
 
 /**
  * 检查速率限制
@@ -45,4 +45,4 @@ async function checkRateLimit(db, openid, action, maxRequests, windowMs, failOpe
   }
 }
 
-module.exports = { checkRateLimit };
+module.exports = { checkRateLimit, RATE_LIMIT };

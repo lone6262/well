@@ -265,6 +265,14 @@ const TIME = {
   CACHE_30MIN: 30 * 60 * 1000
 };
 
+// === 地图搜索配置 ===
+const MAP_SEARCH = {
+  DEFAULT_RADIUS: 5000,      // 默认搜索半径5公里
+  TIMEOUT_MS: 8000,          // 单次搜索超时8秒
+  PAGE_SIZE: 20,             // 每页结果数量
+  EARTH_RADIUS: 6371000      // 地球半径（米），用于距离计算
+};
+
 // === V1.5 Phase 4 邀请系统常量 ===
 
 // 邀请状态
@@ -416,6 +424,8 @@ module.exports = {
   AGE_RANGES,
   // 时间常量
   TIME,
+  // 地图搜索配置
+  MAP_SEARCH,
   // Phase 4 新增
   INVITE_STATUS,
   INVITE_CONFIG,
