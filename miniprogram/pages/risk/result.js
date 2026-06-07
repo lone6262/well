@@ -1,9 +1,9 @@
 // 风险结果页面逻辑 - 数据库版本
-var app = getApp()
+let app = getApp()
 
 // 本地风险显示信息函数
 function getRiskDisplayInfo(riskLevel) {
-  var riskInfo = {
+  let riskInfo = {
     low: {
       color: '#52c41a',  // 绿色
       icon: '🟢',
@@ -36,13 +36,18 @@ Page({
     petInfo: {},
     selectedSymptoms: [],
     assessmentDetail: null,
-    loading: true
+    loading: true,
+    quotaInfo: null,
+    purchasing: false,
+    reportPurchased: false,
+    hasExistingReport: false,
+    showPayOptions: false
   },
 
   onLoad: function(options) {
-    var assessmentId = options.assessmentId
-    var riskLevel = options.riskLevel
-    var petId = options.petId
+    let assessmentId = options.assessmentId
+    let riskLevel = options.riskLevel
+    let petId = options.petId
 
     console.log('风险结果页面加载, assessmentId:', assessmentId, 'riskLevel:', riskLevel, 'petId:', petId)
 
@@ -51,7 +56,7 @@ Page({
         title: '参数错误',
         icon: 'none'
       })
-      var self = this
+      let self = this
       setTimeout(function() {
         wx.navigateBack()
       }, 1500)
@@ -59,7 +64,7 @@ Page({
     }
 
     // 设置风险显示信息
-    var riskDisplayInfo = getRiskDisplayInfo(riskLevel)
+    let riskDisplayInfo = getRiskDisplayInfo(riskLevel)
 
     this.setData({
       assessmentId: assessmentId,
@@ -70,12 +75,14 @@ Page({
 
     // 加载评估详情
     this.loadAssessmentDetail()
+    // 并行发起配额检查，避免 AI 报告卡片延迟 1 秒
+    this.checkReportQuota()
   },
 
   // 从云函数加载评估详情和宠物信息
   loadAssessmentDetail: function() {
-    var self = this
-    var assessmentId = self.data.assessmentId
+    let self = this
+    let assessmentId = self.data.assessmentId
 
     console.log('从云函数加载评估详情, assessmentId:', assessmentId)
 
@@ -89,14 +96,14 @@ Page({
     wx.cloud.callFunction({
       name: 'getRecordDetail',
       data: {
-        openid: app.getOpenid(),
-        assessmentId: assessmentId
+        assessmentId: assessmentId,
+        token: getApp().globalData.token
       },
       success: function(res) {
         console.log('评估详情加载成功:', res.result)
 
         if (res.result.code === 0) {
-          var data = res.result.data
+          let data = res.result.data
 
           self.setData({
             assessmentDetail: data.assessmentDetail,
@@ -105,6 +112,14 @@ Page({
             petInfo: data.petInfo || {},
             loading: false
           })
+
+          // 检查是否已有AI报告（配额检查已在 onLoad 中并行发起）
+          if (data.assessmentDetail.has_ai_report || data.assessmentDetail.aiCacheId) {
+            self.setData({ hasExistingReport: true, reportPurchased: true })
+          }
+
+          // Phase 4: 处理邀请奖励（首次自查后触发）
+          self.processInviteRewardIfNeeded(assessmentId)
 
         } else {
           console.log('评估记录获取失败:', res.result.msg)
@@ -133,11 +148,11 @@ Page({
 
   // === 新增：加载本地模拟数据（降级方案）===
   loadLocalMockData: function() {
-    var self = this
+    let self = this
 
     console.log('=== 使用本地模拟数据 ===')
 
-    var mockData = {
+    let mockData = {
       assessmentDetail: {
         _id: self.data.assessmentId,
         assessmentId: self.data.assessmentId,
@@ -172,13 +187,13 @@ Page({
 
   // 查看详细建议
   viewReport: function() {
-    var advice = this.getAdviceByRiskLevel()
-    var symptoms = this.data.selectedSymptoms
+    let advice = this.getAdviceByRiskLevel()
+    let symptoms = this.data.selectedSymptoms
 
-    var content = advice + '\n\n检测到以下症状：\n'
+    let content = advice + '\n\n检测到以下症状：\n'
 
     if (symptoms && symptoms.length > 0) {
-      for (var i = 0; i < symptoms.length; i++) {
+      for (let i = 0; i < symptoms.length; i++) {
         content += '• ' + symptoms[i] + '\n'
       }
     }
@@ -200,7 +215,7 @@ Page({
 
   // 根据风险等级获取建议
   getAdviceByRiskLevel: function() {
-    var adviceMap = {
+    let adviceMap = {
       low: '居家观察：注意宠物状态变化，保持良好的饮食和作息。如有异常变化，请及时就医。',
       mid: '建议线上问诊：症状可能需要专业评估，建议咨询线上兽医或近期就医检查。',
       high: '立即就医：请不要拖延，立即前往最近的宠物医院就诊。'
@@ -225,10 +240,46 @@ Page({
     })
   },
 
+  // Phase 4: 处理邀请奖励
+  processInviteRewardIfNeeded: function(recordId) {
+    let inviteCode = app.globalData.pendingInviteCode
+    if (!inviteCode) return
+
+    // 清除邀请码，防止重复触发
+    app.globalData.pendingInviteCode = null
+
+    wx.cloud.callFunction({
+      name: 'processInviteReward',
+      data: { recordId: recordId, inviteCode: inviteCode },
+      success: function(res) {
+        if (res.result && res.result.code === 0 && res.result.data.rewarded) {
+          wx.showToast({ title: '邀请奖励已发放！', icon: 'success', duration: 2000 })
+        }
+      },
+      fail: function() {
+        // 静默失败，不影响用户体验
+      }
+    })
+  },
+
   // 返回首页
   goHome: function() {
     wx.switchTab({
       url: '/pages/index/index'
+    })
+  },
+
+  // 跳转会员页面
+  goToMember: function() {
+    wx.navigateTo({
+      url: '/pages/member/order'
+    })
+  },
+
+  // 跳转会员页面（带返回报告生成参数）
+  goToMemberWithReport: function() {
+    wx.navigateTo({
+      url: '/pages/member/order?fromReport=true&assessmentId=' + this.data.assessmentId
     })
   },
 
@@ -243,5 +294,103 @@ Page({
   // 重新评估
   reassess: function() {
     wx.navigateBack()
+  },
+
+  // 检查报告配额
+  checkReportQuota: function() {
+    let self = this
+    wx.cloud.callFunction({
+      name: 'checkReportQuota',
+      data: { token: app.globalData.token },
+      success: function(res) {
+        if (res.result && res.result.code === 0) {
+          self.setData({ quotaInfo: res.result.data })
+        }
+      }
+    })
+  },
+
+  // 获取AI报告（generateAIReport 内部统一处理：查额度 → 生成报告 → 扣额度 → 创建订单）
+  getAIReport: function() {
+    let self = this
+    let quotaInfo = self.data.quotaInfo
+    let assessmentId = self.data.assessmentId
+
+    if (self.data.purchasing) return
+
+    // 首份优惠（¥1.00），确认后直接生成
+    if (quotaInfo && quotaInfo.quota_source === 'first_report') {
+      wx.showModal({
+        title: '获取AI健康报告',
+        content: '新用户首份仅需¥1.00，包含症状分析、护理建议、就医指导等8大章节。',
+        confirmText: '确认获取',
+        cancelText: '再想想',
+        success: function(res) {
+          if (res.confirm) {
+            self.generateReport(assessmentId)
+          }
+        }
+      })
+      return
+    }
+
+    // 会员/邀请免费额度 或 付费：直接生成（generateAIReport 内部扣额度）
+    self.generateReport(assessmentId)
+  },
+
+  // 选择单份购买
+  paySingleReport: function() {
+    let self = this
+    self.setData({ showPayOptions: false })
+    self.generateReport(self.data.assessmentId)
+  },
+
+  // 选择开通会员
+  chooseMembership: function() {
+    let self = this
+    self.setData({ showPayOptions: false })
+    self.goToMemberWithReport()
+  },
+
+  // 关闭支付选项面板
+  closePayOptions: function() {
+    this.setData({ showPayOptions: false })
+  },
+
+  // 生成AI报告（generateAIReport 已内置额度扣减 + 订单创建，报告失败不扣额度）
+  generateReport: function(recordId) {
+    let self = this
+    self.setData({ purchasing: true })
+    wx.showLoading({ title: '正在生成AI报告...' })
+
+    wx.cloud.callFunction({
+      name: 'generateAIReport',
+      data: { recordId: recordId, token: app.globalData.token },
+      success: function(res) {
+        wx.hideLoading()
+        self.setData({ purchasing: false })
+        if (res.result && res.result.code === 0) {
+          self.setData({ reportPurchased: true })
+          wx.navigateTo({
+            url: '/pages/ai-report/index?recordId=' + recordId
+          })
+        } else {
+          wx.showToast({ title: res.result.msg || '生成报告失败', icon: 'none' })
+        }
+      },
+      fail: function(err) {
+        wx.hideLoading()
+        self.setData({ purchasing: false })
+        wx.showToast({ title: '生成报告失败', icon: 'none' })
+      }
+    })
+  },
+
+  // 查看已有报告
+  viewExistingReport: function() {
+    let self = this
+    wx.navigateTo({
+      url: '/pages/ai-report/index?recordId=' + self.data.assessmentId
+    })
   }
 })

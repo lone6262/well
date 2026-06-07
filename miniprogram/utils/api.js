@@ -10,7 +10,7 @@
  *   }
  */
 
-var app = getApp();
+let app = getApp();
 
 /**
  * API响应标准化
@@ -24,7 +24,7 @@ var app = getApp();
 /**
  * 调用云函数
  * @param {string} name - 云函数名称
- * @param {Object} data - 请求参数（openid 会自动注入）
+ * @param {Object} data - 请求参数（openid 由云函数服务端自动获取，无需传递）
  * @param {Object} options - 可选配置
  * @param {boolean} options.requireLogin - 是否需要登录（默认true）
  * @param {boolean} options.showError - 是否自动显示错误提示（默认false）
@@ -32,17 +32,17 @@ var app = getApp();
  */
 function call(name, data, options) {
   options = options || {};
-  var requireLogin = options.requireLogin !== false;
-  var showError = options.showError || false;
+  let requireLogin = options.requireLogin !== false;
+  let showError = options.showError || false;
 
   return new Promise(function(resolve) {
     // 如果需要登录但没有openid，等待登录完成
     if (requireLogin && !app.globalData.openid) {
-      app.onLoginComplete(function(openid) {
-        _doCall(name, data, openid, showError, resolve);
+      app.onLoginComplete(function() {
+        _doCall(name, data, showError, resolve);
       });
     } else {
-      _doCall(name, data, app.globalData.openid, showError, resolve);
+      _doCall(name, data, showError, resolve);
     }
   });
 }
@@ -50,12 +50,8 @@ function call(name, data, options) {
 /**
  * 执行实际的云函数调用
  */
-function _doCall(name, data, openid, showError, resolve) {
-  // 自动注入 openid
-  var requestData = Object.assign({}, data);
-  if (openid && !requestData.openid) {
-    requestData.openid = openid;
-  }
+function _doCall(name, data, showError, resolve) {
+  let requestData = data;
 
   // 检查云开发是否可用
   if (!app.globalData.cloudDevelopmentAvailable) {
@@ -73,7 +69,7 @@ function _doCall(name, data, openid, showError, resolve) {
     name: name,
     data: requestData,
     success: function(res) {
-      var result = res.result || {};
+      let result = res.result || {};
 
       if (result.code === 0) {
         resolve({
@@ -101,8 +97,8 @@ function _doCall(name, data, openid, showError, resolve) {
     fail: function(err) {
       console.error('[API] 云函数调用失败:', name, err);
 
-      // 标记云开发不可用
-      if (err.errCode === -1 || err.errMsg.indexOf('fail') !== -1) {
+      // 标记云开发不可用（仅精确匹配网络/服务不可用错误码）
+      if (err.errCode === -1 || err.errCode === -404011) {
         app.globalData.cloudDevelopmentAvailable = false;
       }
 
@@ -130,7 +126,7 @@ function _doCall(name, data, openid, showError, resolve) {
  * @returns {Promise<Array<ApiResult>>}
  */
 function batchCall(requests) {
-  var promises = requests.map(function(req) {
+  let promises = requests.map(function(req) {
     return call(req.name, req.data, req.options);
   });
   return Promise.all(promises);

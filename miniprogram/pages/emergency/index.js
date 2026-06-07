@@ -1,6 +1,7 @@
 // 急救通道页面 - 极简设计逻辑
-var app = getApp()
-var mapService = require('../../utils/mapService.js')
+let app = getApp()
+let mapService = require('../../utils/mapService.js')
+let phoneUtil = require('../../utils/phone.js')
 
 Page({
   data: {
@@ -9,8 +10,8 @@ Page({
     showOther: false,  // 是否显示其他医院
 
     // 位置信息
-    latitude: 39.90469,
-    longitude: 116.40717,
+    latitude: 22.543099,   // 深圳市民中心
+    longitude: 114.057868,
 
     // 医院数据
     nearestHospital: null,   // 最近的医院
@@ -26,7 +27,7 @@ Page({
 
   // === 页面初始化 ===
   initEmergencyPage: function() {
-    var self = this
+    let self = this
 
     // 立即开始定位
     this.getUserLocation().then(function(location) {
@@ -58,7 +59,7 @@ Page({
 
   // === 获取用户位置 ===
   getUserLocation: function() {
-    var self = this
+    let self = this
     return new Promise(function(resolve, reject) {
       wx.getLocation({
         type: 'gcj02',
@@ -77,11 +78,11 @@ Page({
 
   // === 加载急救医院数据 ===
   loadEmergencyHospitals: function() {
-    var self = this
+    let self = this
     self.setData({ isLoading: true })
 
-    var loadPromise
-    var app = getApp()
+    let loadPromise
+    let app = getApp()
 
     if (app.globalData.cloudDevelopmentAvailable) {
       loadPromise = new Promise(function(resolve, reject) {
@@ -114,11 +115,11 @@ Page({
 
     return loadPromise.then(function(hospitals) {
       // 处理医院数据
-      var processedHospitals = self.processHospitals(hospitals)
+      let processedHospitals = self.processHospitals(hospitals)
 
       // 分离最近医院和其他医院
-      var nearest = null
-      var others = []
+      let nearest = null
+      let others = []
 
       if (processedHospitals.length > 0) {
         nearest = processedHospitals[0]  // 最近的一家
@@ -140,9 +141,9 @@ Page({
       console.error('医院加载失败:', error)
 
       // 使用离线急救数据
-      var offlineHospitals = self.getEmergencyOfflineData()
+      let offlineHospitals = self.getEmergencyOfflineData()
 
-      var offlineOthers = offlineHospitals.slice(1)
+      let offlineOthers = offlineHospitals.slice(1)
       self.setData({
         nearestHospital: offlineHospitals[0],
         otherHospitals: offlineOthers,
@@ -163,11 +164,11 @@ Page({
 
   // === 处理医院数据 ===
   processHospitals: function(hospitals) {
-    var self = this
+    let self = this
 
     return hospitals.map(function(hospital) {
       // 格式化距离显示
-      var distanceText = self.formatDistance(hospital.distance)
+      let distanceText = self.formatDistance(hospital.distance)
 
       return {
         hospitalId: hospital.hospitalId,
@@ -198,8 +199,8 @@ Page({
 
   // === 获取离线急救数据 ===
   getEmergencyOfflineData: function() {
-    var lat = this.data.latitude
-    var lng = this.data.longitude
+    let lat = this.data.latitude
+    let lng = this.data.longitude
 
     return [
       {
@@ -231,22 +232,10 @@ Page({
 
   // === 用户交互方法 ===
 
-  // 提取单个电话号码（多个号码用分隔符分开时只取第一个）
-  extractSinglePhone: function(phone) {
-    if (!phone) return '';
-    var telStr = phone.toString();
-    // 多个号码可能用分号、逗号、斜杠、顿号等分隔，只取第一个
-    var parts = telStr.split(/[;；,，/\\、\n\r|]/);
-    var first = (parts[0] || '').trim();
-    // 清理：只保留数字、+、-、空格
-    var cleaned = first.replace(/[^0-9+\-\s]/g, '').trim();
-    return (cleaned && cleaned.length >= 7) ? cleaned : '';
-  },
-
   // 拨打电话 - 增强版
   callHospital: function(e) {
-    var phone = e.currentTarget.dataset.phone
-    var hospitalName = e.currentTarget.dataset.name || '宠物医院'
+    let phone = e.currentTarget.dataset.phone
+    let hospitalName = e.currentTarget.dataset.name || '宠物医院'
     console.log('拨打急救电话:', phone, '医院:', hospitalName)
 
     // 电话号码验证和清理
@@ -260,7 +249,7 @@ Page({
     }
 
     // 提取单个电话号码（多个号码用分隔符分开时只取第一个）
-    var cleanPhone = this.extractSinglePhone(phone)
+    let cleanPhone = phoneUtil.extractSinglePhone(phone)
 
     if (!cleanPhone || cleanPhone === '请电话确认' || cleanPhone === '暂无电话') {
       wx.showModal({
@@ -323,7 +312,7 @@ Page({
 
   // 导航到医院
   navigateToHospital: function(e) {
-    var hospital = e.currentTarget.dataset.hospital
+    let hospital = e.currentTarget.dataset.hospital
     console.log('导航到医院:', hospital.name)
 
     mapService.openNavigation(hospital)
@@ -337,7 +326,7 @@ Page({
 
   // 切换其他医院显示（增强版）
   toggleOtherHospitals: function() {
-    var newShowOther = !this.data.showOther
+    let newShowOther = !this.data.showOther
 
     // 添加震动反馈
     if (wx.vibrateShort) {
@@ -360,8 +349,8 @@ Page({
 
   // 选择其他医院（增强版）
   selectHospital: function(e) {
-    var hospital = e.currentTarget.dataset.hospital
-    var self = this
+    let hospital = e.currentTarget.dataset.hospital
+    let self = this
 
     // 添加震动反馈
     if (wx.vibrateShort) {
@@ -400,10 +389,10 @@ Page({
 
   // 加载更多医院（瀑布流）
   loadMoreHospitals: function() {
-    var self = this
-    var currentCount = self.data.displayCount
-    var allHospitals = self.data.otherHospitals
-    var newCount = currentCount + 5
+    let self = this
+    let currentCount = self.data.displayCount
+    let allHospitals = self.data.otherHospitals
+    let newCount = currentCount + 5
 
     if (newCount > allHospitals.length) {
       newCount = allHospitals.length

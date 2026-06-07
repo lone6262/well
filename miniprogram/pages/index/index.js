@@ -1,35 +1,49 @@
-// 首页逻辑 - 完整版本
+// 首页逻辑 - 重构版本（拆分为模块）
 const app = getApp()
+const dataLoader = require('./data-loader.js')
+const navHandler = require('./nav-handler.js')
 
 Page({
   data: {
-    nearbyHospitals: [],  // 第一次加载时不显示预置数据，避免误导用户
+    nearbyHospitals: [],
     petsList: [],
     dailyTip: '定期体检是预防疾病的关键，建议每年至少为宠物进行一次全面体检。',
     loadingPets: false,
     userInfo: {
       avatarUrl: ''
     },
-    lastUpdateTime: '正在加载...',  // 明确标注正在加载状态
-    isLoadingHospitals: true,  // 第一次加载时标记为加载中
-    isLoadingLocation: false,  // 防止重复请求位置权限
-    lastUpdateTimeTimestamp: 0  // 记录医院数据最后更新时间
+    lastUpdateTime: '正在加载...',
+    isLoadingHospitals: true,
+    isLoadingLocation: false,
+    lastUpdateTimeTimestamp: 0,
+    showFollowupPopup: false,
+    pendingFollowup: null,
+    dailyKnowledge: null,
+    isMember: false,
+    memberDaysRemaining: 0
   },
 
-  onLoad() {
+  onLoad(options) {
     console.log('首页加载')
     this.loadUserInfo()
     this.loadDailyTip()
+    this.loadDailyKnowledge()
+
+    // Phase 4: 捕获邀请码
+    if (options && options.invite_code) {
+      app.globalData.pendingInviteCode = options.invite_code
+      console.log('捕获到邀请码: ***')
+    }
 
     // 使用登录回调机制，确保登录完成后再加载数据
     const self = this
     app.onLoginComplete((openid) => {
       console.log('登录回调触发，准备加载宠物数据')
       self.loadPetList()
+      self.loadMemberStatus()
       self.lastLoadedOpenid = openid
     })
 
-    // 移除这里的重复调用，只在onShow中调用
     console.log('首页加载完成，等待onShow触发医院数据加载')
   },
 
@@ -50,319 +64,58 @@ Page({
     }
 
     // 优化：只在首次加载或5分钟后才刷新医院数据
+    // 但 fallback 假数据（id 以 'f' 开头）必须重试加载真实数据
     const now = Date.now()
     const lastUpdateTime = self.data.lastUpdateTimeTimestamp || 0
-    const REFRESH_INTERVAL = 5 * 60 * 1000 // 5分钟刷新间隔
+    const REFRESH_INTERVAL = 5 * 60 * 1000
+    var isFallbackData = self.data.nearbyHospitals.some(function(h) {
+      return h.id && typeof h.id === 'string' && h.id.charAt(0) === 'f'
+    })
 
-    if (now - lastUpdateTime > REFRESH_INTERVAL || !self.data.nearbyHospitals.length) {
-      console.log('刷新附近医院数据')
+    if (now - lastUpdateTime > REFRESH_INTERVAL || !self.data.nearbyHospitals.length || isFallbackData) {
+      console.log(isFallbackData ? '当前为 fallback 数据，强制刷新' : '刷新附近医院数据')
       self.loadNearbyHospitals()
-      // 记录刷新时间
       self.setData({ lastUpdateTimeTimestamp: now })
     } else {
       console.log('医院数据仍在有效期内，跳过刷新')
     }
+
+    // 检查待处理的回访记录
+    self.checkPendingFollowups()
   },
 
-  // 加载用户信息 - 从云端同步
-  loadUserInfo() {
-    const self = this
-    var openid = app.getOpenid()
-
-    // 先用本地缓存显示
-    if (app.globalData.userInfo) {
-      self.setData({
-        userInfo: app.globalData.userInfo
-      })
-    }
-
-    // 从云端同步最新用户信息
-    if (openid && app.globalData.cloudDevelopmentAvailable) {
-      wx.cloud.callFunction({
-        name: 'saveUserProfile',
-        data: {
-          openid: openid,
-          action: 'get'
-        },
-        success: function(res) {
-          if (res.result && res.result.code === 0 && res.result.data) {
-            var cloudUserInfo = res.result.data
-            var userInfo = {
-              avatarUrl: cloudUserInfo.avatarUrl || app.globalData.userInfo.avatarUrl || '/images/avatar.png',
-              nickName: cloudUserInfo.nickName || app.globalData.userInfo.nickName || '宠物爱好者'
-            }
-            self.setData({ userInfo: userInfo })
-            app.globalData.userInfo = userInfo
-            wx.setStorageSync('userInfo', userInfo)
-          }
-        },
-        fail: function(err) {
-          console.log('云端用户信息同步失败，使用本地数据', err)
-        }
-      })
-    }
+  // 数据加载方法 - 使用dataLoader模块
+  loadUserInfo: function() {
+    dataLoader.loadUserInfo(this)
   },
 
-  // 从云数据库加载宠物列表 - 增强版
-  loadPetList() {
-    const self = this
-
-    // 使用统一的登录状态检查方法
-    const openid = app.getOpenid()
-
-    if (!openid || (typeof openid === 'string' && openid.indexOf('mock_') === 0)) {
-      console.log('⚠️ 用户未登录，引导登录')
-      self.setData({
-        petsList: [],
-        loadingPets: false
-      })
-      return
-    }
-
-    console.log('🔄 从数据库加载宠物列表...', openid)
-    self.setData({ loadingPets: true })
-
-    wx.cloud.callFunction({
-      name: 'getPetList',
-      data: {
-        openid: openid
-      },
-      success: function(res) {
-        console.log('✅ 宠物列表云函数调用成功:', res.result)
-
-        if (res.result.code === 0) {
-          const petList = res.result.data.petList || []
-
-          if (petList.length === 0) {
-            console.log('📭 宠物列表为空，显示添加引导')
-            self.setData({
-              petsList: [],
-              loadingPets: false
-            })
-
-            // 显示添加宠物引导
-            wx.showModal({
-              title: '添加宠物',
-              content: '还没有宠物档案，是否立即添加？',
-              confirmText: '立即添加',
-              cancelText: '稍后再说',
-              success: function(modalRes) {
-                if (modalRes.confirm) {
-                  wx.navigateTo({
-                    url: '/pages/pet/profile'
-                  })
-                }
-              }
-            })
-            return
-          }
-
-          console.log('📋 云端返回宠物数据:', petList)
-
-          const pets = petList.map(pet => {
-            // 优先使用云函数返回的健康状态
-            let healthStatus, healthStatusText
-
-            if (pet.healthStatus && pet.healthStatusText) {
-              healthStatus = pet.healthStatus
-              healthStatusText = pet.healthStatusText
-              console.log(`✅ 宠物${pet.name}使用云端健康状态: ${healthStatusText}`)
-            } else {
-              healthStatus = self.calculateHealthStatus(pet)
-              healthStatusText = self.getHealthStatusText(healthStatus)
-              console.log(`⚠️ 宠物${pet.name}前端计算健康状态: ${healthStatusText}`)
-            }
-
-            return {
-              id: pet.petId,
-              name: pet.name,
-              avatar: pet.avatar || (pet.type === 'cat' ? '🐱' : '🐶'),
-              type: pet.type,
-              age: pet.age,
-              healthStatus: healthStatus,
-              healthStatusText: healthStatusText,
-              hasAvatar: !!pet.avatar,
-              isRealAvatar: !!(pet.avatar) // 有头像URL就是真实头像
-            }
-          })
-
-          self.setData({
-            petsList: pets,
-            loadingPets: false
-          })
-
-          console.log('✅ 首页宠物数据更新完成:', pets)
-
-          // 移除重复调用，医院数据由onShow统一管理
-        } else {
-          console.error('❌ 宠物列表返回错误:', res.result.msg)
-          self.setData({
-            petsList: [],
-            loadingPets: false
-          })
-          wx.showToast({
-            title: res.result.msg || '数据加载失败',
-            icon: 'none',
-            duration: 2000
-          })
-        }
-      },
-      fail: function(err) {
-        console.error('❌ 宠物列表云函数调用失败:', err)
-        self.setData({
-          petsList: [],
-          loadingPets: false
-        })
-        wx.showToast({
-          title: '网络连接失败',
-          icon: 'none',
-          duration: 2000
-        })
-      }
-    })
+  loadPetList: function() {
+    dataLoader.loadPetList(this)
   },
 
-  // 加载附近医院数据（实时） - 使用统一权限管理，防止重复请求
-  loadNearbyHospitals() {
-    const self = this
-
-    // 防止重复请求位置权限
-    if (self.data.isLoadingLocation) {
-      console.log('⚠️ 位置请求正在进行中，跳过重复请求')
-      return
-    }
-
-    console.log('🔄 开始加载实时附近医院数据...')
-
-    // 标记正在请求位置
-    self.setData({
-      isLoadingLocation: true,
-      isLoadingHospitals: true,
-      lastUpdateTime: '正在定位...'
-    })
-
-    // 使用app.js的统一权限管理获取用户位置
-    app.getUserLocation().then(location => {
-      console.log('✅ 用户位置获取成功:', location)
-
-      // 优先通过云函数获取真实医院数据
-      if (app.globalData.cloudDevelopmentAvailable) {
-        return new Promise((resolve, reject) => {
-          wx.cloud.callFunction({
-            name: 'searchHospitals',
-            data: {
-              latitude: location.latitude,
-              longitude: location.longitude,
-              radius: 5000
-            },
-            success: function(res) {
-              if (res.result && res.result.code === 0 && res.result.data.hospitals.length > 0) {
-                console.log('✅ 云函数返回真实医院数据:', res.result.data.hospitals.length)
-                resolve(res.result.data.hospitals)
-              } else {
-                console.log('⚠️ 云函数无数据，使用本地搜索')
-                reject('no_data')
-              }
-            },
-            fail: function(err) {
-              console.log('⚠️ 云函数调用失败，使用本地搜索:', err)
-              reject(err)
-            }
-          })
-        })
-      } else {
-        // 云开发不可用，使用本地地图服务
-        const mapService = require('../../utils/mapService.js')
-        return mapService.searchNearbyHospitals(
-          location.latitude,
-          location.longitude,
-          3000
-        )
-      }
-    }).then(hospitals => {
-      console.log('✅ 医院搜索成功:', hospitals)
-
-      // 格式化医院数据用于首页显示
-      const nearbyHospitals = hospitals.slice(0, 3).map(hospital => {
-        let distanceStr = '1km'
-        if (typeof hospital.distance === 'number' && hospital.distance >= 0) {
-          if (hospital.distance >= 1000) {
-            distanceStr = Math.round(hospital.distance / 1000) + 'km'
-          } else {
-            distanceStr = Math.round(hospital.distance) + 'm'
-          }
-        }
-
-        return {
-          id: hospital.hospitalId || Date.now(),
-          name: hospital.name || '宠物医院',
-          distance: distanceStr,
-          address: hospital.address || '地址信息更新中',
-          is24h: hospital.is24h !== false,
-          phone: hospital.phone || '电话咨询',
-          latitude: hospital.latitude || 0,
-          longitude: hospital.longitude || 0
-        }
-      })
-
-      const currentTime = new Date()
-      const timeString = this.formatUpdateTime(currentTime)
-
-      self.setData({
-        nearbyHospitals: nearbyHospitals,
-        lastUpdateTime: timeString,
-        isLoadingHospitals: false,
-        isLoadingLocation: false,
-        lastUpdateTimeTimestamp: Date.now()
-      })
-
-      console.log('✅ 附近医院数据加载完成:', nearbyHospitals)
-      console.log('🕒 更新时间:', timeString)
-
-      wx.showToast({
-        title: '医院数据已更新',
-        icon: 'success',
-        duration: 1500
-      })
-    }).catch(error => {
-      console.log('❌ 附近医院数据加载失败:', error)
-
-      self.setData({
-        isLoadingLocation: false,
-        isLoadingHospitals: false
-      })
-
-      // 使用默认数据
-      const fallbackHospitals = [
-        { id: 'f1', name: '爱心宠物医院', distance: '500m', address: '提供24小时急诊服务', is24h: true, phone: '请电话确认', latitude: 0, longitude: 0 },
-        { id: 'f2', name: '宠物中心医院', distance: '1km', address: '全天候医疗服务', is24h: true, phone: '请电话确认', latitude: 0, longitude: 0 },
-        { id: 'f3', name: '萌宠宠物诊所', distance: '800m', address: '常规门诊服务', is24h: false, phone: '请电话确认', latitude: 0, longitude: 0 }
-      ]
-
-      const currentTime = new Date()
-      const timeString = this.formatUpdateTime(currentTime) + ' (默认)'
-
-      self.setData({
-        nearbyHospitals: fallbackHospitals,
-        lastUpdateTime: timeString
-      })
-
-      wx.showToast({
-        title: '使用推荐医院数据',
-        icon: 'none',
-        duration: 2000
-      })
-    })
+  loadNearbyHospitals: function() {
+    dataLoader.loadNearbyHospitals(this)
   },
 
-  // 格式化更新时间
+  loadDailyKnowledge: function() {
+    dataLoader.loadDailyKnowledge(this)
+  },
+
+  loadMemberStatus: function() {
+    dataLoader.loadMemberStatus(this)
+  },
+
+  checkPendingFollowups: function() {
+    dataLoader.checkPendingFollowups(this)
+  },
+
   formatUpdateTime(date) {
     const hours = date.getHours().toString().padStart(2, '0')
     const minutes = date.getMinutes().toString().padStart(2, '0')
     return `今天 ${hours}:${minutes}`
   },
 
-  // 计算宠物健康状态（向后兼容）
+
   calculateHealthStatus(pet) {
     const hasRecentVaccine = pet.vaccineDate && this.isDateRecent(pet.vaccineDate)
     const hasRecentDeworming = pet.dewormDate && this.isDateRecent(pet.dewormDate)
@@ -374,7 +127,6 @@ Page({
     }
   },
 
-  // 检查日期是否在最近30天内
   isDateRecent(dateString) {
     if (!dateString) return false
 
@@ -386,12 +138,10 @@ Page({
     return diffDays <= 30
   },
 
-  // 获取健康状态文本
   getHealthStatusText(status) {
     return status === 'good' ? '状态良好' : '需要关注'
   },
 
-  // 获取模拟宠物数据（用于未登录或加载失败时）
   getMockPets() {
     return [
       {
@@ -415,7 +165,6 @@ Page({
     ]
   },
 
-  // 加载每日健康提示
   loadDailyTip() {
     const tips = [
       '定期体检是预防疾病的关键，建议每年至少为宠物进行一次全面体检。',
@@ -431,73 +180,25 @@ Page({
     })
   },
 
-  // 跳转到急救通道
-  toEmergency() {
-    console.log('点击急救按钮')
-    try {
-      wx.switchTab({
-        url: '/pages/emergency/index',
-        success: function() {
-          console.log('跳转急救页面成功')
-        },
-        fail: function(err) {
-          console.error('跳转急救页面失败:', err)
-          wx.showToast({
-            title: '页面跳转失败',
-            icon: 'none'
-          })
-        }
-      })
-    } catch (error) {
-      console.error('急救按钮点击异常:', error)
-    }
+  // 导航方法 - 使用navHandler模块
+  toEmergency: navHandler.toEmergency,
+  toSymptom: navHandler.toSymptom,
+  toHospital: navHandler.toHospital,
+  toKnowledge: navHandler.toKnowledge,
+  toKnowledgeDetail: navHandler.toKnowledgeDetail,
+  goToMember: navHandler.goToMember,
+  goToInvite: navHandler.goToInvite,
+  goToFollowupList: navHandler.goToFollowupList,
+
+  // 需要绑定this的方法
+  closeFollowupPopup: function() {
+    navHandler.closeFollowupPopup.call(this)
   },
 
-  // 跳转到症状自查
-  toSymptom() {
-    console.log('点击症状自查按钮')
-    try {
-      wx.switchTab({
-        url: '/pages/symptom/guide',
-        success: function() {
-          console.log('跳转症状自查成功')
-        },
-        fail: function(err) {
-          console.error('跳转症状自查失败:', err)
-          wx.showToast({
-            title: '页面跳转失败',
-            icon: 'none'
-          })
-        }
-      })
-    } catch (error) {
-      console.error('症状自查按钮点击异常:', error)
-    }
+  goToFollowup: function() {
+    navHandler.goToFollowup.call(this)
   },
 
-  // 跳转到就医导航
-  toHospital() {
-    console.log('点击医院导航按钮')
-    try {
-      wx.switchTab({
-        url: '/pages/hospital/list',
-        success: function() {
-          console.log('跳转医院导航成功')
-        },
-        fail: function(err) {
-          console.error('跳转医院导航失败:', err)
-          wx.showToast({
-            title: '页面跳转失败',
-            icon: 'none'
-          })
-        }
-      })
-    } catch (error) {
-      console.error('医院导航按钮点击异常:', error)
-    }
-  },
-
-  // 跳转到宠物档案
   toPetProfile() {
     console.log('点击健康档案按钮')
     try {
@@ -519,7 +220,6 @@ Page({
     }
   },
 
-  // 查看宠物详情（点击宠物健康状态卡片）
   viewPetDetail(e) {
     const petId = e.currentTarget.dataset.petId
     const petName = e.currentTarget.dataset.petName
@@ -546,16 +246,6 @@ Page({
     }
   },
 
-  // 跳转到知识页面
-  toKnowledge() {
-    console.log('点击科普知识按钮')
-    wx.showToast({
-      title: '功能开发中',
-      icon: 'none'
-    })
-  },
-
-  // 显示更多功能
   showMoreFeatures() {
     wx.showToast({
       title: '更多功能开发中',
@@ -563,12 +253,11 @@ Page({
     })
   },
 
-  // 添加宠物
   addPet() {
     console.log('点击添加宠物')
     try {
       wx.navigateTo({
-        url: '/pages/pet/profile',
+        url: '/pages/pet/profile?action=add',
         success: function() {
           console.log('跳转宠物档案成功，准备打开添加弹窗')
           // 延迟一下，确保页面加载完成
@@ -585,7 +274,6 @@ Page({
     }
   },
 
-  // 刷新健康状态
   refreshHealthStatus() {
     console.log('刷新宠物健康状态')
     this.loadPetList()
@@ -595,7 +283,6 @@ Page({
     })
   },
 
-  // 跳转到用户中心
   toUser() {
     console.log('点击用户头像')
     try {
@@ -613,7 +300,6 @@ Page({
     }
   },
 
-  // 导航到医院（直接打开地图）
   navigateToHospital(e) {
     const hospital = e.currentTarget.dataset.hospital
     console.log('导航到医院:', hospital)
@@ -674,7 +360,8 @@ Page({
     }
   },
 
-  // 页面卸载时清理资源
+  onShareAppMessage: navHandler.onShareAppMessage,
+
   onUnload() {
     console.log('首页卸载，清理资源')
   }

@@ -2,7 +2,7 @@
 // 注意: 此云函数当前返回模拟数据。生产环境请使用 searchHospitals 云函数，
 // 该函数通过服务端调用腾讯地图API获取实时数据并隐藏API密钥。
 const cloud = require('wx-server-sdk');
-const { COLLECTIONS, RESPONSE_CODE } = require('./constants');
+const { COLLECTIONS, RESPONSE_CODE , warmupConfig} = require('./common/constants');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -16,6 +16,7 @@ const db = cloud.database();
  * TODO: 接入数据库中的真实医院数据
  */
 exports.main = async (event) => {
+  await warmupConfig(db);
   const { latitude, longitude, is24h = false, limit = 20 } = event;
 
   try {
@@ -103,7 +104,7 @@ exports.main = async (event) => {
     return {
       code: RESPONSE_CODE.SERVER_ERROR,
       msg: '服务器错误，请稍后重试',
-      data: { error: error.message }
+      data: {}
     };
   }
 };

@@ -46,6 +46,32 @@
     </view>
   </view>
 
+  <!-- AI报告入口卡片（高风险不显示，优先就医） -->
+  <view class="ai-report-card" wx:if="{{!loading && quotaInfo && !reportPurchased && riskLevel !== 'high'}}">
+    <view class="report-card-header">📋 AI健康报告</view>
+    <view class="report-card-desc">包含症状分析、护理建议、就医指导等8大章节</view>
+    <!-- 会员额度耗尽提示 -->
+    <view class="quota-exhausted-notice" wx:if="{{quotaInfo.member_quota_exhausted}}">
+      <text>⚠️ 本月免费额度已用完（{{quotaInfo.member_quota_used}}/{{quotaInfo.member_quota_total}}），本次 ¥9.90</text>
+      <text class="upgrade-link" bindtap="goToMember">升级年度会员，每月15次免费额度 →</text>
+    </view>
+    <view class="report-card-price">
+      <text class="price-tag" wx:if="{{quotaInfo.quota_source === 'first_report'}}">首份仅需 ¥1.00</text>
+      <text class="price-tag" wx:elif="{{quotaInfo.has_free_quota}}">免费获取</text>
+      <text class="price-tag" wx:else>¥9.90</text>
+      <text class="member-link" wx:if="{{quotaInfo.quota_source === 'paid' && !quotaInfo.member_quota_exhausted}}" bindtap="goToMember">成为会员，免费获取 →</text>
+    </view>
+    <button class="report-btn" bindtap="getAIReport" loading="{{purchasing}}">
+      {{quotaInfo.has_free_quota && quotaInfo.price === 0 ? '免费获取报告' : '获取AI报告'}}
+    </button>
+  </view>
+
+  <!-- 已有报告提示（高风险不显示） -->
+  <view class="report-purchased-card" wx:if="{{!loading && reportPurchased && riskLevel !== 'high'}}">
+    <view class="purchased-header">✅ 已获取AI报告</view>
+    <button class="view-report-btn" bindtap="viewExistingReport">查看报告详情</button>
+  </view>
+
   <!-- 操作按钮 -->
   <view class="action-section">
     <!-- 高风险：只显示急救通道按钮 -->
@@ -67,5 +93,37 @@
     <button class="secondary-btn" wx:if="{{riskLevel === 'low'}}" bindtap="goHome">
       返回首页
     </button>
+  </view>
+
+  <!-- 支付选项面板 -->
+  <view class="pay-options-mask" wx:if="{{showPayOptions}}" bindtap="closePayOptions">
+    <view class="pay-options-panel" catchtap="">
+      <view class="pay-panel-header">
+        <text class="pay-panel-title">获取AI健康报告</text>
+        <text class="pay-panel-desc">包含症状分析、护理建议、就医指导等8大章节</text>
+      </view>
+      <view class="pay-option-item" bindtap="paySingleReport" hover-class="pay-option-hover">
+        <view class="pay-option-left">
+          <text class="pay-option-icon">📋</text>
+          <view class="pay-option-info">
+            <text class="pay-option-name">单份报告</text>
+            <text class="pay-option-desc">一次性获取完整AI报告</text>
+          </view>
+        </view>
+        <text class="pay-option-price">¥9.90</text>
+      </view>
+      <view class="pay-option-item pay-option-recommend" bindtap="chooseMembership" hover-class="pay-option-hover">
+        <view class="pay-recommend-badge">推荐</view>
+        <view class="pay-option-left">
+          <text class="pay-option-icon">👑</text>
+          <view class="pay-option-info">
+            <text class="pay-option-name">开通会员</text>
+            <text class="pay-option-desc">每月3份免费报告 + 无限自查</text>
+          </view>
+        </view>
+        <text class="pay-option-price">¥19.90<small>/月</small></text>
+      </view>
+      <view class="pay-panel-cancel" bindtap="closePayOptions">取消</view>
+    </view>
   </view>
 </view>

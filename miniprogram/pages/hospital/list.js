@@ -1,6 +1,7 @@
 // 医院列表页面 - 全新设计逻辑
-var app = getApp()
-var mapService = require('../../utils/mapService.js')
+let app = getApp()
+let mapService = require('../../utils/mapService.js')
+let phoneUtil = require('../../utils/phone.js')
 
 Page({
   data: {
@@ -11,8 +12,8 @@ Page({
     displayCount: 10,
 
     // 位置信息
-    latitude: 39.90469,
-    longitude: 116.40717,
+    latitude: 22.543099,   // 深圳市民中心
+    longitude: 114.057868,
     locationText: '定位中...',
 
     // API状态
@@ -40,7 +41,7 @@ Page({
 
   // === 页面初始化 ===
   initPage: function() {
-    var self = this
+    let self = this
 
     // 获取位置
     this.getUserLocation().then(function(location) {
@@ -65,7 +66,7 @@ Page({
 
   // === 获取用户位置 ===
   getUserLocation: function() {
-    var self = this
+    let self = this
     return new Promise(function(resolve, reject) {
       wx.getLocation({
         type: 'gcj02',
@@ -79,8 +80,8 @@ Page({
           console.error('获取位置失败:', error)
           // 使用默认位置
           resolve({
-            latitude: 39.90469,
-            longitude: 116.40717
+            latitude: 22.543099,
+            longitude: 114.057868
           })
         }
       })
@@ -89,11 +90,11 @@ Page({
 
   // === 加载医院数据 ===
   loadHospitals: function() {
-    var self = this
+    let self = this
     self.setData({ isLoading: true })
 
-    var loadPromise
-    var app = getApp()
+    let loadPromise
+    let app = getApp()
 
     if (app.globalData.cloudDevelopmentAvailable) {
       // 优先通过云函数获取真实医院数据
@@ -128,10 +129,10 @@ Page({
 
     return loadPromise.then(function(hospitals) {
       // 数据加载成功
-      var processedHospitals = self.processHospitalData(hospitals)
+      let processedHospitals = self.processHospitalData(hospitals)
 
       // 分类医院数据
-      var emergencyHospitals = processedHospitals.filter(function(h) {
+      let emergencyHospitals = processedHospitals.filter(function(h) {
         return h.is24h || h.hasEmergency
       }).slice(0, 5)
 
@@ -150,8 +151,8 @@ Page({
     }).catch(function(error) {
       console.error('医院数据加载失败:', error)
 
-      var offlineHospitals = self.getOfflineHospitals()
-      var processedOffline = self.processHospitalData(offlineHospitals)
+      let offlineHospitals = self.getOfflineHospitals()
+      let processedOffline = self.processHospitalData(offlineHospitals)
 
       self.setData({
         hospitals: processedOffline,
@@ -174,14 +175,14 @@ Page({
 
   // === 处理医院数据 ===
   processHospitalData: function(hospitals) {
-    var self = this
+    let self = this
 
     return hospitals.map(function(hospital) {
       // 计算距离显示
-      var distanceDisplay = self.formatDistance(hospital.distance)
+      let distanceDisplay = self.formatDistance(hospital.distance)
 
       // 确定医院类型标签
-      var hasEmergency = hospital.name.indexOf('急诊') !== -1 ||
+      let hasEmergency = hospital.name.indexOf('急诊') !== -1 ||
                         hospital.name.indexOf('紧急') !== -1
 
       return {
@@ -216,8 +217,8 @@ Page({
 
   // === 获取离线医院数据 ===
   getOfflineHospitals: function() {
-    var lat = this.data.latitude
-    var lng = this.data.longitude
+    let lat = this.data.latitude
+    let lng = this.data.longitude
 
     return [
       {
@@ -260,7 +261,7 @@ Page({
 
   // 查看医院详情
   viewHospital: function(e) {
-    var hospitalId = e.currentTarget.dataset.id
+    let hospitalId = e.currentTarget.dataset.id
     console.log('查看医院详情:', hospitalId)
 
     // 跳转到医院详情页
@@ -277,8 +278,8 @@ Page({
 
   // 拨打电话
   callHospital: function(e) {
-    var phone = e.currentTarget.dataset.phone
-    var self = this
+    let phone = e.currentTarget.dataset.phone
+    let self = this
     console.log('拨打电话:', phone)
 
     if (!phone || phone === '请电话确认' || phone === '暂无电话') {
@@ -298,8 +299,8 @@ Page({
           success: function(res) {
             if (res.confirm) {
               // 找到对应的医院进行导航
-              var hospitalId = e.currentTarget.dataset.id
-              var hospital = self.data.displayHospitals.find(function(h) {
+              let hospitalId = e.currentTarget.dataset.id
+              let hospital = self.data.displayHospitals.find(function(h) {
                 return h.hospitalId === hospitalId
               })
               if (hospital) {
@@ -315,7 +316,7 @@ Page({
     }
 
     // 提取单个电话号码（多个号码用分隔符分开时只取第一个）
-    var cleanPhone = this.extractSinglePhone(phone)
+    let cleanPhone = phoneUtil.extractSinglePhone(phone)
 
     if (!cleanPhone || cleanPhone.length < 7) {
       wx.showModal({
@@ -341,21 +342,9 @@ Page({
     })
   },
 
-  // 提取单个电话号码（多个号码用分隔符分开时只取第一个）
-  extractSinglePhone: function(phone) {
-    if (!phone) return '';
-    var telStr = phone.toString();
-    // 多个号码可能用分号、逗号、斜杠、顿号等分隔，只取第一个
-    var parts = telStr.split(/[;；,，/\\、\n\r|]/);
-    var first = (parts[0] || '').trim();
-    // 清理：只保留数字、+、-、空格
-    var cleaned = first.replace(/[^0-9+\-\s]/g, '').trim();
-    return (cleaned && cleaned.length >= 7) ? cleaned : '';
-  },
-
   // 导航到医院
   navigateToHospital: function(e) {
-    var hospital = e.currentTarget.dataset.hospital
+    let hospital = e.currentTarget.dataset.hospital
     console.log('导航到医院:', hospital.name)
 
     if (this.data.apiAvailable) {
@@ -375,7 +364,7 @@ Page({
   // 快速导航到最近医院
   navigateToNearest: function() {
     if (this.data.displayHospitals.length > 0) {
-      var nearestHospital = this.data.displayHospitals[0]
+      let nearestHospital = this.data.displayHospitals[0]
       this.navigateToHospital({
         currentTarget: {
           dataset: {
@@ -408,7 +397,7 @@ Page({
 
   // 显示医院详情
   showHospitalDetail: function(e) {
-    var hospital = e.currentTarget.dataset.hospital
+    let hospital = e.currentTarget.dataset.hospital
     console.log('显示医院详情:', hospital.name)
 
     wx.showModal({
@@ -420,7 +409,7 @@ Page({
 
   // 快速导航到医院
   quickNavigate: function(e) {
-    var hospital = e.currentTarget.dataset.hospital
+    let hospital = e.currentTarget.dataset.hospital
     console.log('快速导航到医院:', hospital.name)
 
     if (!hospital.latitude || !hospital.longitude) {
@@ -442,10 +431,10 @@ Page({
 
   // 加载更多医院（瀑布流）
   loadMoreHospitals: function() {
-    var self = this
-    var currentCount = self.data.displayCount
-    var allHospitals = self.data.hospitals
-    var newCount = currentCount + 10
+    let self = this
+    let currentCount = self.data.displayCount
+    let allHospitals = self.data.hospitals
+    let newCount = currentCount + 10
 
     if (newCount > allHospitals.length) {
       newCount = allHospitals.length

@@ -1,0 +1,65 @@
+<view class="container">
+  <view class="page-header">
+    <view class="back-btn" bindtap="goBack" hover-class="back-btn-active">
+      <view class="back-arrow"></view>
+      <text class="back-text">返回</text>
+    </view>
+    <view class="page-title">会员服务协议</view>
+    <view class="header-placeholder"></view>
+  </view>
+  <scroll-view scroll-y class="content-scroll">
+    <view class="content">
+      <view class="update-date">更新日期：2026年6月3日</view>
+      <view class="section">
+        <text class="section-title">一、服务内容</text>
+        <text class="section-text">Well宠物健康平台（以下简称"本平台"）提供以下会员服务：</text>
+        <text class="section-text">1. 月度会员：¥19.90/月</text>
+        <text class="section-text">2. 年度会员：¥99.00/年</text>
+        <text class="section-text">具体权益以购买时展示的内容为准。本平台保留调整价格和权益的权利，调整前已购买的会员不受影响。</text>
+      </view>
+      <view class="section">
+        <text class="section-title">二、会员权益</text>
+        <text class="section-text">1. 每月3次AI健康报告额度</text>
+        <text class="section-text">2. 不限次数症状自查</text>
+        <text class="section-text">3. 宠物疫苗/驱虫到期提醒（需授权订阅消息）</text>
+        <text class="section-text">4. 历史AI报告永久保存</text>
+        <text class="section-text">5. 会员专属科普内容</text>
+        <text class="section-text">报告额度按月对齐到会员起始日重置，未使用的额度不累计至下月。</text>
+      </view>
+      <view class="section">
+        <text class="section-title">三、购买与支付</text>
+        <text class="section-text">1. 购买会员通过微信支付完成</text>
+        <text class="section-text">2. 支付成功后立即生效</text>
+        <text class="section-text">3. 会员到期前续费，新到期日 = 旧到期日 + 购买时长</text>
+        <text class="section-text">4. 会员过期后续费，从购买时间起算</text>
+      </view>
+      <view class="section">
+        <text class="section-title">四、取消与退款</text>
+        <text class="section-text">1. 会员开通后不支持退款（法律另有规定的除外）</text>
+        <text class="section-text">2. 您可以取消自动续费，取消后会员权益保留至到期日</text>
+        <text class="section-text">3. 到期后未续费，会员状态自动变更为已过期</text>
+      </view>
+      <view class="section">
+        <text class="section-title">五、免责声明</text>
+        <text class="section-text">1. AI健康报告仅供参考，不构成医疗诊断建议</text>
+        <text class="section-text">2. 任何健康相关决策请咨询执业兽医师</text>
+        <text class="section-text">3. 本平台不对因使用AI报告导致的任何损失承担责任</text>
+        <text class="section-text">4. 因不可抗力导致服务中断，本平台不承担责任</text>
+      </view>
+      <view class="section">
+        <text class="section-title">六、账号与安全</text>
+        <text class="section-text">1. 会员权益仅限绑定微信号本人使用</text>
+        <text class="section-text">2. 禁止转借、转售会员权益</text>
+        <text class="section-text">3. 违规使用将导致会员资格被取消且不予退款</text>
+      </view>
+      <view class="section">
+        <text class="section-title">七、协议变更</text>
+        <text class="section-text">本平台有权修改本协议条款，重大变更将通过小程序内通知的方式告知。继续使用服务视为同意变更后的协议。</text>
+      </view>
+      <view class="section">
+        <text class="section-title">八、联系方式</text>
+        <text class="section-text">如有任何疑问，请通过小程序「我的」页面中的反馈功能联系我们。</text>
+      </view>
+    </view>
+  </scroll-view>
+</view>

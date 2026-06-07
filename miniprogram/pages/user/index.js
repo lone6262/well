@@ -1,5 +1,5 @@
 // 用户中心页面逻辑 - ES5完全兼容版本
-var app = getApp()
+let app = getApp()
 
 Page({
   data: {
@@ -30,15 +30,13 @@ Page({
   // 加载用户信息 - 统一使用app.js的登录状态
   loadUserInfo: function() {
     // 检查登录状态（使用统一的登录检查方法）
-    var openid = app.getOpenid()
-    var userInfo = app.globalData.userInfo || wx.getStorageSync('userInfo') || {}
+    let openid = app.getOpenid()
+    let userInfo = app.globalData.userInfo || wx.getStorageSync('userInfo') || {}
 
     // 修复：只要openid存在就认为是已登录，不依赖nickName
-    var isLoggedIn = !!openid
+    let isLoggedIn = !!openid
 
     console.log('用户中心 - 登录状态检查:', {
-      openid: openid,
-      userInfo: userInfo,
       isLoggedIn: isLoggedIn,
       isGuest: app.globalData.isGuest,
       cloudDevelopmentAvailable: app.globalData.cloudDevelopmentAvailable
@@ -68,8 +66,8 @@ Page({
 
   // 加载用户统计数据 - 从云端获取
   loadUserStats: function() {
-    var self = this
-    var openid = app.getOpenid()
+    let self = this
+    let openid = app.getOpenid()
 
     if (!openid) {
       console.log('用户未登录，使用默认统计数据')
@@ -95,15 +93,15 @@ Page({
     }
 
     wx.cloud.callFunction({
-      name: 'getUserStats', // 需要创建这个云函数
+      name: 'getUserStats',
       data: {
-        openid: openid
+        token: app.globalData.token || wx.getStorageSync('token')
       },
       success: function(res) {
         console.log('用户统计数据加载成功:', res.result)
 
         if (res.result.code === 0) {
-          var stats = res.result.data
+          let stats = res.result.data
 
           self.setData({
             userStats: {
@@ -131,8 +129,8 @@ Page({
 
   // 从本地存储加载统计数据（降级方案）
   loadLocalStats: function() {
-    var self = this
-    var userStats = wx.getStorageSync('userStats') || {
+    let self = this
+    let userStats = wx.getStorageSync('userStats') || {
       checkCount: 0,
       reportCount: 0,
       petCount: 0,
@@ -141,7 +139,7 @@ Page({
     }
 
     // 从本地宠物数据计算宠物数量
-    var localPets = wx.getStorageSync('localPets') || []
+    let localPets = wx.getStorageSync('localPets') || []
     userStats.petCount = localPets.length
 
     self.setData({
@@ -153,8 +151,8 @@ Page({
 
   // 加载用户宠物信息 - 从云端获取
   loadUserPets: function() {
-    var self = this
-    var openid = app.getOpenid()
+    let self = this
+    let openid = app.getOpenid()
 
     if (!openid) {
       console.log('用户未登录')
@@ -176,13 +174,13 @@ Page({
     wx.cloud.callFunction({
       name: 'getPetList',
       data: {
-        openid: openid
+        token: app.globalData.token
       },
       success: function(res) {
         console.log('用户宠物加载成功:', res.result)
 
         if (res.result.code === 0 && res.result.data.petList) {
-          var userPets = res.result.data.petList.map(function(pet) {
+          let userPets = res.result.data.petList.map(function(pet) {
             return {
               id: pet.petId,
               petId: pet.petId,
@@ -200,11 +198,12 @@ Page({
             userPets: userPets
           })
 
-          // 更新统计数据中的宠物数量
-          var currentUserStats = self.data.userStats
-          currentUserStats.petCount = userPets.length
+          // 更新统计数据中的宠物数量（不可变更新）
           self.setData({
-            userStats: currentUserStats
+            userStats: {
+              ...self.data.userStats,
+              petCount: userPets.length
+            }
           })
 
           // 保存到本地存储
@@ -223,10 +222,10 @@ Page({
 
   // 从本地存储加载宠物数据（降级方案）
   loadLocalPets: function() {
-    var self = this
+    let self = this
 
     // 优先使用本地存储的宠物数据
-    var localPets = wx.getStorageSync('userPets') || []
+    let localPets = wx.getStorageSync('userPets') || []
 
     if (localPets.length > 0) {
       console.log('从本地存储加载宠物数据:', localPets)
@@ -234,16 +233,17 @@ Page({
         userPets: localPets
       })
 
-      // 更新统计数据
-      var userStats = self.data.userStats
-      userStats.petCount = localPets.length
+      // 更新统计数据（不可变更新）
       self.setData({
-        userStats: userStats
+        userStats: {
+          ...self.data.userStats,
+          petCount: localPets.length
+        }
       })
     } else {
       // 如果本地存储也没有，使用模拟数据
       console.log('本地存储为空，使用演示数据')
-      var mockPets = [
+      let mockPets = [
         {
           id: 'mock_1',
           petId: 'mock_1',
@@ -270,18 +270,19 @@ Page({
         userPets: mockPets
       })
 
-      // 更新统计数据
-      var userStats = self.data.userStats
-      userStats.petCount = mockPets.length
+      // 更新统计数据（不可变更新）
       self.setData({
-        userStats: userStats
+        userStats: {
+          ...self.data.userStats,
+          petCount: mockPets.length
+        }
       })
     }
   },
 
   // 用户登录 - 统一使用app.js的登录系统
   login: function() {
-    var self = this
+    let self = this
 
     // 检查是否已经登录（有openid）
     if (app.getOpenid()) {
@@ -309,7 +310,7 @@ Page({
       // 注册登录完成回调
       app.onLoginComplete(function(openid) {
         wx.hideLoading()
-        console.log('静默登录完成，openid:', openid)
+        console.log('静默登录完成')
 
         // 静默登录完成后，获取用户资料
         app.requestUserAuthorization(function(result) {
@@ -337,7 +338,7 @@ Page({
   // 记录用户登录到本地存储（云开发已禁用）
   recordUserLogin: function(userInfo) {
     // 使用本地存储记录用户登录，替代云函数
-    var loginRecord = {
+    let loginRecord = {
       nickname: userInfo.nickName,
       avatar: userInfo.avatarUrl,
       loginTime: new Date().toISOString(),
@@ -345,7 +346,7 @@ Page({
     }
 
     // 获取历史登录记录
-    var loginHistory = wx.getStorageSync('loginHistory') || []
+    let loginHistory = wx.getStorageSync('loginHistory') || []
 
     // 添加新的登录记录
     loginHistory.push(loginRecord)
@@ -363,7 +364,7 @@ Page({
 
   // 用户退出登录 - 统一清理登录状态
   logout: function() {
-    var self = this
+    let self = this
 
     wx.showModal({
       title: '退出登录',
@@ -411,9 +412,24 @@ Page({
     wx.navigateTo({ url: '/pages/user/records?type=checkRecords' })
   },
 
+  // 查看回访记录
+  viewFollowupRecords: function() {
+    wx.navigateTo({ url: '/pages/followup/index' })
+  },
+
   // 查看我的报告
   viewReports: function() {
-    wx.navigateTo({ url: '/pages/user/records?type=reports' })
+    wx.navigateTo({ url: '/pages/user/records?type=reports&showReport=true' })
+  },
+
+  // 会员中心
+  viewMemberCenter: function() {
+    wx.navigateTo({ url: '/pages/member/index' })
+  },
+
+  // 查看我的订单
+  viewOrders: function() {
+    wx.navigateTo({ url: '/pages/order/list' })
   },
 
   // 查看宠物档案
@@ -451,14 +467,14 @@ Page({
       return
     }
 
-    var self = this
+    let self = this
 
     wx.chooseImage({
       count: 1,
       sizeType: ['compressed'],
       sourceType: ['album', 'camera'],
       success: function(res) {
-        var tempFilePath = res.tempFilePaths[0]
+        let tempFilePath = res.tempFilePaths[0]
         console.log('用户选择头像:', tempFilePath)
 
         // 显示上传中
@@ -481,9 +497,9 @@ Page({
 
   // 上传头像到云存储
   uploadAvatarToCloud: function(filePath) {
-    var self = this
+    let self = this
 
-    var cloudPath = 'user-avatars/' + app.getOpenid() + '_' + Date.now() + '.jpg'
+    let cloudPath = 'user-avatars/' + app.getOpenid() + '_' + Date.now() + '.jpg'
 
     wx.cloud.uploadFile({
       cloudPath: cloudPath,
@@ -493,7 +509,7 @@ Page({
         wx.hideLoading()
 
         // 更新用户头像
-        var userInfo = self.data.userInfo
+        let userInfo = self.data.userInfo
         userInfo.avatar = res.fileID
         userInfo.avatarUrl = res.fileID
 
@@ -525,12 +541,12 @@ Page({
 
   // 本地存储头像更新
   updateAvatarLocal: function(filePath) {
-    var self = this
+    let self = this
 
     wx.hideLoading()
 
     // 更新用户头像
-    var userInfo = self.data.userInfo
+    let userInfo = self.data.userInfo
     userInfo.avatar = filePath
     userInfo.avatarUrl = filePath
 
@@ -550,7 +566,7 @@ Page({
 
   // 修改昵称 - 新增功能
   editNickname: function() {
-    var self = this
+    let self = this
 
     if (!self.data.userInfo.isLoggedIn) {
       wx.showModal({
@@ -567,13 +583,13 @@ Page({
       placeholderText: self.data.userInfo.nickname || '请输入昵称',
       success: function(res) {
         if (res.confirm && res.content) {
-          var newNickname = res.content.trim()
+          let newNickname = res.content.trim()
 
           if (newNickname) {
             console.log('用户修改昵称:', newNickname)
 
             // 更新用户信息
-            var userInfo = self.data.userInfo
+            let userInfo = self.data.userInfo
             userInfo.nickName = newNickname
             userInfo.nickname = newNickname
 
@@ -607,19 +623,20 @@ Page({
 
   // 同步用户信息到云端
   syncUserInfoToCloud: function(userInfo) {
-    var self = this
-    var openid = app.getOpenid()
+    let self = this
+    let openid = app.getOpenid()
 
     console.log('同步用户信息到云端:', userInfo)
 
     wx.cloud.callFunction({
-      name: 'saveUserProfile', // 需要创建这个云函数
+      name: 'saveUserProfile',
       data: {
-        openid: openid,
+        action: 'update',
         userInfo: {
           nickName: userInfo.nickName,
           avatarUrl: userInfo.avatarUrl || userInfo.avatar
-        }
+        },
+        token: app.globalData.token
       },
       success: function(res) {
         console.log('用户信息同步成功')
@@ -639,7 +656,7 @@ Page({
 
   // 查看宠物详情
   viewPetDetail: function(e) {
-    var pet = e.currentTarget.dataset.pet
+    let pet = e.currentTarget.dataset.pet
 
     wx.navigateTo({
       url: '/pages/pet/profile?petId=' + pet.petId
@@ -661,25 +678,9 @@ Page({
     })
   },
 
-  // 查看我的订单
-  viewOrders: function() {
-    wx.showToast({
-      title: '功能开发中',
-      icon: 'none'
-    })
-  },
-
   // 分享应用
   shareApp: function() {
-    wx.showShareMenu({
-      withShareTicket: true,
-      menus: ['shareAppMessage', 'shareTimeline']
-    })
-
-    wx.showToast({
-      title: '点击右上角分享',
-      icon: 'none'
-    })
+    wx.navigateTo({ url: '/pages/invite/index' })
   },
 
   // 联系我们
@@ -700,11 +701,12 @@ Page({
     })
   },
 
-  // 分享配置
+  // 分享配置（带邀请码）
   onShareAppMessage: function() {
+    let inviteCode = app.globalData.currentInviteCode || ''
     return {
       title: '宠物症状自查 - 守护您的宠物健康',
-      path: '/pages/index/index',
+      path: '/pages/index/index' + (inviteCode ? '?invite_code=' + inviteCode : ''),
       imageUrl: '/images/share-cover.png'
     }
   }

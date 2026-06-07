@@ -328,7 +328,7 @@ class MapService {
     if (!tel) return '暂无电话'
 
     // 移除所有非数字字符，只保留数字、+、-、空格
-    var cleaned = tel.toString().replace(/[^0-9+\-\s]/g, '').trim()
+    let cleaned = tel.toString().replace(/[^0-9+\-\s]/g, '').trim()
 
     // 如果清理后为空或过短，返回提示
     if (!cleaned || cleaned.length < 7) {

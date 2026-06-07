@@ -1,0 +1,70 @@
+<!--邀请排行榜页面 - 重设计版本-->
+<view class="ranking-page">
+
+  <!-- 加载状态 -->
+  <view class="loading-wrapper" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <block wx:if="{{!loading}}">
+    <!-- Top 3 领奖台 -->
+    <view class="podium-banner" wx:if="{{top3.length > 0}}">
+      <view class="podium-banner-deco"></view>
+      <view class="podium-row">
+        <!-- 第二名 -->
+        <view class="podium-slot podium-slot--2" wx:if="{{top3.length >= 2}}">
+          <image class="podium-face" src="{{top3[1].avatarUrl}}" mode="aspectFill" />
+          <view class="podium-crown">🥈</view>
+          <text class="podium-nick">{{top3[1].nickname}}</text>
+          <text class="podium-score">{{top3[1].inviteCount}}人</text>
+          <view class="podium-bar podium-bar--2"></view>
+        </view>
+
+        <!-- 第一名 -->
+        <view class="podium-slot podium-slot--1">
+          <image class="podium-face podium-face--1" src="{{top3[0].avatarUrl}}" mode="aspectFill" />
+          <view class="podium-crown">🥇</view>
+          <text class="podium-nick">{{top3[0].nickname}}</text>
+          <text class="podium-score">{{top3[0].inviteCount}}人</text>
+          <view class="podium-bar podium-bar--1"></view>
+        </view>
+
+        <!-- 第三名 -->
+        <view class="podium-slot podium-slot--3" wx:if="{{top3.length >= 3}}">
+          <image class="podium-face" src="{{top3[2].avatarUrl}}" mode="aspectFill" />
+          <view class="podium-crown">🥉</view>
+          <text class="podium-nick">{{top3[2].nickname}}</text>
+          <text class="podium-score">{{top3[2].inviteCount}}人</text>
+          <view class="podium-bar podium-bar--3"></view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="ranking-empty" wx:if="{{rankList.length === 0}}">
+      <text class="ranking-empty-icon">🏆</text>
+      <text class="ranking-empty-title">暂无排行数据</text>
+      <text class="ranking-empty-hint">邀请好友成为第一名吧！</text>
+    </view>
+
+    <!-- 完整排行列表 -->
+    <view class="rank-list" wx:if="{{restList.length > 0}}">
+      <view class="rank-row {{index % 2 === 0 ? 'rank-row--even' : 'rank-row--odd'}}" wx:for="{{restList}}" wx:key="rank">
+        <text class="rank-num">{{item.rank}}</text>
+        <image class="rank-face" src="{{item.avatarUrl}}" mode="aspectFill" />
+        <text class="rank-nick">{{item.nickname}}</text>
+        <text class="rank-score">{{item.inviteCount}}人</text>
+      </view>
+    </view>
+  </block>
+
+  <!-- 我的排名 - 固定底部 -->
+  <view class="my-rank" wx:if="{{myRank > 0}}">
+    <view class="my-rank-inner">
+      <text class="my-rank-tag">我的排名</text>
+      <text class="my-rank-position">第 {{myRank}} 名</text>
+      <text class="my-rank-detail">{{myCount}} 人已成功邀请</text>
+    </view>
+  </view>
+</view>

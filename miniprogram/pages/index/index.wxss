@@ -266,6 +266,23 @@
   background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
 }
 
+.member-gradient {
+  background: linear-gradient(135deg, #f5af19 0%, #f12711 100%);
+}
+
+.invite-gradient {
+  background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+}
+
+.followup-gradient {
+  background: linear-gradient(135deg, #0cebeb 0%, #20e3b2 50%, #29ffc6 100%);
+}
+
+.reward-badge {
+  background: rgba(255, 215, 0, 0.3);
+  border: 1rpx solid rgba(255, 215, 0, 0.5);
+}
+
 .feature-icon-large {
   font-size: 64rpx;
   margin-bottom: 12rpx;
@@ -615,6 +632,169 @@
 
 /* === 统一设备适配 - iOS兼容优化 === */
 
+/* === 会员 Banner === */
+
+.member-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 24rpx 24rpx;
+  padding: 20rpx 24rpx;
+  background: linear-gradient(135deg, #f5af19 0%, #f12711 100%);
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(241, 39, 17, 0.2);
+}
+
+.member-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.member-banner-icon {
+  font-size: 32rpx;
+}
+
+.member-banner-text {
+  font-size: 26rpx;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.member-banner-action {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* === 今日科普 - 精美卡片 === */
+
+.knowledge-daily-card {
+  margin: 0 24rpx 48rpx;
+  background: #ffffff;
+  border-radius: 20rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 20rpx rgba(102, 126, 234, 0.1), 0 1rpx 3rpx rgba(0, 0, 0, 0.06);
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.knowledge-daily-card-active {
+  transform: scale(0.98);
+  box-shadow: 0 2rpx 10rpx rgba(102, 126, 234, 0.08);
+}
+
+/* 顶部装饰渐变条 */
+.daily-card-gradient-bar {
+  height: 6rpx;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 30%, #f5af19 60%, #f12711 100%);
+}
+
+/* 内容区 */
+.daily-card-body {
+  padding: 28rpx 28rpx 24rpx;
+}
+
+/* 标签行：左badge + 右箭头 */
+.daily-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.daily-card-badge {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.badge-icon {
+  font-size: 24rpx;
+}
+
+.badge-label {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #667eea;
+  letter-spacing: 1rpx;
+}
+
+.daily-card-arrow {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.arrow-text {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.arrow-chevron {
+  width: 12rpx;
+  height: 12rpx;
+  border-top: 3rpx solid #bbb;
+  border-right: 3rpx solid #bbb;
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+}
+
+/* 标题 */
+.daily-card-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #212121;
+  line-height: 1.5;
+  margin-bottom: 12rpx;
+}
+
+/* 摘要 */
+.daily-card-summary {
+  display: block;
+  font-size: 24rpx;
+  color: #757575;
+  line-height: 1.7;
+  margin-bottom: 20rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* 底部标签 */
+.daily-card-footer {
+  display: flex;
+  gap: 24rpx;
+}
+
+.daily-tag {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.tag-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: #667eea;
+}
+
+.tag-dot.dot-blue {
+  background: #4facfe;
+}
+
+.tag-text {
+  font-size: 20rpx;
+  color: #999;
+}
+
+/* === 统一设备适配 - iOS兼容优化（续） === */
+
 /* 极小屏幕设备优化（iPhone SE等） - 专门防止文字重叠 */
 @media (max-width: 321px) {
   .emergency-big-btn {
@@ -867,4 +1047,106 @@
 .empty-hint {
   font-size: 22rpx;
   color: #909399;
-}/* 设备自适应媒体查询 */
+}
+
+/* === 回访提醒弹窗 — 项目统一风格 === */
+
+.followup-mask {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
+}
+
+.followup-modal {
+  width: 100%;
+  max-width: 600rpx;
+  background: #ffffff;
+  border-radius: 28rpx;
+  overflow: hidden;
+  box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.15);
+}
+
+.followup-modal-deco {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  text-align: center;
+  font-size: 72rpx;
+  padding: 32rpx 0 16rpx;
+}
+
+.followup-modal-body {
+  padding: 28rpx 32rpx 32rpx;
+  text-align: center;
+}
+
+.followup-modal-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.followup-modal-subtitle {
+  display: block;
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 20rpx;
+}
+
+.followup-modal-pet {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  background: #f8f9ff;
+  border-radius: 16rpx;
+  padding: 16rpx 20rpx;
+  margin-bottom: 4rpx;
+}
+
+.followup-pet-name { font-size: 28rpx; font-weight: bold; color: #333; }
+
+.followup-pet-sep { margin: 0 12rpx; color: #d9d9d9; }
+
+.followup-pet-symptoms { font-size: 26rpx; color: #666; }
+
+.followup-modal-actions {
+  display: flex;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.followup-btn-later {
+  flex: 1;
+  height: 96rpx;
+  line-height: 96rpx;
+  font-size: 30rpx;
+  color: #999;
+  background: #fff;
+  border: none;
+  border-right: 1rpx solid #f0f0f0;
+  border-radius: 0;
+  text-align: center;
+}
+
+.followup-btn-later::after { border: none; }
+
+.followup-btn-go {
+  flex: 1;
+  height: 96rpx;
+  line-height: 96rpx;
+  font-size: 30rpx;
+  font-weight: bold;
+  background: #fff;
+  color: #667eea;
+  border: none;
+  border-radius: 0;
+  text-align: center;
+}
+
+.followup-btn-go::after { border: none; }
+/* 设备自适应媒体查询 */

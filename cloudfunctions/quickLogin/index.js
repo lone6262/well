@@ -1,4 +1,8 @@
-// 蹇€熺櫥褰曚簯鍑芥暟 - 鐢ㄤ簬娴嬭瘯鍜屽垱寤虹敤鎴?const cloud = require('wx-server-sdk');
+// 快速登录云函数 - 用于测试和创建用户
+const cloud = require('wx-server-sdk');
+const { COLLECTIONS, RESPONSE_CODE , warmupConfig} = require('./common/constants');
+const { generateToken } = require('./common/auth');
+const { checkRateLimit } = require('./common/rate-limiter');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -7,83 +11,94 @@ cloud.init({
 const db = cloud.database();
 
 /**
- * 蹇€熺櫥褰曚簯鍑芥暟 - 鑷姩鍒涘缓鐢ㄦ埛
+ * 快速登录云函数 - 自动创建用户
  */
 exports.main = async (event, context) => {
+  await warmupConfig(db);
   const { userInfo = {} } = event;
 
   try {
-    // 鑾峰彇鐢ㄦ埛openid
+    // 获取用户openid
     const { OPENID } = cloud.getWXContext();
 
-    console.log('鐢ㄦ埛OPENID:', OPENID);
-    console.log('鐢ㄦ埛淇℃伅:', userInfo);
+    console.log('用户登录信息获取成功');
 
-    // 妫€鏌ョ敤鎴锋槸鍚﹀凡瀛樺湪
-    const userResult = await db.collection('users').where({
+    // 速率限制
+    if (!await checkRateLimit(db, OPENID, 'quickLogin', 20, 60000, false)) {
+      return { code: RESPONSE_CODE.ERROR, msg: '操作过于频繁，请稍后再试', data: {} };
+    }
+
+    // 检查用户是否已存在
+    const userResult = await db.collection(COLLECTIONS.USERS).where({
       user_id: OPENID
     }).get();
 
     let userData;
 
     if (userResult.data.length === 0) {
-      // 鐢ㄦ埛涓嶅瓨鍦紝鍒涘缓鏂扮敤鎴?      userData = {
+      // 用户不存在，创建新用户
+      userData = {
         user_id: OPENID,
-        nickName: userInfo.nickName || '娴嬭瘯鐢ㄦ埛',
+        nickName: userInfo.nickName || '测试用户',
         avatarUrl: userInfo.avatarUrl || '',
         createTime: new Date(),
         updateTime: new Date(),
-        isMember: true,
+        isMember: false,
         loginCount: 1,
         lastLoginTime: new Date()
       };
 
-      const addResult = await db.collection('users').add({
+      const addResult = await db.collection(COLLECTIONS.USERS).add({
         data: userData
       });
 
-      console.log('鍒涘缓鐢ㄦ埛鎴愬姛:', addResult);
+      console.log('创建用户成功:', addResult._id);
+
+      const token = generateToken(OPENID, addResult._id);
 
       return {
-        code: 0,
-        msg: '鐢ㄦ埛鍒涘缓鎴愬姛',
+        code: RESPONSE_CODE.SUCCESS,
+        msg: '用户创建成功',
         data: {
           openid: OPENID,
           userId: addResult._id,
+          token: token,
           userInfo: userData
         }
       };
     } else {
-      // 鐢ㄦ埛宸插瓨鍦紝鏇存柊鐧诲綍淇℃伅
+      // 用户已存在，更新登录信息
       const existingUser = userResult.data[0];
 
-      await db.collection('users').doc(existingUser._id).update({
+      await db.collection(COLLECTIONS.USERS).doc(existingUser._id).update({
         data: {
           lastLoginTime: new Date(),
-          loginCount: existingUser.loginCount + 1 || 1,
+          loginCount: (existingUser.loginCount || 0) + 1,
           updateTime: new Date()
         }
       });
 
-      console.log('鐢ㄦ埛鐧诲綍鎴愬姛:', existingUser);
+      console.log('用户登录成功:', existingUser._id);
+
+      const token = generateToken(OPENID, existingUser._id);
 
       return {
-        code: 0,
-        msg: '鐧诲綍鎴愬姛',
+        code: RESPONSE_CODE.SUCCESS,
+        msg: '登录成功',
         data: {
           openid: OPENID,
           userId: existingUser._id,
+          token: token,
           userInfo: existingUser
         }
       };
     }
   } catch (error) {
-    console.error('鐧诲綍澶辫触:', error);
+    console.error('登录失败:', error);
     return {
-      code: -1,
-      msg: '鐧诲綍澶辫触: ' + error.message,
+      code: RESPONSE_CODE.SERVER_ERROR,
+      msg: '登录失败，请稍后重试',
       data: {}
     };
   }
 };
-

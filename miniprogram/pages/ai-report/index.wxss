@@ -1,0 +1,310 @@
+/* AI健康报告页面样式 */
+.report-page {
+  min-height: 100vh;
+  background: #f5f6f8;
+  padding-bottom: 140rpx;
+}
+
+/* === 加载状态 === */
+.loading-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 0;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 6rpx solid #e0e0e0;
+  border-top: 6rpx solid #4A90E2;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 20rpx;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 26rpx;
+  color: #999;
+}
+
+/* === 报告头部 === */
+.report-header {
+  background: #ffffff;
+  padding: 32rpx 24rpx;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.risk-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8rpx 24rpx;
+  border-radius: 24rpx;
+}
+
+.risk-badge-low {
+  background: #f6ffed;
+}
+
+.risk-badge-mid {
+  background: #fffbe6;
+}
+
+.risk-badge-high {
+  background: #fff2f0;
+}
+
+.risk-badge-text {
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.risk-badge-low .risk-badge-text {
+  color: #52c41a;
+}
+
+.risk-badge-mid .risk-badge-text {
+  color: #faad14;
+}
+
+.risk-badge-high .risk-badge-text {
+  color: #f5222d;
+}
+
+.report-time {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* === 章节卡片 === */
+.section-card {
+  background: #ffffff;
+  border-radius: 16rpx;
+  margin: 20rpx 20rpx 0;
+  padding: 24rpx;
+  overflow: hidden;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  padding: 8rpx 0;
+}
+
+.section-icon {
+  font-size: 32rpx;
+  margin-right: 12rpx;
+}
+
+.section-title {
+  flex: 1;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.section-arrow {
+  font-size: 24rpx;
+  color: #999;
+  padding: 4rpx 8rpx;
+}
+
+.section-body {
+  padding-top: 20rpx;
+  border-top: 1rpx solid #f0f0f0;
+  margin-top: 16rpx;
+}
+
+/* === 纯文本内容 === */
+.content-text {
+  font-size: 28rpx;
+  color: #444;
+  line-height: 1.8;
+  display: block;
+}
+
+/* === 列表内容 === */
+.list-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 12rpx;
+}
+
+.list-bullet {
+  font-size: 28rpx;
+  color: #4A90E2;
+  margin-right: 12rpx;
+  line-height: 1.8;
+  flex-shrink: 0;
+}
+
+.list-text {
+  font-size: 28rpx;
+  color: #444;
+  line-height: 1.8;
+  flex: 1;
+}
+
+/* === 症状分析 === */
+.symptom-item {
+  margin-bottom: 20rpx;
+  padding: 16rpx;
+  background: #f9fafc;
+  border-radius: 12rpx;
+}
+
+.symptom-name {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.symptom-explanation {
+  display: block;
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* === 常见误区 === */
+.myth-item {
+  margin-bottom: 20rpx;
+  padding: 16rpx;
+  background: #f9fafc;
+  border-radius: 12rpx;
+}
+
+.myth-row {
+  margin-bottom: 12rpx;
+}
+
+.myth-label {
+  font-size: 26rpx;
+  color: #f5222d;
+  line-height: 1.6;
+}
+
+.fact-row {
+  padding-left: 8rpx;
+}
+
+.fact-label {
+  font-size: 26rpx;
+  color: #52c41a;
+  line-height: 1.6;
+}
+
+/* === 空数据提示 === */
+.empty-hint {
+  padding: 16rpx 0;
+}
+
+.empty-hint-text {
+  font-size: 26rpx;
+  color: #bbb;
+}
+
+/* === 底部免责声明 === */
+.disclaimer-box {
+  background: #fffbe6;
+  border-radius: 16rpx;
+  margin: 20rpx;
+  padding: 20rpx 24rpx;
+  display: flex;
+  align-items: flex-start;
+}
+
+.disclaimer-icon {
+  font-size: 28rpx;
+  margin-right: 12rpx;
+  flex-shrink: 0;
+  line-height: 1.6;
+}
+
+.disclaimer-text {
+  font-size: 24rpx;
+  color: #d48806;
+  line-height: 1.6;
+  flex: 1;
+}
+
+/* === 分享提示 === */
+.share-hint {
+  display: flex;
+  justify-content: center;
+  padding: 32rpx 24rpx 0;
+}
+
+.share-hint-text {
+  font-size: 24rpx;
+  color: #bbb;
+}
+
+/* === 底部间距 === */
+.bottom-space {
+  height: 40rpx;
+}
+
+/* === 底部操作栏 === */
+.action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16rpx 24rpx;
+  padding-bottom: calc(16rpx + env(safe-area-inset-bottom));
+  background: #ffffff;
+  box-shadow: 0 -2rpx 8rpx rgba(0, 0, 0, 0.06);
+  z-index: 10;
+  display: flex;
+  gap: 20rpx;
+}
+
+.action-btn {
+  flex: 1;
+  height: 88rpx;
+  border-radius: 44rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn-home {
+  background: #f0f7ff;
+}
+
+.action-btn-home:active {
+  background: #dce8f7;
+}
+
+.action-btn-history {
+  background: #4A90E2;
+}
+
+.action-btn-history:active {
+  background: #3a7bd5;
+}
+
+.action-btn-text {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.action-btn-home .action-btn-text {
+  color: #4A90E2;
+}
+
+.action-btn-history .action-btn-text {
+  color: #ffffff;
+}

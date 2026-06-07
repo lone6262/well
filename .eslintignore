@@ -1,0 +1,5 @@
+node_modules/
+test_archive/
+cloudfunctions/*/node_modules/
+*.min.js
+miniprogram/images/

@@ -73,6 +73,11 @@
 
       <!-- 自查记录 & 健康报告入口 -->
       <view class="pet-records-section">
+        <view class="record-entry quick-check-entry" bindtap="quickCheck" data-pet-id="{{item._id}}" data-pet-name="{{item.name}}">
+          <text class="record-entry-icon">🩺</text>
+          <text class="record-entry-text quick-check-text">快速自查</text>
+          <text class="record-entry-arrow">›</text>
+        </view>
         <view class="record-entry" bindtap="showPetRecords" data-pet-id="{{item._id}}" data-pet-name="{{item.name}}">
           <text class="record-entry-icon">📋</text>
           <text class="record-entry-text">自查记录</text>
@@ -382,9 +387,12 @@
 
     <!-- 空状态 -->
     <view class="record-modal-empty" wx:else>
-      <text class="empty-icon">📋</text>
-      <text class="empty-text">暂无记录</text>
-      <text class="empty-hint">进行症状自查后会在这里显示</text>
+      <text class="empty-icon" wx:if="{{currentRecordType === 'report'}}">📊</text>
+      <text class="empty-icon" wx:else>📋</text>
+      <text class="empty-text" wx:if="{{currentRecordType === 'report'}}">暂无AI健康报告</text>
+      <text class="empty-text" wx:else>暂无记录</text>
+      <text class="empty-hint" wx:if="{{currentRecordType === 'report'}}">在自查记录中查看评估详情，可生成AI报告</text>
+      <text class="empty-hint" wx:else>进行症状自查后会在这里显示</text>
     </view>
   </view>
 </view>

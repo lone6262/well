@@ -1,0 +1,328 @@
+/* 会员中心页面样式 */
+page {
+  background-color: #f5f6f8;
+  width: 100%;
+}
+
+.container {
+  width: 100%;
+  max-width: 750rpx;
+  margin: 0 auto;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding-bottom: 40rpx;
+}
+
+/* 页面头部 */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 24rpx;
+  background-color: #ffffff;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  padding: 10rpx 20rpx;
+  border-radius: 28rpx;
+  transition: background 200ms ease;
+}
+
+.back-btn-active {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.back-arrow {
+  width: 16rpx;
+  height: 16rpx;
+  border-left: 4rpx solid #333;
+  border-bottom: 4rpx solid #333;
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+  margin-right: 6rpx;
+}
+
+.back-text {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.page-title {
+  font-size: 34rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.header-placeholder {
+  width: 80rpx;
+}
+
+/* 加载状态 */
+.loading-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 0;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 4rpx solid #e0e0e0;
+  border-top: 4rpx solid #4A90E2;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 20rpx;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 内容区域 */
+.content {
+  padding: 20rpx 24rpx;
+}
+
+/* 会员状态卡 */
+.member-card {
+  border-radius: 20rpx;
+  padding: 36rpx 32rpx;
+  margin-bottom: 24rpx;
+  display: flex;
+  align-items: center;
+}
+
+.active-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+}
+
+.inactive-card {
+  background: linear-gradient(135deg, #b8c6db 0%, #f5f7fa 100%);
+  color: #666;
+}
+
+.member-badge {
+  margin-right: 24rpx;
+}
+
+.badge-icon {
+  font-size: 56rpx;
+}
+
+.member-info {
+  flex: 1;
+}
+
+.member-type {
+  font-size: 34rpx;
+  font-weight: bold;
+  margin-bottom: 8rpx;
+}
+
+.member-detail {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.detail-item {
+  font-size: 24rpx;
+  opacity: 0.9;
+}
+
+.detail-sep {
+  margin: 0 12rpx;
+  font-size: 24rpx;
+  opacity: 0.6;
+}
+
+.highlight {
+  color: #ffd700;
+  font-weight: bold;
+  opacity: 1;
+}
+
+/* 报告额度卡 */
+.credits-card {
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.credits-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.credits-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.credits-reset {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.credits-bar-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.credits-bar-bg {
+  flex: 1;
+  height: 16rpx;
+  background: #f0f0f0;
+  border-radius: 8rpx;
+  margin-right: 16rpx;
+  overflow: hidden;
+}
+
+.credits-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4A90E2, #667eea);
+  border-radius: 8rpx;
+  transition: width 0.3s ease;
+}
+
+.credits-num {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #4A90E2;
+  min-width: 60rpx;
+  text-align: right;
+}
+
+.credits-hint {
+  font-size: 22rpx;
+  color: #faad14;
+  margin-top: 8rpx;
+  display: block;
+}
+
+/* 权益列表 */
+.benefits-section {
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.benefits-list {
+  /* container */
+}
+
+.benefit-item {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.benefit-item:last-child {
+  border-bottom: none;
+}
+
+.benefit-icon-wrap {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+}
+
+.blue-icon {
+  background: rgba(74, 144, 226, 0.1);
+}
+
+.green-icon {
+  background: rgba(82, 196, 26, 0.1);
+}
+
+.orange-icon {
+  background: rgba(250, 173, 20, 0.1);
+}
+
+.purple-icon {
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.benefit-icon {
+  font-size: 32rpx;
+}
+
+.benefit-text {
+  flex: 1;
+}
+
+.benefit-name {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.benefit-desc {
+  font-size: 22rpx;
+  color: #999;
+}
+
+/* 操作按钮 */
+.action-section {
+  padding: 20rpx 0;
+}
+
+.action-btn {
+  width: 100%;
+  height: 88rpx;
+  border-radius: 44rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+}
+
+.action-btn.primary::after {
+  border: none;
+}
+
+/* Additional styles for status page */
+.benefit-status { color: #52c41a; font-size: 32rpx; font-weight: bold; }
+.action-btn.danger { background: #fff; color: #f5222d; border: 2rpx solid #f5222d; margin-top: 16rpx; }
+.action-btn.danger::after { border: none; }
+.action-btn.danger[disabled] { color: #ccc; border-color: #ccc; }

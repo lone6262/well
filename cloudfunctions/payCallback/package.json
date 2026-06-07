@@ -1,0 +1,9 @@
+{
+  "name": "payCallback",
+  "version": "1.0.0",
+  "description": "微信支付回调（骨架，真实支付时填充）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

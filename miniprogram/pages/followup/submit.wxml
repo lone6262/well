@@ -1,0 +1,102 @@
+<!--回访提交页面— 项目统一风格-->
+<view class="page-container">
+  <!-- 顶部渐变头部 -->
+  <view class="page-header">
+    <view class="header-inner">
+      <view class="nav-bar">
+        <view class="back-btn" bindtap="goBack" hover-class="back-btn-active">
+          <view class="back-arrow"></view>
+          <text class="back-text">返回</text>
+        </view>
+      </view>
+      <view class="header-content">
+        <text class="header-icon">🐾</text>
+        <text class="header-title">宠物回访</text>
+        <text class="header-subtitle">告诉我们宝贝的恢复情况</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 提交成功 -->
+  <view class="success-section" wx:if="{{submitted}}">
+    <view class="success-card">
+      <text class="success-emoji">🎉</text>
+      <text class="success-title">感谢您的反馈</text>
+      <text class="success-desc">您的回访信息已记录，有助于我们为宝贝提供更好的健康建议</text>
+      <button class="btn-primary" bindtap="goHome">返回首页</button>
+    </view>
+  </view>
+
+  <!-- 回访表单 -->
+  <view class="form-area" wx:if="{{!submitted}}">
+    <!-- 宠物信息卡 -->
+    <view class="card">
+      <view class="card-label">
+        <text class="card-label-icon">🐾</text>
+        <text class="card-label-text">{{petName || '宠物'}}的恢复情况</text>
+      </view>
+      <view class="symptom-tags" wx:if="{{symptomList.length > 0}}">
+        <text class="tag" wx:for="{{symptomList}}" wx:key="*this">{{item}}</text>
+      </view>
+      <text class="symptom-fallback" wx:elif="{{symptoms}}">{{symptoms}}</text>
+    </view>
+
+    <!-- 恢复状态 -->
+    <view class="card">
+      <view class="card-label">
+        <text class="card-label-text">恢复状态</text>
+        <text class="required">*</text>
+      </view>
+      <view class="status-options">
+        <view class="status-item {{selectedStatus === item.key ? 'status-selected' : ''}}"
+              wx:for="{{statusOptions}}" wx:key="key"
+              bindtap="selectStatus" data-status="{{item.key}}"
+              style="{{selectedStatus === item.key ? 'border-color:' + item.color + ';background:' + item.color + '0a' : ''}}">
+          <text class="status-emoji">{{item.icon}}</text>
+          <text class="status-label" style="{{selectedStatus === item.key ? 'color:' + item.color : ''}}">{{item.label}}</text>
+          <view class="status-check" wx:if="{{selectedStatus === item.key}}">✓</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 是否就医 -->
+    <view class="card">
+      <view class="switch-row">
+        <view class="switch-info">
+          <text class="switch-icon">🏥</text>
+          <view class="switch-text">
+            <text class="switch-label">是否去看了医生</text>
+            <text class="switch-hint">帮助我们了解就医情况</text>
+          </view>
+        </view>
+        <switch checked="{{visitedVet}}" bindchange="toggleVetVisit" color="#667eea" />
+      </view>
+    </view>
+
+    <!-- 补充说明 -->
+    <view class="card">
+      <view class="card-label">
+        <text class="card-label-text">📝 补充说明</text>
+      </view>
+      <textarea class="textarea"
+                placeholder="关于宝贝恢复情况的补充说明..."
+                value="{{notes}}"
+                bindinput="onNotesInput"
+                maxlength="500"
+                auto-height />
+      <text class="char-count">{{notes.length || 0}}/500</text>
+    </view>
+
+    <!-- 提交按钮 -->
+    <view class="btn-area">
+      <button class="btn-primary {{submitting || !selectedStatus ? 'btn-disabled' : ''}}"
+              bindtap="submitFollowup"
+              disabled="{{submitting || !selectedStatus}}">
+        {{submitting ? '提交中...' : '提交反馈'}}
+      </button>
+    </view>
+  </view>
+
+  <!-- 底部安全区 -->
+  <view class="safe-bottom"></view>
+</view>

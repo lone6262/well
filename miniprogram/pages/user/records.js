@@ -1,5 +1,5 @@
 // 自查记录/健康报告列表页面
-var app = getApp()
+let app = getApp()
 
 Page({
   data: {
@@ -12,11 +12,13 @@ Page({
   },
 
   onLoad: function(options) {
-    var type = options.type || 'checkRecords'
-    var pageTitle = type === 'reports' ? '健康报告' : '自查记录'
+    let type = options.type || 'checkRecords'
+    let showReport = options.showReport === 'true'
+    let pageTitle = type === 'reports' ? '健康报告' : '自查记录'
 
     this.setData({
       type: type,
+      showReport: showReport,
       pageTitle: pageTitle
     })
 
@@ -30,8 +32,8 @@ Page({
 
   // 加载记录列表
   loadRecords: function() {
-    var self = this
-    var openid = app.getOpenid()
+    let self = this
+    let openid = app.getOpenid()
 
     if (!openid) {
       wx.showToast({ title: '请先登录', icon: 'none' })
@@ -50,14 +52,14 @@ Page({
     wx.cloud.callFunction({
       name: 'getRecordList',
       data: {
-        openid: openid,
+        token: getApp().globalData.token,
         page: 1,
         pageSize: 20
       },
       success: function(res) {
         if (res.result && res.result.code === 0) {
-          var data = res.result.data
-          var records = data.records || []
+          let data = res.result.data
+          let records = data.records || []
 
           // 格式化记录数据
           records = records.map(function(record) {
@@ -88,29 +90,38 @@ Page({
 
   // 查看记录详情
   viewDetail: function(e) {
-    var record = e.currentTarget.dataset.record
-    wx.navigateTo({
-      url: '/pages/risk/result?assessmentId=' + record._id + '&riskLevel=' + record.riskLevel
-    })
+    let record = e.currentTarget.dataset.record
+
+    // 健康报告模式：直接跳转AI报告页
+    if (this.data.showReport) {
+      wx.navigateTo({
+        url: '/pages/ai-report/index?recordId=' + record._id
+      })
+    } else {
+      // 自查记录模式：跳转评估结果页
+      wx.navigateTo({
+        url: '/pages/risk/result?assessmentId=' + record._id + '&riskLevel=' + record.riskLevel
+      })
+    }
   },
 
   // 加载更多
   loadMore: function() {
-    var self = this
-    var openid = app.getOpenid()
-    var nextPage = self.data.page + 1
+    let self = this
+    let openid = app.getOpenid()
+    let nextPage = self.data.page + 1
 
     wx.cloud.callFunction({
       name: 'getRecordList',
       data: {
-        openid: openid,
+        token: getApp().globalData.token,
         page: nextPage,
         pageSize: 20
       },
       success: function(res) {
         if (res.result && res.result.code === 0) {
-          var data = res.result.data
-          var newRecords = data.records || []
+          let data = res.result.data
+          let newRecords = data.records || []
 
           newRecords = newRecords.map(function(record) {
             record.riskText = self.getRiskText(record.riskLevel)
@@ -132,31 +143,31 @@ Page({
 
   // 风险等级文字
   getRiskText: function(level) {
-    var map = { low: '低风险', mid: '中风险', high: '高风险' }
+    let map = { low: '低风险', mid: '中风险', high: '高风险' }
     return map[level] || '未知'
   },
 
   // 风险等级颜色
   getRiskColor: function(level) {
-    var map = { low: '#52c41a', mid: '#faad14', high: '#f5222d' }
+    let map = { low: '#52c41a', mid: '#faad14', high: '#f5222d' }
     return map[level] || '#999999'
   },
 
   // 格式化日期
   formatDate: function(dateStr) {
     if (!dateStr) return '未知时间'
-    var date = new Date(dateStr)
-    var month = date.getMonth() + 1
-    var day = date.getDate()
-    var hour = date.getHours()
-    var minute = date.getMinutes()
+    let date = new Date(dateStr)
+    let month = date.getMonth() + 1
+    let day = date.getDate()
+    let hour = date.getHours()
+    let minute = date.getMinutes()
     return month + '月' + day + '日 ' + (hour < 10 ? '0' : '') + hour + ':' + (minute < 10 ? '0' : '') + minute
   },
 
   // 删除记录
   deleteRecord: function(e) {
-    var self = this;
-    var recordId = e.currentTarget.dataset.id;
+    let self = this;
+    let recordId = e.currentTarget.dataset.id;
     if (!recordId) return;
     wx.showModal({
       title: '确认删除',
@@ -165,7 +176,7 @@ Page({
         if (res.confirm) {
           if (!app.globalData.cloudDevelopmentAvailable) {
             // 本地存储模式
-            var records = self.data.records.filter(function(r) { return r._id !== recordId; });
+            let records = self.data.records.filter(function(r) { return r._id !== recordId; });
             self.setData({ records: records });
             wx.showToast({ title: '已删除', icon: 'success' });
             return;
@@ -173,11 +184,11 @@ Page({
           wx.showLoading({ title: '删除中...' });
           wx.cloud.callFunction({
             name: 'deleteRecord',
-            data: { openid: app.getOpenid(), recordId: recordId },
+            data: { recordId: recordId, token: app.globalData.token },
             success: function(res) {
               wx.hideLoading();
               if (res.result && res.result.code === 0) {
-                var records = self.data.records.filter(function(r) { return r._id !== recordId; });
+                let records = self.data.records.filter(function(r) { return r._id !== recordId; });
                 self.setData({ records: records });
                 wx.showToast({ title: '已删除', icon: 'success' });
               } else {

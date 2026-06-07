@@ -1,0 +1,75 @@
+<view class="container">
+  <view class="page-header">
+    <view class="back-btn" bindtap="goBack" hover-class="back-btn-active">
+      <view class="back-arrow"></view>
+      <text class="back-text">返回</text>
+    </view>
+    <view class="page-title">隐私政策</view>
+    <view class="header-placeholder"></view>
+  </view>
+  <scroll-view scroll-y class="content-scroll">
+    <view class="content">
+      <view class="update-date">更新日期：2026年6月3日</view>
+      <view class="section">
+        <text class="section-title">一、信息收集范围</text>
+        <text class="section-text">我们收集以下类型的信息用于提供服务：</text>
+        <text class="section-text">1. 用户基本信息：微信昵称、头像（仅在您授权后收集）</text>
+        <text class="section-text">2. 宠物信息：宠物名称、类型、品种、年龄、体重、性别、疫苗和驱虫记录</text>
+        <text class="section-text">3. 健康数据：症状描述、持续时间、严重程度、风险评估结果</text>
+        <text class="section-text">4. 位置信息：用于查找附近宠物医院（仅在您授权后获取）</text>
+        <text class="section-text">5. 设备信息：设备型号、操作系统版本（用于服务优化）</text>
+      </view>
+      <view class="section">
+        <text class="section-title">二、信息使用目的</text>
+        <text class="section-text">我们收集的信息仅用于以下目的：</text>
+        <text class="section-text">1. 提供宠物健康风险评估服务</text>
+        <text class="section-text">2. 生成AI健康报告</text>
+        <text class="section-text">3. 推荐附近宠物医院</text>
+        <text class="section-text">4. 管理宠物档案和健康记录</text>
+        <text class="section-text">5. 会员权益管理和服务</text>
+        <text class="section-text">6. 改善产品体验和服务质量</text>
+      </view>
+      <view class="section">
+        <text class="section-title">三、信息存储</text>
+        <text class="section-text">您的数据存储在微信云开发平台（腾讯云），采用业界标准的安全措施进行保护。我们不会将您的个人数据转移至境外。</text>
+      </view>
+      <view class="section">
+        <text class="section-title">四、信息共享</text>
+        <text class="section-text">我们不会向第三方出售、出租或共享您的个人数据，以下情况除外：</text>
+        <text class="section-text">1. 获得您的明确授权后</text>
+        <text class="section-text">2. 法律法规要求或政府部门强制要求</text>
+      </view>
+      <view class="section">
+        <text class="section-title">五、第三方服务</text>
+        <text class="section-text">本产品使用以下第三方服务：</text>
+        <text class="section-text">1. 微信支付：用于会员购买和AI报告购买</text>
+        <text class="section-text">2. 腾讯地图：用于查找和导航宠物医院</text>
+        <text class="section-text">3. AI服务：用于生成健康报告内容（不传输用户真实姓名等身份信息）</text>
+      </view>
+      <view class="section">
+        <text class="section-title">六、用户权利</text>
+        <text class="section-text">您有权：</text>
+        <text class="section-text">1. 查看您的所有个人数据</text>
+        <text class="section-text">2. 要求删除您的个人数据（通过「我的」页面或联系客服）</text>
+        <text class="section-text">3. 撤回已授予的权限</text>
+        <text class="section-text">4. 注销账号并删除全部相关数据</text>
+      </view>
+      <view class="section">
+        <text class="section-title">七、数据保留期限</text>
+        <text class="section-text">我们仅在提供服务所必需的期限内保留您的数据。账号注销后，相关数据将在30天内删除。</text>
+      </view>
+      <view class="section">
+        <text class="section-title">八、未成年人保护</text>
+        <text class="section-text">我们不会主动收集未满14周岁未成年人的个人信息。如发现误收集，我们将及时删除。</text>
+      </view>
+      <view class="section">
+        <text class="section-title">九、隐私政策更新</text>
+        <text class="section-text">我们可能会不时更新本隐私政策。更新后的政策将在小程序内公示，重大变更将通过弹窗方式通知您。</text>
+      </view>
+      <view class="section">
+        <text class="section-title">十、联系我们</text>
+        <text class="section-text">如您对本隐私政策有任何疑问，请通过小程序「我的」页面中的反馈功能联系我们。</text>
+      </view>
+    </view>
+  </scroll-view>
+</view>

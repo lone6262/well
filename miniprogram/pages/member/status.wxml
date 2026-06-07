@@ -1,0 +1,97 @@
+<view class="container">
+  <view class="page-header">
+    <view class="back-btn" bindtap="goBack" hover-class="back-btn-active">
+      <view class="back-arrow"></view>
+      <text class="back-text">返回</text>
+    </view>
+    <view class="page-title">会员状态</view>
+    <view class="header-placeholder"></view>
+  </view>
+
+  <view class="loading-wrapper" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <view class="content" wx:if="{{!loading}}">
+    <!-- 会员状态卡 -->
+    <view class="member-card {{isMember ? 'active-card' : 'inactive-card'}}">
+      <view class="member-badge">
+        <text class="badge-icon">{{isMember ? '👑' : '☆'}}</text>
+      </view>
+      <view class="member-info">
+        <view class="member-type">{{isMember ? typeText : '尚未开通会员'}}</view>
+        <view class="member-detail" wx:if="{{isMember}}">
+          <text class="detail-item">到期：{{expireText}}</text>
+          <text class="detail-sep">|</text>
+          <text class="detail-item highlight">剩余 {{memberInfo.days_remaining}} 天</text>
+        </view>
+        <view class="member-detail" wx:if="{{!isMember}}">
+          <text class="detail-item">开通会员，享受更多专属权益</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 报告额度卡 -->
+    <view class="credits-card" wx:if="{{isMember}}">
+      <view class="credits-header">
+        <text class="credits-title">本月报告额度</text>
+      </view>
+      <view class="credits-bar-wrapper">
+        <view class="credits-bar-bg">
+          <view class="credits-bar-fill" style="width: {{memberInfo.report_credits_total > 0 ? (memberInfo.report_credits_remaining / memberInfo.report_credits_total * 100) : 0}}%"></view>
+        </view>
+        <text class="credits-num">{{creditsText}}</text>
+      </view>
+    </view>
+
+    <!-- 权益列表 -->
+    <view class="benefits-section">
+      <view class="section-title">会员权益</view>
+      <view class="benefits-list">
+        <view class="benefit-item">
+          <view class="benefit-icon-wrap blue-icon"><text class="benefit-icon">📋</text></view>
+          <view class="benefit-text">
+            <text class="benefit-name">每月{{memberInfo.report_credits_total || 5}}次AI报告</text>
+            <text class="benefit-desc">价值 ¥29.9/月 · 约6折</text>
+          </view>
+          <view class="benefit-status" wx:if="{{isMember}}">✓</view>
+        </view>
+        <view class="benefit-item">
+          <view class="benefit-icon-wrap green-icon"><text class="benefit-icon">🔄</text></view>
+          <view class="benefit-text">
+            <text class="benefit-name">无限症状自查</text>
+            <text class="benefit-desc">不限次数使用</text>
+          </view>
+          <view class="benefit-status" wx:if="{{isMember}}">✓</view>
+        </view>
+        <view class="benefit-item">
+          <view class="benefit-icon-wrap orange-icon"><text class="benefit-icon">💊</text></view>
+          <view class="benefit-text">
+            <text class="benefit-name">疫苗/驱虫提醒</text>
+            <text class="benefit-desc">到期自动提醒</text>
+          </view>
+          <view class="benefit-status" wx:if="{{isMember}}">✓</view>
+        </view>
+        <view class="benefit-item">
+          <view class="benefit-icon-wrap purple-icon"><text class="benefit-icon">📁</text></view>
+          <view class="benefit-text">
+            <text class="benefit-name">历史报告永久保存</text>
+            <text class="benefit-desc">随时查看所有报告</text>
+          </view>
+          <view class="benefit-status" wx:if="{{isMember}}">✓</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-section">
+      <button class="action-btn primary" bindtap="goToPurchase">
+        {{isMember ? '续费 / 升级会员' : '立即开通会员'}}
+      </button>
+      <button class="action-btn danger" wx:if="{{isMember && memberInfo.auto_renew}}" bindtap="cancelAutoRenew" disabled="{{cancelling}}">
+        取消自动续费
+      </button>
+    </view>
+  </view>
+</view>

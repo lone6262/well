@@ -1,18 +1,29 @@
 // 云函数入口文件
 const cloud = require('wx-server-sdk');
-const { COLLECTIONS, RESPONSE_CODE } = require('./constants');
+const { COLLECTIONS, RESPONSE_CODE , warmupConfig} = require('./common/constants');
+const { verifyToken } = require('./common/auth');
+const { createLogger } = require('./common/logger');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
 });
 
 const db = cloud.database();
+const logger = createLogger('getRecordDetail');
 
 /**
  * 获取评估详情（包含宠物信息）
  */
 exports.main = async (event, context) => {
-  const { openid, assessmentId } = event;
+  await warmupConfig(db);
+  const { assessmentId, token } = event;
+  const { OPENID } = cloud.getWXContext();
+  const openid = OPENID;
+
+  // Token 验证
+  if (!verifyToken(token)) {
+    return { code: RESPONSE_CODE.UNAUTHORIZED, msg: '身份验证失败，请重新登录', data: {} };
+  }
 
   try {
     // 1. 参数校验
@@ -76,7 +87,7 @@ exports.main = async (event, context) => {
           };
         }
       } catch (petError) {
-        console.error('查询宠物信息失败:', petError);
+        logger.error('查询宠物信息失败:', petError);
         // 宠物信息查询失败不影响主流程
       }
     }
@@ -92,7 +103,9 @@ exports.main = async (event, context) => {
         riskLevel: recordData.risk_level,
         matchedRule: recordData.matched_rule || '',
         assessmentDate: recordData.created_at,
-        aiCacheId: recordData.ai_cache_id
+        aiCacheId: recordData.ai_report_id || recordData.ai_cache_id,
+        has_ai_report: !!recordData.has_ai_report || !!recordData.ai_report_id,
+        description: recordData.description || ''
       },
       petInfo: petData
     };
@@ -104,25 +117,21 @@ exports.main = async (event, context) => {
     };
 
   } catch (error) {
-    console.error('获取评估详情失败:', error);
+    logger.error('获取评估详情失败:', error);
 
     // 处理数据库特定错误
     if (error.errCode === -1) {
       return {
         code: RESPONSE_CODE.SERVER_ERROR,
         msg: '数据库连接失败，请稍后重试',
-        data: {
-          error: error.message
-        }
+        data: {}
       };
     }
 
     return {
       code: RESPONSE_CODE.SERVER_ERROR,
       msg: '服务器错误，请稍后重试',
-      data: {
-        error: error.message
-      }
+      data: {}
     };
   }
 };

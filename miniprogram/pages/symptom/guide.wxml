@@ -31,7 +31,8 @@
             wx:key="id"
             bindtap="selectPet"
             data-id="{{item.id}}">
-        <text class="pet-emoji">{{item.emoji}}</text>
+        <image wx:if="{{item.avatar}}" class="pet-avatar-sm" src="{{item.avatar}}" mode="aspectFill"/>
+        <text wx:else class="pet-emoji">{{item.emoji}}</text>
         <text class="pet-name">{{item.name}}</text>
         <text class="pet-info">{{item.age}} · {{item.gender}}</text>
       </view>

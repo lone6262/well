@@ -8,7 +8,21 @@
     "pages/hospital/list",
     "pages/pet/profile",
     "pages/user/index",
-    "pages/user/records"
+    "pages/user/records",
+    "pages/knowledge/list",
+    "pages/knowledge/detail",
+    "pages/ai-report/index",
+    "pages/order/list",
+    "pages/member/index",
+    "pages/member/order",
+    "pages/followup/submit",
+    "pages/invite/index",
+    "pages/invite/ranking",
+    "pages/agreement/privacy",
+    "pages/agreement/member",
+    "pages/member/status",
+    "pages/followup/index",
+    "pages/order/detail"
   ],
   "window": {
     "backgroundColor": "#F6F6F6",

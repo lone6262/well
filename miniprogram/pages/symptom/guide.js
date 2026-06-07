@@ -1,8 +1,8 @@
 // 症状向导页面 - 全新设计逻辑
-var app = getApp()
+let app = getApp()
 
 // 症状ID对照表（按文档要求使用英文ID）
-var SYMPTOM_ID_MAP = {
+let SYMPTOM_ID_MAP = {
   // 消化系统
   '呕吐': 'vomit',
   '腹泻': 'diarrhea',
@@ -35,7 +35,7 @@ var SYMPTOM_ID_MAP = {
 }
 
 // 带emoji图标的症状分类数据（使用英文ID）
-var SYMPTOM_CATEGORIES = [
+let SYMPTOM_CATEGORIES = [
   {
     name: "消化系统",
     emoji: "🍽️",
@@ -125,7 +125,7 @@ Page({
   // 计算分类选中数量
   calculateSelectedCount: function(categories) {
     return categories.map(function(category) {
-      var selectedCount = category.symptoms.filter(function(s) {
+      let selectedCount = category.symptoms.filter(function(s) {
         return s.selected
       }).length
       return Object.assign({}, category, {
@@ -134,24 +134,68 @@ Page({
     })
   },
 
-  onLoad: function() {
-    console.log('=== 症状自查页面加载 ===')
+  onLoad: function(options) {
+    console.log('=== 症状自查页面加载 ===', options)
+    // 支持从宠物档案页传入 petId 预选宠物
+    if (options && options.petId) {
+      this._preselectPetId = options.petId
+    }
     this.initPage()
   },
 
   onShow: function() {
-    // TabBar页面每次显示时检查宠物数据是否更新
-    var self = this
-    if (app.globalData.petsUpdated) {
-      console.log('检测到宠物数据更新，重新加载')
-      self.loadPetData()
-      app.globalData.petsUpdated = false
+    let self = this
+    console.log('症状自查页面 onShow，重置页面状态')
+
+    // 重置页面状态，清除上一次的填写内容
+    self.resetPageState()
+
+    // 从宠物档案快速自查入口传入的预选宠物ID
+    if (app.globalData._quickCheckPetId) {
+      self._preselectPetId = app.globalData._quickCheckPetId
+      app.globalData._quickCheckPetId = null
     }
+    self.loadPetData()
+    app.globalData.petsUpdated = false
+  },
+
+  // 重置页面状态
+  resetPageState: function() {
+    let self = this
+
+    // 重置步骤到第一步
+    self.setData({
+      currentStep: 1,
+      selectedPet: '',
+      selectedSymptoms: [],
+      selectedSymptomNames: [],
+      description: '',
+      duration: '',
+      severity: '',
+      canNext: false,
+      activeCategory: 0
+    })
+
+    // 重置症状分类的选中状态
+    let categories = self.data.symptomCategories
+    for (let i = 0; i < categories.length; i++) {
+      for (let j = 0; j < categories[i].symptoms.length; j++) {
+        categories[i].symptoms[j].selected = false
+      }
+    }
+
+    // 更新分类选中数量
+    let updatedCategories = this.calculateSelectedCount(categories)
+    self.setData({
+      symptomCategories: updatedCategories
+    })
+
+    console.log('页面状态已重置')
   },
 
   // === 页面初始化 ===
   initPage: function() {
-    var self = this
+    let self = this
 
     // 使用统一的登录状态检查方法
     if (!app.getOpenid()) {
@@ -163,7 +207,7 @@ Page({
     }
 
     // 初始化症状分类数据，添加选中数量
-    var categoriesWithCount = this.calculateSelectedCount(SYMPTOM_CATEGORIES)
+    let categoriesWithCount = this.calculateSelectedCount(SYMPTOM_CATEGORIES)
 
     this.setData({
       symptomCategories: categoriesWithCount
@@ -174,41 +218,31 @@ Page({
 
   // === 加载宠物数据 ===
   loadPetData: function() {
-    var self = this
+    let self = this
 
-    var openid = app.getOpenid()
+    let openid = app.getOpenid()
 
     // 登录检查
     if (!openid || (typeof openid === 'string' && openid.indexOf('mock_') === 0)) {
-      console.log('用户未登录，提示登录')
+      console.log('用户未登录，静默处理')
       self.setData({ petList: [] })
-      wx.showModal({
-        title: '需要登录',
-        content: '使用症状自查需要先登录，是否立即登录？',
-        confirmText: '立即登录',
-        cancelText: '稍后再说',
-        success: function(res) {
-          if (res.confirm) {
-            wx.switchTab({ url: '/pages/user/index' })
-          }
-        }
-      })
       return
     }
 
     wx.cloud.callFunction({
       name: 'getPetList',
       data: {
-        openid: openid
+        token: app.globalData.token
       },
       success: function(res) {
         if (res.result.code === 0 && res.result.data.petList && res.result.data.petList.length > 0) {
           // 格式化宠物数据
-          var formattedPets = res.result.data.petList.map(function(pet) {
+          let formattedPets = res.result.data.petList.map(function(pet) {
             return {
               id: pet.petId,
               name: pet.name,
               emoji: pet.type === 'cat' ? '🐱' : '🐶',
+              avatar: pet.avatar || '',
               age: pet.age + '个月',
               gender: pet.gender === 'male' ? '弟弟' : '妹妹'
             }
@@ -218,21 +252,22 @@ Page({
             petList: formattedPets
           })
 
-          // 自动选择第一个宠物
+          // 优先预选传入的宠物，否则选第一个
           if (formattedPets.length > 0) {
-            self.selectPetById(formattedPets[0].id)
+            var preselectId = self._preselectPetId
+            if (preselectId) {
+              self._preselectPetId = null
+              var targetPet = formattedPets.find(function(p) { return p.id === preselectId })
+              self.selectPetById(targetPet ? targetPet.id : formattedPets[0].id)
+              // 快速自查：跳过宠物选择步骤，直接进入症状选择
+              self.setData({ currentStep: 2 })
+            } else {
+              self.selectPetById(formattedPets[0].id)
+            }
           }
         } else {
-          // 没有宠物时提示添加
-          wx.showModal({
-            title: '添加宠物',
-            content: '还没有宠物档案，现在添加吗？',
-            success: function(modalRes) {
-              if (modalRes.confirm) {
-                self.addNewPet()
-              }
-            }
-          })
+          // 没有宠物时静默处理，用户可通过「添加新宠物」入口主动添加
+          console.log('暂无宠物档案')
         }
       },
       fail: function() {
@@ -246,11 +281,13 @@ Page({
 
   // === 选择宠物 ===
   selectPet: function(e) {
-    var petId = e.currentTarget.dataset.id
+    let petId = e.currentTarget.dataset.id
     this.selectPetById(petId)
   },
 
   selectPetById: function(petId) {
+    // 切换宠物时清除旧症状缓存
+    this.clearAllSymptoms()
     this.setData({
       selectedPet: petId
     })
@@ -266,7 +303,7 @@ Page({
 
   // === 切换症状分类 ===
   switchCategory: function(e) {
-    var categoryIndex = parseInt(e.currentTarget.dataset.index)
+    let categoryIndex = parseInt(e.currentTarget.dataset.index)
     this.setData({
       activeCategory: categoryIndex
     })
@@ -274,8 +311,8 @@ Page({
 
   // === 展开/收起分类 ===
   toggleCategory: function(e) {
-    var categoryIndex = parseInt(e.currentTarget.dataset.index)
-    var categories = this.data.symptomCategories
+    let categoryIndex = parseInt(e.currentTarget.dataset.index)
+    let categories = this.data.symptomCategories
 
     categories[categoryIndex].expanded = !categories[categoryIndex].expanded
 
@@ -286,32 +323,32 @@ Page({
 
   // === 切换症状选择 ===
   toggleSymptom: function(e) {
-    var categoryIndex = parseInt(e.currentTarget.dataset.categoryIndex)
-    var symptomId = e.currentTarget.dataset.id
+    let categoryIndex = parseInt(e.currentTarget.dataset.categoryIndex)
+    let symptomId = e.currentTarget.dataset.id
 
     console.log('=== 症状选择操作 ===')
     console.log('分类索引:', categoryIndex)
     console.log('症状ID:', symptomId)
 
     // 找到对应的症状并切换状态
-    var categories = this.data.symptomCategories
-    var targetSymptom = categories[categoryIndex].symptoms.find(function(s) {
+    let categories = this.data.symptomCategories
+    let targetSymptom = categories[categoryIndex].symptoms.find(function(s) {
       return s.id === symptomId
     })
 
     if (targetSymptom) {
       // 完全自由的多选：切换状态，不限制任何选择
-      var newSelectedState = !targetSymptom.selected
+      let newSelectedState = !targetSymptom.selected
       targetSymptom.selected = newSelectedState
 
       console.log('症状:', targetSymptom.name)
       console.log('选中状态:', newSelectedState)
 
       // 更新已选症状ID列表和名称列表
-      var selectedSymptoms = [] // 英文ID用于提交
-      var selectedSymptomNames = [] // 中文名称用于显示
-      for (var i = 0; i < categories.length; i++) {
-        for (var j = 0; j < categories[i].symptoms.length; j++) {
+      let selectedSymptoms = [] // 英文ID用于提交
+      let selectedSymptomNames = [] // 中文名称用于显示
+      for (let i = 0; i < categories.length; i++) {
+        for (let j = 0; j < categories[i].symptoms.length; j++) {
           if (categories[i].symptoms[j].selected) {
             selectedSymptoms.push(categories[i].symptoms[j].id)
             selectedSymptomNames.push(categories[i].symptoms[j].name)
@@ -323,7 +360,7 @@ Page({
       console.log('所有已选症状名称:', selectedSymptomNames)
 
       // 更新分类选中数量
-      var updatedCategories = this.calculateSelectedCount(categories)
+      let updatedCategories = this.calculateSelectedCount(categories)
 
       this.setData({
         symptomCategories: updatedCategories,
@@ -344,16 +381,16 @@ Page({
 
   // === 移除已选症状 ===
   removeSymptom: function(e) {
-    var symptomName = e.currentTarget.dataset.symptom
-    var removeIndex = e.currentTarget.dataset.index
+    let symptomName = e.currentTarget.dataset.symptom
+    let removeIndex = e.currentTarget.dataset.index
 
     // 找到对应的症状并取消选择
-    var categories = this.data.symptomCategories
-    var selectedSymptoms = this.data.selectedSymptoms
-    var selectedSymptomNames = this.data.selectedSymptomNames
+    let categories = this.data.symptomCategories
+    let selectedSymptoms = this.data.selectedSymptoms
+    let selectedSymptomNames = this.data.selectedSymptomNames
 
-    for (var i = 0; i < categories.length; i++) {
-      for (var j = 0; j < categories[i].symptoms.length; j++) {
+    for (let i = 0; i < categories.length; i++) {
+      for (let j = 0; j < categories[i].symptoms.length; j++) {
         if (categories[i].symptoms[j].name === symptomName) {
           categories[i].symptoms[j].selected = false
         }
@@ -365,7 +402,7 @@ Page({
     selectedSymptomNames.splice(removeIndex, 1)
 
     // 更新分类选中数量
-    var updatedCategories = this.calculateSelectedCount(categories)
+    let updatedCategories = this.calculateSelectedCount(categories)
 
     this.setData({
       symptomCategories: updatedCategories,
@@ -378,20 +415,20 @@ Page({
 
   // === 清空所有症状 ===
   clearAllSymptoms: function() {
-    var self = this
-    var categories = self.data.symptomCategories
+    let self = this
+    let categories = self.data.symptomCategories
 
     console.log('=== 清空所有症状选择 ===')
 
     // 清空所有选中状态
-    for (var i = 0; i < categories.length; i++) {
-      for (var j = 0; j < categories[i].symptoms.length; j++) {
+    for (let i = 0; i < categories.length; i++) {
+      for (let j = 0; j < categories[i].symptoms.length; j++) {
         categories[i].symptoms[j].selected = false
       }
     }
 
     // 更新分类选中数量
-    var updatedCategories = this.calculateSelectedCount(categories)
+    let updatedCategories = this.calculateSelectedCount(categories)
 
     self.setData({
       symptomCategories: updatedCategories,
@@ -400,18 +437,11 @@ Page({
     })
 
     self.updateCanNext()
-
-    wx.showModal({
-      title: '清空成功',
-      content: '已清空所有症状选择，您可以重新选择',
-      showCancel: false,
-      confirmText: '知道了'
-    })
   },
 
   // === 描述输入 ===
   onDescriptionInput: function(e) {
-    var description = e.detail.value
+    let description = e.detail.value
 
     // 字数限制：≤ 100字
     if (description.length > 100) {
@@ -423,8 +453,8 @@ Page({
     }
 
     // 敏感词检查（使用统一配置模块）
-    var sensitiveWords = require('../../config/sensitiveWords.js')
-    var checkResult = sensitiveWords.checkSensitiveWords(description)
+    let sensitiveWords = require('../../config/sensitiveWords.js')
+    let checkResult = sensitiveWords.checkSensitiveWords(description)
     if (checkResult.hasSensitive) {
       wx.showToast({
         title: checkResult.message,
@@ -442,14 +472,14 @@ Page({
 
   // === 快速问答 ===
   selectDuration: function(e) {
-    var value = e.currentTarget.dataset.value
+    let value = e.currentTarget.dataset.value
     this.setData({
       duration: this.data.duration === value ? '' : value
     })
   },
 
   selectSeverity: function(e) {
-    var value = e.currentTarget.dataset.value
+    let value = e.currentTarget.dataset.value
     this.setData({
       severity: this.data.severity === value ? '' : value
     })
@@ -457,7 +487,7 @@ Page({
 
   // === 更新下一步按钮状态 ===
   updateCanNext: function() {
-    var canNext = false
+    let canNext = false
 
     switch(this.data.currentStep) {
       case 1:
@@ -487,7 +517,7 @@ Page({
   },
 
   nextStep: function() {
-    var self = this
+    let self = this
 
     if (!this.data.canNext) {
       wx.showToast({
@@ -509,7 +539,7 @@ Page({
 
   // === 提交评估 ===
   submitAssessment: function() {
-    var self = this
+    let self = this
 
     console.log('=== 开始提交评估 ===')
     console.log('当前步骤:', self.data.currentStep)
@@ -531,12 +561,12 @@ Page({
     if (self.data.selectedSymptoms.length === 0) {
       console.log('检测到selectedSymptoms为空，尝试从symptomCategories中提取')
 
-      var extractedSymptoms = []
-      var extractedSymptomNames = []
-      var categories = self.data.symptomCategories
+      let extractedSymptoms = []
+      let extractedSymptomNames = []
+      let categories = self.data.symptomCategories
 
-      for (var i = 0; i < categories.length; i++) {
-        for (var j = 0; j < categories[i].symptoms.length; j++) {
+      for (let i = 0; i < categories.length; i++) {
+        for (let j = 0; j < categories[i].symptoms.length; j++) {
           if (categories[i].symptoms[j].selected) {
             extractedSymptoms.push(categories[i].symptoms[j].id)
             extractedSymptomNames.push(categories[i].symptoms[j].name)
@@ -565,7 +595,7 @@ Page({
     }
 
     // 使用统一的登录状态检查
-    var openid = app.getOpenid()
+    let openid = app.getOpenid()
     if (!openid) {
       wx.showModal({
         title: '请先登录',
@@ -583,14 +613,14 @@ Page({
       return
     }
 
-    console.log('开始提交症状评估，openid:', openid)
+    console.log('开始提交症状评估')
 
-    var submitData = {
-      openid: openid, // 用户标识
+    let submitData = {
       petId: self.data.selectedPet,
       symptomIds: self.data.selectedSymptoms, // 英文ID数组，用于规则引擎
       symptomNames: self.data.selectedSymptomNames, // 中文名称数组，用于显示
-      description: self.data.description
+      description: self.data.description,
+      token: app.globalData.token || ''
     }
 
     console.log('提交数据:', submitData)
@@ -598,7 +628,7 @@ Page({
     wx.showLoading({ title: '正在评估风险，请稍候...' })
 
     // 超时设置：5秒
-    var timeout = setTimeout(function() {
+    let timeout = setTimeout(function() {
       wx.hideLoading()
       wx.showToast({
         title: '网络繁忙，请重试',
@@ -616,7 +646,7 @@ Page({
 
         if (res.result.code === 0) {
           // 按照文档要求处理返回结果
-          var data = res.result.data
+          let data = res.result.data
           console.log('云函数返回数据:', data)
 
           // 根据action字段决定跳转行为

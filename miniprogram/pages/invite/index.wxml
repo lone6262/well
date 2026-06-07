@@ -1,0 +1,115 @@
+<!--邀请好友页面 - 重设计版本-->
+<view class="invite-page">
+
+  <!-- 加载状态 -->
+  <view class="loading-wrapper" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <block wx:if="{{!loading}}">
+    <!-- Hero 统计卡片 -->
+    <view class="invite-hero">
+      <view class="hero-decoration hero-decoration-1"></view>
+      <view class="hero-decoration hero-decoration-2"></view>
+
+      <view class="stats-grid">
+        <view class="stats-cell">
+          <text class="stats-value">{{stats.totalInvites || 0}}</text>
+          <text class="stats-caption">总邀请</text>
+        </view>
+        <view class="stats-cell">
+          <text class="stats-value stats-value--pending">{{stats.pendingInvites || 0}}</text>
+          <text class="stats-caption">待确认</text>
+        </view>
+        <view class="stats-cell">
+          <text class="stats-value stats-value--success">{{stats.rewardedInvites || 0}}</text>
+          <text class="stats-caption">已成功</text>
+        </view>
+        <view class="stats-cell">
+          <text class="stats-value stats-value--reward">{{stats.rewardCredits || 0}}</text>
+          <text class="stats-caption">奖励额度</text>
+        </view>
+      </view>
+
+      <!-- 里程碑进度 -->
+      <view class="milestone-track">
+        <view class="milestone-row">
+          <text class="milestone-label">邀请{{stats.trialThreshold}}人获得7天会员</text>
+          <text class="milestone-counter">{{stats.rewardedInvites || 0}}/{{stats.trialThreshold}}</text>
+        </view>
+        <view class="milestone-bar">
+          <view class="milestone-fill" style="width: {{milestonePercent}}%"></view>
+        </view>
+        <text class="milestone-badge" wx:if="{{stats.trialGranted}}">已发放</text>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-group">
+      <button class="action-btn action-btn--primary" open-type="share">
+        <text class="action-icon">📤</text>
+        <text class="action-label">分享给好友</text>
+      </button>
+      <button class="action-btn action-btn--outline" bindtap="generatePoster" loading="{{posterGenerating}}">
+        <text class="action-icon">🖼️</text>
+        <text class="action-label">生成海报</text>
+      </button>
+    </view>
+
+    <!-- 邀请规则 -->
+    <view class="rules-card">
+      <view class="rules-heading">
+        <text class="rules-icon">💡</text>
+        <text class="rules-title">邀请规则</text>
+      </view>
+      <view class="rules-steps">
+        <view class="step-card step-card--1">
+          <view class="step-badge">1</view>
+          <view class="step-body">
+            <text class="step-name">分享邀请</text>
+            <text class="step-detail">分享给好友或生成专属海报</text>
+          </view>
+        </view>
+        <view class="step-connector"></view>
+        <view class="step-card step-card--2">
+          <view class="step-badge">2</view>
+          <view class="step-body">
+            <text class="step-name">好友自查</text>
+            <text class="step-detail">好友完成首次症状自查</text>
+          </view>
+        </view>
+        <view class="step-connector"></view>
+        <view class="step-card step-card--3">
+          <view class="step-badge">3</view>
+          <view class="step-body">
+            <text class="step-name">双方获奖</text>
+            <text class="step-detail">双方各获得1次免费AI报告</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 邀请排行预览 -->
+    <view class="ranking-card" wx:if="{{topRankers.length > 0}}">
+      <view class="ranking-card-header">
+        <view class="ranking-card-title-group">
+          <text class="ranking-card-icon">🏆</text>
+          <text class="ranking-card-title">邀请排行</text>
+        </view>
+        <text class="ranking-card-link" bindtap="toRanking">查看全部 ›</text>
+      </view>
+      <view class="ranking-card-list">
+        <view class="ranking-card-item" wx:for="{{topRankers}}" wx:key="rank">
+          <view class="rank-medal">{{item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : '🥉'}}</view>
+          <image class="rank-avatar" src="{{item.avatarUrl}}" mode="aspectFill" />
+          <text class="rank-name">{{item.nickname}}</text>
+          <text class="rank-count">{{item.inviteCount}}人</text>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 海报画布（隐藏）- 现代化 type="2d" API -->
+  <canvas type="2d" id="posterCanvas" class="poster-canvas" style="width:300px;height:400px;position:fixed;left:-9999px;top:-9999px;"></canvas>
+</view>

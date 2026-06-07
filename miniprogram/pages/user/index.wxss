@@ -429,6 +429,19 @@
   color: var(--text-inverse, #ffffff);
 }
 
+.vip-tag {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  font-size: 20rpx;
+  font-weight: bold;
+}
+
+.purple-icon {
+  background: rgba(102, 126, 234, 0.1);
+}
+
 .menu-arrow {
   font-size: var(--text-2xl, 48rpx);
   color: var(--text-tertiary, #9e9e9e);

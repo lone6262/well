@@ -1,12 +1,15 @@
 // 云函数入口文件
 const cloud = require('wx-server-sdk');
-const { COLLECTIONS, RESPONSE_CODE } = require('./constants');
+const { COLLECTIONS, RESPONSE_CODE , warmupConfig} = require('./common/constants');
+const { verifyToken } = require('./common/auth');
+const { createLogger } = require('./common/logger');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
 });
 
 const db = cloud.database();
+const logger = createLogger('getPetList');
 
 /**
  * 计算宠物健康状态
@@ -37,7 +40,15 @@ function getHealthStatusText(status) {
  * 获取用户的宠物列表
  */
 exports.main = async (event, context) => {
-  const { openid } = event;
+  await warmupConfig(db);
+  const { token } = event;
+  const { OPENID } = cloud.getWXContext();
+  const openid = OPENID;
+
+  // Token 验证
+  if (!verifyToken(token)) {
+    return { code: RESPONSE_CODE.UNAUTHORIZED, msg: '身份验证失败，请重新登录', data: {} };
+  }
 
   try {
     // 1. 参数校验
@@ -89,13 +100,11 @@ exports.main = async (event, context) => {
     };
 
   } catch (error) {
-    console.error('获取宠物列表失败:', error);
+    logger.error('获取宠物列表失败:', error);
     return {
       code: RESPONSE_CODE.SERVER_ERROR,
       msg: '服务器错误，请稍后重试',
-      data: {
-        error: error.message
-      }
+      data: {}
     };
   }
 };

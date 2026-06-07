@@ -147,6 +147,14 @@ page {
   margin-bottom: var(--spacing-sm);
 }
 
+.pet-avatar-sm {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  display: block;
+  margin-bottom: var(--spacing-sm);
+}
+
 .pet-name {
   display: block;
   font-size: 28rpx;

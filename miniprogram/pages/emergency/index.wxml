@@ -142,8 +142,8 @@
   </view>
 
   <!-- 返回按钮 -->
-  <view class="back-btn" bindtap="goBack">
-    <text class="back-icon">←</text>
+  <view class="back-btn" bindtap="goBack" hover-class="back-btn-active">
+    <view class="back-arrow"></view>
     <text class="back-text">返回首页</text>
   </view>
 

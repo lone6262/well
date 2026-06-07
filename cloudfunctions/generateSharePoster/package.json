@@ -1,0 +1,9 @@
+{
+  "name": "generateSharePoster",
+  "version": "1.0.0",
+  "description": "服务端生成分享海报",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

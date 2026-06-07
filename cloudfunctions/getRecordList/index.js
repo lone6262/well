@@ -1,15 +1,26 @@
 // 云函数：获取用户自查记录列表
 const cloud = require('wx-server-sdk');
-const { COLLECTIONS, RESPONSE_CODE } = require('./constants');
+const { COLLECTIONS, RESPONSE_CODE , warmupConfig} = require('./common/constants');
+const { verifyToken } = require('./common/auth');
+const { createLogger } = require('./common/logger');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
 });
 
 const db = cloud.database();
+const logger = createLogger('getRecordList');
 
 exports.main = async (event, context) => {
-  const { openid, page = 1, pageSize = 20 } = event;
+  await warmupConfig(db);
+  const { page = 1, pageSize = 20, token } = event;
+  const { OPENID } = cloud.getWXContext();
+  const openid = OPENID;
+
+  // Token 验证
+  if (!verifyToken(token)) {
+    return { code: RESPONSE_CODE.UNAUTHORIZED, msg: '身份验证失败，请重新登录', data: {} };
+  }
 
   if (!openid) {
     return {
@@ -47,9 +58,9 @@ exports.main = async (event, context) => {
     });
 
     // 批量查询宠物信息
-    var petMap = {};
+    let petMap = {};
     if (petIds.length > 0) {
-      var petsResult = await db.collection(COLLECTIONS.PETS)
+      let petsResult = await db.collection(COLLECTIONS.PETS)
         .where({
           _id: db.command.in(petIds)
         })
@@ -65,8 +76,8 @@ exports.main = async (event, context) => {
     }
 
     // 组装返回数据
-    var records = recordsResult.data.map(function(record) {
-      var petInfo = petMap[record.pet_id] || { name: '未知宠物', type: 'cat' };
+    let records = recordsResult.data.map(function(record) {
+      let petInfo = petMap[record.pet_id] || { name: '未知宠物', type: 'cat' };
       return {
         _id: record._id,
         petId: record.pet_id,
@@ -77,6 +88,8 @@ exports.main = async (event, context) => {
         riskLevel: record.risk_level || 'low',
         description: record.description || '',
         matchedRule: record.matched_rule || '',
+        hasAiReport: record.has_ai_report || false,
+        aiReportId: record.ai_report_id || '',
         createdAt: record.created_at,
         action: record.action || ''
       };
@@ -95,11 +108,11 @@ exports.main = async (event, context) => {
     };
 
   } catch (error) {
-    console.error('获取记录列表失败:', error);
+    logger.error('获取记录列表失败:', error);
     return {
       code: RESPONSE_CODE.SERVER_ERROR,
       msg: '获取记录列表失败',
-      error: error.message
+      data: {}
     };
   }
 };

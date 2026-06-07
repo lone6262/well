@@ -1,0 +1,81 @@
+﻿<!--会员购买页面-->
+<view class="container">
+  <!-- 页面头部 -->
+  <view class="page-header">
+    <view class="back-btn" bindtap="goBack" hover-class="back-btn-active">
+      <view class="back-arrow"></view>
+      <text class="back-text">返回</text>
+    </view>
+    <view class="page-title">{{upgradeMode ? "升级年度会员" : (renewMode ? "续费会员" : "开通会员")}}</view>
+    <view class="header-placeholder"></view>
+  </view>
+
+  <view class="content">
+    <!-- 选择套餐 -->
+    <view class="section-title">{{upgradeMode ? "升级方案" : (renewMode ? "续费方案" : "选择套餐")}}</view>
+
+    <view class="plans-wrapper">
+      <!-- 月卡 -->
+      <view class="plan-card {{selectedType === 'monthly' ? 'selected' : ''}} {{renewMode ? 'selected' : ''}}" bindtap="selectPlan" data-type="monthly">
+        <view class="plan-check" wx:if="{{selectedType === 'monthly' || renewMode}}">✓</view>
+        <view class="plan-name">月度会员</view>
+        <view class="plan-price">
+          <text class="price-symbol">¥</text>
+          <text class="price-amount">{{monthlyPrice}}</text>
+          <text class="price-unit">/月</text>
+        </view>
+        <view class="plan-save">{{monthlySave}}</view>
+        <view class="plan-features">
+          <text class="feature-item">• 每月5次AI报告</text>
+          <text class="feature-item">• 无限自查</text>
+          <text class="feature-item">• 报告永久保存</text>
+        </view>
+      </view>
+
+      <!-- 年卡（推荐） -->
+      <view class="plan-card {{selectedType === 'yearly' ? 'selected' : ''}} recommend {{upgradeMode ? 'selected' : ''}}" bindtap="selectPlan" data-type="yearly">
+        <view class="recommend-badge">{{upgradeMode ? "升级推荐" : "推荐"}}</view>
+        <view class="plan-check" wx:if="{{selectedType === 'yearly' || upgradeMode}}">✓</view>
+        <view class="plan-name">年度会员</view>
+        <view class="plan-price">
+          <text class="price-symbol">¥</text>
+          <text class="price-amount">{{yearlyPrice}}</text>
+          <text class="price-unit">/年</text>
+        </view>
+        <view class="plan-save">{{yearlySave}}</view>
+        <view class="plan-features">
+          <text class="feature-item">• 每月15次AI报告</text>
+          <text class="feature-item">• 无限自查</text>
+          <text class="feature-item">• 报告永久保存</text>
+          <text class="feature-item">• 专属内容</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 价格说明 -->
+    <view class="price-note">
+      <text class="note-text">
+        {{upgradeMode ? "升级后月度剩余天数将叠加到年度会员中" : (renewMode ? "续费后有效期将延长" : "开通即代表同意《会员服务协议》，会员权益立时生效")}}
+      </text>
+    </view>
+
+    <!-- 底部按钮 -->
+    <view class="bottom-action">
+      <button class="confirm-btn {{purchasing ? 'disabled' : ''}}" bindtap="confirmPurchase" disabled="{{purchasing}}">
+        {{purchasing ? '处理中...' : (upgradeMode ? '立即升级' : (renewMode ? '确认续费' : '立即开通'))}}
+      </button>
+    </view>
+  </view>
+
+  <!-- 模拟支付处理覆盖层 -->
+  <view class="pay-processing-mask" wx:if="{{showPayProcessing}}">
+    <view class="pay-processing-content">
+      <text class="pay-processing-icon">💸</text>
+      <view class="pay-processing-spinner"></view>
+      <text class="pay-processing-title">正在处理{{upgradeMode ? "升级" : (renewMode ? "续费" : "支付")}}...</text>
+      <text class="pay-processing-desc">请稍候，正在连接支付服务</text>
+      <text class="pay-processing-amount">¥{{selectedType === 'yearly' ? yearlyPrice : monthlyPrice}}</text>
+      <text class="pay-processing-method">微信支付（模拟）</text>
+    </view>
+  </view>
+</view>

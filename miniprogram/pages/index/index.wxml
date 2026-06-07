@@ -29,6 +29,15 @@
     </button>
   </view>
 
+  <!-- 会员 Banner -->
+  <view class="member-banner" wx:if="{{isMember}}" bindtap="goToMember">
+    <view class="member-banner-content">
+      <text class="member-banner-icon">👑</text>
+      <text class="member-banner-text">会员特权已激活 · 剩余{{memberDaysRemaining}}天</text>
+    </view>
+    <text class="member-banner-action">查看权益 ›</text>
+  </view>
+
   <!-- 主要功能网格 -->
   <view class="main-features">
     <view class="section-header">
@@ -75,6 +84,35 @@
           <text class="feature-desc">专业养宠指南</text>
         </view>
         <view class="feature-badge">HOT</view>
+      </view>
+
+      <!-- 会员中心 -->
+      <view class="feature-card member-gradient" bindtap="goToMember" hover-class="feature-card-pressed">
+        <view class="feature-icon-large">👑</view>
+        <view class="feature-content">
+          <text class="feature-title">会员中心</text>
+          <text class="feature-desc">专属权益</text>
+        </view>
+        <view class="feature-badge" wx:if="{{isMember}}">VIP</view>
+      </view>
+
+      <!-- 邀请好友 -->
+      <view class="feature-card invite-gradient" bindtap="goToInvite" hover-class="feature-card-pressed">
+        <view class="feature-icon-large">🎁</view>
+        <view class="feature-content">
+          <text class="feature-title">邀请好友</text>
+          <text class="feature-desc">双方获奖</text>
+        </view>
+        <view class="feature-badge reward-badge">奖</view>
+      </view>
+
+      <!-- 回访记录 -->
+      <view class="feature-card followup-gradient" bindtap="goToFollowupList" hover-class="feature-card-pressed">
+        <view class="feature-icon-large">📝</view>
+        <view class="feature-content">
+          <text class="feature-title">回访记录</text>
+          <text class="feature-desc">追踪恢复情况</text>
+        </view>
       </view>
     </view>
   </view>
@@ -167,14 +205,69 @@
     </view>
   </view>
 
-  <!-- 底部健康提示 -->
-  <view class="health-tip-card">
+  <!-- 今日科普 - 精美卡片 -->
+  <view class="knowledge-daily-card" bindtap="toKnowledgeDetail" data-id="{{dailyKnowledge._id}}" wx:if="{{dailyKnowledge}}" hover-class="knowledge-daily-card-active">
+    <!-- 顶部装饰渐变条 -->
+    <view class="daily-card-gradient-bar"></view>
+    <!-- 内容区 -->
+    <view class="daily-card-body">
+      <!-- 标签行 -->
+      <view class="daily-card-top">
+        <view class="daily-card-badge">
+          <text class="badge-icon">📖</text>
+          <text class="badge-label">今日科普</text>
+        </view>
+        <view class="daily-card-arrow">
+          <text class="arrow-text">阅读全文</text>
+          <view class="arrow-chevron"></view>
+        </view>
+      </view>
+      <!-- 标题 -->
+      <text class="daily-card-title">{{dailyKnowledge.title}}</text>
+      <!-- 摘要 -->
+      <text class="daily-card-summary" wx:if="{{dailyKnowledge.summary}}">{{dailyKnowledge.summary}}</text>
+      <!-- 底部标签 -->
+      <view class="daily-card-footer">
+        <view class="daily-tag">
+          <text class="tag-dot"></text>
+          <text class="tag-text">专业知识</text>
+        </view>
+        <view class="daily-tag">
+          <text class="tag-dot dot-blue"></text>
+          <text class="tag-text">每日更新</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 健康提示（无科普数据时降级显示） -->
+  <view class="health-tip-card" wx:if="{{!dailyKnowledge}}">
     <view class="tip-header">
       <text class="tip-icon">💡</text>
       <text class="tip-title">今日健康提示</text>
     </view>
     <view class="tip-content">
       <text class="tip-text">{{dailyTip}}</text>
+    </view>
+  </view>
+
+  <!-- 回访提醒弹窗 — 温馨治愈风 -->
+  <view class="followup-mask" wx:if="{{showFollowupPopup}}" bindtap="closeFollowupPopup">
+    <view class="followup-modal" catchtap="">
+      <view class="followup-modal-deco">🐾</view>
+      <view class="followup-modal-body">
+        <text class="followup-modal-title">宝贝恢复了吗？</text>
+        <text class="followup-modal-subtitle">告诉我们的恢复情况，帮助更好地照顾它</text>
+        <view class="followup-modal-pet" wx:if="{{pendingFollowup}}">
+          <text class="followup-pet-name">{{pendingFollowup.pet_name || '宠物'}}</text>
+          <text class="followup-pet-sep">·</text>
+          <text class="followup-pet-symptoms">{{pendingFollowup.symptom_list || '症状自查'}}</text>
+        </view>
+      </view>
+      <view class="followup-modal-actions">
+        <button class="followup-btn-later" bindtap="closeFollowupPopup">稍后再说</button>
+        <button class="followup-btn-go" bindtap="goToFollowup">🐾 去反馈</button>
+      </view>
     </view>
   </view>
 

@@ -1,22 +1,7 @@
-// 浜戝嚱鏁板叆鍙ｆ枃浠?const cloud = require('wx-server-sdk');
-
-// 鏈湴甯搁噺瀹氫箟锛堥伩鍏嶈法浜戝嚱鏁板紩鐢級
-const COLLECTIONS = {
-  USERS: 'users',
-  PETS: 'pets',
-  SYMPTOM_RECORDS: 'symptom_records',
-  AI_CACHE: 'ai_cache',
-  ORDERS: 'orders',
-  HOSPITALS: 'hospitals'
-};
-
-const RESPONSE_CODE = {
-  SUCCESS: 0,
-  ERROR: -1,
-  UNAUTHORIZED: 401,
-  NOT_FOUND: 404,
-  SERVER_ERROR: 500
-};
+// 用户登录云函数 - 通过微信 code 换取 openid + HMAC签名Token
+const cloud = require('wx-server-sdk');
+const { COLLECTIONS, RESPONSE_CODE, warmupConfig } = require('./common/constants');
+const { generateToken } = require('./common/auth');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -25,26 +10,29 @@ cloud.init({
 const db = cloud.database();
 
 /**
- * 鐢ㄦ埛鐧诲綍浜戝嚱鏁? * @param {Object} event - 璇锋眰鍙傛暟
- * @param {string} event.code - 寰俊鐧诲綍code
- * @param {string} event.nickname - 鐢ㄦ埛鏄电О锛堝彲閫夛級
- * @param {string} event.avatar - 鐢ㄦ埛澶村儚锛堝彲閫夛級
- * @returns {Object} 鐧诲綍缁撴灉
+ * 用户登录云函数
+ * 使用 wx.login() 返回的 code 调用 code2Session 获取 openid
+ * @param {Object} event - 请求参数
+ * @param {string} event.code - 微信登录code
+ * @param {string} event.nickname - 用户昵称（可选）
+ * @param {string} event.avatar - 用户头像（可选）
+ * @returns {Object} 登录结果（含 token）
  */
 exports.main = async (event, context) => {
+  await warmupConfig(db);
   const { code, nickname = '', avatar = '' } = event;
 
   try {
-    // 1. 鍙傛暟鏍￠獙
+    // 1. 参数校验
     if (!code) {
       return {
         code: RESPONSE_CODE.ERROR,
-        msg: '鐧诲綍code涓嶈兘涓虹┖',
+        msg: '登录code不能为空',
         data: {}
       };
     }
 
-    // 2. 璋冪敤寰俊鐧诲綍鎺ュ彛鑾峰彇openid
+    // 2. 调用微信登录接口获取openid
     const wxResult = await cloud.openapi.auth.code2Session({
       jsCode: code
     });
@@ -52,7 +40,7 @@ exports.main = async (event, context) => {
     if (wxResult.errcode !== 0) {
       return {
         code: RESPONSE_CODE.ERROR,
-        msg: '寰俊鐧诲綍澶辫触锛? + wxResult.errmsg,
+        msg: '微信登录失败：' + wxResult.errmsg,
         data: {}
       };
     }
@@ -60,7 +48,8 @@ exports.main = async (event, context) => {
     const openid = wxResult.openid;
     const unionid = wxResult.unionid || '';
 
-    // 3. 鏌ヨ鐢ㄦ埛鏄惁宸插瓨鍦?    const userResult = await db.collection(COLLECTIONS.USERS).where({
+    // 3. 查询用户是否已存在
+    const userResult = await db.collection(COLLECTIONS.USERS).where({
       user_id: openid
     }).get();
 
@@ -68,13 +57,14 @@ exports.main = async (event, context) => {
     let isNewUser = false;
 
     if (userResult.data.length === 0) {
-      // 4. 鏂扮敤鎴凤紝鍒涘缓鐢ㄦ埛璁板綍
+      // 4. 新用户，创建用户记录
       const userData = {
         user_id: openid,
         unionid: unionid,
         nickname: nickname,
         avatar: avatar,
-        member_expire: null,        // 闈炰細鍛?        created_at: new Date(),
+        member_expire: null,        // 非会员
+        created_at: new Date(),
         updated_at: new Date()
       };
 
@@ -86,7 +76,7 @@ exports.main = async (event, context) => {
       isNewUser = true;
 
     } else {
-      // 5. 鑰佺敤鎴凤紝鏇存柊鐢ㄦ埛淇℃伅
+      // 5. 老用户，更新用户信息
       userId = userResult.data[0]._id;
       const updateData = {
         updated_at: new Date()
@@ -104,17 +94,23 @@ exports.main = async (event, context) => {
       });
     }
 
-    // 6. 鑾峰彇瀹屾暣鐨勭敤鎴蜂俊鎭?    const finalUserResult = await db.collection(COLLECTIONS.USERS).doc(userId).get();
+    // 6. 获取完整的用户信息
+    const finalUserResult = await db.collection(COLLECTIONS.USERS).doc(userId).get();
     const userInfo = finalUserResult.data;
 
-    // 7. 鍒ゆ柇浼氬憳鐘舵€?    const isMember = userInfo.member_expire &&
+    // 7. 判断会员状态
+    const isMember = userInfo.member_expire &&
                      new Date(userInfo.member_expire) > new Date();
 
-    // 8. 杩斿洖鐧诲綍缁撴灉
+    // 8. 生成 HMAC 签名的 Token
+    const token = generateToken(openid, userId);
+
+    // 9. 返回登录结果
     return {
       code: RESPONSE_CODE.SUCCESS,
-      msg: isNewUser ? '娉ㄥ唽鎴愬姛' : '鐧诲綍鎴愬姛',
+      msg: isNewUser ? '注册成功' : '登录成功',
       data: {
+        token: token,
         userId: userId,
         user_id: openid,
         userInfo: {
@@ -128,13 +124,11 @@ exports.main = async (event, context) => {
     };
 
   } catch (error) {
-    console.error('鐧诲綍澶辫触:', error);
+    console.error('登录失败:', error);
     return {
       code: RESPONSE_CODE.SERVER_ERROR,
-      msg: '鏈嶅姟鍣ㄩ敊璇紝璇风◢鍚庨噸璇?,
-      data: {
-        error: error.message
-      }
+      msg: '服务器错误，请稍后重试',
+      data: {}
     };
   }
 };

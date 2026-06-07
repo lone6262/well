@@ -1,0 +1,9 @@
+{
+  "name": "processInviteReward",
+  "version": "1.0.0",
+  "description": "处理邀请奖励（反作弊+发放+里程碑）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

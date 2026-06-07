@@ -1,0 +1,119 @@
+﻿<!--会员中心页面-->
+<view class="page-container">
+  <!-- 顶部渐变头部 -->
+  <view class="page-header">
+    <view class="header-inner">
+      <view class="nav-bar">
+        <view class="back-btn" bindtap="goBack" hover-class="back-btn-active">
+          <view class="back-arrow"></view>
+          <text class="back-text">返回</text>
+        </view>
+      </view>
+      <view class="header-content">
+        <text class="header-icon">👑</text>
+        <text class="header-title">会员中心</text>
+        <text class="header-subtitle">为宝贝的健康保驾护航</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="state-wrapper" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="state-text">加载中...</text>
+  </view>
+
+  <view class="content-area" wx:if="{{!loading}}">
+    <!-- 会员状态卡 -->
+    <view class="vip-card {{isMember ? 'vip-active' : 'vip-inactive'}}">
+      <view class="vip-top">
+        <view class="vip-badge">
+          <text class="vip-badge-icon">{{isMember ? '👑' : '☆'}}</text>
+        </view>
+        <view class="vip-info">
+          <text class="vip-type">{{isMember ? typeText : '尚未开通会员'}}</text>
+          <text class="vip-desc" wx:if="{{isMember}}">到期：{{expireText}}</text>
+          <text class="vip-desc" wx:else>开通会员，享受更多专属权益</text>
+        </view>
+        <view class="vip-days" wx:if="{{isMember}}">
+          <text class="vip-days-num">{{memberInfo.days_remaining}}</text>
+          <text class="vip-days-unit">天</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 报告额度（会员专属） -->
+    <view class="card" wx:if="{{isMember}}">
+      <view class="card-row">
+        <text class="card-title">📳 本月报告额度</text>
+        <text class="card-extra" wx:if="{{memberInfo.next_reset_at}}">{{memberInfo.next_reset_at}} 重置</text>
+      </view>
+      <view class="progress-row">
+        <view class="progress-bg">
+          <view class="progress-fill" style="width: {{memberInfo.report_credits_total > 0 ? (memberInfo.report_credits_remaining / memberInfo.report_credits_total * 100) : 0}}%"></view>
+        </view>
+        <text class="progress-text">{{creditsText}}</text>
+      </view>
+      <text class="progress-hint" wx:if="{{memberInfo.report_credits_remaining === 0}}">本月额度已用完，下月自动重置</text>
+    </view>
+
+    <!-- 权益列表 -->
+    <view class="card">
+      <text class="card-title" style="margin-bottom: 24rpx;">🎬 会员权益</text>
+
+      <view class="benefit-item">
+        <view class="benefit-icon-wrap benefit-blue">
+          <text class="benefit-icon">📵</text>
+        </view>
+        <view class="benefit-info">
+          <text class="benefit-name">每月{{memberInfo.report_credits_total || 5}}次AI报告</text>
+          <text class="benefit-desc">深度分析宠物健康状况</text>
+        </view>
+        <text class="benefit-value">¥29.9/次 <text class="benefit-discount">约3折</text></text>
+      </view>
+
+      <view class="benefit-item">
+        <view class="benefit-icon-wrap benefit-green">
+          <text class="benefit-icon">🔧</text>
+        </view>
+        <view class="benefit-info">
+          <text class="benefit-name">无限症状自查</text>
+          <text class="benefit-desc">不限次数随时使用</text>
+        </view>
+        <text class="benefit-value">无限</text>
+      </view>
+
+      <view class="benefit-item">
+        <view class="benefit-icon-wrap benefit-orange">
+          <text class="benefit-icon">📧</text>
+        </view>
+        <view class="benefit-info">
+          <text class="benefit-name">历史报告永久保存</text>
+          <text class="benefit-desc">随时查看所有报告</text>
+        </view>
+        <text class="benefit-value">永久</text>
+      </view>
+
+      <view class="benefit-item benefit-last">
+        <view class="benefit-icon-wrap benefit-purple">
+          <text class="benefit-icon">📎</text>
+        </view>
+        <view class="benefit-info">
+          <text class="benefit-name">会员专属内容</text>
+          <text class="benefit-desc">深度养宠知识库</text>
+        </view>
+        <text class="benefit-value">独家</text>
+      </view>
+    </view>
+
+    <!-- 底部按钮 -->
+    <view class="btn-area">
+      <button class="btn-primary" bindtap="goToPurchase" hover-class="btn-hover">
+        {{isMember ? (memberInfo.type === 'yearly' ? '✅ 已是年度会员' : '🔄 续费 / 升级') : '⭐ 立即开通会员'}}
+      </button>
+    </view>
+  </view>
+
+  <!-- 底部安全区 -->
+  <view class="safe-bottom"></view>
+</view>

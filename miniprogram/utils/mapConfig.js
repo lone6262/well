@@ -6,8 +6,8 @@ const MAP_CONFIG = {
 
   // 地图默认配置
   defaultCenter: {
-    latitude: 39.90469,  // 北京天安门
-    longitude: 116.40717
+    latitude: 22.543099,  // 深圳市民中心
+    longitude: 114.057868
   },
 
   // 搜索配置

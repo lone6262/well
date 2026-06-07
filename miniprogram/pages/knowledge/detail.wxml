@@ -1,0 +1,58 @@
+<!--知识库文章详情页面-->
+<view class="detail-page">
+
+  <!-- 加载状态 -->
+  <view class="loading-section" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">正在加载文章...</text>
+  </view>
+
+  <!-- 文章内容 -->
+  <view class="article-content" wx:if="{{!loading}}">
+
+    <!-- 文章头部 -->
+    <view class="article-header">
+      <text class="article-title">{{article.title}}</text>
+      <view class="header-meta">
+        <view class="pet-type-tag">
+          <text class="tag-text">{{petTypeText}}</text>
+        </view>
+        <text class="meta-category">{{categoryName}}</text>
+        <text class="meta-views">👁 {{article.view_count || 0}}次浏览</text>
+      </view>
+    </view>
+
+    <!-- 文章正文 -->
+    <view class="article-body">
+      <rich-text nodes="{{nodes}}"></rich-text>
+    </view>
+
+    <!-- 相关症状 -->
+    <view class="related-section" wx:if="{{relatedSymptoms.length > 0}}">
+      <view class="section-title">
+        <text class="title-text">相关症状</text>
+      </view>
+      <view class="symptom-tags">
+        <view class="symptom-tag" wx:for="{{relatedSymptoms}}" wx:key="*this">
+          <text class="symptom-tag-text">{{item}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 分享提示 -->
+    <view class="share-hint">
+      <text class="share-hint-text">觉得有用？点击右上角分享给朋友吧</text>
+    </view>
+
+    <!-- 底部间距（给按钮留空间） -->
+    <view class="bottom-space"></view>
+  </view>
+
+  <!-- 底部操作按钮 -->
+  <view class="action-bar" wx:if="{{!loading}}">
+    <view class="action-btn" bindtap="onSymptomCheck">
+      <text class="action-btn-text">相关症状自查</text>
+    </view>
+  </view>
+
+</view>

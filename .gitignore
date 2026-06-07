@@ -18,6 +18,9 @@ miniprogram_npm/
 .env.production
 .env.development
 
+# æœåŠ¡ç«¯å¯†é’¥ï¼ˆåŒ…å«çœŸå®å¯†é’¥ï¼Œä¸æäº¤ï¼‰
+cloudfunctions/common/secrets.js
+
 # ç³»ç»Ÿæ–‡ä»¶
 .DS_Store
 Thumbs.db
@@ -43,3 +46,16 @@ project.config.json   # å¯é€‰ï¼Œä½†å»ºè®®ä¿ç•™é€šç”¨é…ç½®ï¼Œå»æ‰æ•æ„Ÿå­—æ®
 .spec-workflow/
 *.backup
 guide-ios.wxss
+
+# ²¿ÊğÃÜÔ¿ºÍÃô¸ĞÅäÖÃ£¨°üº¬ÕæÊµAPIÃÜÔ¿£¬²»Ìá½»£©
+.deploy-keys.txt
+
+# Claude AI ¼¼ÄÜ£¨±¾µØ¹¤¾ß£¬·ÇÏîÄ¿´úÂë£©
+.claude/
+
+# ²âÊÔ´æµµºÍÁÙÊ±ÎÄ¼ş
+test_archive/temp_*
+test_archive/*.zip
+
+# ×Ô¶¯Éú³ÉµÄÈßÓàÎÄ¼ş
+miniprogram/app_new.js

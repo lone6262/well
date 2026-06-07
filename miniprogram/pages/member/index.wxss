@@ -1,0 +1,329 @@
+/* ===================================
+   会员中心页面 — 项目统一风格
+   配色：蓝紫渐变 #667eea → #764ba2
+   背景：#f8f9ff → #f0f2f5
+   =================================== */
+
+page {
+  background: linear-gradient(180deg, #f8f9ff 0%, #f0f2f5 100%);
+  min-height: 100vh;
+}
+
+.page-container {
+  min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ===== 顶部渐变头部 ===== */
+.page-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 0 0 32rpx 32rpx;
+  overflow: hidden;
+}
+
+.header-inner { padding: 0 24rpx 32rpx; }
+
+.nav-bar { padding-top: env(safe-area-inset-top); }
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 16rpx 12rpx 16rpx 4rpx;
+  margin-top: 8rpx;
+  margin-bottom: 16rpx;
+}
+
+.back-btn-active { opacity: 0.7; }
+
+.back-arrow {
+  width: 16rpx; height: 16rpx;
+  border-left: 4rpx solid #fff;
+  border-bottom: 4rpx solid #fff;
+  transform: rotate(45deg);
+  margin-right: 8rpx;
+}
+
+.back-text { font-size: 28rpx; color: #fff; }
+
+.header-content { padding-left: 8rpx; }
+
+.header-icon { font-size: 44rpx; display: block; margin-bottom: 8rpx; }
+
+.header-title {
+  display: block;
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 6rpx;
+}
+
+.header-subtitle {
+  display: block;
+  font-size: 26rpx;
+  color: rgba(255,255,255,0.8);
+}
+
+/* ===== 加载状态 ===== */
+.state-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 160rpx 0;
+}
+
+.loading-spinner {
+  width: 56rpx; height: 56rpx;
+  border: 4rpx solid #e8e8e8;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 20rpx;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.state-text { font-size: 28rpx; color: #999; }
+
+/* ===== 内容区域 ===== */
+.content-area { padding: 20rpx 24rpx 0; }
+
+/* ===== VIP 状态卡 ===== */
+.vip-card {
+  border-radius: 24rpx;
+  padding: 36rpx 32rpx;
+  margin-bottom: 20rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+.vip-active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 8rpx 32rpx rgba(102,126,234,0.35);
+}
+
+.vip-inactive {
+  background: linear-gradient(135deg, #b8c6db 0%, #e8ecf1 100%);
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
+}
+
+/* 装饰圆 */
+.vip-card::before {
+  content: '';
+  position: absolute;
+  top: -60rpx;
+  right: -40rpx;
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+}
+
+.vip-card::after {
+  content: '';
+  position: absolute;
+  bottom: -80rpx;
+  right: 60rpx;
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+}
+
+.vip-top {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.vip-badge { margin-right: 20rpx; }
+
+.vip-badge-icon { font-size: 64rpx; }
+
+.vip-info { flex: 1; }
+
+.vip-type {
+  display: block;
+  font-size: 34rpx;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 8rpx;
+}
+
+.vip-desc {
+  display: block;
+  font-size: 24rpx;
+  color: rgba(255,255,255,0.8);
+}
+
+.vip-inactive .vip-type { color: #666; }
+.vip-inactive .vip-desc { color: #999; }
+
+.vip-days {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255,255,255,0.2);
+  border-radius: 16rpx;
+  padding: 12rpx 24rpx;
+}
+
+.vip-days-num {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #ffd700;
+  line-height: 1;
+}
+
+.vip-days-unit {
+  font-size: 20rpx;
+  color: rgba(255,255,255,0.8);
+  margin-top: 4rpx;
+}
+
+/* ===== 通用卡片 ===== */
+.card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 1rpx 3rpx 0 rgba(0,0,0,0.1), 0 1rpx 2rpx 0 rgba(0,0,0,0.06);
+}
+
+.card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.card-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.card-extra {
+  font-size: 22rpx;
+  color: #999;
+}
+
+/* 进度条 */
+.progress-row {
+  display: flex;
+  align-items: center;
+}
+
+.progress-bg {
+  flex: 1;
+  height: 16rpx;
+  background: #f0f0f0;
+  border-radius: 8rpx;
+  overflow: hidden;
+  margin-right: 16rpx;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 8rpx;
+  transition: width 0.5s ease;
+}
+
+.progress-text {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #667eea;
+  min-width: 60rpx;
+  text-align: right;
+}
+
+.progress-hint {
+  display: block;
+  font-size: 22rpx;
+  color: #faad14;
+  margin-top: 10rpx;
+}
+
+/* ===== 权益列表 ===== */
+.benefit-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.benefit-last { border-bottom: none; padding-bottom: 4rpx; }
+
+.benefit-icon-wrap {
+  width: 68rpx;
+  height: 68rpx;
+  border-radius: 18rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.benefit-blue { background: rgba(102,126,234,0.1); }
+.benefit-green { background: rgba(82,196,26,0.1); }
+.benefit-orange { background: rgba(250,173,20,0.1); }
+.benefit-purple { background: rgba(114,75,162,0.1); }
+
+.benefit-icon { font-size: 34rpx; }
+
+.benefit-info { flex: 1; }
+
+.benefit-name {
+  display: block;
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 4rpx;
+}
+
+.benefit-desc {
+  display: block;
+  font-size: 22rpx;
+  color: #999;
+}
+
+.benefit-value {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #667eea;
+  flex-shrink: 0;
+}
+
+.benefit-discount {
+  font-size: 20rpx;
+  color: #fff;
+  background: #FF6B6B;
+  border-radius: 6rpx;
+  padding: 2rpx 8rpx;
+  margin-left: 8rpx;
+  font-weight: 500;
+}
+
+/* ===== 按钮 ===== */
+.btn-area { padding: 16rpx 0 20rpx; }
+
+.btn-primary {
+  width: 100%;
+  height: 96rpx;
+  border-radius: 48rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+  line-height: 96rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: #fff !important;
+  border: none;
+  box-shadow: 0 6rpx 20rpx rgba(102,126,234,0.3);
+}
+
+.btn-primary::after { border: none; }
+
+.btn-hover { opacity: 0.9; transform: scale(0.98); }
+
+/* 底部安全区 */
+.safe-bottom { height: calc(env(safe-area-inset-bottom) + 20rpx); }

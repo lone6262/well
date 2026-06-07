@@ -1,0 +1,57 @@
+<view class="container">
+  <view class="page-header">
+    <view class="back-btn" bindtap="goBack" hover-class="back-btn-active">
+      <view class="back-arrow"></view>
+      <text class="back-text">返回</text>
+    </view>
+    <view class="page-title">订单详情</view>
+    <view class="header-placeholder"></view>
+  </view>
+
+  <view class="loading-wrapper" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <view class="content" wx:if="{{!loading && order}}">
+    <!-- 状态卡 -->
+    <view class="status-card">
+      <text class="status-icon">{{typeIcon}}</text>
+      <view class="status-info">
+        <text class="status-type">{{typeText}}</text>
+        <view class="status-badge" style="color: {{statusColor}}">{{statusText}}</view>
+      </view>
+    </view>
+
+    <!-- 金额 -->
+    <view class="amount-card">
+      <text class="amount-label">支付金额</text>
+      <text class="amount-value">¥ {{amountDisplay}}</text>
+    </view>
+
+    <!-- 订单信息 -->
+    <view class="detail-card">
+      <view class="detail-title">订单信息</view>
+      <view class="detail-row" bindtap="copyOrderNo">
+        <text class="detail-label">订单编号</text>
+        <text class="detail-value link">{{order.out_trade_no || '-'}}</text>
+      </view>
+      <view class="detail-row" wx:if="{{order.transaction_id}}">
+        <text class="detail-label">交易流水号</text>
+        <text class="detail-value">{{order.transaction_id}}</text>
+      </view>
+      <view class="detail-row" wx:if="{{order.description}}">
+        <text class="detail-label">描述</text>
+        <text class="detail-value">{{order.description}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">创建时间</text>
+        <text class="detail-value">{{createdText || '-'}}</text>
+      </view>
+      <view class="detail-row" wx:if="{{paidText}}">
+        <text class="detail-label">支付时间</text>
+        <text class="detail-value">{{paidText}}</text>
+      </view>
+    </view>
+  </view>
+</view>

@@ -8,7 +8,7 @@ Page({
   },
 
   onLoad: function () {
-    var app = getApp()
+    let app = getApp()
     this.setData({
       envId: '云开发已禁用'
     })
@@ -41,7 +41,7 @@ Page({
 
   // 添加日志
   addLog: function (message) {
-    var timestamp = new Date().toLocaleTimeString()
+    let timestamp = new Date().toLocaleTimeString()
     this.data.logs.push('[' + timestamp + '] ' + message)
     this.setData({
       logs: this.data.logs
