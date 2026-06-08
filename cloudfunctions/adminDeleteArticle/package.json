@@ -1,0 +1,9 @@
+{
+  "name": "adminDeleteArticle",
+  "version": "1.0.0",
+  "description": "删除知识文章云函数（管理端）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>宠物健康自查 - 管理后台登录</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="login-page">
+  <div class="login-container">
+    <div class="login-box">
+      <div class="login-header">
+        <h1>🐾 宠物健康自查</h1>
+        <p>管理后台登录</p>
+      </div>
+
+      <form id="loginForm" class="login-form">
+        <div class="form-group">
+          <label for="adminSecret">管理员密钥</label>
+          <input
+            type="password"
+            id="adminSecret"
+            name="adminSecret"
+            placeholder="请输入管理员密钥"
+            required
+            autocomplete="off"
+          >
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          登录
+        </button>
+      </form>
+
+      <div class="login-footer">
+        <p>登录即表示您同意管理系统使用规范</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CloudBase Web SDK（本地） -->
+  <script src="lib/cloudbase.js"></script>
+  <script>
+    var TCB_ENV = ''; //云环境ID
+
+    ['cloudbase', 'tcb', '__auth'].forEach(function(prefix) {
+      Object.keys(localStorage).forEach(function(k) {
+        if (k.indexOf(prefix) !== -1) localStorage.removeItem(k);
+      });
+    });
+
+    var app = cloudbase.init({ env: TCB_ENV });
+
+    function showError(message) {
+      var el = document.getElementById('errorMessage');
+      el.textContent = message;
+      el.className = 'error-message show';
+    }
+
+    function doLogin(adminSecret, submitBtn) {
+      app.auth({ persistence: 'local' })
+        .anonymousAuthProvider()
+        .signIn()
+        .then(function(loginState) {
+          console.log('匿名登录成功');
+          // 现在匿名登录已真正开启，直接用 SDK 的 callFunction
+          return app.callFunction({
+            name: 'adminLogin',
+            data: { adminSecret: adminSecret }
+          });
+        })
+        .then(function(result) {
+          var r = result.result;
+          if (r.code === 0) {
+            localStorage.setItem('adminToken', r.data.adminToken);
+            localStorage.setItem('tokenExpires', String(Date.now() + r.data.expiresIn * 1000));
+            window.location.href = 'dashboard.html';
+          } else {
+            showError(r.msg || '登录失败，请检查密钥');
+          }
+        })
+        .catch(function(error) {
+          console.error('登录错误:', error);
+          showError('请求失败：' + ((error && error.message) || '请稍后重试'));
+        })
+        .then(function() {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '登录';
+        });
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      var adminSecret = document.getElementById('adminSecret').value.trim();
+      var submitBtn = e.target.querySelector('button[type="submit"]');
+      document.getElementById('errorMessage').textContent = '';
+      document.getElementById('errorMessage').className = 'error-message';
+
+      if (!adminSecret) { showError('请输入管理员密钥'); return; }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = '登录中...';
+      doLogin(adminSecret, submitBtn);
+    });
+  </script>
+</body>
+</html>

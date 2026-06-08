@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理后台 - 宠物健康自查</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- 侧边栏 -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>🐾 管理后台</h2>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#dashboard" class="nav-item active" data-tab="dashboard">
+          <span class="icon">📊</span>
+          <span class="text">数据统计</span>
+        </a>
+        <a href="#users" class="nav-item" data-tab="users">
+          <span class="icon">👥</span>
+          <span class="text">用户管理</span>
+        </a>
+        <a href="#orders" class="nav-item" data-tab="orders">
+          <span class="icon">💰</span>
+          <span class="text">订单管理</span>
+        </a>
+        <a href="#articles" class="nav-item" data-tab="articles">
+          <span class="icon">📝</span>
+          <span class="text">内容管理</span>
+        </a>
+        <a href="#settings" class="nav-item" data-tab="settings">
+          <span class="icon">⚙️</span>
+          <span class="text">系统设置</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="logoutBtn" class="btn btn-outline btn-block">
+          退出登录
+        </button>
+      </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+      <!-- 顶部栏 -->
+      <header class="top-bar">
+        <h1 id="pageTitle" class="page-title">数据统计</h1>
+        <div class="user-info">
+          <span class="user-label">管理员</span>
+        </div>
+      </header>
+
+      <!-- 内容区域 -->
+      <div class="content-area">
+        <!-- 数据统计 Tab -->
+        <div id="tab-dashboard" class="tab-content active">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon">👥</div>
+              <div class="stat-info">
+                <h3 id="statUsersTotal">-</h3>
+                <p>总用户数</p>
+                <span class="stat-change" id="statUsersGrowth">今日 +0</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">💰</div>
+              <div class="stat-info">
+                <h3>¥<span id="statRevenueTotal">-</span></h3>
+                <p>总收入</p>
+                <span class="stat-change" id="statRevenueToday">今日 ¥0</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">📦</div>
+              <div class="stat-info">
+                <h3 id="statOrdersTotal">-</h3>
+                <p>总订单数</p>
+                <span class="stat-change" id="statOrdersPaid">已支付 -</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">👑</div>
+              <div class="stat-info">
+                <h3 id="statMembersActive">-</h3>
+                <p>有效会员</p>
+                <span class="stat-change" id="statMembersTotal">总计 -</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-section">
+            <h3>数据趋势</h3>
+            <div id="trendChart" class="chart-placeholder">
+              <p>选择时间范围查看趋势</p>
+              <div class="chart-controls">
+                <button class="btn btn-sm" data-range="today">今日</button>
+                <button class="btn btn-sm" data-range="week">近7天</button>
+                <button class="btn btn-sm" data-range="month">近30天</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 用户管理 Tab -->
+        <div id="tab-users" class="tab-content">
+          <div class="table-controls">
+            <div class="search-box">
+              <input type="text" id="userSearchInput" placeholder="搜索用户昵称或ID">
+              <button id="userSearchBtn" class="btn btn-primary">搜索</button>
+            </div>
+            <div class="filter-box">
+              <select id="userMemberFilter">
+                <option value="all">全部用户</option>
+                <option value="member">会员</option>
+                <option value="non-member">非会员</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>用户ID</th>
+                  <th>昵称</th>
+                  <th>会员状态</th>
+                  <th>宠物数</th>
+                  <th>订单数</th>
+                  <th>注册时间</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody">
+                <tr>
+                  <td colspan="6" class="loading">加载中...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="pagination" id="usersPagination"></div>
+        </div>
+
+        <!-- 订单管理 Tab -->
+        <div id="tab-orders" class="tab-content">
+          <div class="table-controls">
+            <div class="filter-box">
+              <select id="orderStatusFilter">
+                <option value="all">全部状态</option>
+                <option value="paid">已支付</option>
+                <option value="pending">待支付</option>
+                <option value="refunded">已退款</option>
+              </select>
+            </div>
+            <div class="filter-box">
+              <select id="orderTypeFilter">
+                <option value="all">全部类型</option>
+                <option value="report">报告订单</option>
+                <option value="member">会员订单</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>订单号</th>
+                  <th>用户</th>
+                  <th>类型</th>
+                  <th>金额</th>
+                  <th>状态</th>
+                  <th>创建时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTableBody">
+                <tr>
+                  <td colspan="7" class="loading">加载中...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="pagination" id="ordersPagination"></div>
+        </div>
+
+        <!-- 内容管理 Tab -->
+        <div id="tab-articles" class="tab-content">
+          <div class="table-controls">
+            <button id="createArticleBtn" class="btn btn-primary">+ 新建文章</button>
+            <div class="filter-box">
+              <select id="articleCategoryFilter">
+                <option value="all">全部分类</option>
+                <option value="digestive">消化系统</option>
+                <option value="respiratory">呼吸系统</option>
+                <option value="behavior">行为异常</option>
+                <option value="prevention">预防保健</option>
+                <option value="care">特殊阶段</option>
+              </select>
+            </div>
+            <div class="filter-box">
+              <select id="articleStatusFilter">
+                <option value="all">全部状态</option>
+                <option value="published">已发布</option>
+                <option value="draft">草稿</option>
+                <option value="archived">已归档</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>标题</th>
+                  <th>分类</th>
+                  <th>状态</th>
+                  <th>浏览量</th>
+                  <th>发布时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="articlesTableBody">
+                <tr>
+                  <td colspan="6" class="loading">加载中...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="pagination" id="articlesPagination"></div>
+        </div>
+
+        <!-- 系统设置 Tab -->
+        <div id="tab-settings" class="tab-content">
+          <div class="settings-section">
+            <h3>价格设置</h3>
+            <div class="settings-grid">
+              <div class="setting-item">
+                <label>首份报告价格（元）</label>
+                <input type="number" id="priceFirstReport" step="0.01">
+              </div>
+              <div class="setting-item">
+                <label>标准报告价格（元）</label>
+                <input type="number" id="priceStandardReport" step="0.01">
+              </div>
+              <div class="setting-item">
+                <label>月卡价格（元）</label>
+                <input type="number" id="priceMemberMonthly" step="0.01">
+              </div>
+              <div class="setting-item">
+                <label>年卡价格（元）</label>
+                <input type="number" id="priceMemberYearly" step="0.01">
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3>会员额度设置</h3>
+            <div class="settings-grid">
+              <div class="setting-item">
+                <label>月卡每月报告额度</label>
+                <input type="number" id="creditsMonthlyReports">
+              </div>
+              <div class="setting-item">
+                <label>年卡每月报告额度</label>
+                <input type="number" id="creditsYearlyReports">
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-actions">
+            <button id="saveConfigBtn" class="btn btn-primary">保存配置</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 加载提示 -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="spinner"></div>
+    <p>加载中...</p>
+  </div>
+
+  <!-- 消息提示 -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- 文章编辑弹窗 -->
+  <div id="articleModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="articleModalTitle">编辑文章</h3>
+        <button class="modal-close" id="articleModalClose">&times;</button>
+      </div>
+      <form id="articleForm" class="modal-body">
+        <input type="hidden" id="articleId">
+
+        <div class="form-group">
+          <label>文章标题</label>
+          <input type="text" id="articleTitle" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>分类</label>
+            <select id="articleCategory">
+              <option value="digestive">消化系统</option>
+              <option value="respiratory">呼吸系统</option>
+              <option value="behavior">行为异常</option>
+              <option value="prevention">预防保健</option>
+              <option value="care">特殊阶段</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>目标宠物</label>
+            <select id="articleTargetPet">
+              <option value="all">全部</option>
+              <option value="cat">猫</option>
+              <option value="dog">狗</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>摘要</label>
+          <textarea id="articleSummary" rows="2"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>内容（Markdown）</label>
+          <textarea id="articleContent" rows="15" required></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>封面图片URL</label>
+            <input type="text" id="articleCoverImage">
+          </div>
+
+          <div class="form-group">
+            <label>排序</label>
+            <input type="number" id="articleSortOrder" value="0">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>状态</label>
+          <select id="articleStatus">
+            <option value="draft">草稿</option>
+            <option value="published">发布</option>
+          </select>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="articleModalCancel">取消</button>
+          <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CloudBase Web SDK（本地，只用于获取匿名登录 token） -->
+  <script src="lib/cloudbase.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/users.js"></script>
+  <script src="js/orders.js"></script>
+  <script src="js/articles.js"></script>
+  <script src="js/stats.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

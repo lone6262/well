@@ -265,12 +265,27 @@ const TIME = {
   CACHE_30MIN: 30 * 60 * 1000
 };
 
-// === 地图搜索配置 ===
-const MAP_SEARCH = {
-  DEFAULT_RADIUS: 5000,      // 默认搜索半径5公里
-  TIMEOUT_MS: 8000,          // 单次搜索超时8秒
-  PAGE_SIZE: 20,             // 每页结果数量
-  EARTH_RADIUS: 6371000      // 地球半径（米），用于距离计算
+// === AI 模型配置 ===
+const AI_CONFIG = {
+  TEMPERATURE: 0.7,           // 生成温度
+  MAX_TOKENS: 4000,           // 最大令牌数
+  TIMEOUT_MS: 30000,          // 请求超时（30秒）
+  API_PORT: 443,              // API端口
+  CACHE_CLEANUP_PROBABILITY: 0.01  // 缓存清理概率（1%）
+};
+
+// === 排行榜配置 ===
+const RANKING_CONFIG = {
+  TOP_N: 20,                  // Top N 排行
+  BATCH_SIZE: 100,            // 批量查询大小
+  MAX_QUERY_LIMIT: 100        // 最大查询限制
+};
+
+// === 限流配置 ===
+const RATE_LIMIT = {
+  WINDOW_MS: 60000,           // 时间窗口（1分钟）
+  MAX_REQUESTS: 10,           // 最大请求数
+  DAILY_MAX_INVITES: 50       // 每日最大邀请数
 };
 
 // === V1.5 Phase 4 邀请系统常量 ===
@@ -424,8 +439,12 @@ module.exports = {
   AGE_RANGES,
   // 时间常量
   TIME,
-  // 地图搜索配置
-  MAP_SEARCH,
+  // AI 配置
+  AI_CONFIG,
+  // 排行榜配置
+  RANKING_CONFIG,
+  // 限流配置
+  RATE_LIMIT,
   // Phase 4 新增
   INVITE_STATUS,
   INVITE_CONFIG,
