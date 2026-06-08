@@ -93,7 +93,7 @@ exports.main = async (event, context) => {
       return { code: RESPONSE_CODE.ERROR, msg: '请先完成至少一次症状自查', data: {} };
     }
 
-    // 8. 更新邀请记录（原子性：先检查状态再更新）
+    // 8. 原子更新邀请记录（条件更新防并发：只有 status=PENDING 才会更新成功）
     let updateResult = await db.collection(COLLECTIONS.INVITE_RECORDS)
       .where({
         _id: invite._id,
@@ -109,43 +109,65 @@ exports.main = async (event, context) => {
       });
 
     if (!updateResult.stats || updateResult.stats.updated === 0) {
+      // 并发请求时，第二个请求的 where 条件不匹配，updated=0
       return { code: RESPONSE_CODE.ERROR, msg: '邀请已被使用', data: {} };
     }
 
-    // 9. 发放邀请人奖励
-    let inviterUserResult = await db.collection(COLLECTIONS.USERS)
-      .where({ user_id: invite.inviter_id })
-      .limit(1)
-      .get();
+    // 9-10. 发放奖励（带补偿：失败时回滚邀请状态，允许重试）
+    let creditsGranted = false;
+    try {
+      // 发放邀请人奖励（_.inc 原子递增，无需担心并发）
+      let inviterUserResult = await db.collection(COLLECTIONS.USERS)
+        .where({ user_id: invite.inviter_id })
+        .limit(1)
+        .get();
 
-    if (inviterUserResult.data && inviterUserResult.data.length > 0) {
-      await db.collection(COLLECTIONS.USERS).doc(inviterUserResult.data[0]._id).update({
-        data: { invite_reward_credits: _.inc(INVITE_CONFIG.REWARD_CREDITS), updated_at: now }
-      });
-    }
+      if (inviterUserResult.data && inviterUserResult.data.length > 0) {
+        await db.collection(COLLECTIONS.USERS).doc(inviterUserResult.data[0]._id).update({
+          data: { invite_reward_credits: _.inc(INVITE_CONFIG.REWARD_CREDITS), updated_at: now }
+        });
+      }
 
-    // 10. 发放被邀请人奖励
-    let inviteeUserResult = await db.collection(COLLECTIONS.USERS)
-      .where({ user_id: inviteeOpenid })
-      .limit(1)
-      .get();
+      // 发放被邀请人奖励
+      let inviteeUserResult = await db.collection(COLLECTIONS.USERS)
+        .where({ user_id: inviteeOpenid })
+        .limit(1)
+        .get();
 
-    if (inviteeUserResult.data && inviteeUserResult.data.length > 0) {
-      await db.collection(COLLECTIONS.USERS).doc(inviteeUserResult.data[0]._id).update({
-        data: { invite_reward_credits: _.inc(INVITE_CONFIG.REWARD_CREDITS), updated_at: now }
-      });
-    } else {
-      // 被邀请人无用户记录时创建
-      await db.collection(COLLECTIONS.USERS).add({
-        data: {
-          user_id: inviteeOpenid,
-          invite_reward_credits: INVITE_CONFIG.REWARD_CREDITS,
-          first_report_used: false,
-          isMember: false,
-          created_at: now,
-          updated_at: now
-        }
-      });
+      if (inviteeUserResult.data && inviteeUserResult.data.length > 0) {
+        await db.collection(COLLECTIONS.USERS).doc(inviteeUserResult.data[0]._id).update({
+          data: { invite_reward_credits: _.inc(INVITE_CONFIG.REWARD_CREDITS), updated_at: now }
+        });
+      } else {
+        await db.collection(COLLECTIONS.USERS).add({
+          data: {
+            user_id: inviteeOpenid,
+            invite_reward_credits: INVITE_CONFIG.REWARD_CREDITS,
+            first_report_used: false,
+            isMember: false,
+            created_at: now,
+            updated_at: now
+          }
+        });
+      }
+
+      creditsGranted = true;
+    } catch (creditError) {
+      // 奖励发放失败 → 回滚邀请状态为 PENDING，允许下次重试
+      console.error('[processInviteReward] 积分发放失败，回滚邀请状态:', creditError.message);
+      try {
+        await db.collection(COLLECTIONS.INVITE_RECORDS).doc(invite._id).update({
+          data: {
+            status: INVITE_STATUS.PENDING,
+            invitee_id: _.remove(),
+            rewarded_at: _.remove(),
+            updated_at: now
+          }
+        });
+      } catch (rollbackError) {
+        console.error('[processInviteReward] 回滚失败（需人工介入）:', rollbackError.message, 'inviteId=', invite._id);
+      }
+      return { code: RESPONSE_CODE.SERVER_ERROR, msg: '奖励发放失败，请重试', data: {} };
     }
 
     // 11. 检查里程碑：邀请3人 → 7天试用会员

@@ -9,6 +9,10 @@ cloudfunctions/**/node_modules/
 cloudfunctions/**/package-lock.json
 cloudfunctions/**/.env
 
+# 云函数公共模块副本（由 sync-common.sh 自动生成，唯一源码在 cloudfunctions/common/）
+cloudfunctions/*/common/
+!cloudfunctions/common/
+
 # 依赖目录（如果本地有 npm 包）
 node_modules/
 miniprogram_npm/
@@ -31,6 +35,11 @@ Thumbs.db
 *.swo
 *~
 
+# 根目录调试/临时文件
+__*.js
+__*.txt
+fix_*.py
+
 # 日志文件
 *.log
 npm-debug.log*
@@ -47,15 +56,15 @@ project.config.json   # 可选，但建议保留通用配置，去掉敏感字�
 *.backup
 guide-ios.wxss
 
-# ������Կ���������ã�������ʵAPI��Կ�����ύ��
+# ������Կ���������ã�������ʵAPI��Կ�����ύ��
 .deploy-keys.txt
 
-# Claude AI ���ܣ����ع��ߣ�����Ŀ���룩
+# Claude AI ���ܣ����ع��ߣ�����Ŀ���룩
 .claude/
 
-# ���Դ浵����ʱ�ļ�
+# ���Դ浵����ʱ�ļ�
 test_archive/temp_*
 test_archive/*.zip
 
-# �Զ����ɵ������ļ�
+# �Զ����ɵ������ļ�
 miniprogram/app_new.js

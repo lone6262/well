@@ -211,10 +211,13 @@ exports.main = async (event, context) => {
       }
     });
 
-    // 7b. 报告生成成功后，扣减额度 + 创建订单（保证失败不扣）
+    // 7b. 报告生成成功后，扣减额度 + 创建订单
+    //     策略：先扣额度，再返回报告。扣减失败时记录补偿日志，不阻塞用户。
+    //     后续可通过补偿任务补扣。
     const now = new Date();
     const outTradeNo = 'RPT_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     let orderId = null;
+    let quotaDeducted = false;
 
     try {
       // 解析用户额度
@@ -249,7 +252,7 @@ exports.main = async (event, context) => {
         }
       }
 
-      // 扣减额度
+      // 扣减额度（原子操作）
       if (quotaSource === 'first_report') {
         if (user && user._id) {
           await db.collection(COLLECTIONS.USERS).doc(user._id).update({
@@ -290,9 +293,26 @@ exports.main = async (event, context) => {
       };
       const orderResult = await db.collection(COLLECTIONS.ORDERS).add({ data: orderData });
       orderId = orderResult._id;
+      quotaDeducted = true;
     } catch (quotaError) {
-      console.error('[generateAIReport] 额度扣减/订单创建失败（报告已生成，不影响）:', quotaError.message);
-      // 报告已生成，额度扣减失败不阻塞返回
+      // 额度扣减失败 → 记录补偿日志，后续可通过定时任务补扣
+      console.error('[generateAIReport] 额度扣减失败，已记录补偿日志:', quotaError.message);
+      try {
+        await db.collection(COLLECTIONS.ORDERS).add({
+          data: {
+            user_id: openid,
+            type: ORDER_TYPES.REPORT,
+            record_id: recordId,
+            status: 'quota_pending',
+            description: '额度扣减失败，待补偿',
+            metadata: { quota_source: 'compensation_needed', record_id: recordId },
+            created_at: now,
+            updated_at: now
+          }
+        });
+      } catch (logErr) {
+        console.error('[generateAIReport] 补偿日志写入也失败:', logErr.message);
+      }
     }
 
     // 8. 创建回访记录（24h后提醒）

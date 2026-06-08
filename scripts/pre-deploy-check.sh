@@ -41,13 +41,19 @@ fi
 SECRETS_TRACKED=$(git ls-files cloudfunctions/common/secrets.js 2>/dev/null | wc -l)
 check "secrets.js 未被 Git 追踪" "$([ "$SECRETS_TRACKED" -eq 0 ] && echo pass || echo fail)"
 
-# 2. 本地 auth.js 检查
-LOCAL_AUTH=$(find cloudfunctions -path "*/auth.js" ! -path "*/common/auth.js" ! -path "*/node_modules/*" | wc -l)
-check "无本地 auth.js 副本 (仅 common/auth.js)" "$([ "$LOCAL_AUTH" -eq 0 ] && echo pass || echo fail)"
+# 2. common/ 同步状态检查
+echo ""
+echo "--- 公共模块同步状态 ---"
+SYNC_OUT=$(bash scripts/sync-common.sh --check 2>&1)
+SYNC_EXIT=$?
+check "common/ 模块已同步到所有云函数" "$([ "$SYNC_EXIT" -eq 0 ] && echo pass || echo fail)"
 
-# 3. 本地 constants.js 检查
-LOCAL_CONST=$(find cloudfunctions -name "constants.js" ! -path "*/common/constants.js" ! -path "*/node_modules/*" | wc -l)
-check "无本地 constants.js 副本 (仅 common/constants.js)" "$([ "$LOCAL_CONST" -eq 0 ] && echo pass || echo fail)"
+# 3. 本地 auth.js 残留检查（各函数的 common/ 已 gitignore，此检查用于提醒未同步的情况）
+LOCAL_AUTH=$(find cloudfunctions -path "*/common/auth.js" ! -path "*/node_modules/*" ! -path "cloudfunctions/common/auth.js" | wc -l)
+check "各云函数有 auth.js 副本 ($LOCAL_AUTH 个)" "$([ "$LOCAL_AUTH" -gt 0 ] && echo pass || echo fail)"
+
+LOCAL_CONST=$(find cloudfunctions -path "*/common/constants.js" ! -path "*/node_modules/*" ! -path "cloudfunctions/common/constants.js" | wc -l)
+check "各云函数有 constants.js 副本 ($LOCAL_CONST 个)" "$([ "$LOCAL_CONST" -gt 0 ] && echo pass || echo fail)"
 
 # 4. MOCK_PAY 检查
 MOCK_PAY=$(grep -r "MOCK_PAY = true" cloudfunctions/ --include="*.js" 2>/dev/null | grep -v node_modules | wc -l)
@@ -62,11 +68,10 @@ check "无 var 声明 (应使用 const/let)" "$([ "$VAR_COUNT" -eq 0 ] && echo p
 # 6. require 路径检查
 echo ""
 echo "--- 导入路径 ---"
-BAD_CONSTANTS=$(grep -rn "require('./constants')" cloudfunctions/ --include="*.js" 2>/dev/null | grep -v node_modules | grep -v "common/" | wc -l)
-check "无本地 ./constants 引用 (应使用 ../common/constants)" "$([ "$BAD_CONSTANTS" -eq 0 ] && echo pass || echo fail)"
-
-BAD_AUTH=$(grep -rn "require('./auth')" cloudfunctions/ --include="*.js" 2>/dev/null | grep -v node_modules | wc -l)
-check "无本地 ./auth 引用 (应使用 ../common/auth)" "$([ "$BAD_AUTH" -eq 0 ] && echo pass || echo fail)"
+# 注意：云函数使用 require('./common/xxx') 引用副本，这是正确的（微信云开发限制）
+# 检查是否有残留的 require('../common/') 路径（部署时会失败）
+BAD_RELATIVE=$(grep -rn "require('../common/" cloudfunctions/ --include="*.js" 2>/dev/null | grep -v node_modules | wc -l)
+check "无 ../common/ 引用 (部署时会找不到)" "$([ "$BAD_RELATIVE" -eq 0 ] && echo pass || echo fail)"
 
 # 7. 共享模块存在性
 echo ""

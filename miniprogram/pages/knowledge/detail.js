@@ -98,6 +98,8 @@ Page({
   },
 
   // 将文章内容转换为rich-text组件可用的节点数组
+  // 安全说明: 使用 type:'text' 构建，不会解析 HTML 标签，天然防 XSS
+  // 如需支持 HTML 内容，必须添加标签/属性白名单过滤
   parseContent: function(content) {
     if (!content) return []
 
