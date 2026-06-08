@@ -2,6 +2,21 @@
 // 完全遵循：静默登录、游客模式、按需授权、token续期
 
 const { TOAST_DURATION, CACHE_DURATION } = require('./utils/constants.js')
+const logger = require('./utils/logger.js')
+
+// 生产环境静默大部分日志，仅保留 warn 和 error
+// 正式版环境为 'release'，开发版为 'develop'，体验版为 'trial'
+try {
+  var accountInfo = wx.getAccountInfoSync()
+  var envVersion = accountInfo.miniProgram.envVersion
+  if (envVersion === 'release') {
+    logger.setLevel('warn')
+  } else {
+    logger.setLevel('debug')
+  }
+} catch (e) {
+  logger.setLevel('debug')
+}
 
 App({
   globalData: {

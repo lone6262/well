@@ -1,6 +1,6 @@
 /**
  * 云函数统一日志模块
- * 替代 console.log 直接调用，支持按级别控制输出
+ * 替代 console.log 直接调用，支持按级别控制输出 + 敏感字段脱敏
  *
  * 使用方式：
  *   const { createLogger } = require('../common/logger');
@@ -21,33 +21,81 @@ const LOG_LEVELS = {
   silent: 4
 };
 
+// 需要脱敏的敏感字段名（不区分大小写匹配）
+var SENSITIVE_KEYS = ['openid', 'token', 'secret', 'password', 'phone', 'apikey', 'api_key', 'adminsecret'];
+
+/**
+ * 脱敏处理：将敏感字段的值替换为 ***
+ * @param {*} obj - 需要脱敏的对象或值
+ * @returns {*} 脱敏后的副本
+ */
+function sanitize(obj) {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === 'string') return obj;
+  if (typeof obj === 'number' || typeof obj === 'boolean') return obj;
+  if (obj instanceof Error) return obj.message || String(obj);
+
+  if (Array.isArray(obj)) {
+    return obj.map(function(item) { return sanitize(item); });
+  }
+
+  if (typeof obj === 'object') {
+    var result = {};
+    var keys = Object.keys(obj);
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      var lowerKey = key.toLowerCase();
+      var isSensitive = false;
+      for (var j = 0; j < SENSITIVE_KEYS.length; j++) {
+        if (lowerKey.indexOf(SENSITIVE_KEYS[j]) !== -1) {
+          isSensitive = true;
+          break;
+        }
+      }
+      if (isSensitive) {
+        var val = obj[key];
+        result[key] = (typeof val === 'string' && val.length > 4)
+          ? val.substring(0, 4) + '***'
+          : '***';
+      } else {
+        result[key] = sanitize(obj[key]);
+      }
+    }
+    return result;
+  }
+
+  return obj;
+}
+
 function createLogger(prefix) {
-  const envLevel = process.env.LOG_LEVEL || 'debug';
-  const currentLevel = LOG_LEVELS[envLevel] !== undefined ? LOG_LEVELS[envLevel] : LOG_LEVELS.debug;
-  const label = prefix ? `[${prefix}]` : '';
+  var envLevel = process.env.LOG_LEVEL || 'debug';
+  var currentLevel = LOG_LEVELS[envLevel] !== undefined ? LOG_LEVELS[envLevel] : LOG_LEVELS.debug;
+  var label = prefix ? '[' + prefix + ']' : '';
 
   return {
     debug: function() {
       if (currentLevel <= LOG_LEVELS.debug) {
-        console.log(label, ...arguments);
+        var args = Array.prototype.slice.call(arguments);
+        console.log.apply(console, [label].concat(args.map(function(a) { return sanitize(a); })));
       }
     },
     info: function() {
       if (currentLevel <= LOG_LEVELS.info) {
-        console.log(label, ...arguments);
+        var args = Array.prototype.slice.call(arguments);
+        console.log.apply(console, [label].concat(args.map(function(a) { return sanitize(a); })));
       }
     },
     warn: function() {
       if (currentLevel <= LOG_LEVELS.warn) {
-        console.warn(label, ...arguments);
+        var args = Array.prototype.slice.call(arguments);
+        console.warn.apply(console, [label].concat(args.map(function(a) { return sanitize(a); })));
       }
     },
     error: function() {
-      if (currentLevel <= LOG_LEVELS.error) {
-        console.error(label, ...arguments);
-      }
+      // error 级别不脱敏，方便排查问题
+      console.error.apply(console, [label].concat(Array.prototype.slice.call(arguments)));
     }
   };
 }
 
-module.exports = { createLogger, LOG_LEVELS };
+module.exports = { createLogger, LOG_LEVELS, sanitize };
