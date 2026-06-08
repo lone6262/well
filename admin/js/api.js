@@ -3,35 +3,30 @@
  * CloudBase SDK 匿名登录 + callFunction
  */
 
-var _app = null;
-var _ready = null;
-var _env = (typeof TCB_CONFIG !== 'undefined') ? TCB_CONFIG.env : ''; //云环境ID
+'use strict';
+
+let _app = null;
+let _ready = null;
 
 function initCloud() {
   if (_ready) return _ready;
 
   _ready = new Promise(function(resolve, reject) {
     try {
-      ['cloudbase', 'tcb', '__auth'].forEach(function(prefix) {
-        Object.keys(localStorage).forEach(function(k) {
-          if (k.indexOf(prefix) !== -1) localStorage.removeItem(k);
-        });
-      });
+      clearCloudBaseCache();
 
-      var CloudBase = typeof cloudbase !== 'undefined' ? cloudbase : (typeof tcb !== 'undefined' ? tcb : null);
+      const CloudBase = typeof cloudbase !== 'undefined' ? cloudbase : (typeof tcb !== 'undefined' ? tcb : null);
       if (!CloudBase) { reject(new Error('SDK 未加载')); return; }
 
-      _app = CloudBase.init({ env: _env });
+      _app = CloudBase.init({ env: TCB_CONFIG.env });
 
       _app.auth({ persistence: 'local' })
         .anonymousAuthProvider()
         .signIn()
         .then(function() {
-          console.log('[api] 匿名登录成功');
           resolve(_app);
         })
         .catch(function() {
-          console.warn('[api] 匿名登录失败，继续尝试');
           resolve(_app);
         });
     } catch(e) {
@@ -92,7 +87,7 @@ function showToast(message, type = 'info') {
 
   setTimeout(() => {
     toast.classList.add('hidden');
-  }, 3000);
+  }, TOAST_DISPLAY_DURATION);
 }
 
 /**

@@ -42,19 +42,15 @@
 
   <!-- CloudBase Web SDK（本地） -->
   <script src="lib/cloudbase.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/tcb-utils.js"></script>
   <script>
-    var TCB_ENV = ''; //云环境ID
+    clearCloudBaseCache();
 
-    ['cloudbase', 'tcb', '__auth'].forEach(function(prefix) {
-      Object.keys(localStorage).forEach(function(k) {
-        if (k.indexOf(prefix) !== -1) localStorage.removeItem(k);
-      });
-    });
-
-    var app = cloudbase.init({ env: TCB_ENV });
+    const app = cloudbase.init({ env: TCB_CONFIG.env });
 
     function showError(message) {
-      var el = document.getElementById('errorMessage');
+      const el = document.getElementById('errorMessage');
       el.textContent = message;
       el.className = 'error-message show';
     }
@@ -63,16 +59,14 @@
       app.auth({ persistence: 'local' })
         .anonymousAuthProvider()
         .signIn()
-        .then(function(loginState) {
-          console.log('匿名登录成功');
-          // 现在匿名登录已真正开启，直接用 SDK 的 callFunction
+        .then(function() {
           return app.callFunction({
             name: 'adminLogin',
             data: { adminSecret: adminSecret }
           });
         })
         .then(function(result) {
-          var r = result.result;
+          const r = result.result;
           if (r.code === 0) {
             localStorage.setItem('adminToken', r.data.adminToken);
             localStorage.setItem('tokenExpires', String(Date.now() + r.data.expiresIn * 1000));
@@ -82,7 +76,6 @@
           }
         })
         .catch(function(error) {
-          console.error('登录错误:', error);
           showError('请求失败：' + ((error && error.message) || '请稍后重试'));
         })
         .then(function() {
@@ -94,8 +87,8 @@
     document.getElementById('loginForm').addEventListener('submit', function(e) {
       e.preventDefault();
 
-      var adminSecret = document.getElementById('adminSecret').value.trim();
-      var submitBtn = e.target.querySelector('button[type="submit"]');
+      const adminSecret = document.getElementById('adminSecret').value.trim();
+      const submitBtn = e.target.querySelector('button[type="submit"]');
       document.getElementById('errorMessage').textContent = '';
       document.getElementById('errorMessage').className = 'error-message';
 

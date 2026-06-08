@@ -22,6 +22,9 @@ const CLOUD_FUNCTIONS = {
   adminUpdateConfig: 'adminUpdateConfig'
 };
 
+// UI 常量
+const TOAST_DISPLAY_DURATION = 3000;
+
 // 分页配置
 const PAGINATION = {
   defaultPageSize: 20,
