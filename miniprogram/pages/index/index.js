@@ -57,7 +57,9 @@ Page({
     }
 
     // 检查openid变化（重新登录）
-    if (app.globalData.openid && app.globalData.openid !== self.lastLoadedOpenid) {
+    // 必须同时检查 token，避免 onLaunch 清空 token 后、静默登录完成前
+    // onShow 用空 token 调用云函数导致"身份验证失败"
+    if (app.globalData.openid && app.globalData.token && app.globalData.openid !== self.lastLoadedOpenid) {
       console.log('检测到用户变化，重新加载宠物列表')
       self.loadPetList()
       self.lastLoadedOpenid = app.globalData.openid
