@@ -49,6 +49,13 @@ async function getVerifiedRecord(recordId, openid) {
     throw error;
   }
 
+  // 合规：高风险症状禁止生成报告，引导就医
+  if (record.risk_level === 'high' || record.riskLevel === 'high') {
+    const error = new Error('检测到高风险症状，请立即就医');
+    error.code = RESPONSE_CODE.ERROR;
+    throw error;
+  }
+
   if (record.has_ai_report && record.ai_report_id) {
     // 已有报告，从缓存读取
     const cacheResult = await db.collection(COLLECTIONS.AI_CACHE)
@@ -211,6 +218,19 @@ exports.main = async (event, context) => {
       }
     });
 
+    // V1.5: 报告生成埋点
+    try {
+      await cloud.callFunction({
+        name: 'trackEvent',
+        data: {
+          eventName: 'report_generate',
+          properties: { source: reportResult.source || 'llm' }
+        }
+      });
+    } catch (trackErr) {
+      console.warn('[generateAIReport] 埋点记录跳过:', trackErr.message);
+    }
+
     // 7b. 报告生成成功后，扣减额度 + 创建订单
     //     策略：先扣额度，再返回报告。扣减失败时记录补偿日志，不阻塞用户。
     //     后续可通过补偿任务补扣。
@@ -357,6 +377,27 @@ exports.main = async (event, context) => {
 
   } catch (error) {
     console.error('generateAIReport 云函数执行失败:', error);
+
+    // V1.5: LLM 失败自动退款
+    if (orderId) {
+      try {
+        const failedOrderResult = await db.collection(COLLECTIONS.ORDERS).doc(orderId).get();
+        const failedOrder = failedOrderResult.data;
+        const orderAmount = failedOrder ? (failedOrder.amount || 0) : 0;
+        if (orderAmount > 0) {
+          try {
+            await cloud.callFunction({
+              name: 'requestRefund',
+              data: { orderId: orderId, reason: 'AI报告生成失败，自动退款', token: event.token }
+            });
+          } catch (refundErr) {
+            console.error('[generateAIReport] 自动退款失败:', refundErr.message);
+          }
+        }
+      } catch (fetchErr) {
+        console.error('[generateAIReport] 查询订单失败，跳过退款:', fetchErr.message);
+      }
+    }
 
     // 处理业务逻辑错误（带自定义 code）
     if (error.code) {

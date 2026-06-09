@@ -1,0 +1,9 @@
+{
+  "name": "checkExpiredMembers",
+  "version": "1.0.0",
+  "description": "定时扫描已过期会员并更新状态",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

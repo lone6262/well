@@ -326,3 +326,61 @@ page {
 .action-btn.danger { background: #fff; color: #f5222d; border: 2rpx solid #f5222d; margin-top: 16rpx; }
 .action-btn.danger::after { border: none; }
 .action-btn.danger[disabled] { color: #ccc; border-color: #ccc; }
+
+/* V1.5 续费到期提醒 */
+.renew-reminder {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #fff7e6, #ffe7ba);
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+  margin-bottom: 20rpx;
+  border: 1rpx solid #ffd591;
+}
+.reminder-icon { font-size: 32rpx; margin-right: 12rpx; }
+.reminder-text { flex: 1; font-size: 26rpx; color: #d48806; }
+.reminder-link { font-size: 26rpx; color: #4A90E2; font-weight: bold; }
+
+/* V1.5 自动续费卡 */
+.auto-renew-card {
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+.auto-renew-row { display: flex; align-items: center; justify-content: space-between; }
+.auto-renew-title { font-size: 28rpx; font-weight: bold; color: #333; display: block; }
+.auto-renew-hint { font-size: 22rpx; color: #999; margin-top: 4rpx; display: block; }
+
+/* V1.5 家庭成员入口 */
+.family-entry {
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+.family-row { display: flex; align-items: center; justify-content: space-between; }
+.family-info { display: flex; align-items: center; }
+.family-icon { font-size: 36rpx; margin-right: 16rpx; }
+.family-title { font-size: 28rpx; font-weight: bold; color: #333; }
+.family-arrow { font-size: 28rpx; color: #ccc; }
+
+/* V1.5 点数包入口 */
+.points-entry {
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+.points-row { display: flex; align-items: center; justify-content: space-between; }
+.points-info { display: flex; align-items: center; flex-wrap: wrap; }
+.points-icon { font-size: 36rpx; margin-right: 16rpx; }
+.points-title { font-size: 28rpx; font-weight: bold; color: #333; }
+.points-subtitle { font-size: 22rpx; color: #ff4757; margin-left: 16rpx; }
+.points-arrow { font-size: 28rpx; color: #ccc; }
+
+/* V1.5 pink icon */
+.pink-icon { background: rgba(235, 47, 150, 0.1); }

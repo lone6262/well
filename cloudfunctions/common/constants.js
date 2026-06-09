@@ -28,6 +28,7 @@ const RISK_LEVELS = {
 const ORDER_STATUS = {
   PENDING: 'pending',
   PAID: 'paid',
+  REFUND_REQUESTED: 'refund_requested',
   REFUNDED: 'refunded',
   FAILED: 'failed',
   CLOSED: 'closed'
@@ -38,7 +39,11 @@ const ORDER_TYPES = {
   REPORT: 'report',
   MEMBER: 'member',
   MEMBER_MONTHLY: 'member_monthly',
-  MEMBER_YEARLY: 'member_yearly'
+  MEMBER_YEARLY: 'member_yearly',
+  MEMBER_FAMILY_MONTHLY: 'member_family_monthly',
+  MEMBER_FAMILY_YEARLY: 'member_family_yearly',
+  POINTS: 'points',
+  BUNDLE: 'bundle'
 };
 
 // 会员到期时间（天）
@@ -61,7 +66,17 @@ const COLLECTIONS = {
   INVITE_RECORDS: 'invite_records',
   FOLLOWUP_RECORDS: 'followup_records',
   REPORT_TEMPLATES: 'report_templates',
-  SYSTEM_CONFIG: 'system_config'
+  SYSTEM_CONFIG: 'system_config',
+  // V1.5 新增
+  REFUND_RECORDS: 'refund_records',
+  USER_POINTS: 'user_points',
+  POINT_TRANSACTIONS: 'point_transactions',
+  USER_COUPONS: 'user_coupons',
+  COUPONS: 'coupons',
+  MEMBER_RENEW_LOG: 'member_renew_log',
+  BILL_CHECK_LOGS: 'bill_check_logs',
+  ANALYTICS_EVENTS: 'analytics_events',
+  ERROR_LOGS: 'error_logs'
 };
 
 // API响应码
@@ -224,16 +239,90 @@ const FOLLOWUP_STATUS = {
 
 // 价格（单位：分）
 const PRICES = {
-  FIRST_REPORT: 100,       // 新用户首份 ¥1.00
-  STANDARD_REPORT: 990,    // 标准报告 ¥9.90
-  MEMBER_MONTHLY: 1990,    // 月卡 ¥19.90
-  MEMBER_YEARLY: 9900      // 年卡 ¥99.00
+  // === AI 报告 ===
+  FIRST_REPORT: 100,              // 新用户首份 ¥1.00
+  STANDARD_REPORT: 990,           // 标准报告 ¥9.90
+
+  // === 个人会员 ===
+  MEMBER_MONTHLY: 1990,           // 个人月卡 ¥19.90
+  MEMBER_YEARLY: 9900,            // 个人年卡 ¥99.00
+
+  // === 家庭会员 ===
+  MEMBER_FAMILY_MONTHLY: 2990,    // 家庭月卡 ¥29.90
+  MEMBER_FAMILY_YEARLY: 19900,    // 家庭年卡 ¥199.00
+
+  // === 续费价格（非首充） ===
+  RENEW_MONTHLY: 1590,            // 月卡续费 ¥15.90
+  RENEW_YEARLY: 8900,             // 年卡续费 ¥89.00
+  RENEW_FAMILY_MONTHLY: 2590,     // 家庭月卡续费 ¥25.90
+  RENEW_FAMILY_YEARLY: 17900,     // 家庭年卡续费 ¥179.00
+
+  // === 点数包 ===
+  POINTS_PACK_3: 1990,            // 3 次包 ¥19.90
+  POINTS_PACK_5: 2990,            // 5 次包 ¥29.90
+
+  // === 组合套餐 ===
+  BUNDLE_STARTER: 2990,           // 新手礼包 ¥29.90（月卡+3次包）
+  BUNDLE_ESSENTIAL: 11900,        // 铲屎官必备 ¥119（年卡+5次包）
+  BUNDLE_FAMILY: 3990,            // 家庭尊享 ¥39.90（家庭月卡+3次包）
+
+  // === 大额订单审核阈值 ===
+  MANUAL_REVIEW_THRESHOLD: 9900,  // ≥¥99 触发人工审核
 };
 
 // 会员额度
 const MEMBER_CREDITS = {
-  MONTHLY_REPORTS: 5,      // 月卡每月5次AI报告
-  YEARLY_REPORTS: 15       // 年卡每月15次AI报告
+  MONTHLY_REPORTS: 3,             // 个人月卡每月 3 次
+  YEARLY_REPORTS: 3,              // 个人年卡每月 3 次
+  FAMILY_MONTHLY_REPORTS: 6,      // 家庭月卡每月 6 次
+  FAMILY_YEARLY_REPORTS: 6,       // 家庭年卡每月 6 次
+  TRIAL_REPORTS: 1,               // 体验会员每月 1 次
+};
+
+// 点数包规格
+const POINTS_PACKS = {
+  PACK_3: { count: 3, price: 1990, expire_days: 90 },
+  PACK_5: { count: 5, price: 2990, expire_days: 90 },
+};
+
+// 组合套餐定义
+const BUNDLES = {
+  STARTER: {
+    name: '新手礼包',
+    items: [
+      { type: 'member', tier: 'monthly' },
+      { type: 'points', pack: 'PACK_3' }
+    ],
+    price: 2990,
+    origin_price: 3980,
+  },
+  ESSENTIAL: {
+    name: '铲屎官必备',
+    items: [
+      { type: 'member', tier: 'yearly' },
+      { type: 'points', pack: 'PACK_5' }
+    ],
+    price: 11900,
+    origin_price: 12890,
+  },
+  FAMILY: {
+    name: '家庭尊享',
+    items: [
+      { type: 'member', tier: 'family_monthly' },
+      { type: 'points', pack: 'PACK_3' }
+    ],
+    price: 3990,
+    origin_price: 4980,
+  },
+};
+
+// 会员限制
+const MEMBER_LIMITS = {
+  MAX_PETS_PERSONAL: 3,
+  MAX_PETS_FAMILY: 5,
+  MAX_FAMILY_MEMBERS: 4,
+  TRIAL_DURATION_DAYS: 7,
+  TRIAL_COOLDOWN_DAYS: 30,
 };
 
 // 支付超时（分钟）
@@ -434,6 +523,9 @@ module.exports = {
   FOLLOWUP_STATUS,
   PRICES,
   MEMBER_CREDITS,
+  POINTS_PACKS,
+  BUNDLES,
+  MEMBER_LIMITS,
   PAYMENT_TIMEOUT,
   KNOWLEDGE_CATEGORIES,
   AGE_RANGES,

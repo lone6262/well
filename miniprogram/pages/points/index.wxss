@@ -1,0 +1,34 @@
+page { background-color: #f5f6f8; }
+.container { width: 100%; max-width: 750rpx; margin: 0 auto; min-height: 100vh; box-sizing: border-box; padding-bottom: 160rpx; }
+.page-header { display: flex; align-items: center; justify-content: space-between; padding: 20rpx 24rpx; background: #fff; border-bottom: 1rpx solid #f0f0f0; }
+.back-btn { display: flex; align-items: center; padding: 10rpx 20rpx; border-radius: 28rpx; }
+.back-arrow { width: 16rpx; height: 16rpx; border-left: 4rpx solid #333; border-bottom: 4rpx solid #333; transform: rotate(45deg); margin-right: 6rpx; }
+.back-text { font-size: 28rpx; color: #333; }
+.page-title { font-size: 34rpx; font-weight: bold; color: #333; }
+.header-placeholder { width: 80rpx; }
+
+/* 余额卡片 */
+.balance-card { background: linear-gradient(135deg, #667eea, #764ba2); margin: 24rpx; border-radius: 16rpx; padding: 36rpx 32rpx; color: #fff; }
+.balance-label { display: block; font-size: 26rpx; opacity: 0.85; margin-bottom: 12rpx; }
+.balance-value { display: block; font-size: 56rpx; font-weight: bold; }
+.balance-expire { display: block; font-size: 24rpx; opacity: 0.7; margin-top: 8rpx; }
+
+/* 点数包选项 */
+.pack-section { padding: 0 24rpx; }
+.section-title { font-size: 32rpx; font-weight: bold; color: #333; margin-bottom: 20rpx; }
+.pack-card { background: #fff; border-radius: 16rpx; padding: 28rpx 24rpx; margin-bottom: 20rpx; position: relative; border: 2rpx solid #f0f0f0; transition: all 200ms; }
+.pack-card.selected { border-color: #667eea; background: rgba(102,126,234,0.04); }
+.pack-badge { position: absolute; top: 0; right: 0; background: #667eea; color: #fff; font-size: 22rpx; padding: 6rpx 20rpx; border-radius: 0 16rpx 0 12rpx; }
+.pack-header { display: flex; align-items: center; gap: 12rpx; margin-bottom: 12rpx; }
+.pack-count { font-size: 34rpx; font-weight: bold; color: #333; }
+.pack-tag { font-size: 22rpx; color: #fa8c16; }
+.pack-pricing { display: flex; align-items: baseline; gap: 12rpx; margin-bottom: 8rpx; }
+.pack-price { font-size: 40rpx; font-weight: bold; color: #f5222d; }
+.pack-unit { font-size: 24rpx; color: #999; }
+.pack-save { font-size: 24rpx; color: #52c41a; }
+.single-card { opacity: 0.7; }
+
+/* 购买按钮 */
+.buy-section { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; padding: 20rpx 24rpx; padding-bottom: calc(20rpx + env(safe-area-inset-bottom)); box-shadow: 0 -2rpx 12rpx rgba(0,0,0,0.08); text-align: center; }
+.buy-btn { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border-radius: 40rpx; font-size: 32rpx; font-weight: bold; }
+.buy-note { display: block; font-size: 22rpx; color: #999; margin-top: 8rpx; }

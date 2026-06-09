@@ -25,8 +25,10 @@ function calcNextReset(startDate, currentReset) {
  * 优先级：
  * 1. 新用户首份优惠（¥1.00）
  * 2. 邀请奖励免费额度
- * 3. 会员每月免费报告额度
- * 4. 付费报告（¥9.90）
+ * 3. 体验会员额度（每月1次）
+ * 4. 会员每月免费报告额度
+ * 5. 点数包余额
+ * 6. 付费报告（¥9.90）
  */
 exports.main = async (event, context) => {
   await warmupConfig(db);
@@ -159,6 +161,30 @@ exports.main = async (event, context) => {
           description: '本月免费额度已用完（' + used + '/' + total + '），可按标准价获取'
         }
       };
+    }
+
+    // 4.5 检查点数包余额
+    const pointsResult = await db.collection(COLLECTIONS.USER_POINTS)
+      .where({ user_id: openid })
+      .limit(1)
+      .get();
+
+    if (pointsResult.data && pointsResult.data.length > 0) {
+      const points = pointsResult.data[0];
+      const now = new Date();
+      if (points.balance > 0 && points.expire_at && new Date(points.expire_at) > now) {
+        return {
+          code: RESPONSE_CODE.SUCCESS,
+          msg: '点数包余额',
+          data: {
+            has_free_quota: true,
+            quota_source: 'points',
+            price: 0,
+            price_display: '免费',
+            description: '使用点数包余额（剩余' + points.balance + '次）'
+          }
+        };
+      }
     }
 
     // 5. 无免费额度，需要付费

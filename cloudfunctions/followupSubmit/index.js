@@ -78,6 +78,16 @@ exports.main = async (event, context) => {
       }
     });
 
+    // V1.5: 回访完成自动发券
+    try {
+      await cloud.callFunction({
+        name: 'autoIssueCoupon',
+        data: { userId: openid, scene: 'followup' }
+      });
+    } catch (couponErr) {
+      console.warn('[followupSubmit] 回访发券跳过:', couponErr.message);
+    }
+
     // 6. 返回结果
     return {
       code: RESPONSE_CODE.SUCCESS,

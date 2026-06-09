@@ -18,7 +18,8 @@ const {
   SAMPLE_PETS,
   INITIAL_HOSPITALS,
   getInitialKnowledgeArticles,
-  getInitialReportTemplates
+  getInitialReportTemplates,
+  getInitialCouponTemplates
 } = require('./seed-data');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
@@ -118,7 +119,17 @@ async function main(configSeed) {
       ['followup_records', [], ''],
       ['report_templates', getInitialReportTemplates(), '含基础模板'],
       ['rate_limits', [], ''],
-      ['audit_logs', [], '']
+      ['audit_logs', [], ''],
+      // V1.5 新增集合
+      ['user_points', [], 'V1.5 点数余额'],
+      ['point_transactions', [], 'V1.5 点数交易流水'],
+      ['user_coupons', [], 'V1.5 用户优惠券'],
+      ['coupons', getInitialCouponTemplates(), 'V1.5 优惠券模板（含种子数据）'],
+      ['refund_records', [], 'V1.5 退款记录'],
+      ['member_renew_log', [], 'V1.5 续费日志'],
+      ['bill_check_logs', [], 'V1.5 对账差异记录'],
+      ['analytics_events', [], 'V1.5 埋点事件'],
+      ['error_logs', [], 'V1.5 错误日志']
     ];
 
     for (const [name, data, label] of collections) {
@@ -191,7 +202,10 @@ async function resetAllData(db, configSeed) {
   const userCollections = [
     'users', 'pets', 'symptom_records', 'ai_cache',
     'orders', 'members', 'invite_records', 'followup_records',
-    'rate_limits', 'audit_logs', 'hospitals', 'knowledge_articles', 'report_templates'
+    'rate_limits', 'audit_logs', 'hospitals', 'knowledge_articles', 'report_templates',
+    // V1.5 新增
+    'user_points', 'point_transactions', 'user_coupons', 'coupons',
+    'refund_records', 'member_renew_log', 'bill_check_logs', 'analytics_events', 'error_logs'
   ];
 
   const results = { cleared: [], failed: [] };

@@ -1,0 +1,7 @@
+{
+  "name": "consumePoint",
+  "version": "1.0.0",
+  "description": "消耗1个点数（用于AI报告生成时扣减）",
+  "main": "index.js",
+  "dependencies": { "wx-server-sdk": "~2.6.3" }
+}

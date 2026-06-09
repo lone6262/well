@@ -138,6 +138,11 @@ function switchTab(tabName) {
     users: '用户管理',
     orders: '订单管理',
     articles: '内容管理',
+    refunds: '退款管理',
+    coupons: '优惠券管理',
+    members: '会员管理',
+    bills: '对账记录',
+    risk: '风控面板',
     settings: '系统设置'
   };
   document.getElementById('pageTitle').textContent = titles[tabName] || '管理后台';
@@ -155,6 +160,21 @@ function switchTab(tabName) {
       break;
     case 'articles':
       initArticlesModule();
+      break;
+    case 'refunds':
+      initRefundsModule();
+      break;
+    case 'coupons':
+      initCouponsModule();
+      break;
+    case 'members':
+      initMembersModule();
+      break;
+    case 'bills':
+      initBillsModule();
+      break;
+    case 'risk':
+      initRiskModule();
       break;
     case 'settings':
       initSettingsModule();

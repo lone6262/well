@@ -1,0 +1,30 @@
+<view class="bundle-page">
+  <view class="bundle-card" wx:for="{{bundles}}" wx:key="key">
+    <view class="bundle-header">
+      <view class="bundle-name">{{item.name}}</view>
+      <view class="bundle-desc">{{item.desc}}</view>
+    </view>
+
+    <view class="bundle-items">
+      <view class="bundle-item" wx:for="{{item.items}}" wx:for-item="line" wx:key="*this">
+        <text class="check">✓</text>
+        <text>{{line}}</text>
+      </view>
+    </view>
+
+    <view class="bundle-price-section">
+      <view class="origin-price">单买总价 ¥{{item.originPrice}}</view>
+      <view class="bundle-price-row">
+        <text class="bundle-price">¥{{item.price}}</text>
+        <text class="save-tag">立省 ¥{{item.save}}</text>
+      </view>
+    </view>
+
+    <button class="buy-btn"
+            data-key="{{item.key}}"
+            bindtap="onPurchaseBundle"
+            disabled="{{purchasing}}">
+      立即购买
+    </button>
+  </view>
+</view>

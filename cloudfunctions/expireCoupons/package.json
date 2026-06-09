@@ -1,0 +1,7 @@
+{
+  "name": "expireCoupons",
+  "version": "1.0.0",
+  "description": "定时任务：批量过期到期优惠券",
+  "main": "index.js",
+  "dependencies": { "wx-server-sdk": "~2.6.3" }
+}

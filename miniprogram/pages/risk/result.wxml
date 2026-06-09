@@ -53,13 +53,17 @@
     <!-- 会员额度耗尽提示 -->
     <view class="quota-exhausted-notice" wx:if="{{quotaInfo.member_quota_exhausted}}">
       <text>⚠️ 本月免费额度已用完（{{quotaInfo.member_quota_used}}/{{quotaInfo.member_quota_total}}），本次 ¥9.90</text>
-      <text class="upgrade-link" bindtap="goToMember">升级年度会员，每月15次免费额度 →</text>
+      <text class="upgrade-link" bindtap="goToMember">升级年度会员，每月更多免费额度 →</text>
     </view>
     <view class="report-card-price">
       <text class="price-tag" wx:if="{{quotaInfo.quota_source === 'first_report'}}">首份仅需 ¥1.00</text>
       <text class="price-tag" wx:elif="{{quotaInfo.has_free_quota}}">免费获取</text>
       <text class="price-tag" wx:else>¥9.90</text>
       <text class="member-link" wx:if="{{quotaInfo.quota_source === 'paid' && !quotaInfo.member_quota_exhausted}}" bindtap="goToMember">成为会员，免费获取 →</text>
+    </view>
+    <!-- 合规：付费前固定提示 -->
+    <view class="compliance-notice">
+      ⚕️ 本报告仅为健康参考，不构成医疗诊断，如有紧急症状请立即就医
     </view>
     <button class="report-btn" bindtap="getAIReport" loading="{{purchasing}}">
       {{quotaInfo.has_free_quota && quotaInfo.price === 0 ? '免费获取报告' : '获取AI报告'}}
@@ -74,10 +78,24 @@
 
   <!-- 操作按钮 -->
   <view class="action-section">
-    <!-- 高风险：只显示急救通道按钮 -->
-    <button class="emergency-btn" wx:if="{{riskLevel === 'high'}}" bindtap="goToEmergency">
-      🚨 前往急救通道
-    </button>
+    <!-- 高风险：全屏红色警告 + 紧急操作 -->
+    <block wx:if="{{riskLevel === 'high'}}">
+      <view class="high-risk-warning-box">
+        <view class="warning-icon">🚨</view>
+        <view class="warning-title">您的宠物可能处于危险中</view>
+        <view class="warning-desc">检测到高风险症状，请立即联系附近宠物医院，切勿延误。</view>
+        <view class="warning-symptoms">
+          <text class="warning-symptom-tag" wx:for="{{selectedSymptoms}}" wx:key="*this">{{item}}</text>
+        </view>
+        <view class="warning-note">⚠️ AI 报告无法替代紧急救治，请优先就医</view>
+      </view>
+      <button class="emergency-btn" bindtap="goToEmergency">
+        🚨 前往急救通道
+      </button>
+      <button class="primary-btn" bindtap="viewHospitals">
+        🏥 查看附近医院
+      </button>
+    </block>
 
     <!-- 中风险：显示查看医院和返回首页按钮 -->
     <block wx:if="{{riskLevel === 'mid'}}">
@@ -124,6 +142,27 @@
         <text class="pay-option-price">¥19.90<small>/月</small></text>
       </view>
       <view class="pay-panel-cancel" bindtap="closePayOptions">取消</view>
+    </view>
+  </view>
+
+  <!-- 免责声明强制勾选弹窗 -->
+  <view class="disclaimer-modal-mask" wx:if="{{showDisclaimerModal}}">
+    <view class="disclaimer-modal">
+      <view class="disclaimer-modal-title">⚠️ 重要声明</view>
+      <view class="disclaimer-modal-content">
+        <view class="disclaimer-modal-item">1. 本 AI 健康报告仅为健康参考，<text class="disclaimer-highlight">不构成兽医诊断</text>。</view>
+        <view class="disclaimer-modal-item">2. 如您的宠物出现紧急症状（抽搐、昏迷、大出血等），请立即就医，不要等待报告。</view>
+        <view class="disclaimer-modal-item">3. 报告内容基于您提供的症状信息，由 AI 辅助生成，可能存在局限性。</view>
+      </view>
+      <view class="disclaimer-checkbox-row" bindtap="toggleDisclaimerAgree">
+        <view class="disclaimer-checkbox {{disclaimerAgreed ? 'checked' : ''}}">
+          <text wx:if="{{disclaimerAgreed}}">✓</text>
+        </view>
+        <text class="disclaimer-checkbox-label">我已知晓并同意以上声明</text>
+      </view>
+      <button class="disclaimer-confirm-btn {{disclaimerAgreed ? '' : 'disabled'}}" bindtap="confirmDisclaimer">
+        确认并继续
+      </button>
     </view>
   </view>
 </view>

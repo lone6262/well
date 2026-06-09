@@ -271,4 +271,155 @@ function getInitialReportTemplates() {
   return templates;
 }
 
-module.exports = { SAMPLE_PETS, INITIAL_HOSPITALS, getInitialKnowledgeArticles, getInitialReportTemplates };
+module.exports = { SAMPLE_PETS, INITIAL_HOSPITALS, getInitialKnowledgeArticles, getInitialReportTemplates, getInitialCouponTemplates };
+
+/**
+ * V1.5 优惠券种子模板
+ * 10 种优惠券覆盖所有 autoIssueCoupon 场景 + 用户手动领取
+ */
+function getInitialCouponTemplates() {
+  const now = new Date();
+
+  return [
+    {
+      name: '新用户专享券',
+      type: 'report',
+      discount_type: 'fixed',
+      discount_value: 890,         // 减 ¥8.90 → 报告实付 ¥1.00
+      min_amount: 990,             // 满 ¥9.90 可用
+      validity_days: 7,
+      scene: 'new_user',
+      total_limit: null,           // 不限
+      per_user_limit: 1,
+      total_issued: 0,
+      is_active: true,
+      created_at: now,
+    },
+    {
+      name: '新用户 8 折券',
+      type: 'report',
+      discount_type: 'percent',
+      discount_value: 80,          // 8 折
+      min_amount: 0,
+      validity_days: 7,
+      scene: 'new_user',
+      total_limit: null,
+      per_user_limit: 1,
+      total_issued: 0,
+      is_active: true,
+      created_at: now,
+    },
+    {
+      name: '邀请奖励券',
+      type: 'report',
+      discount_type: 'fixed',
+      discount_value: 300,         // 减 ¥3.00
+      min_amount: 0,               // 无门槛
+      validity_days: 30,
+      scene: 'invite',
+      total_limit: null,
+      per_user_limit: 10,
+      total_issued: 0,
+      is_active: true,
+      created_at: now,
+    },
+    {
+      name: '回访奖励券',
+      type: 'report',
+      discount_type: 'fixed',
+      discount_value: 300,         // 减 ¥3.00
+      min_amount: 0,
+      validity_days: 30,
+      scene: 'followup',
+      total_limit: null,
+      per_user_limit: 5,
+      total_issued: 0,
+      is_active: true,
+      created_at: now,
+    },
+    {
+      name: '回访 8 折券',
+      type: 'universal',
+      discount_type: 'percent',
+      discount_value: 80,          // 8 折
+      min_amount: 0,
+      validity_days: 30,
+      scene: 'followup',
+      total_limit: null,
+      per_user_limit: 1,
+      total_issued: 0,
+      is_active: true,
+      created_at: now,
+    },
+    {
+      name: '续费 8 折券',
+      type: 'member',
+      discount_type: 'percent',
+      discount_value: 80,          // 8 折
+      min_amount: 0,
+      validity_days: 15,
+      scene: 'renew',
+      total_limit: null,
+      per_user_limit: 1,
+      total_issued: 0,
+      is_active: true,
+      created_at: now,
+    },
+    {
+      name: '回归券',
+      type: 'universal',
+      discount_type: 'fixed',
+      discount_value: 500,         // 减 ¥5.00
+      min_amount: 0,               // 无门槛
+      validity_days: 15,
+      scene: 'return',
+      total_limit: null,
+      per_user_limit: 1,
+      total_issued: 0,
+      is_active: true,
+      created_at: now,
+    },
+    {
+      name: '邀请 5 人会员券',
+      type: 'member',
+      discount_type: 'fixed',
+      discount_value: 500,         // 减 ¥5.00
+      min_amount: 0,
+      validity_days: 30,
+      scene: 'invite_milestone_5',
+      total_limit: null,
+      per_user_limit: 1,
+      total_issued: 0,
+      is_active: true,
+      created_at: now,
+    },
+    {
+      name: '通用减 1 元券',
+      type: 'universal',
+      discount_type: 'fixed',
+      discount_value: 100,         // 减 ¥1.00
+      min_amount: 0,
+      validity_days: 30,
+      scene: 'universal',
+      total_limit: 1000,
+      per_user_limit: 1,
+      total_issued: 0,
+      is_active: true,
+      created_at: now,
+    },
+    {
+      name: '报告满减券',
+      type: 'report',
+      discount_type: 'fixed',
+      discount_value: 500,         // 减 ¥5.00
+      min_amount: 990,             // 满 ¥9.90 可用
+      validity_days: 15,
+      scene: 'universal',
+      total_limit: 500,
+      per_user_limit: 1,
+      total_issued: 0,
+      is_active: true,
+      created_at: now,
+    },
+  ];
+}

@@ -1,0 +1,9 @@
+{
+  "name": "acceptFamilyInvite",
+  "version": "1.0.0",
+  "description": "接受家庭成员邀请，加入家庭会员",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

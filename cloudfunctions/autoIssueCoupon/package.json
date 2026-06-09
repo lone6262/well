@@ -1,0 +1,7 @@
+{
+  "name": "autoIssueCoupon",
+  "version": "1.0.0",
+  "description": "自动发券（注册/回访/邀请等场景触发）",
+  "main": "index.js",
+  "dependencies": { "wx-server-sdk": "~2.6.3" }
+}

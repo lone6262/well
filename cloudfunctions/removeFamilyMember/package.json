@@ -1,0 +1,9 @@
+{
+  "name": "removeFamilyMember",
+  "version": "1.0.0",
+  "description": "主账号移除家庭成员",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

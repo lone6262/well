@@ -1,0 +1,7 @@
+{
+  "name": "applyCoupon",
+  "version": "1.0.0",
+  "description": "下单时锁定优惠券（内部调用）",
+  "main": "index.js",
+  "dependencies": { "wx-server-sdk": "~2.6.3" }
+}

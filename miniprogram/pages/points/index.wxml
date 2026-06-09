@@ -1,0 +1,64 @@
+<!--点数包购买页-->
+<view class="container">
+  <view class="page-header">
+    <view class="back-btn" bindtap="goBack"><view class="back-arrow"></view><text class="back-text">返回</text></view>
+    <view class="page-title">点数包</view>
+    <view class="header-placeholder"></view>
+  </view>
+
+  <!-- 当前余额 -->
+  <view class="balance-card">
+    <text class="balance-label">当前点数余额</text>
+    <text class="balance-value">{{balance}} 次</text>
+    <text class="balance-expire" wx:if="{{expireAt}}">有效期至 {{expireText}}</text>
+  </view>
+
+  <!-- 点数包选项 -->
+  <view class="pack-section">
+    <view class="section-title">选择点数包</view>
+
+    <view class="pack-card {{selectedPack === 'PACK_3' ? 'selected' : ''}}" bindtap="selectPack" data-pack="PACK_3">
+      <view class="pack-badge" wx:if="{{selectedPack === 'PACK_3'}}">✓ 已选</view>
+      <view class="pack-header">
+        <text class="pack-count">3 次</text>
+        <text class="pack-tag">🔥 推荐</text>
+      </view>
+      <view class="pack-pricing">
+        <text class="pack-price">¥19.90</text>
+        <text class="pack-unit">≈¥6.63/次</text>
+      </view>
+      <view class="pack-save">比单买省 ¥9.80（省33%）</view>
+    </view>
+
+    <view class="pack-card {{selectedPack === 'PACK_5' ? 'selected' : ''}}" bindtap="selectPack" data-pack="PACK_5">
+      <view class="pack-badge" wx:if="{{selectedPack === 'PACK_5'}}">✓ 已选</view>
+      <view class="pack-header">
+        <text class="pack-count">5 次</text>
+        <text class="pack-tag">💰 最划算</text>
+      </view>
+      <view class="pack-pricing">
+        <text class="pack-price">¥29.90</text>
+        <text class="pack-unit">≈¥5.98/次</text>
+      </view>
+      <view class="pack-save">比单买省 ¥19.60（省40%）</view>
+    </view>
+
+    <view class="pack-card single-card" bindtap="goBack">
+      <view class="pack-header">
+        <text class="pack-count">单次报告</text>
+      </view>
+      <view class="pack-pricing">
+        <text class="pack-price">¥9.90</text>
+        <text class="pack-unit">按次付费</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 购买按钮 -->
+  <view class="buy-section">
+    <button class="buy-btn" bindtap="purchasePack" loading="{{purchasing}}">
+      {{purchasing ? '购买中...' : '立即购买'}}
+    </button>
+    <text class="buy-note">购买后 90 天有效，不可结转</text>
+  </view>
+</view>

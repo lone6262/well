@@ -1,0 +1,9 @@
+{
+  "name": "checkDailyBill",
+  "version": "1.0.0",
+  "description": "每日自动对账 — 微信支付账单与本地订单比对",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

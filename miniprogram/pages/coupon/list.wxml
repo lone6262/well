@@ -1,0 +1,40 @@
+<view class="coupon-list-page">
+  <!-- 顶部 Tab -->
+  <view class="tabs">
+    <view class="tab {{activeTab === 'unused' ? 'active' : ''}}" data-tab="unused" bindtap="onTabChange">可使用</view>
+    <view class="tab {{activeTab === 'used' ? 'active' : ''}}" data-tab="used" bindtap="onTabChange">已使用</view>
+    <view class="tab {{activeTab === 'expired' ? 'active' : ''}}" data-tab="expired" bindtap="onTabChange">已过期</view>
+  </view>
+
+  <!-- 优惠券列表 -->
+  <view class="coupon-list" wx:if="{{!loading}}">
+    <view class="coupon-card {{coupon.status !== 'unused' ? 'disabled' : ''}}"
+          wx:for="{{coupons}}" wx:key="_id"
+          data-coupon="{{item}}" bindtap="onCouponTap">
+      <view class="coupon-left">
+        <view class="coupon-value">
+          <text wx:if="{{item.discount_type === 'fixed'}}">¥{{item.discount_value_display || '0.00'}}</text>
+          <text wx:if="{{item.discount_type === 'percent'}}">{{item.discount_value}}折</text>
+        </view>
+        <view class="coupon-condition">
+          <text wx:if="{{item.min_amount > 0}}">满¥{{item.min_amount_display}}可用</text>
+          <text wx:else>无门槛</text>
+        </view>
+      </view>
+      <view class="coupon-right">
+        <view class="coupon-name">{{item.name || '优惠券'}}</view>
+        <view class="coupon-type">适用于：{{item.type === 'report' ? '报告' : item.type === 'member' ? '会员' : item.type === 'points' ? '点数包' : '通用'}}</view>
+        <view class="coupon-expire">{{item.status === 'unused' ? '有效期至 ' + item.expire_at_display : (item.status === 'used' ? '已使用' : '已过期')}}</view>
+      </view>
+    </view>
+
+    <view class="empty" wx:if="{{coupons.length === 0}}">
+      <text>暂无优惠券</text>
+    </view>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="loading" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+</view>

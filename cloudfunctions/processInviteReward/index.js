@@ -170,7 +170,7 @@ exports.main = async (event, context) => {
       return { code: RESPONSE_CODE.SERVER_ERROR, msg: '奖励发放失败，请重试', data: {} };
     }
 
-    // 11. 检查里程碑：邀请3人 → 7天试用会员
+    // 11. 阶梯里程碑检查
     let totalRewarded = await db.collection(COLLECTIONS.INVITE_RECORDS)
       .where({
         inviter_id: invite.inviter_id,
@@ -178,38 +178,8 @@ exports.main = async (event, context) => {
       })
       .count();
 
-    let trialGranted = false;
-    if (totalRewarded.total >= INVITE_CONFIG.TRIAL_THRESHOLD) {
-      // 原子性：在用户记录上标记 trial_granted 防止重复发放
-      let trialClaimResult = await db.collection(COLLECTIONS.USERS)
-        .where({
-          user_id: invite.inviter_id,
-          trial_granted: _.neq(true)
-        })
-        .update({
-          data: { trial_granted: true, updated_at: now }
-        });
-
-      if (trialClaimResult.stats && trialClaimResult.stats.updated > 0) {
-        let trialExpire = new Date(now.getTime() + INVITE_CONFIG.TRIAL_DAYS * 24 * 60 * 60 * 1000);
-        await db.collection(COLLECTIONS.MEMBERS).add({
-          data: {
-            user_id: invite.inviter_id,
-            type: 'trial',
-            status: MEMBER_STATUS.ACTIVE,
-            start_date: now,
-            expire_date: trialExpire,
-            report_credits_total: MEMBER_CREDITS.MONTHLY_REPORTS,
-            report_credits_used: 0,
-            report_credits_reset_at: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
-            auto_renew: false,
-            created_at: now,
-            updated_at: now
-          }
-        });
-        trialGranted = true;
-      }
-    }
+    const totalInvites = totalRewarded.total;
+    const milestones = await checkMilestones(invite.inviter_id, totalInvites, now);
 
     // 12. 返回结果
     return {
@@ -218,8 +188,9 @@ exports.main = async (event, context) => {
       data: {
         rewarded: true,
         credits_granted: INVITE_CONFIG.REWARD_CREDITS,
-        trial_granted: trialGranted
-      }
+        total_invites: totalInvites,
+        milestones,
+      },
     };
 
   } catch (error) {
@@ -227,3 +198,176 @@ exports.main = async (event, context) => {
     return { code: RESPONSE_CODE.SERVER_ERROR, msg: '操作失败', data: {} };
   }
 };
+
+/**
+ * 阶梯里程碑奖励
+ *
+ * 邀请人数 → 奖励
+ * 1 人  → +1 次报告额度（已在外层发放）
+ * 3 人  → 7 天体验会员
+ * 5 人  → 5 元会员优惠券（通过 autoIssueCoupon）
+ * 10 人 → 1 个月正式月卡
+ *
+ * @returns {object} 各里程碑发放状态
+ */
+async function checkMilestones(inviterId, totalInvites, now) {
+  const milestones = {
+    trial: false,      // 3 人：7天体验
+    coupon_5: false,   // 5 人：5元券
+    monthly: false,    // 10 人：1个月月卡
+  };
+
+  // === 里程碑 1：邀请 3 人 → 7 天体验会员 ===
+  if (totalInvites >= INVITE_CONFIG.TRIAL_THRESHOLD) {
+    const trialClaimResult = await db.collection(COLLECTIONS.USERS)
+      .where({
+        user_id: inviterId,
+        trial_granted: _.neq(true),
+      })
+      .update({
+        data: { trial_granted: true, updated_at: now },
+      });
+
+    if (trialClaimResult.stats && trialClaimResult.stats.updated > 0) {
+      const trialExpire = new Date(now.getTime() + INVITE_CONFIG.TRIAL_DAYS * 24 * 60 * 60 * 1000);
+      await db.collection(COLLECTIONS.MEMBERS).add({
+        data: {
+          user_id: inviterId,
+          type: 'trial',
+          status: MEMBER_STATUS.ACTIVE,
+          start_date: now,
+          expire_date: trialExpire,
+          report_credits_total: MEMBER_CREDITS.TRIAL_REPORTS,
+          report_credits_used: 0,
+          report_credits_reset_at: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+          auto_renew: false,
+          created_at: now,
+          updated_at: now,
+        },
+      });
+      milestones.trial = true;
+      console.log(`[processInviteReward] 用户 ${inviterId} 达成 3 人里程碑，发放体验会员`);
+    }
+  }
+
+  // === 里程碑 2：邀请 5 人 → 5 元会员优惠券 ===
+  if (totalInvites >= 5) {
+    const couponClaimResult = await db.collection(COLLECTIONS.USERS)
+      .where({
+        user_id: inviterId,
+        coupon_5_granted: _.neq(true),
+      })
+      .update({
+        data: { coupon_5_granted: true, updated_at: now },
+      });
+
+    if (couponClaimResult.stats && couponClaimResult.stats.updated > 0) {
+      try {
+        await cloud.callFunction({
+          name: 'autoIssueCoupon',
+          data: {
+            userId: inviterId,
+            scene: 'invite_milestone_5',
+          },
+        });
+        milestones.coupon_5 = true;
+        console.log(`[processInviteReward] 用户 ${inviterId} 达成 5 人里程碑，发放会员 5 元券`);
+      } catch (couponError) {
+        console.error(`[processInviteReward] 5 人里程碑发券失败:`, couponError.message);
+        // 回滚标记，允许下次重试
+        await db.collection(COLLECTIONS.USERS)
+          .where({ user_id: inviterId })
+          .limit(1)
+          .update({ data: { coupon_5_granted: _.remove() } });
+      }
+    }
+  }
+
+  // === 里程碑 3：邀请 10 人 → 1 个月正式月卡 ===
+  if (totalInvites >= 10) {
+    const monthlyClaimResult = await db.collection(COLLECTIONS.USERS)
+      .where({
+        user_id: inviterId,
+        monthly_10_granted: _.neq(true),
+      })
+      .update({
+        data: { monthly_10_granted: true, updated_at: now },
+      });
+
+    if (monthlyClaimResult.stats && monthlyClaimResult.stats.updated > 0) {
+      try {
+        const monthlyExpire = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+        // 查看是否已有活跃会员
+        const existingMember = await db.collection(COLLECTIONS.MEMBERS)
+          .where({ user_id: inviterId, status: MEMBER_STATUS.ACTIVE })
+          .limit(1)
+          .get();
+
+        if (existingMember.data && existingMember.data.length > 0) {
+          // 已有会员 → 延长到期时间
+          const member = existingMember.data[0];
+          const currentExpire = new Date(member.expire_date);
+          const baseDate = currentExpire > now ? currentExpire : now;
+          const newExpire = new Date(baseDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+          await db.collection(COLLECTIONS.MEMBERS).doc(member._id).update({
+            data: {
+              expire_date: newExpire,
+              report_credits_total: Math.max(member.report_credits_total || 0, MEMBER_CREDITS.MONTHLY_REPORTS),
+              updated_at: now,
+            },
+          });
+        } else {
+          // 无会员 → 直接创建月卡
+          await db.collection(COLLECTIONS.MEMBERS).add({
+            data: {
+              user_id: inviterId,
+              type: 'monthly',
+              status: MEMBER_STATUS.ACTIVE,
+              start_date: now,
+              expire_date: monthlyExpire,
+              report_credits_total: MEMBER_CREDITS.MONTHLY_REPORTS,
+              report_credits_used: 0,
+              report_credits_reset_at: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+              auto_renew: false,
+              created_at: now,
+              updated_at: now,
+            },
+          });
+        }
+
+        // 记录订单
+        await db.collection(COLLECTIONS.ORDERS).add({
+          data: {
+            user_id: inviterId,
+            type: 'member_monthly',
+            status: 'paid',
+            amount: 0,
+            out_trade_no: 'WELL_INVITE_REWARD_' + Date.now(),
+            transaction_id: 'REWARD_MONTHLY_10',
+            description: '邀请 10 人奖励 — 1 个月月卡',
+            metadata: {
+              reward_type: 'invite_milestone_10',
+              total_invites: totalInvites,
+            },
+            paid_at: now,
+            created_at: now,
+            updated_at: now,
+          },
+        });
+
+        milestones.monthly = true;
+        console.log(`[processInviteReward] 用户 ${inviterId} 达成 10 人里程碑，发放 1 个月月卡`);
+      } catch (monthlyError) {
+        console.error(`[processInviteReward] 10 人里程碑发放月卡失败:`, monthlyError.message);
+        await db.collection(COLLECTIONS.USERS)
+          .where({ user_id: inviterId })
+          .limit(1)
+          .update({ data: { monthly_10_granted: _.remove() } });
+      }
+    }
+  }
+
+  return milestones;
+}

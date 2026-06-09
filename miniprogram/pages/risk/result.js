@@ -41,7 +41,9 @@ Page({
     purchasing: false,
     reportPurchased: false,
     hasExistingReport: false,
-    showPayOptions: false
+    showPayOptions: false,
+    showDisclaimerModal: false,
+    disclaimerAgreed: false
   },
 
   onLoad: function(options) {
@@ -305,6 +307,47 @@ Page({
       success: function(res) {
         if (res.result && res.result.code === 0) {
           self.setData({ quotaInfo: res.result.data })
+          // 检查是否有待支付订单，引导恢复
+          self.checkPendingOrder()
+        }
+      }
+    })
+  },
+
+  // 检查是否有待支付订单（支付中断恢复）
+  checkPendingOrder: function() {
+    var self = this
+    if (!app.globalData.cloudDevelopmentAvailable) return
+    wx.cloud.callFunction({
+      name: 'orderList',
+      data: { token: app.globalData.token, status: 'pending', limit: 1 },
+      success: function(res) {
+        if (res.result && res.result.code === 0) {
+          var orders = res.result.data && res.result.data.orders
+          if (orders && orders.length > 0) {
+            var order = orders[0]
+            wx.showModal({
+              title: '待支付订单',
+              content: '您有一笔未完成的订单（' + (order.description || 'AI报告') + '），是否继续支付？',
+              confirmText: '继续支付',
+              cancelText: '取消订单',
+              success: function(modalRes) {
+                if (modalRes.confirm) {
+                  // 继续支付：直接生成报告（内部会复用订单逻辑）
+                  self.generateReport(self.data.assessmentId)
+                } else {
+                  // 取消订单
+                  wx.cloud.callFunction({
+                    name: 'cancelOrder',
+                    data: { orderId: order._id, token: app.globalData.token },
+                    success: function() {
+                      wx.showToast({ title: '订单已取消', icon: 'success' })
+                    }
+                  })
+                }
+              }
+            })
+          }
         }
       }
     })
@@ -316,6 +359,41 @@ Page({
     let quotaInfo = self.data.quotaInfo
     let assessmentId = self.data.assessmentId
 
+    if (self.data.purchasing) return
+
+    // 合规：先检查免责声明是否已接受（每人仅需勾选一次）
+    var disclaimerAccepted = wx.getStorageSync('disclaimer_accepted_report')
+    if (!disclaimerAccepted) {
+      self.setData({ showDisclaimerModal: true, disclaimerAgreed: false })
+      return
+    }
+
+    self._proceedToGetReport()
+  },
+
+  // 切换免责声明勾选
+  toggleDisclaimerAgree: function() {
+    this.setData({ disclaimerAgreed: !this.data.disclaimerAgreed })
+  },
+
+  // 确认免责声明
+  confirmDisclaimer: function() {
+    if (!this.data.disclaimerAgreed) {
+      wx.showToast({ title: '请先勾选同意声明', icon: 'none' })
+      return
+    }
+    wx.setStorageSync('disclaimer_accepted_report', true)
+    this.setData({ showDisclaimerModal: false })
+    this._proceedToGetReport()
+  },
+
+  // 实际执行获取报告逻辑
+  _proceedToGetReport: function() {
+    var self = this
+    var quotaInfo = self.data.quotaInfo
+    var assessmentId = self.data.assessmentId
+
+    // 防重复点击
     if (self.data.purchasing) return
 
     // 首份优惠（¥1.00），确认后直接生成

@@ -1,0 +1,9 @@
+{
+  "name": "getFamilyMembers",
+  "version": "1.0.0",
+  "description": "查询家庭成员列表及使用情况",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

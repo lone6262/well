@@ -14,6 +14,13 @@
   </view>
 
   <view class="content" wx:if="{{!loading}}">
+    <!-- 续费到期提醒 -->
+    <view class="renew-reminder" wx:if="{{showRenewReminder}}">
+      <text class="reminder-icon">⏰</text>
+      <text class="reminder-text">会员将在 {{daysRemaining}} 天后到期，续费享优惠价</text>
+      <text class="reminder-link" bindtap="goToPurchase">立即续费 ></text>
+    </view>
+
     <!-- 会员状态卡 -->
     <view class="member-card {{isMember ? 'active-card' : 'inactive-card'}}">
       <view class="member-badge">
@@ -24,7 +31,7 @@
         <view class="member-detail" wx:if="{{isMember}}">
           <text class="detail-item">到期：{{expireText}}</text>
           <text class="detail-sep">|</text>
-          <text class="detail-item highlight">剩余 {{memberInfo.days_remaining}} 天</text>
+          <text class="detail-item highlight">剩余 {{daysRemaining}} 天</text>
         </view>
         <view class="member-detail" wx:if="{{!isMember}}">
           <text class="detail-item">开通会员，享受更多专属权益</text>
@@ -36,12 +43,47 @@
     <view class="credits-card" wx:if="{{isMember}}">
       <view class="credits-header">
         <text class="credits-title">本月报告额度</text>
+        <text class="credits-hint" wx:if="{{memberInfo.report_credits_remaining <= 1}}">额度即将用完</text>
       </view>
       <view class="credits-bar-wrapper">
         <view class="credits-bar-bg">
           <view class="credits-bar-fill" style="width: {{memberInfo.report_credits_total > 0 ? (memberInfo.report_credits_remaining / memberInfo.report_credits_total * 100) : 0}}%"></view>
         </view>
         <text class="credits-num">{{creditsText}}</text>
+      </view>
+    </view>
+
+    <!-- 自动续费开关（V1.5） -->
+    <view class="auto-renew-card" wx:if="{{showAutoRenewToggle}}">
+      <view class="auto-renew-row">
+        <view class="auto-renew-info">
+          <text class="auto-renew-title">自动续费</text>
+          <text class="auto-renew-hint">到期前自动续费，可随时取消</text>
+        </view>
+        <switch checked="{{autoRenew}}" bindchange="toggleAutoRenew" color="#667eea" />
+      </view>
+    </view>
+
+    <!-- 家庭成员入口（V1.5） -->
+    <view class="family-entry" wx:if="{{isMember && isFamilyMember}}" bindtap="goToFamily">
+      <view class="family-row">
+        <view class="family-info">
+          <text class="family-icon">👨‍👩‍👧‍👦</text>
+          <text class="family-title">管理家庭成员</text>
+        </view>
+        <text class="family-arrow">></text>
+      </view>
+    </view>
+
+    <!-- 点数包入口（V1.5） -->
+    <view class="points-entry" bindtap="goToPoints">
+      <view class="points-row">
+        <view class="points-info">
+          <text class="points-icon">🎁</text>
+          <text class="points-title">购买点数包</text>
+          <text class="points-subtitle">≈¥6.6/次，比单买更划算</text>
+        </view>
+        <text class="points-arrow">></text>
       </view>
     </view>
 
@@ -52,8 +94,8 @@
         <view class="benefit-item">
           <view class="benefit-icon-wrap blue-icon"><text class="benefit-icon">📋</text></view>
           <view class="benefit-text">
-            <text class="benefit-name">每月{{memberInfo.report_credits_total || 5}}次AI报告</text>
-            <text class="benefit-desc">价值 ¥29.9/月 · 约6折</text>
+            <text class="benefit-name">每月{{memberInfo.report_credits_total || 3}}次AI报告</text>
+            <text class="benefit-desc">价值 ¥{{benefitValue}}/月</text>
           </view>
           <view class="benefit-status" wx:if="{{isMember}}">✓</view>
         </view>
@@ -81,6 +123,15 @@
           </view>
           <view class="benefit-status" wx:if="{{isMember}}">✓</view>
         </view>
+        <!-- 家庭会员专属 -->
+        <view class="benefit-item" wx:if="{{isFamilyMember}}">
+          <view class="benefit-icon-wrap pink-icon"><text class="benefit-icon">👨‍👩‍👧‍👦</text></view>
+          <view class="benefit-text">
+            <text class="benefit-name">家庭成员共享</text>
+            <text class="benefit-desc">最多 4 人共享额度</text>
+          </view>
+          <view class="benefit-status" wx:if="{{isMember}}">✓</view>
+        </view>
       </view>
     </view>
 
@@ -89,7 +140,7 @@
       <button class="action-btn primary" bindtap="goToPurchase">
         {{isMember ? '续费 / 升级会员' : '立即开通会员'}}
       </button>
-      <button class="action-btn danger" wx:if="{{isMember && memberInfo.auto_renew}}" bindtap="cancelAutoRenew" disabled="{{cancelling}}">
+      <button class="action-btn danger" wx:if="{{isMember && memberInfo.auto_renew && !autoRenew}}" bindtap="cancelAutoRenew" disabled="{{cancelling}}">
         取消自动续费
       </button>
     </view>

@@ -53,5 +53,36 @@
         <text class="detail-value">{{paidText}}</text>
       </view>
     </view>
+
+    <!-- 退款信息 -->
+    <view class="detail-card refund-card" wx:if="{{order.status === 'refund_requested' || order.status === 'refunded'}}">
+      <view class="detail-title">退款信息</view>
+      <view class="detail-row">
+        <text class="detail-label">退款状态</text>
+        <text class="detail-value refund-status">{{order.status === 'refunded' ? '退款成功' : '退款审核中'}}</text>
+      </view>
+      <view class="detail-row" wx:if="{{order.refund_amount}}">
+        <text class="detail-label">退款金额</text>
+        <text class="detail-value">¥ {{order.refund_amount / 100}}</text>
+      </view>
+      <view class="refund-notice" wx:if="{{order.status === 'refunded'}}">
+        退款一般 T+1~3 个工作日到账，请注意查收
+      </view>
+      <view class="refund-notice" wx:if="{{order.status === 'refund_requested'}}">
+        退款申请已提交，等待审核，预计 1-3 个工作日处理
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-area">
+      <!-- 已支付订单可申请退款 -->
+      <button class="refund-btn" wx:if="{{order.status === 'paid'}}" bindtap="requestRefund">
+        申请退款
+      </button>
+      <!-- 退款须知 -->
+      <view class="refund-policy" wx:if="{{order.status === 'paid'}}">
+        本产品为虚拟商品，一经生成不支持退款，系统故障除外
+      </view>
+    </view>
   </view>
 </view>

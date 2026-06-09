@@ -9,7 +9,8 @@ const {
   PRICES,
   MEMBER_STATUS,
   MEMBER_DURATION,
-  MEMBER_CREDITS
+  MEMBER_CREDITS,
+  MEMBER_LIMITS
 , warmupConfig} = require('./common/constants');
 const { verifyToken } = require('./common/auth');
 const { checkRateLimit } = require('./common/rate-limiter');
@@ -19,6 +20,14 @@ const db = cloud.database();
 const _ = db.command;
 
 const MOCK_PAY = true; // 模拟支付模式，商户号到位后改为 false
+
+// 会员类型 → 订单类型映射
+const MEMBER_TYPE_TO_ORDER = {
+  monthly: ORDER_TYPES.MEMBER_MONTHLY,
+  yearly: ORDER_TYPES.MEMBER_YEARLY,
+  family_monthly: ORDER_TYPES.MEMBER_FAMILY_MONTHLY,
+  family_yearly: ORDER_TYPES.MEMBER_FAMILY_YEARLY
+};
 
 /**
  * 会员激活/续费
@@ -48,15 +57,36 @@ exports.main = async (event, context) => {
   if (!openid) {
     return { code: RESPONSE_CODE.UNAUTHORIZED, msg: '用户未登录', data: {} };
   }
-  if (memberType !== 'monthly' && memberType !== 'yearly') {
+  const VALID_TYPES = ['monthly', 'yearly', 'family_monthly', 'family_yearly'];
+  if (!VALID_TYPES.includes(memberType)) {
     return { code: RESPONSE_CODE.ERROR, msg: '会员类型参数无效', data: {} };
   }
 
-  // 2. 确定价格和时长
-  let isYearly = memberType === 'yearly';
-  let price = isYearly ? PRICES.MEMBER_YEARLY : PRICES.MEMBER_MONTHLY;
-  let orderType = isYearly ? ORDER_TYPES.MEMBER_YEARLY : ORDER_TYPES.MEMBER_MONTHLY;
-  let durationDays = isYearly ? MEMBER_DURATION.YEAR : MEMBER_DURATION.MONTH;
+  // 2. 确定价格、时长和产品类型
+  const isFamily = memberType.startsWith('family_');
+  const isYearly = memberType.includes('yearly');
+  const orderType = MEMBER_TYPE_TO_ORDER[memberType] || ORDER_TYPES.MEMBER_MONTHLY;
+  const durationDays = isYearly ? MEMBER_DURATION.YEAR : MEMBER_DURATION.MONTH;
+
+  // 根据会员类型取对应价格
+  const PRICE_MAP = {
+    monthly: PRICES.MEMBER_MONTHLY,
+    yearly: PRICES.MEMBER_YEARLY,
+    family_monthly: PRICES.MEMBER_FAMILY_MONTHLY,
+    family_yearly: PRICES.MEMBER_FAMILY_YEARLY
+  };
+  const RENEW_PRICE_MAP = {
+    monthly: PRICES.RENEW_MONTHLY,
+    yearly: PRICES.RENEW_YEARLY,
+    family_monthly: PRICES.RENEW_FAMILY_MONTHLY,
+    family_yearly: PRICES.RENEW_FAMILY_YEARLY
+  };
+  const CREDITS_MAP = {
+    monthly: MEMBER_CREDITS.MONTHLY_REPORTS,
+    yearly: MEMBER_CREDITS.YEARLY_REPORTS,
+    family_monthly: MEMBER_CREDITS.FAMILY_MONTHLY_REPORTS,
+    family_yearly: MEMBER_CREDITS.FAMILY_YEARLY_REPORTS
+  };
 
   try {
     // 3. 查询现有会员记录（含 active 和 expired）
@@ -156,7 +186,12 @@ exports.main = async (event, context) => {
       memberId = memberResult._id;
     }
 
-    // 8. 创建订单
+    // 8. 确定价格（续费使用续费价，首充使用原价）
+    const price = isActiveMember
+      ? (RENEW_PRICE_MAP[memberType] || PRICE_MAP[memberType])
+      : PRICE_MAP[memberType];
+
+    // 9. 创建订单
     let outTradeNo = 'WELL_MEMBER_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
     let orderResult = await db.collection(COLLECTIONS.ORDERS).add({
       data: {

@@ -75,6 +75,16 @@ exports.main = async (event, context) => {
       userId = insertResult._id;
       isNewUser = true;
 
+      // V1.5: 新用户自动发券
+      try {
+        await cloud.callFunction({
+          name: 'autoIssueCoupon',
+          data: { userId: openid, scene: 'new_user' }
+        });
+      } catch (couponErr) {
+        console.warn('[login] 新用户发券跳过:', couponErr.message);
+      }
+
     } else {
       // 5. 老用户，更新用户信息
       userId = userResult.data[0]._id;

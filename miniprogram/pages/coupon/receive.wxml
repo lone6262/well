@@ -1,0 +1,25 @@
+<view class="receive-page">
+  <view class="coupon-list" wx:if="{{!loading}}">
+    <view class="coupon-card" wx:for="{{coupons}}" wx:key="_id">
+      <view class="coupon-left">
+        <view class="coupon-value">{{item.discount_display}}</view>
+        <view class="coupon-condition">
+          <text wx:if="{{item.min_amount > 0}}">满¥{{item.min_amount_display}}</text>
+          <text wx:else>无门槛</text>
+        </view>
+      </view>
+      <view class="coupon-right">
+        <view class="coupon-name">{{item.name}}</view>
+        <view class="coupon-meta">{{item.type_text}} · {{item.scene_text}}</view>
+        <view class="coupon-stock">剩余 {{item.remaining}} 张</view>
+        <button class="receive-btn" size="mini" data-id="{{item._id}}" bindtap="onReceiveCoupon">立即领取</button>
+      </view>
+    </view>
+
+    <view class="empty" wx:if="{{coupons.length === 0}}">
+      <text>暂无可领取的优惠券</text>
+    </view>
+  </view>
+
+  <view class="loading" wx:if="{{loading}}"><text>加载中...</text></view>
+</view>

@@ -1,0 +1,59 @@
+<view class="family-page">
+  <!-- 顶部信息 -->
+  <view class="header-card">
+    <view class="header-title">家庭会员</view>
+    <view class="header-info">
+      <text>成员上限：{{maxMembers}} 人</text>
+      <text>当前成员：{{members.length}} 人</text>
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="action-bar" wx:if="{{isOwner}}">
+    <button class="action-btn primary" bindtap="onInviteFamily">邀请家人</button>
+    <button class="action-btn outline" bindtap="onAcceptInvite">输入邀请码加入</button>
+  </view>
+  <view class="action-bar" wx:else>
+    <button class="action-btn outline" bindtap="onAcceptInvite">输入邀请码加入</button>
+  </view>
+
+  <!-- 成员列表 -->
+  <view class="member-list" wx:if="{{!loading}}">
+    <view class="member-card" wx:for="{{members}}" wx:key="user_id">
+      <image class="member-avatar" src="{{item.avatarUrl || '/images/icons/usercenter.png'}}" mode="aspectFill"></image>
+      <view class="member-info">
+        <view class="member-name">
+          {{item.nickName || '未知用户'}}
+          <text class="role-tag {{item.role === 'owner' ? 'owner' : ''}}">{{item.role === 'owner' ? '主账号' : '成员'}}</text>
+        </view>
+        <view class="member-credits" wx:if="{{item.role === 'owner'}}">
+          家庭额度管理
+        </view>
+      </view>
+      <button wx:if="{{isOwner && item.role !== 'owner'}}"
+              class="remove-btn"
+              data-userid="{{item.user_id}}"
+              data-nickname="{{item.nickName}}"
+              bindtap="onRemoveMember">
+        移除
+      </button>
+    </view>
+
+    <view class="empty" wx:if="{{members.length === 0}}">
+      <text>暂无家庭成员</text>
+    </view>
+  </view>
+
+  <view class="loading" wx:if="{{loading}}"><text>加载中...</text></view>
+
+  <!-- 邀请码弹窗 -->
+  <view class="modal-mask" wx:if="{{showInviteModal}}" bindtap="onCloseInviteModal">
+    <view class="modal-content" catchtap="">
+      <view class="modal-title">邀请家人</view>
+      <view class="modal-desc">将以下邀请码分享给家人</view>
+      <view class="invite-code">{{inviteCode}}</view>
+      <button class="copy-btn" bindtap="onCopyInviteCode">复制邀请码</button>
+      <button class="close-btn" bindtap="onCloseInviteModal">关闭</button>
+    </view>
+  </view>
+</view>

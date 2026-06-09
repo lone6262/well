@@ -1,0 +1,9 @@
+{
+  "name": "checkRiskControl",
+  "version": "1.0.0",
+  "description": "风控检查 — 频率限制、大额审核、防刷量",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}
