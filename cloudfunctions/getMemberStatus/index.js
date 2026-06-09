@@ -1,6 +1,6 @@
 // 云函数入口文件
 const cloud = require('wx-server-sdk');
-const { COLLECTIONS, RESPONSE_CODE, MEMBER_STATUS, MEMBER_CREDITS , warmupConfig} = require('./common/constants');
+const { COLLECTIONS, RESPONSE_CODE, MEMBER_STATUS, MEMBER_CREDITS, PRICES, warmupConfig} = require('./common/constants');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
@@ -145,6 +145,35 @@ exports.main = async (event, context) => {
     const daysRemaining = Math.ceil((expireDate - now) / (24 * 60 * 60 * 1000));
     const creditsRemaining = Math.max(0, creditsTotal - creditsUsed);
 
+    // 查询会员成就数据
+    const reportCountResult = await db.collection(COLLECTIONS.ORDERS)
+      .where({ user_id: openid, type: 'report', status: 'paid' })
+      .count();
+    const totalReports = reportCountResult.total || 0;
+
+    // 计算已节省金额（标准价 × 报告数 - 实际总支出）
+    let savedAmount = 0;
+    if (totalReports > 0) {
+      const paidOrdersResult = await db.collection(COLLECTIONS.ORDERS)
+        .where({ user_id: openid, status: 'paid' })
+        .field({ amount: true })
+        .limit(100)
+        .get();
+      const totalPaid = (paidOrdersResult.data || []).reduce(function(sum, o) {
+        return sum + (o.amount || 0);
+      }, 0);
+      savedAmount = Math.max(0, PRICES.STANDARD_REPORT * totalReports - totalPaid);
+    }
+
+    // 续费价格
+    const RENEW_PRICE_MAP = {
+      monthly: PRICES.RENEW_MONTHLY,
+      yearly: PRICES.RENEW_YEARLY,
+      family_monthly: PRICES.RENEW_FAMILY_MONTHLY,
+      family_yearly: PRICES.RENEW_FAMILY_YEARLY,
+    };
+    const renewPrice = RENEW_PRICE_MAP[member.type] || 0;
+
     return {
       code: RESPONSE_CODE.SUCCESS,
       msg: '获取成功',
@@ -156,7 +185,13 @@ exports.main = async (event, context) => {
         report_credits_total: creditsTotal,
         report_credits_used: creditsUsed,
         report_credits_remaining: creditsRemaining,
-        next_reset_at: nextResetAt
+        next_reset_at: nextResetAt,
+        total_reports: totalReports,
+        saved_amount: savedAmount,
+        saved_amount_display: (savedAmount / 100).toFixed(2),
+        renew_price: renewPrice,
+        renew_price_display: (renewPrice / 100).toFixed(2),
+        auto_renew: member.auto_renew || false,
       }
     };
 

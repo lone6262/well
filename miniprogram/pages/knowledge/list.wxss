@@ -93,6 +93,9 @@
 /* === 文章标题 === */
 .article-header {
   margin-bottom: 12rpx;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .article-title {
@@ -104,6 +107,23 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  flex: 1;
+}
+
+/* V1.5 会员专享标签 */
+.member-only-badge {
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  margin-left: 12rpx;
+  flex-shrink: 0;
+}
+.member-only-text {
+  font-size: 18rpx;
+  color: #fff;
+  white-space: nowrap;
 }
 
 /* === 文章摘要 === */

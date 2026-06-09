@@ -1,5 +1,12 @@
 <!--风险结果页面-->
 <view class="container">
+  <!-- 会员标识 -->
+  <view class="member-indicator" wx:if="{{isMember}}" bindtap="goToMember">
+    <text class="member-indicator-icon">👑</text>
+    <text class="member-indicator-text">会员用户</text>
+    <text class="member-indicator-arrow">></text>
+  </view>
+
   <!-- 风险等级卡片 -->
   <view class="risk-card" style="background-color: {{riskDisplayInfo.color}};">
     <view class="risk-icon">{{riskDisplayInfo.icon}}</view>

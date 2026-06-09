@@ -9,6 +9,8 @@ Page({
     renewMode: false,
     monthlyPrice: '29.90',
     yearlyPrice: '99.00',
+    monthlyRenewPrice: '25.90',
+    yearlyRenewPrice: '89.00',
     yearlySave: '省38%',
     monthlySave: '约3折',
     fromReport: false,
@@ -40,7 +42,17 @@ Page({
     if (options.renew === 'monthly') {
       this.setData({
         renewMode: true,
-        selectedType: 'monthly'
+        selectedType: 'monthly',
+        monthlyPrice: '25.90'
+      })
+    }
+
+    // 续费模式：年度续费
+    if (options.renew === 'yearly') {
+      this.setData({
+        renewMode: true,
+        selectedType: 'yearly',
+        yearlyPrice: '89.00'
       })
     }
   },

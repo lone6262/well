@@ -96,6 +96,7 @@ function getInitialKnowledgeArticles() {
       content: '## 猫咪呕吐的常见原因\n\n### 1. 饮食问题\n- 吃得太快或太多\n- 食物突然更换\n- 食物过敏或不耐受\n\n### 2. 毛球症\n- 猫咪日常梳理会吞入毛发\n- 毛发在胃中积聚形成毛球\n\n### 3. 疾病因素\n- 肠胃炎\n- 肝肾疾病\n- 甲状腺功能亢进\n\n## 应对措施\n\n### 轻微呕吐（1-2次/天，精神正常）\n1. 禁食4-6小时，少量多次给水\n2. 恢复喂食时先给少量易消化食物\n3. 观察呕吐物内容和频率\n\n### 何时就医\n- 一天内呕吐超过3次\n- 呕吐物带血或呈黄绿色\n- 伴有腹泻、精神萎靡\n- 超过24小时不愿进食\n\n### 预防建议\n- 定期梳毛减少毛球\n- 使用慢食碗控制进食速度\n- 换粮时逐步过渡（7天）',
       cover_image: '',
       related_symptoms: ['呕吐', '食欲不振'],
+      member_only: true,
       view_count: 0, sort_order: 1, status: 'published',
       published_at: now, created_at: now, updated_at: now
     },
@@ -129,6 +130,7 @@ function getInitialKnowledgeArticles() {
       content: '## 狗狗咳嗽的常见原因\n\n### 1. 上呼吸道感染\n- 犬窝咳（传染性气管支气管炎）\n- 犬流感\n- 支原体感染\n\n### 2. 过敏或刺激\n- 灰尘、花粉过敏\n- 二手烟刺激\n- 香水或清洁剂\n\n### 3. 其他疾病\n- 心脏病（老年犬常见）\n- 气管塌陷（小型犬多见）\n- 肺炎\n\n## 应对措施\n\n### 轻微咳嗽\n1. 保持环境清洁通风\n2. 使用加湿器增加湿度\n3. 避免刺激物\n4. 减少剧烈运动\n\n### 何时就医\n- 咳嗽持续超过1周\n- 咳出带血或脓性分泌物\n- 伴有呼吸困难、发烧\n- 夜间咳嗽加重\n\n### 预防建议\n- 按时接种疫苗（犬窝咳疫苗）\n- 避免接触病犬\n- 保持室内空气清新',
       cover_image: '',
       related_symptoms: ['咳嗽', '呼吸困难'],
+      member_only: true,
       view_count: 0, sort_order: 4, status: 'published',
       published_at: now, created_at: now, updated_at: now
     },
@@ -140,6 +142,7 @@ function getInitialKnowledgeArticles() {
       content: '## 宠物疫苗接种指南\n\n### 狗狗疫苗\n\n#### 核心疫苗（必须接种）\n- 犬瘟热\n- 犬细小病毒\n- 犬腺病毒（传染性肝炎）\n- 狂犬疫苗\n\n#### 非核心疫苗（根据风险评估）\n- 犬窝咳\n- 钩端螺旋体\n- 犬流感\n\n### 猫咪疫苗\n\n#### 核心疫苗\n- 猫瘟（猫泛白细胞减少症）\n- 猫疱疹病毒\n- 猫杯状病毒\n- 狂犬疫苗\n\n#### 非核心疫苗\n- 猫白血病病毒\n\n### 接种时间表\n\n#### 幼年首次免疫\n- 6-8周龄：第一针\n- 间隔3-4周加强一次\n- 共需2-3针完成基础免疫\n- 16周龄以上接种狂犬疫苗\n\n#### 成年后\n- 每年加强一次核心疫苗\n- 或根据抗体滴度决定是否加强\n\n### 注意事项\n- 接种前确保宠物健康\n- 接种后观察30分钟\n- 一周内避免洗澡和剧烈运动',
       cover_image: '',
       related_symptoms: [],
+      member_only: true,
       view_count: 0, sort_order: 5, status: 'published',
       published_at: now, created_at: now, updated_at: now
     },
@@ -162,6 +165,7 @@ function getInitialKnowledgeArticles() {
       content: '## 幼宠护理全攻略\n\n### 接宠准备\n\n#### 必备物品\n- 食盆、水盆\n- 适合年龄的粮食\n- 窝/笼子\n- 尿垫/猫砂\n- 体温计\n\n### 喂养指南\n\n#### 幼犬\n- 2-3月龄：每日4餐\n- 3-6月龄：每日3餐\n- 6月龄以上：每日2餐\n- 选择幼犬专用粮\n\n#### 幼猫\n- 2-3月龄：每日4-5餐\n- 3-6月龄：每日3-4餐\n- 6月龄以上：每日2-3餐\n- 可适当补充羊奶粉\n\n### 健康检查\n\n#### 首次体检\n- 接回家后1周内\n- 全面体检\n- 粪便检查\n- 制定免疫计划\n\n#### 日常观察\n- 精神状态\n- 食欲和饮水量\n- 排泄情况\n- 体温（犬38-39°C，猫38-39.5°C）\n\n### 社会化训练\n- 3-14周是社会化关键期\n- 逐步接触不同的人、动物和环境\n- 正向激励，避免恐吓',
       cover_image: '',
       related_symptoms: [],
+      member_only: true,
       view_count: 0, sort_order: 7, status: 'published',
       published_at: now, created_at: now, updated_at: now
     },
@@ -173,6 +177,7 @@ function getInitialKnowledgeArticles() {
       content: '## 老年宠护理指南\n\n### 什么是老年宠\n- 猫：10岁以上\n- 小型犬：10岁以上\n- 大型犬：7岁以上\n\n### 常见老年疾病\n\n#### 关节问题\n- 骨关节炎\n- 椎间盘疾病\n- 症状：行动迟缓、不愿上下楼梯\n\n#### 内分泌疾病\n- 甲状腺功能亢进（猫）\n- 甲状腺功能减退（犬）\n- 糖尿病\n- 肾脏疾病\n\n#### 肿瘤\n- 定期检查肿块\n- 早期发现预后更好\n\n### 护理要点\n\n#### 饮食调整\n- 选择老年宠物专用粮\n- 适当补充关节保健品（软骨素、鱼油）\n- 控制体重，减轻关节负担\n- 少量多餐\n\n#### 运动管理\n- 保持适度运动\n- 避免剧烈运动\n- 散步时间缩短但频率增加\n\n#### 定期体检\n- 每半年一次全面体检\n- 血液检查（肝肾功、甲状腺）\n- 尿液检查\n- 血压监测\n\n#### 生活环境\n- 提供柔软的睡垫\n- 使用宠物台阶减少跳跃\n- 保持环境温暖',
       cover_image: '',
       related_symptoms: [],
+      member_only: true,
       view_count: 0, sort_order: 8, status: 'published',
       published_at: now, created_at: now, updated_at: now
     }

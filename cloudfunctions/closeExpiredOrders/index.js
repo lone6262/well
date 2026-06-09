@@ -50,6 +50,23 @@ exports.main = async (event, context) => {
         // 2. 释放资源（回滚已占用的额度）
         await rollbackOrderResources(order);
 
+        // 3. 发送订单超时通知（非阻塞）
+        try {
+          await cloud.callFunction({
+            name: 'sendPaymentNotification',
+            data: {
+              openid: order.user_id,
+              templateType: 'ORDER_TIMEOUT',
+              data: {
+                productName: order.description || '订单',
+                page: 'pages/index/index',
+              },
+            },
+          });
+        } catch (notifyErr) {
+          console.warn('[closeExpiredOrders] 超时通知发送失败:', notifyErr.message);
+        }
+
         closedCount++;
         console.log('[closeExpiredOrders] 关闭订单:', order._id, order.out_trade_no);
       } catch (err) {

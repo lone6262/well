@@ -24,9 +24,10 @@
           <text class="price-amount">{{monthlyPrice}}</text>
           <text class="price-unit">/月</text>
         </view>
+        <view class="plan-renew-hint" wx:if="{{!renewMode}}">续费仅 ¥{{monthlyRenewPrice}}/月</view>
         <view class="plan-save">{{monthlySave}}</view>
         <view class="plan-features">
-          <text class="feature-item">• 每月5次AI报告</text>
+          <text class="feature-item">• 每月3次AI报告</text>
           <text class="feature-item">• 无限自查</text>
           <text class="feature-item">• 报告永久保存</text>
         </view>
@@ -42,9 +43,10 @@
           <text class="price-amount">{{yearlyPrice}}</text>
           <text class="price-unit">/年</text>
         </view>
+        <view class="plan-renew-hint" wx:if="{{!renewMode}}">续费仅 ¥{{yearlyRenewPrice}}/年</view>
         <view class="plan-save">{{yearlySave}}</view>
         <view class="plan-features">
-          <text class="feature-item">• 每月15次AI报告</text>
+          <text class="feature-item">• 每月3次AI报告</text>
           <text class="feature-item">• 无限自查</text>
           <text class="feature-item">• 报告永久保存</text>
           <text class="feature-item">• 专属内容</text>

@@ -214,6 +214,9 @@ async function handleReportOrder(event, openid) {
           coupon_discount: couponDiscount
         },
         paid_at: MOCK_PAY ? now : null,
+        channel: event.channel || 'mp',
+        is_checked: false,
+        need_manual_review: payAmount >= PRICES.MANUAL_REVIEW_THRESHOLD,
         created_at: now,
         updated_at: now
       };
@@ -390,6 +393,9 @@ async function handleMemberOrder(event, openid) {
       description: (memberTier.includes('yearly') ? '年卡' : '月卡') + '会员购买',
       metadata: { member_tier: memberTier, mock_pay: MOCK_PAY },
       paid_at: MOCK_PAY ? now : null,
+      channel: event.channel || 'mp',
+      is_checked: false,
+      need_manual_review: amount >= PRICES.MANUAL_REVIEW_THRESHOLD,
       created_at: now,
       updated_at: now,
     };
@@ -440,6 +446,9 @@ async function handlePointsOrder(event, openid) {
       description: `${pack.count} 次点数包购买`,
       metadata: { pack_type: packType, pack_count: pack.count, mock_pay: MOCK_PAY },
       paid_at: MOCK_PAY ? now : null,
+      channel: event.channel || 'mp',
+      is_checked: false,
+      need_manual_review: pack.price >= PRICES.MANUAL_REVIEW_THRESHOLD,
       created_at: now,
       updated_at: now,
     };
@@ -537,6 +546,7 @@ async function handleBundleOrder(event, openid) {
         parent_order_id: null, // 稍后更新
         bundle_type: bundleKey,
         metadata: { bundle_item: item, mock_pay: MOCK_PAY },
+        is_checked: false,
         created_at: now,
         updated_at: now,
       };
@@ -560,6 +570,9 @@ async function handleBundleOrder(event, openid) {
       sub_orders: subOrders,
       metadata: { bundle_name: bundle.name, mock_pay: MOCK_PAY },
       paid_at: MOCK_PAY ? now : null,
+      channel: event.channel || 'mp',
+      is_checked: false,
+      need_manual_review: bundle.price >= PRICES.MANUAL_REVIEW_THRESHOLD,
       created_at: now,
       updated_at: now,
     };

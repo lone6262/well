@@ -9,7 +9,8 @@ let {
   INVITE_CONFIG,
   PRICES,
   MEMBER_STATUS,
-  MEMBER_CREDITS
+  MEMBER_CREDITS,
+  MEMBER_LIMITS
 } = require('./common/constants');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
@@ -229,6 +230,21 @@ async function checkMilestones(inviterId, totalInvites, now) {
       });
 
     if (trialClaimResult.stats && trialClaimResult.stats.updated > 0) {
+      // 检查 30 天冷却期内是否领取过体验会员
+      const cooldownMs = (MEMBER_LIMITS.TRIAL_COOLDOWN_DAYS || 30) * 24 * 60 * 60 * 1000;
+      const recentTrial = await db.collection(COLLECTIONS.MEMBERS)
+        .where({
+          user_id: inviterId,
+          type: 'trial',
+          created_at: _.gt(new Date(now.getTime() - cooldownMs)),
+        })
+        .limit(1)
+        .get();
+
+      if (recentTrial.data && recentTrial.data.length > 0) {
+        // 30 天内已领取体验会员，跳过但保留 trial_granted 标记防止重复
+        console.log(`[processInviteReward] 用户 ${inviterId} 30 天内已领取体验会员，跳过`);
+      } else {
       const trialExpire = new Date(now.getTime() + INVITE_CONFIG.TRIAL_DAYS * 24 * 60 * 60 * 1000);
       await db.collection(COLLECTIONS.MEMBERS).add({
         data: {
@@ -247,6 +263,7 @@ async function checkMilestones(inviterId, totalInvites, now) {
       });
       milestones.trial = true;
       console.log(`[processInviteReward] 用户 ${inviterId} 达成 3 人里程碑，发放体验会员`);
+      }
     }
   }
 

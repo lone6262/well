@@ -31,6 +31,9 @@
       <!-- 卡片头部 -->
       <view class="article-header">
         <text class="article-title">{{item.title}}</text>
+        <view class="member-only-badge" wx:if="{{item.member_only}}">
+          <text class="member-only-text">👑 会员专享</text>
+        </view>
       </view>
 
       <!-- 摘要 -->

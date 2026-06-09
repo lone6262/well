@@ -153,6 +153,7 @@ exports.main = async (event, context) => {
         status: ORDER_STATUS.PAID,
         transaction_id: transaction_id || order.transaction_id || '',
         paid_at: now,
+        profit: order.amount,
         updated_at: now
       }
     });

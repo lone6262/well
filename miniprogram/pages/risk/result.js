@@ -43,7 +43,8 @@ Page({
     hasExistingReport: false,
     showPayOptions: false,
     showDisclaimerModal: false,
-    disclaimerAgreed: false
+    disclaimerAgreed: false,
+    isMember: false
   },
 
   onLoad: function(options) {
@@ -85,6 +86,9 @@ Page({
   loadAssessmentDetail: function() {
     let self = this
     let assessmentId = self.data.assessmentId
+
+    // 设置会员状态
+    self.setData({ isMember: app.globalData.userInfo && app.globalData.userInfo.isMember || false })
 
     console.log('从云函数加载评估详情, assessmentId:', assessmentId)
 

@@ -1,0 +1,7 @@
+{
+  "name": "cleanExpiredCache",
+  "version": "1.0.0",
+  "description": "定时清理 AI 缓存（非永久 + 过期）",
+  "main": "index.js",
+  "dependencies": {}
+}

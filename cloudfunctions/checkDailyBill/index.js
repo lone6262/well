@@ -48,6 +48,7 @@ exports.main = async (event, context) => {
 
     // === 2. 本地数据自检 ===
     const diffOrders = [];
+    const diffOrderIds = new Set();
     let totalAmount = 0;
 
     for (const order of orders) {
@@ -63,6 +64,7 @@ exports.main = async (event, context) => {
           wx_amount: null,
           diff_type: 'missing_transaction_id',
         });
+        diffOrderIds.add(order._id);
       }
 
       // 检查：金额异常（<= 0）
@@ -75,6 +77,7 @@ exports.main = async (event, context) => {
           wx_amount: null,
           diff_type: 'invalid_amount',
         });
+        diffOrderIds.add(order._id);
       }
     }
 
@@ -125,6 +128,7 @@ exports.main = async (event, context) => {
               wx_amount: wxOrder.total_fee,
               diff_type: 'amount_mismatch',
             });
+            diffOrderIds.add(order._id);
           }
 
           // 状态不一致（微信已回调但本地未更新）
@@ -136,6 +140,7 @@ exports.main = async (event, context) => {
                   status: ORDER_STATUS.PAID,
                   transaction_id: wxOrder.transaction_id,
                   paid_at: new Date(wxOrder.time_end),
+                  is_checked: true,
                   updated_at: new Date(),
                 },
               });
@@ -159,7 +164,37 @@ exports.main = async (event, context) => {
       }
     }
 
-    // === 5. 写入对账日志 ===
+    // === 5. 批量标记对账结果 ===
+    const checkedOrders = orders.filter(o => !diffOrderIds.has(o._id));
+    const remarkOrders = orders.filter(o => diffOrderIds.has(o._id));
+
+    // 无差异订单标记 is_checked
+    for (const order of checkedOrders) {
+      try {
+        await db.collection(COLLECTIONS.ORDERS).doc(order._id).update({
+          data: { is_checked: true, updated_at: new Date() },
+        });
+      } catch (e) { /* 静默 */ }
+    }
+
+    // 差异订单标记 check_remark
+    const diffMap = new Map();
+    for (const d of diffOrders) {
+      diffMap.set(d.order_id, d.diff_type);
+    }
+    for (const order of remarkOrders) {
+      try {
+        await db.collection(COLLECTIONS.ORDERS).doc(order._id).update({
+          data: {
+            is_checked: false,
+            check_remark: diffMap.get(order._id) || '对账差异',
+            updated_at: new Date(),
+          },
+        });
+      } catch (e) { /* 静默 */ }
+    }
+
+    // === 6. 写入对账日志 ===
     const billLog = {
       bill_date: billDate,
       total_order_count: orders.length,

@@ -18,6 +18,7 @@ Page({
     activeCategory: '全部',
     articles: [],
     loading: true,
+    isMember: false,
     page: 1,
     hasMore: false,
     pageSize: 10
@@ -69,6 +70,10 @@ Page({
             return article
           })
 
+          // 检查会员状态
+          var isMember = app.globalData.userInfo && app.globalData.userInfo.isMember
+          self.setData({ isMember: isMember })
+
           self.setData({
             articles: articles,
             hasMore: data.hasMore || false,
@@ -104,6 +109,24 @@ Page({
   // 点击文章卡片
   onArticleTap: function(e) {
     let articleId = e.currentTarget.dataset.id
+    let article = this.data.articles.find(function(a) { return a._id === articleId })
+
+    // 会员专享文章：非会员引导开通
+    if (article && article.member_only && !this.data.isMember) {
+      wx.showModal({
+        title: '会员专享内容',
+        content: '该文章为会员专享，开通会员即可阅读全部内容',
+        confirmText: '开通会员',
+        confirmColor: '#667eea',
+        success: function(res) {
+          if (res.confirm) {
+            wx.navigateTo({ url: '/pages/member/order' })
+          }
+        }
+      })
+      return
+    }
+
     wx.navigateTo({
       url: '/pages/knowledge/detail?id=' + articleId
     })

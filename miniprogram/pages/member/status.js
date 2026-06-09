@@ -17,6 +17,9 @@ Page({
     isFamilyMember: false,
     daysRemaining: 999,
     showRenewReminder: false,
+    totalReports: 0,
+    savedAmount: '0.00',
+    renewPriceDisplay: '',
   },
 
   onLoad: function() {
@@ -71,6 +74,9 @@ Page({
             isFamilyMember: isFamily,
             daysRemaining: daysRemaining,
             showRenewReminder: data.is_member && daysRemaining <= 7,
+            totalReports: data.total_reports || 0,
+            savedAmount: data.saved_amount_display || '0.00',
+            renewPriceDisplay: data.renew_price_display || '',
           })
         } else {
           self.setData({ loading: false })

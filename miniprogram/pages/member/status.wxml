@@ -59,8 +59,22 @@
         <view class="auto-renew-info">
           <text class="auto-renew-title">自动续费</text>
           <text class="auto-renew-hint">到期前自动续费，可随时取消</text>
+          <text class="auto-renew-detail" wx:if="{{renewPriceDisplay}}">续费价 ¥{{renewPriceDisplay}} · 下次 {{expireText}}</text>
         </view>
         <switch checked="{{autoRenew}}" bindchange="toggleAutoRenew" color="#667eea" />
+      </view>
+    </view>
+
+    <!-- 会员成就卡（V1.5） -->
+    <view class="achievement-card" wx:if="{{isMember && totalReports > 0}}">
+      <view class="achievement-item">
+        <text class="achievement-value">{{totalReports}}</text>
+        <text class="achievement-label">已生成报告</text>
+      </view>
+      <view class="achievement-divider"></view>
+      <view class="achievement-item">
+        <text class="achievement-value saved">¥{{savedAmount}}</text>
+        <text class="achievement-label">已为您节省</text>
       </view>
     </view>
 

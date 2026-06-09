@@ -84,6 +84,24 @@ exports.main = async (event, context) => {
     // 回滚用户资源
     await rollbackUserResources(order);
 
+    // 发送退款成功通知（非阻塞）
+    try {
+      await cloud.callFunction({
+        name: 'sendPaymentNotification',
+        data: {
+          openid: refund.user_id,
+          templateType: 'REFUND_SUCCESS',
+          data: {
+            productName: order.description || '健康报告',
+            amountDisplay: (refund.amount / 100).toFixed(2),
+            page: 'pages/order/detail?id=' + order._id,
+          },
+        },
+      });
+    } catch (notifyErr) {
+      console.warn('[processRefund] 退款通知发送失败:', notifyErr.message);
+    }
+
     return {
       code: RESPONSE_CODE.SUCCESS,
       msg: '退款成功',

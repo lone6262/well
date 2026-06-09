@@ -78,11 +78,19 @@ async function getCache(db, cacheKey) {
 
   if (cacheResult.data && cacheResult.data.length > 0) {
     const cached = cacheResult.data[0];
-    if (cached.expire_at && new Date(cached.expire_at) > new Date()) {
-      // 更新命中计数
+    // 永久缓存不检查过期时间
+    const isExpired = !cached.is_permanent && cached.expire_at && new Date(cached.expire_at) <= new Date();
+    if (!isExpired) {
+      // 更新命中计数，高频缓存自动升级为永久
       try {
+        const newHitCount = (cached.hit_count || 0) + 1;
+        const updateData = { hit_count: newHitCount };
+        // 命中 ≥10 次自动标记为永久缓存
+        if (newHitCount >= 10 && !cached.is_permanent) {
+          updateData.is_permanent = true;
+        }
         await db.collection(COLLECTIONS.AI_CACHE).doc(cached._id).update({
-          data: { hit_count: (cached.hit_count || 0) + 1 }
+          data: updateData
         });
       } catch (_) {}
 
@@ -126,8 +134,12 @@ async function setCache(db, cacheKey, content, source, petInfo, ageRange, riskLe
  */
 async function cleanExpiredCache(db) {
   try {
+    // 仅清理非永久的过期缓存
     const result = await db.collection(COLLECTIONS.AI_CACHE)
-      .where({ expire_at: db.command.lt(new Date()) })
+      .where({
+        expire_at: db.command.lt(new Date()),
+        is_permanent: db.command.neq(true),
+      })
       .remove();
     if (result.stats && result.stats.removed > 0) {
       console.log('[cache] 清理了 ' + result.stats.removed + ' 条过期缓存');
@@ -433,6 +445,12 @@ async function generateReport(db, symptomRecord, petInfo) {
   const cached = await getCache(db, cacheKey);
   if (cached) {
     console.log('[report] 命中缓存, cacheId=' + cached._id);
+    // 缓存命中埋点（非阻塞）
+    try {
+      db.collection(COLLECTIONS.ANALYTICS_EVENTS).add({
+        data: { event_type: 'cache_hit', event_data: { symptoms_hash: cacheKey, source: cached.source || 'cache' }, created_at: new Date() }
+      }).catch(function() {});
+    } catch (_) {}
     return {
       content: cached.report_content,
       source: REPORT_SOURCE.CACHE,
@@ -471,6 +489,13 @@ async function generateReport(db, symptomRecord, petInfo) {
   } catch (err) {
     console.warn('[report] 缓存写入失败（不影响返回）: ' + err.message);
   }
+
+  // 缓存未命中埋点（非阻塞）
+  try {
+    db.collection(COLLECTIONS.ANALYTICS_EVENTS).add({
+      data: { event_type: 'cache_miss', event_data: { symptoms_hash: cacheKey, source: source }, created_at: new Date() }
+    }).catch(function() {});
+  } catch (_) {}
 
   return {
     content: content,

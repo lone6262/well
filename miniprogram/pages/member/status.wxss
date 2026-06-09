@@ -352,6 +352,23 @@ page {
 .auto-renew-row { display: flex; align-items: center; justify-content: space-between; }
 .auto-renew-title { font-size: 28rpx; font-weight: bold; color: #333; display: block; }
 .auto-renew-hint { font-size: 22rpx; color: #999; margin-top: 4rpx; display: block; }
+.auto-renew-detail { font-size: 22rpx; color: #667eea; margin-top: 4rpx; display: block; }
+
+/* V1.5 会员成就卡 */
+.achievement-card {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #fff7e6, #fff1cc);
+  border-radius: 16rpx;
+  padding: 24rpx 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+.achievement-item { flex: 1; text-align: center; }
+.achievement-value { font-size: 40rpx; font-weight: bold; color: #faad14; display: block; }
+.achievement-value.saved { color: #f5222d; }
+.achievement-label { font-size: 22rpx; color: #999; margin-top: 4rpx; display: block; }
+.achievement-divider { width: 1rpx; height: 60rpx; background: #e8e8e8; margin: 0 20rpx; }
 
 /* V1.5 家庭成员入口 */
 .family-entry {
