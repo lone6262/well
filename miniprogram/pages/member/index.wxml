@@ -10,7 +10,7 @@
         </view>
       </view>
       <view class="header-content">
-        <text class="header-icon">👑</text>
+        <image class="header-icon" src="/images/icons/crown.svg" mode="aspectFit" />
         <text class="header-title">会员中心</text>
         <text class="header-subtitle">为宝贝的健康保驾护航</text>
       </view>
@@ -28,7 +28,7 @@
     <view class="vip-card {{isMember ? 'vip-active' : 'vip-inactive'}}">
       <view class="vip-top">
         <view class="vip-badge">
-          <text class="vip-badge-icon">{{isMember ? '👑' : '☆'}}</text>
+          <image class="vip-badge-icon" src="{{isMember ? '/images/icons/crown.svg' : '/images/icons/star.svg'}}" mode="aspectFit" />
         </view>
         <view class="vip-info">
           <text class="vip-type">{{isMember ? typeText : '尚未开通会员'}}</text>
@@ -45,7 +45,7 @@
     <!-- 报告额度（会员专属） -->
     <view class="card" wx:if="{{isMember}}">
       <view class="card-row">
-        <text class="card-title">📳 本月报告额度</text>
+        <text class="card-title">本月报告额度</text>
         <text class="card-extra" wx:if="{{memberInfo.next_reset_at}}">{{memberInfo.next_reset_at}} 重置</text>
       </view>
       <view class="progress-row">
@@ -59,12 +59,12 @@
 
     <!-- ===== V1.5 新增：快捷功能区 ===== -->
     <view class="card shortcut-card">
-      <text class="card-title" style="margin-bottom: 24rpx;">🛒 增值服务</text>
+      <text class="card-title" style="margin-bottom: 24rpx;">增值服务</text>
       <view class="shortcut-grid">
         <!-- 点数包 -->
         <view class="shortcut-item" bindtap="goToPoints">
           <view class="shortcut-icon-wrap shortcut-blue">
-            <text class="shortcut-icon">🎁</text>
+            <image class="shortcut-icon" src="/images/icons/gift.svg" mode="aspectFit" />
           </view>
           <text class="shortcut-name">点数包</text>
           <text class="shortcut-price">¥19.9起</text>
@@ -72,7 +72,7 @@
         <!-- 优惠券 -->
         <view class="shortcut-item" bindtap="goToCoupons">
           <view class="shortcut-icon-wrap shortcut-orange">
-            <text class="shortcut-icon">🎫</text>
+            <image class="shortcut-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />
           </view>
           <text class="shortcut-name">优惠券</text>
           <text class="shortcut-price">{{couponCount > 0 ? couponCount + '张可用' : '领取'}}</text>
@@ -80,7 +80,7 @@
         <!-- 套餐 -->
         <view class="shortcut-item" bindtap="goToBundle">
           <view class="shortcut-icon-wrap shortcut-purple">
-            <text class="shortcut-icon">📦</text>
+            <image class="shortcut-icon" src="/images/icons/gift.svg" mode="aspectFit" />
           </view>
           <text class="shortcut-name">超值套餐</text>
           <text class="shortcut-price">省¥9.9</text>
@@ -88,7 +88,7 @@
         <!-- 邀请好友 -->
         <view class="shortcut-item" bindtap="goToInvite">
           <view class="shortcut-icon-wrap shortcut-green">
-            <text class="shortcut-icon">🤝</text>
+            <image class="shortcut-icon" src="/images/icons/gift.svg" mode="aspectFit" />
           </view>
           <text class="shortcut-name">邀请好友</text>
           <text class="shortcut-price">赚额度</text>
@@ -98,12 +98,12 @@
 
     <!-- ===== V1.5 新增：套餐推荐区（非会员显示） ===== -->
     <view class="card" wx:if="{{!isMember}}">
-      <text class="card-title" style="margin-bottom: 20rpx;">⭐ 开通会员享更多</text>
+      <text class="card-title" style="margin-bottom: 20rpx;">开通会员享更多</text>
       <view class="recommend-list">
         <!-- 个人月卡 -->
         <view class="recommend-item" bindtap="goToPurchaseMonthly">
           <view class="recommend-info">
-            <text class="recommend-name">👤 个人月卡</text>
+            <text class="recommend-name">个人月卡</text>
             <text class="recommend-desc">每月3次AI报告</text>
           </view>
           <view class="recommend-right">
@@ -115,7 +115,7 @@
         <view class="recommend-item recommend-hot" bindtap="goToPurchaseYearly">
           <view class="recommend-hot-tag">推荐</view>
           <view class="recommend-info">
-            <text class="recommend-name">👤 个人年卡</text>
+            <text class="recommend-name">个人年卡</text>
             <text class="recommend-desc">≈¥8.25/月，省38%</text>
           </view>
           <view class="recommend-right">
@@ -126,7 +126,7 @@
         <!-- 家庭月卡 -->
         <view class="recommend-item" bindtap="goToPurchaseFamilyMonthly">
           <view class="recommend-info">
-            <text class="recommend-name">👨‍👩‍👧‍👦 家庭月卡</text>
+            <text class="recommend-name">家庭月卡</text>
             <text class="recommend-desc">每月6次 + 5只宠物</text>
           </view>
           <view class="recommend-right">
@@ -137,7 +137,7 @@
         <!-- 家庭年卡 -->
         <view class="recommend-item" bindtap="goToPurchaseFamilyYearly">
           <view class="recommend-info">
-            <text class="recommend-name">👨‍👩‍👧‍👦 家庭年卡</text>
+            <text class="recommend-name">家庭年卡</text>
             <text class="recommend-desc">≈¥16.58/月，最划算</text>
           </view>
           <view class="recommend-right">
@@ -150,11 +150,11 @@
 
     <!-- 权益列表 -->
     <view class="card">
-      <text class="card-title" style="margin-bottom: 24rpx;">🎬 会员权益</text>
+      <text class="card-title" style="margin-bottom: 24rpx;">会员权益</text>
 
       <view class="benefit-item">
         <view class="benefit-icon-wrap benefit-blue">
-          <text class="benefit-icon">📵</text>
+          <image class="benefit-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />
         </view>
         <view class="benefit-info">
           <text class="benefit-name">每月{{memberInfo.report_credits_total || 3}}次AI报告</text>
@@ -165,7 +165,7 @@
 
       <view class="benefit-item">
         <view class="benefit-icon-wrap benefit-green">
-          <text class="benefit-icon">🔧</text>
+          <image class="benefit-icon" src="/images/icons/stethoscope.svg" mode="aspectFit" />
         </view>
         <view class="benefit-info">
           <text class="benefit-name">无限症状自查</text>
@@ -176,7 +176,7 @@
 
       <view class="benefit-item">
         <view class="benefit-icon-wrap benefit-orange">
-          <text class="benefit-icon">📧</text>
+          <image class="benefit-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />
         </view>
         <view class="benefit-info">
           <text class="benefit-name">历史报告永久保存</text>
@@ -187,7 +187,7 @@
 
       <view class="benefit-item">
         <view class="benefit-icon-wrap benefit-purple">
-          <text class="benefit-icon">📎</text>
+          <image class="benefit-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />
         </view>
         <view class="benefit-info">
           <text class="benefit-name">会员专属内容</text>
@@ -199,7 +199,7 @@
       <!-- V1.5 家庭会员专属权益 -->
       <view class="benefit-item" wx:if="{{isMember && isFamilyMember}}">
         <view class="benefit-icon-wrap benefit-pink">
-          <text class="benefit-icon">👨‍👩‍👧‍👦</text>
+          <image class="benefit-icon" src="/images/icons/paw.svg" mode="aspectFit" />
         </view>
         <view class="benefit-info">
           <text class="benefit-name">家庭成员共享</text>
@@ -211,7 +211,7 @@
       <!-- V1.5 自动续费 -->
       <view class="benefit-item benefit-last" wx:if="{{isMember}}">
         <view class="benefit-icon-wrap benefit-teal">
-          <text class="benefit-icon">🔄</text>
+          <image class="benefit-icon" src="/images/icons/stethoscope.svg" mode="aspectFit" />
         </view>
         <view class="benefit-info">
           <text class="benefit-name">自动续费</text>
@@ -224,7 +224,7 @@
     <!-- 底部按钮 -->
     <view class="btn-area">
       <button class="btn-primary" bindtap="goToPurchase" hover-class="btn-hover">
-        {{isMember ? '🔄 续费 / 升级' : '⭐ 立即开通会员'}}
+        {{isMember ? '续费 / 升级' : '立即开通会员'}}
       </button>
       <button class="btn-secondary" bindtap="goToStatus" wx:if="{{isMember}}" hover-class="btn-hover">
         查看会员详情

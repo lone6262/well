@@ -1,31 +1,31 @@
-.family-page { background: #f5f5f5; min-height: 100vh; }
+.family-page { background: var(--bg-secondary); min-height: 100vh; }
 
-.header-card { background: linear-gradient(135deg, #4A90E2, #357ABD); color: #fff; padding: 40rpx; }
+.header-card { background: var(--brand-primary); color: var(--bg-card); padding: 40rpx; }
 .header-title { font-size: 36rpx; font-weight: bold; }
 .header-info { margin-top: 16rpx; display: flex; gap: 30rpx; font-size: 26rpx; opacity: 0.9; }
 
 .action-bar { padding: 24rpx; display: flex; gap: 20rpx; }
 .action-btn { flex: 1; border-radius: 50rpx; font-size: 28rpx; }
-.action-btn.primary { background: #4A90E2; color: #fff; }
-.action-btn.outline { background: #fff; color: #4A90E2; border: 1rpx solid #4A90E2; }
+.action-btn.primary { background: var(--brand-primary); color: var(--bg-card); }
+.action-btn.outline { background: var(--bg-card); color: var(--brand-primary); border: 1rpx solid var(--brand-primary); }
 
 .member-list { padding: 0 24rpx; }
-.member-card { display: flex; align-items: center; background: #fff; border-radius: 16rpx; padding: 24rpx; margin-bottom: 16rpx; }
+.member-card { display: flex; align-items: center; background: var(--bg-card); border-radius: 16rpx; padding: 24rpx; margin-bottom: 16rpx; }
 .member-avatar { width: 80rpx; height: 80rpx; border-radius: 50%; margin-right: 20rpx; }
 .member-info { flex: 1; }
-.member-name { font-size: 30rpx; color: #333; display: flex; align-items: center; gap: 12rpx; }
-.role-tag { font-size: 22rpx; padding: 2rpx 12rpx; border-radius: 10rpx; background: #e8f4fd; color: #4A90E2; }
+.member-name { font-size: 30rpx; color: var(--text-primary); display: flex; align-items: center; gap: 12rpx; }
+.role-tag { font-size: 22rpx; padding: 2rpx 12rpx; border-radius: 10rpx; background: var(--brand-primary-light); color: var(--brand-primary); }
 .role-tag.owner { background: #fff3e0; color: #ff9800; }
-.member-credits { font-size: 24rpx; color: #999; margin-top: 6rpx; }
-.remove-btn { font-size: 24rpx; color: #ff4757; background: none; border: 1rpx solid #ff4757; border-radius: 30rpx; padding: 6rpx 20rpx; }
+.member-credits { font-size: 24rpx; color: var(--text-tertiary); margin-top: 6rpx; }
+.remove-btn { font-size: 24rpx; color: var(--brand-emergency); background: none; border: 1rpx solid var(--brand-emergency); border-radius: 30rpx; padding: 6rpx 20rpx; }
 
-.empty { text-align: center; padding: 80rpx 0; color: #999; font-size: 28rpx; }
-.loading { text-align: center; padding: 80rpx 0; color: #999; }
+.empty { text-align: center; padding: 80rpx 0; color: var(--text-tertiary); font-size: 28rpx; }
+.loading { text-align: center; padding: 80rpx 0; color: var(--text-tertiary); }
 
 .modal-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 999; }
-.modal-content { background: #fff; border-radius: 24rpx; padding: 50rpx; width: 600rpx; text-align: center; }
-.modal-title { font-size: 36rpx; font-weight: bold; color: #333; }
-.modal-desc { font-size: 26rpx; color: #999; margin-top: 12rpx; }
-.invite-code { font-size: 56rpx; font-weight: bold; color: #4A90E2; letter-spacing: 8rpx; margin: 40rpx 0; padding: 30rpx; background: #f0f7ff; border-radius: 16rpx; }
-.copy-btn { background: #4A90E2; color: #fff; border-radius: 50rpx; font-size: 30rpx; }
-.close-btn { background: none; color: #999; font-size: 28rpx; margin-top: 16rpx; }
+.modal-content { background: var(--bg-card); border-radius: 24rpx; padding: 50rpx; width: 600rpx; text-align: center; }
+.modal-title { font-size: 36rpx; font-weight: bold; color: var(--text-primary); }
+.modal-desc { font-size: 26rpx; color: var(--text-tertiary); margin-top: 12rpx; }
+.invite-code { font-size: 56rpx; font-weight: bold; color: var(--brand-primary); letter-spacing: 8rpx; margin: 40rpx 0; padding: 30rpx; background: var(--brand-primary-light); border-radius: 16rpx; }
+.copy-btn { background: var(--brand-primary); color: var(--bg-card); border-radius: 50rpx; font-size: 30rpx; }
+.close-btn { background: none; color: var(--text-tertiary); font-size: 28rpx; margin-top: 16rpx; }

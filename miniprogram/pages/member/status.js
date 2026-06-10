@@ -101,7 +101,7 @@ Page({
       content: enabled
         ? '开启后会员到期前 3 天将自动续费，可随时在会员中心关闭。'
         : '关闭后会员权益将保留至到期日。确认关闭？',
-      confirmColor: enabled ? '#4A90E2' : '#f5222d',
+      confirmColor: enabled ? 'var(--brand-primary)' : 'var(--brand-emergency)',
       success: function(res) {
         if (res.confirm) {
           self.doToggleAutoRenew(enabled)
@@ -142,7 +142,7 @@ Page({
     wx.showModal({
       title: '确认取消',
       content: '取消自动续费后，会员权益将保留至到期日。确认取消？',
-      confirmColor: '#f5222d',
+      confirmColor: 'var(--brand-emergency)',
       success: function(res) {
         if (res.confirm) {
           self.doCancel()

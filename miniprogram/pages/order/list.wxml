@@ -21,7 +21,7 @@
     <view class="order-card" wx:for="{{orders}}" wx:key="_id">
       <view class="order-header">
         <view class="order-type">
-          <text class="type-icon">{{item.type === 'report' ? '📋' : item.type === 'member_monthly' ? '📅' : item.type === 'member_yearly' ? '🗓️' : '📦'}}</text>
+          <image class="type-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />
           <text class="type-name">{{item.typeText}}</text>
         </view>
         <view class="order-status" style="color: {{item.statusColor}};">
@@ -40,7 +40,7 @@
 
   <!-- 空状态 -->
   <view class="empty-state" wx:if="{{!loading && orders.length === 0}}">
-    <text class="empty-icon">📭</text>
+    <image class="empty-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />
     <text class="empty-text">暂无订单</text>
   </view>
 

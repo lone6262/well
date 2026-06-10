@@ -5,7 +5,7 @@
   <view class="profile-header">
     <view class="header-content">
       <view class="header-left">
-        <text class="header-icon">🐾</text>
+        <image class="header-icon" src="/images/icons/paw.svg" mode="aspectFit" aria-label="宠物档案" />
         <view class="header-text">
           <text class="header-title">宠物档案</text>
           <text class="header-subtitle">管理爱宠信息，记录健康状态</text>
@@ -27,7 +27,9 @@
           <view class="pet-avatar-circle">
             <!-- 真实头像或默认头像 -->
             <image wx:if="{{item.avatar}}" class="pet-avatar-image" src="{{item.avatar}}" mode="aspectFill"/>
-            <text wx:else class="pet-avatar-large">{{item.type === 'cat' ? '🐱' : '🐶'}}</text>
+            <view wx:else class="pet-avatar-large">
+              <image class="pet-avatar-fallback-icon" src="/images/icons/paw.svg" mode="aspectFit" />
+            </view>
           </view>
           <view class="pet-type-badge {{item.type === 'cat' ? 'cat-badge' : 'dog-badge'}}">
             {{item.type === 'cat' ? '猫咪' : '狗狗'}}
@@ -48,7 +50,7 @@
         </view>
         <view class="pet-card-actions">
           <view class="action-circle-btn edit-circle" data-pet-id="{{item._id || item.petId}}" bindtap="editPet">
-            <text class="action-icon">✏️</text>
+            <image class="action-icon" src="/images/icons/clipboard.svg" mode="aspectFit" aria-label="编辑" />
           </view>
         </view>
       </view>
@@ -56,14 +58,14 @@
       <!-- 健康状态区域 -->
       <view class="pet-health-section">
         <view class="health-item {{item.vaccineDate ? 'health-valid' : 'health-expired'}}">
-          <text class="health-icon">{{item.vaccineDate ? '💉' : '⚠️'}}</text>
+          <image class="health-icon" src="{{item.vaccineDate ? '/images/icons/pill.svg' : '/images/icons/warning.svg'}}" mode="aspectFit" />
           <view class="health-info">
             <text class="health-label">疫苗状态</text>
             <text class="health-date">{{item.vaccineDate || '未接种'}}</text>
           </view>
         </view>
         <view class="health-item {{item.dewormDate ? 'health-valid' : 'health-expired'}}">
-          <text class="health-icon">{{item.dewormDate ? '💊' : '⚠️'}}</text>
+          <image class="health-icon" src="{{item.dewormDate ? '/images/icons/pill.svg' : '/images/icons/warning.svg'}}" mode="aspectFit" />
           <view class="health-info">
             <text class="health-label">驱虫状态</text>
             <text class="health-date">{{item.dewormDate || '未驱虫'}}</text>
@@ -74,18 +76,18 @@
       <!-- 自查记录 & 健康报告入口 -->
       <view class="pet-records-section">
         <view class="record-entry quick-check-entry" bindtap="quickCheck" data-pet-id="{{item._id}}" data-pet-name="{{item.name}}">
-          <text class="record-entry-icon">🩺</text>
+          <image class="record-entry-icon" src="/images/icons/stethoscope.svg" mode="aspectFit" />
           <text class="record-entry-text quick-check-text">快速自查</text>
           <text class="record-entry-arrow">›</text>
         </view>
         <view class="record-entry" bindtap="showPetRecords" data-pet-id="{{item._id}}" data-pet-name="{{item.name}}">
-          <text class="record-entry-icon">📋</text>
+          <image class="record-entry-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />
           <text class="record-entry-text">自查记录</text>
           <text class="record-count-badge">{{item.recordCount || 0}}条</text>
           <text class="record-entry-arrow">›</text>
         </view>
         <view class="record-entry" bindtap="showPetReports" data-pet-id="{{item._id}}" data-pet-name="{{item.name}}">
-          <text class="record-entry-icon">📊</text>
+          <image class="record-entry-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />
           <text class="record-entry-text">健康报告</text>
           <text class="record-count-badge">{{item.reportCount || 0}}条</text>
           <text class="record-entry-arrow">›</text>
@@ -99,7 +101,7 @@
         </view>
         <view class="footer-right">
           <view class="delete-force-btn" id="delete-btn-{{item._id || item.petId}}" data-pet-id="{{item._id || item.petId}}" catchtap="deletePet">
-            🗑️ 删除
+            删除
           </view>
         </view>
       </view>
@@ -110,7 +112,7 @@
   <view class="empty-state-modern" wx:if="{{petList.length === 0}}">
     <view class="empty-illustration">
       <view class="empty-circle-bg">
-        <text class="empty-emoji-large">🐾</text>
+        <image class="empty-emoji-large" src="/images/icons/paw.svg" mode="aspectFit" />
       </view>
     </view>
     <view class="empty-content">
@@ -119,7 +121,7 @@
     </view>
     <view class="empty-features">
       <view class="feature-item">
-        <text class="feature-icon">📋</text>
+        <image class="feature-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />
         <text class="feature-text">健康记录</text>
       </view>
       <view class="feature-item">
@@ -127,7 +129,7 @@
         <text class="feature-text">疫苗提醒</text>
       </view>
       <view class="feature-item">
-        <text class="feature-icon">🩺</text>
+        <image class="feature-icon" src="/images/icons/stethoscope.svg" mode="aspectFit" />
         <text class="feature-text">症状自查</text>
       </view>
     </view>
@@ -163,7 +165,7 @@
       <!-- 基本信息 -->
       <view class="form-section-modern">
         <view class="section-title-modern">
-          <text class="section-icon">📝</text>
+          <image class="section-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />
           <text class="section-text">基本信息</text>
         </view>
 
@@ -182,7 +184,7 @@
                 </view>
               </view>
               <view class="avatar-placeholder" wx:else>
-                <text class="placeholder-icon">📸</text>
+                <text class="placeholder-icon">上传</text>
                 <text class="avatar-placeholder-text">暂无头像</text>
               </view>
             </view>
@@ -190,11 +192,9 @@
             <!-- 上传操作区域 -->
             <view class="avatar-actions-section">
               <view class="avatar-action-btn upload-btn" bindtap="chooseAvatar">
-                <text class="action-icon">{{uploadingImage ? '⏳' : '📷'}}</text>
                 <text class="action-text">{{uploadingImage ? '上传中...' : '选择头像'}}</text>
               </view>
               <view class="avatar-action-btn delete-btn" wx:if="{{avatarPreview}}" bindtap="removeAvatar">
-                <text class="action-icon">🗑️</text>
                 <text class="action-text">删除</text>
               </view>
             </view>
@@ -229,13 +229,13 @@
             <view class="type-card-modern {{formData.type === 'cat' ? 'type-active' : ''}}"
                   bindtap="selectType"
                   data-type="cat">
-              <text class="type-emoji">🐱</text>
+              <image class="type-icon" src="/images/icons/paw.svg" mode="aspectFit" />
               <text class="type-name">猫咪</text>
             </view>
             <view class="type-card-modern {{formData.type === 'dog' ? 'type-active' : ''}}"
                   bindtap="selectType"
                   data-type="dog">
-              <text class="type-emoji">🐶</text>
+              <image class="type-icon" src="/images/icons/paw.svg" mode="aspectFit" />
               <text class="type-name">狗狗</text>
             </view>
           </view>
@@ -315,7 +315,7 @@
       <!-- 健康记录 -->
       <view class="form-section-modern">
         <view class="section-title-modern">
-          <text class="section-icon">💚</text>
+          <image class="section-icon" src="/images/icons/paw.svg" mode="aspectFit" />
           <text class="section-text">健康记录</text>
         </view>
 
@@ -373,7 +373,6 @@
   <view class="record-modal-list">
     <!-- 加载状态 -->
     <view class="record-modal-loading" wx:if="{{recordLoading}}">
-      <text class="loading-icon">⏳</text>
       <text class="loading-text">加载中...</text>
     </view>
 
@@ -391,8 +390,8 @@
 
     <!-- 空状态 -->
     <view class="record-modal-empty" wx:else>
-      <text class="empty-icon" wx:if="{{currentRecordType === 'report'}}">📊</text>
-      <text class="empty-icon" wx:else>📋</text>
+      <image class="empty-icon" src="/images/icons/clipboard.svg" mode="aspectFit" wx:if="{{currentRecordType === 'report'}}"/>
+      <image class="empty-icon" src="/images/icons/clipboard.svg" mode="aspectFit" wx:else/>
       <text class="empty-text" wx:if="{{currentRecordType === 'report'}}">暂无AI健康报告</text>
       <text class="empty-text" wx:else>暂无记录</text>
       <text class="empty-hint" wx:if="{{currentRecordType === 'report'}}">在自查记录中查看评估详情，可生成AI报告</text>

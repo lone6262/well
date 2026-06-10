@@ -56,10 +56,10 @@
         <view wx:if="{{item.type === 'misconceptions'}}">
           <view class="myth-item" wx:for="{{item.content}}" wx:for-item="m" wx:key="myth">
             <view class="myth-row">
-              <text class="myth-label">❌ {{m.myth}}</text>
+              <text class="myth-label"><image class="myth-icon" src="/images/icons/cross.svg" mode="aspectFit" /> {{m.myth}}</text>
             </view>
             <view class="fact-row">
-              <text class="fact-label">✅ {{m.fact}}</text>
+              <text class="fact-label"><image class="fact-icon" src="/images/icons/check.svg" mode="aspectFit" /> {{m.fact}}</text>
             </view>
           </view>
           <view class="empty-hint" wx:if="{{item.content.length === 0}}">
@@ -72,7 +72,7 @@
 
     <!-- 底部免责声明（始终可见） -->
     <view class="disclaimer-box">
-      <text class="disclaimer-icon">⚠️</text>
+      <image class="disclaimer-icon" src="/images/icons/warning.svg" mode="aspectFit" />
       <text class="disclaimer-text">本报告由AI生成，仅供参考，不构成专业兽医诊断建议。如您的宠物出现严重症状，请及时就医。</text>
     </view>
 

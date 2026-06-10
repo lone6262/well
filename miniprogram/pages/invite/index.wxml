@@ -48,11 +48,11 @@
     <!-- 操作按钮 -->
     <view class="action-group">
       <button class="action-btn action-btn--primary" open-type="share">
-        <text class="action-icon">📤</text>
+        <image class="action-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />
         <text class="action-label">分享给好友</text>
       </button>
       <button class="action-btn action-btn--outline" bindtap="generatePoster" loading="{{posterGenerating}}">
-        <text class="action-icon">🖼️</text>
+        <image class="action-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />
         <text class="action-label">生成海报</text>
       </button>
     </view>
@@ -60,7 +60,7 @@
     <!-- 邀请规则 -->
     <view class="rules-card">
       <view class="rules-heading">
-        <text class="rules-icon">💡</text>
+        <image class="rules-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />
         <text class="rules-title">邀请规则</text>
       </view>
       <view class="rules-steps">
@@ -94,14 +94,17 @@
     <view class="ranking-card" wx:if="{{topRankers.length > 0}}">
       <view class="ranking-card-header">
         <view class="ranking-card-title-group">
-          <text class="ranking-card-icon">🏆</text>
+          <image class="ranking-card-icon" src="/images/icons/crown.svg" mode="aspectFit" />
           <text class="ranking-card-title">邀请排行</text>
         </view>
         <text class="ranking-card-link" bindtap="toRanking">查看全部 ›</text>
       </view>
       <view class="ranking-card-list">
         <view class="ranking-card-item" wx:for="{{topRankers}}" wx:key="rank">
-          <view class="rank-medal">{{item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : '🥉'}}</view>
+          <view class="rank-medal">
+            <image class="rank-medal-icon" src="/images/icons/crown.svg" mode="aspectFit" />
+            <text class="rank-medal-text">{{item.rank === 1 ? '1st' : item.rank === 2 ? '2nd' : '3rd'}}</text>
+          </view>
           <image class="rank-avatar" src="{{item.avatarUrl}}" mode="aspectFill" />
           <text class="rank-name">{{item.nickname}}</text>
           <text class="rank-count">{{item.inviteCount}}人</text>

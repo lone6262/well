@@ -21,7 +21,7 @@
       <view class="pack-badge" wx:if="{{selectedPack === 'PACK_3'}}">✓ 已选</view>
       <view class="pack-header">
         <text class="pack-count">3 次</text>
-        <text class="pack-tag">🔥 推荐</text>
+        <image class="pack-tag" src="/images/icons/warning.svg" mode="aspectFit" />
       </view>
       <view class="pack-pricing">
         <text class="pack-price">¥19.90</text>
@@ -34,7 +34,7 @@
       <view class="pack-badge" wx:if="{{selectedPack === 'PACK_5'}}">✓ 已选</view>
       <view class="pack-header">
         <text class="pack-count">5 次</text>
-        <text class="pack-tag">💰 最划算</text>
+        <image class="pack-tag" src="/images/icons/warning.svg" mode="aspectFit" />
       </view>
       <view class="pack-pricing">
         <text class="pack-price">¥29.90</text>

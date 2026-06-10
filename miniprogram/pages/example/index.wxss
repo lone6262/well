@@ -192,7 +192,7 @@ page {
 
 /* AI助手相关样式 */
 .notice-box {
-  background: linear-gradient(135deg, #fff8e6 0%, #fff3d9 100%);
+  background: var(--color-warning-light);
   border-left: 4rpx solid #ff9800;
   border-radius: 8rpx;
   padding: 20rpx 24rpx;

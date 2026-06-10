@@ -1,6 +1,6 @@
 /* 会员中心页面样式 */
 page {
-  background-color: #f5f6f8;
+  background-color: var(--bg-secondary);
   width: 100%;
 }
 
@@ -19,8 +19,8 @@ page {
   align-items: center;
   justify-content: space-between;
   padding: 20rpx 24rpx;
-  background-color: #ffffff;
-  border-bottom: 1rpx solid #f0f0f0;
+  background-color: var(--bg-card);
+  border-bottom: 1rpx solid var(--border-color);
 }
 
 .back-btn {
@@ -38,8 +38,8 @@ page {
 .back-arrow {
   width: 16rpx;
   height: 16rpx;
-  border-left: 4rpx solid #333;
-  border-bottom: 4rpx solid #333;
+  border-left: 4rpx solid var(--text-primary);
+  border-bottom: 4rpx solid var(--text-primary);
   transform: rotate(45deg);
   -webkit-transform: rotate(45deg);
   margin-right: 6rpx;
@@ -47,13 +47,13 @@ page {
 
 .back-text {
   font-size: 28rpx;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .page-title {
   font-size: 34rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .header-placeholder {
@@ -72,8 +72,8 @@ page {
 .loading-spinner {
   width: 60rpx;
   height: 60rpx;
-  border: 4rpx solid #e0e0e0;
-  border-top: 4rpx solid #4A90E2;
+  border: 4rpx solid var(--border-color);
+  border-top: 4rpx solid var(--brand-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-bottom: 20rpx;
@@ -86,7 +86,7 @@ page {
 
 .loading-text {
   font-size: 28rpx;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 /* 内容区域 */
@@ -104,13 +104,13 @@ page {
 }
 
 .active-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #ffffff;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-accent) 100%);
+  color: var(--bg-card);
 }
 
 .inactive-card {
-  background: linear-gradient(135deg, #b8c6db 0%, #f5f7fa 100%);
-  color: #666;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
 }
 
 .member-badge {
@@ -118,7 +118,8 @@ page {
 }
 
 .badge-icon {
-  font-size: 56rpx;
+  width: 56rpx;
+  height: 56rpx;
 }
 
 .member-info {
@@ -156,7 +157,7 @@ page {
 
 /* 报告额度卡 */
 .credits-card {
-  background: #ffffff;
+  background: var(--bg-card);
   border-radius: 16rpx;
   padding: 24rpx;
   margin-bottom: 24rpx;
@@ -173,12 +174,12 @@ page {
 .credits-title {
   font-size: 28rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .credits-reset {
   font-size: 22rpx;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 .credits-bar-wrapper {
@@ -189,7 +190,7 @@ page {
 .credits-bar-bg {
   flex: 1;
   height: 16rpx;
-  background: #f0f0f0;
+  background: var(--border-color);
   border-radius: 8rpx;
   margin-right: 16rpx;
   overflow: hidden;
@@ -197,7 +198,7 @@ page {
 
 .credits-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #4A90E2, #667eea);
+  background: linear-gradient(90deg, var(--brand-primary), var(--brand-accent));
   border-radius: 8rpx;
   transition: width 0.3s ease;
 }
@@ -205,21 +206,21 @@ page {
 .credits-num {
   font-size: 28rpx;
   font-weight: bold;
-  color: #4A90E2;
+  color: var(--brand-primary);
   min-width: 60rpx;
   text-align: right;
 }
 
 .credits-hint {
   font-size: 22rpx;
-  color: #faad14;
+  color: var(--color-warning);
   margin-top: 8rpx;
   display: block;
 }
 
 /* 权益列表 */
 .benefits-section {
-  background: #ffffff;
+  background: var(--bg-card);
   border-radius: 16rpx;
   padding: 24rpx;
   margin-bottom: 24rpx;
@@ -229,7 +230,7 @@ page {
 .section-title {
   font-size: 30rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 20rpx;
 }
 
@@ -241,7 +242,7 @@ page {
   display: flex;
   align-items: center;
   padding: 16rpx 0;
-  border-bottom: 1rpx solid #f5f5f5;
+  border-bottom: 1rpx solid var(--bg-secondary);
 }
 
 .benefit-item:last-child {
@@ -275,7 +276,8 @@ page {
 }
 
 .benefit-icon {
-  font-size: 32rpx;
+  width: 32rpx;
+  height: 32rpx;
 }
 
 .benefit-text {
@@ -284,7 +286,7 @@ page {
 
 .benefit-name {
   font-size: 28rpx;
-  color: #333;
+  color: var(--text-primary);
   font-weight: 500;
   display: block;
   margin-bottom: 4rpx;
@@ -292,7 +294,7 @@ page {
 
 .benefit-desc {
   font-size: 22rpx;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 /* 操作按钮 */
@@ -313,8 +315,8 @@ page {
 }
 
 .action-btn.primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #ffffff;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-accent) 100%);
+  color: var(--bg-card);
 }
 
 .action-btn.primary::after {
@@ -322,57 +324,57 @@ page {
 }
 
 /* Additional styles for status page */
-.benefit-status { color: #52c41a; font-size: 32rpx; font-weight: bold; }
-.action-btn.danger { background: #fff; color: #f5222d; border: 2rpx solid #f5222d; margin-top: 16rpx; }
+.benefit-status { color: var(--color-success); font-size: 32rpx; font-weight: bold; }
+.action-btn.danger { background: var(--bg-card); color: var(--brand-emergency); border: 2rpx solid var(--brand-emergency); margin-top: 16rpx; }
 .action-btn.danger::after { border: none; }
-.action-btn.danger[disabled] { color: #ccc; border-color: #ccc; }
+.action-btn.danger[disabled] { color: var(--text-tertiary); border-color: var(--text-tertiary); }
 
 /* V1.5 续费到期提醒 */
 .renew-reminder {
   display: flex;
   align-items: center;
-  background: linear-gradient(135deg, #fff7e6, #ffe7ba);
+  background: var(--brand-primary-light);
   border-radius: 16rpx;
   padding: 20rpx 24rpx;
   margin-bottom: 20rpx;
-  border: 1rpx solid #ffd591;
+  border: 1rpx solid var(--color-warning);
 }
-.reminder-icon { font-size: 32rpx; margin-right: 12rpx; }
-.reminder-text { flex: 1; font-size: 26rpx; color: #d48806; }
-.reminder-link { font-size: 26rpx; color: #4A90E2; font-weight: bold; }
+.reminder-icon { width: 32rpx; height: 32rpx; margin-right: 12rpx; }
+.reminder-text { flex: 1; font-size: 26rpx; color: var(--color-warning); }
+.reminder-link { font-size: 26rpx; color: var(--brand-primary); font-weight: bold; }
 
 /* V1.5 自动续费卡 */
 .auto-renew-card {
-  background: #ffffff;
+  background: var(--bg-card);
   border-radius: 16rpx;
   padding: 24rpx;
   margin-bottom: 24rpx;
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
 }
 .auto-renew-row { display: flex; align-items: center; justify-content: space-between; }
-.auto-renew-title { font-size: 28rpx; font-weight: bold; color: #333; display: block; }
-.auto-renew-hint { font-size: 22rpx; color: #999; margin-top: 4rpx; display: block; }
-.auto-renew-detail { font-size: 22rpx; color: #667eea; margin-top: 4rpx; display: block; }
+.auto-renew-title { font-size: 28rpx; font-weight: bold; color: var(--text-primary); display: block; }
+.auto-renew-hint { font-size: 22rpx; color: var(--text-tertiary); margin-top: 4rpx; display: block; }
+.auto-renew-detail { font-size: 22rpx; color: var(--brand-primary); margin-top: 4rpx; display: block; }
 
 /* V1.5 会员成就卡 */
 .achievement-card {
   display: flex;
   align-items: center;
-  background: linear-gradient(135deg, #fff7e6, #fff1cc);
+  background: var(--brand-primary-light);
   border-radius: 16rpx;
   padding: 24rpx 32rpx;
   margin-bottom: 24rpx;
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
 }
 .achievement-item { flex: 1; text-align: center; }
-.achievement-value { font-size: 40rpx; font-weight: bold; color: #faad14; display: block; }
-.achievement-value.saved { color: #f5222d; }
-.achievement-label { font-size: 22rpx; color: #999; margin-top: 4rpx; display: block; }
-.achievement-divider { width: 1rpx; height: 60rpx; background: #e8e8e8; margin: 0 20rpx; }
+.achievement-value { font-size: 40rpx; font-weight: bold; color: var(--color-warning); display: block; }
+.achievement-value.saved { color: var(--brand-emergency); }
+.achievement-label { font-size: 22rpx; color: var(--text-tertiary); margin-top: 4rpx; display: block; }
+.achievement-divider { width: 1rpx; height: 60rpx; background: var(--border-color); margin: 0 20rpx; }
 
 /* V1.5 家庭成员入口 */
 .family-entry {
-  background: #ffffff;
+  background: var(--bg-card);
   border-radius: 16rpx;
   padding: 24rpx;
   margin-bottom: 16rpx;
@@ -380,13 +382,13 @@ page {
 }
 .family-row { display: flex; align-items: center; justify-content: space-between; }
 .family-info { display: flex; align-items: center; }
-.family-icon { font-size: 36rpx; margin-right: 16rpx; }
-.family-title { font-size: 28rpx; font-weight: bold; color: #333; }
-.family-arrow { font-size: 28rpx; color: #ccc; }
+.family-icon { width: 36rpx; height: 36rpx; margin-right: 16rpx; }
+.family-title { font-size: 28rpx; font-weight: bold; color: var(--text-primary); }
+.family-arrow { font-size: 28rpx; color: var(--border-color); }
 
 /* V1.5 点数包入口 */
 .points-entry {
-  background: #ffffff;
+  background: var(--bg-card);
   border-radius: 16rpx;
   padding: 24rpx;
   margin-bottom: 24rpx;
@@ -394,10 +396,10 @@ page {
 }
 .points-row { display: flex; align-items: center; justify-content: space-between; }
 .points-info { display: flex; align-items: center; flex-wrap: wrap; }
-.points-icon { font-size: 36rpx; margin-right: 16rpx; }
-.points-title { font-size: 28rpx; font-weight: bold; color: #333; }
-.points-subtitle { font-size: 22rpx; color: #ff4757; margin-left: 16rpx; }
-.points-arrow { font-size: 28rpx; color: #ccc; }
+.points-icon { width: 36rpx; height: 36rpx; margin-right: 16rpx; }
+.points-title { font-size: 28rpx; font-weight: bold; color: var(--text-primary); }
+.points-subtitle { font-size: 22rpx; color: var(--brand-emergency); margin-left: 16rpx; }
+.points-arrow { font-size: 28rpx; color: var(--border-color); }
 
 /* V1.5 pink icon */
 .pink-icon { background: rgba(235, 47, 150, 0.1); }

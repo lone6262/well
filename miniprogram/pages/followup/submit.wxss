@@ -5,7 +5,7 @@
    =================================== */
 
 page {
-  background: linear-gradient(180deg, #f8f9ff 0%, #f0f2f5 100%);
+  background: var(--bg-secondary);
   min-height: 100vh;
 }
 
@@ -16,7 +16,7 @@ page {
 
 /* ===== 顶部渐变头部 ===== */
 .page-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--brand-primary);
   border-radius: 0 0 32rpx 32rpx;
   overflow: hidden;
 }
@@ -105,7 +105,7 @@ page {
   font-size: 32rpx;
   font-weight: bold;
   line-height: 96rpx;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  background: var(--brand-primary) !important;
   color: #fff !important;
   border: none;
   box-shadow: 0 6rpx 20rpx rgba(102,126,234,0.3);
@@ -159,7 +159,7 @@ page {
 
 .tag {
   background: rgba(102,126,234,0.08);
-  color: #667eea;
+  color: var(--brand-primary);
   font-size: 24rpx;
   padding: 8rpx 18rpx;
   border-radius: 12rpx;

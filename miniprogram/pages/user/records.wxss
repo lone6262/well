@@ -154,7 +154,7 @@
 
 .view-detail-text {
   font-size: 24rpx;
-  color: #4A90E2;
+  color: var(--brand-primary);
   font-weight: 500;
 }
 
@@ -176,7 +176,7 @@
 
 .load-more-text {
   font-size: 26rpx;
-  color: #4A90E2;
+  color: var(--brand-primary);
   font-weight: 500;
 }
 

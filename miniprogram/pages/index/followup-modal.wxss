@@ -21,7 +21,7 @@
 }
 
 .followup-modal-deco {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--brand-primary);
   text-align: center;
   font-size: 72rpx;
   padding: 32rpx 0 16rpx;
@@ -91,7 +91,7 @@
   font-size: 30rpx;
   font-weight: bold;
   background: #fff;
-  color: #667eea;
+  color: var(--brand-primary);
   border: none;
   border-radius: 0;
   text-align: center;

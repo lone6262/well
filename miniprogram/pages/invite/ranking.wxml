@@ -15,7 +15,10 @@
         <!-- 第二名 -->
         <view class="podium-slot podium-slot--2" wx:if="{{top3.length >= 2}}">
           <image class="podium-face" src="{{top3[1].avatarUrl}}" mode="aspectFill" />
-          <view class="podium-crown">🥈</view>
+          <view class="podium-crown">
+            <image class="podium-crown-icon" src="/images/icons/crown.svg" mode="aspectFit" />
+            <text class="podium-crown-text">2nd</text>
+          </view>
           <text class="podium-nick">{{top3[1].nickname}}</text>
           <text class="podium-score">{{top3[1].inviteCount}}人</text>
           <view class="podium-bar podium-bar--2"></view>
@@ -24,7 +27,10 @@
         <!-- 第一名 -->
         <view class="podium-slot podium-slot--1">
           <image class="podium-face podium-face--1" src="{{top3[0].avatarUrl}}" mode="aspectFill" />
-          <view class="podium-crown">🥇</view>
+          <view class="podium-crown">
+            <image class="podium-crown-icon" src="/images/icons/crown.svg" mode="aspectFit" />
+            <text class="podium-crown-text">1st</text>
+          </view>
           <text class="podium-nick">{{top3[0].nickname}}</text>
           <text class="podium-score">{{top3[0].inviteCount}}人</text>
           <view class="podium-bar podium-bar--1"></view>
@@ -33,7 +39,10 @@
         <!-- 第三名 -->
         <view class="podium-slot podium-slot--3" wx:if="{{top3.length >= 3}}">
           <image class="podium-face" src="{{top3[2].avatarUrl}}" mode="aspectFill" />
-          <view class="podium-crown">🥉</view>
+          <view class="podium-crown">
+            <image class="podium-crown-icon" src="/images/icons/crown.svg" mode="aspectFit" />
+            <text class="podium-crown-text">3rd</text>
+          </view>
           <text class="podium-nick">{{top3[2].nickname}}</text>
           <text class="podium-score">{{top3[2].inviteCount}}人</text>
           <view class="podium-bar podium-bar--3"></view>
@@ -43,7 +52,7 @@
 
     <!-- 空状态 -->
     <view class="ranking-empty" wx:if="{{rankList.length === 0}}">
-      <text class="ranking-empty-icon">🏆</text>
+      <image class="ranking-empty-icon" src="/images/icons/crown.svg" mode="aspectFit" />
       <text class="ranking-empty-title">暂无排行数据</text>
       <text class="ranking-empty-hint">邀请好友成为第一名吧！</text>
     </view>

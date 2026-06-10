@@ -5,7 +5,7 @@
    =================================== */
 
 page {
-  background: linear-gradient(180deg, #f8f9ff 0%, #f0f2f5 100%);
+  background: linear-gradient(180deg, var(--brand-primary-light) 0%, var(--bg-secondary) 100%);
   min-height: 100vh;
 }
 
@@ -16,7 +16,7 @@ page {
 
 /* ===== 顶部渐变头部 ===== */
 .page-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-accent) 100%);
   border-radius: 0 0 32rpx 32rpx;
   overflow: hidden;
 }
@@ -43,17 +43,22 @@ page {
   margin-right: 8rpx;
 }
 
-.back-text { font-size: 28rpx; color: #fff; }
+.back-text { font-size: 28rpx; color: var(--bg-card); }
 
 .header-content { padding-left: 8rpx; }
 
-.header-icon { font-size: 44rpx; display: block; margin-bottom: 8rpx; }
+.header-icon {
+  width: 44rpx;
+  height: 44rpx;
+  display: block;
+  margin-bottom: 8rpx;
+}
 
 .header-title {
   display: block;
   font-size: 40rpx;
   font-weight: bold;
-  color: #fff;
+  color: var(--bg-card);
   margin-bottom: 6rpx;
 }
 
@@ -73,8 +78,8 @@ page {
 
 .loading-spinner {
   width: 56rpx; height: 56rpx;
-  border: 4rpx solid #e8e8e8;
-  border-top-color: #667eea;
+  border: 4rpx solid var(--border-color);
+  border-top-color: var(--brand-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-bottom: 20rpx;
@@ -82,7 +87,7 @@ page {
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.state-text { font-size: 28rpx; color: #999; }
+.state-text { font-size: 28rpx; color: var(--text-tertiary); }
 
 /* ===== 内容区域 ===== */
 .content-area { padding: 20rpx 24rpx 0; }
@@ -97,12 +102,12 @@ page {
 }
 
 .vip-active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-accent) 100%);
   box-shadow: 0 8rpx 32rpx rgba(102,126,234,0.35);
 }
 
 .vip-inactive {
-  background: linear-gradient(135deg, #b8c6db 0%, #e8ecf1 100%);
+  background: var(--bg-secondary);
   box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
 }
 
@@ -137,7 +142,10 @@ page {
 
 .vip-badge { margin-right: 20rpx; }
 
-.vip-badge-icon { font-size: 64rpx; }
+.vip-badge-icon {
+  width: 64rpx;
+  height: 64rpx;
+}
 
 .vip-info { flex: 1; }
 
@@ -145,7 +153,7 @@ page {
   display: block;
   font-size: 34rpx;
   font-weight: bold;
-  color: #fff;
+  color: var(--bg-card);
   margin-bottom: 8rpx;
 }
 
@@ -155,8 +163,8 @@ page {
   color: rgba(255,255,255,0.8);
 }
 
-.vip-inactive .vip-type { color: #666; }
-.vip-inactive .vip-desc { color: #999; }
+.vip-inactive .vip-type { color: var(--text-primary); }
+.vip-inactive .vip-desc { color: var(--text-tertiary); }
 
 .vip-days {
   display: flex;
@@ -182,7 +190,7 @@ page {
 
 /* ===== 通用卡片 ===== */
 .card {
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 20rpx;
   padding: 28rpx;
   margin-bottom: 20rpx;
@@ -199,12 +207,12 @@ page {
 .card-title {
   font-size: 30rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .card-extra {
   font-size: 22rpx;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 /* 进度条 */
@@ -216,7 +224,7 @@ page {
 .progress-bg {
   flex: 1;
   height: 16rpx;
-  background: #f0f0f0;
+  background: var(--border-color);
   border-radius: 8rpx;
   overflow: hidden;
   margin-right: 16rpx;
@@ -224,7 +232,7 @@ page {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #667eea, #764ba2);
+  background: linear-gradient(90deg, var(--brand-primary), var(--brand-accent));
   border-radius: 8rpx;
   transition: width 0.5s ease;
 }
@@ -232,7 +240,7 @@ page {
 .progress-text {
   font-size: 28rpx;
   font-weight: bold;
-  color: #667eea;
+  color: var(--brand-primary);
   min-width: 60rpx;
   text-align: right;
 }
@@ -240,7 +248,7 @@ page {
 .progress-hint {
   display: block;
   font-size: 22rpx;
-  color: #faad14;
+  color: var(--color-warning);
   margin-top: 10rpx;
 }
 
@@ -249,7 +257,7 @@ page {
   display: flex;
   align-items: center;
   padding: 20rpx 0;
-  border-bottom: 1rpx solid #f5f5f5;
+  border-bottom: 1rpx solid var(--bg-secondary);
 }
 
 .benefit-last { border-bottom: none; padding-bottom: 4rpx; }
@@ -270,14 +278,17 @@ page {
 .benefit-orange { background: rgba(250,173,20,0.1); }
 .benefit-purple { background: rgba(114,75,162,0.1); }
 
-.benefit-icon { font-size: 34rpx; }
+.benefit-icon {
+  width: 34rpx;
+  height: 34rpx;
+}
 
 .benefit-info { flex: 1; }
 
 .benefit-name {
   display: block;
   font-size: 28rpx;
-  color: #333;
+  color: var(--text-primary);
   font-weight: 500;
   margin-bottom: 4rpx;
 }
@@ -285,20 +296,20 @@ page {
 .benefit-desc {
   display: block;
   font-size: 22rpx;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 .benefit-value {
   font-size: 24rpx;
   font-weight: 600;
-  color: #667eea;
+  color: var(--brand-primary);
   flex-shrink: 0;
 }
 
 .benefit-discount {
   font-size: 20rpx;
-  color: #fff;
-  background: #FF6B6B;
+  color: var(--bg-card);
+  background: var(--brand-emergency);
   border-radius: 6rpx;
   padding: 2rpx 8rpx;
   margin-left: 8rpx;
@@ -336,18 +347,21 @@ page {
 .shortcut-purple { background: rgba(114,75,162,0.1); }
 .shortcut-green { background: rgba(82,196,26,0.1); }
 
-.shortcut-icon { font-size: 40rpx; }
+.shortcut-icon {
+  width: 40rpx;
+  height: 40rpx;
+}
 
 .shortcut-name {
   font-size: 24rpx;
-  color: #333;
+  color: var(--text-primary);
   font-weight: 500;
   margin-bottom: 4rpx;
 }
 
 .shortcut-price {
   font-size: 20rpx;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 /* ===== V1.5 套餐推荐区 ===== */
@@ -360,14 +374,14 @@ page {
   align-items: center;
   padding: 24rpx 20rpx;
   border-radius: 16rpx;
-  background: #f8f9ff;
+  background: var(--brand-primary-light);
   margin-bottom: 12rpx;
   position: relative;
   overflow: hidden;
 }
 
 .recommend-hot {
-  background: linear-gradient(135deg, #f0f2ff 0%, #eee8ff 100%);
+  background: var(--brand-primary-light);
   border: 1rpx solid rgba(102,126,234,0.2);
 }
 
@@ -375,8 +389,8 @@ page {
   position: absolute;
   top: 0;
   right: 0;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: #fff;
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-accent));
+  color: var(--bg-card);
   font-size: 18rpx;
   padding: 4rpx 16rpx;
   border-radius: 0 16rpx 0 12rpx;
@@ -387,7 +401,7 @@ page {
 .recommend-name {
   display: block;
   font-size: 28rpx;
-  color: #333;
+  color: var(--text-primary);
   font-weight: 600;
   margin-bottom: 4rpx;
 }
@@ -395,7 +409,7 @@ page {
 .recommend-desc {
   display: block;
   font-size: 22rpx;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 .recommend-right {
@@ -407,13 +421,13 @@ page {
 .recommend-price {
   font-size: 32rpx;
   font-weight: bold;
-  color: #667eea;
+  color: var(--brand-primary);
   margin-right: 8rpx;
 }
 
 .recommend-arrow {
   font-size: 32rpx;
-  color: #ccc;
+  color: var(--border-color);
 }
 
 /* ===== V1.5 权益扩展 ===== */
@@ -421,7 +435,7 @@ page {
 .benefit-teal { background: rgba(19,194,194,0.1); }
 
 .benefit-link {
-  color: #667eea !important;
+  color: var(--brand-primary) !important;
 }
 
 /* ===== V1.5 次要按钮 ===== */
@@ -439,8 +453,8 @@ page {
   font-size: 32rpx;
   font-weight: bold;
   line-height: 96rpx;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  color: #fff !important;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-accent) 100%) !important;
+  color: var(--bg-card) !important;
   border: none;
   box-shadow: 0 6rpx 20rpx rgba(102,126,234,0.3);
 }
@@ -454,9 +468,9 @@ page {
   font-size: 28rpx;
   font-weight: 500;
   line-height: 80rpx;
-  background: #fff !important;
-  color: #667eea !important;
-  border: 2rpx solid #667eea !important;
+  background: var(--bg-card) !important;
+  color: var(--brand-primary) !important;
+  border: 2rpx solid var(--brand-primary) !important;
 }
 
 .btn-secondary::after { border: none; }

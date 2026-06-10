@@ -16,7 +16,7 @@
   <view class="content" wx:if="{{!loading && order}}">
     <!-- 状态卡 -->
     <view class="status-card">
-      <text class="status-icon">{{typeIcon}}</text>
+      <image class="status-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />
       <view class="status-info">
         <text class="status-type">{{typeText}}</text>
         <view class="status-badge" style="color: {{statusColor}}">{{statusText}}</view>

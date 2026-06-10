@@ -7,7 +7,7 @@
 
 /* === 页面容器 === */
 page {
-  background: linear-gradient(180deg, #f8f9ff 0%, #f0f2f5 100%);
+  background: var(--bg-secondary);
   width: 100%;
 }
 
@@ -31,8 +31,8 @@ page {
 .loading-spinner {
   width: 60rpx;
   height: 60rpx;
-  border: 4rpx solid #e0e0e0;
-  border-top-color: #667eea;
+  border: 4rpx solid var(--border-color);
+  border-top-color: var(--brand-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-bottom: 20rpx;
@@ -43,12 +43,12 @@ page {
 }
 .loading-text {
   font-size: 28rpx;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 /* === 领奖台 Banner === */
 .podium-banner {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--brand-primary);
   padding: 40rpx 24rpx 0;
   position: relative;
   overflow: hidden;
@@ -100,9 +100,21 @@ page {
 }
 
 .podium-crown {
-  font-size: 36rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   position: absolute;
   top: -16rpx;
+}
+.podium-crown-icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+.podium-crown-text {
+  font-size: 18rpx;
+  font-weight: 700;
+  color: #fff;
+  margin-top: 2rpx;
 }
 
 .podium-nick {
@@ -129,15 +141,15 @@ page {
 }
 .podium-bar--1 {
   height: 80rpx;
-  background: linear-gradient(180deg, #ffd700, rgba(255, 215, 0, 0.3));
+  background: #ffd700;
 }
 .podium-bar--2 {
   height: 56rpx;
-  background: linear-gradient(180deg, #c0c0c0, rgba(192, 192, 192, 0.3));
+  background: #c0c0c0;
 }
 .podium-bar--3 {
   height: 40rpx;
-  background: linear-gradient(180deg, #cd7f32, rgba(205, 127, 50, 0.3));
+  background: #cd7f32;
 }
 
 /* === 空状态 === */
@@ -148,19 +160,20 @@ page {
   padding: 80rpx 24rpx;
 }
 .ranking-empty-icon {
-  font-size: 80rpx;
+  width: 80rpx;
+  height: 80rpx;
   margin-bottom: 16rpx;
   opacity: 0.6;
 }
 .ranking-empty-title {
   font-size: 30rpx;
-  color: #212121;
+  color: var(--text-primary);
   margin-bottom: 8rpx;
   font-weight: 500;
 }
 .ranking-empty-hint {
   font-size: 24rpx;
-  color: #757575;
+  color: var(--text-secondary);
 }
 
 /* === 排行列表 === */
@@ -171,21 +184,21 @@ page {
 .rank-row {
   display: flex;
   align-items: center;
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 12rpx;
   padding: 20rpx 24rpx;
   margin-bottom: 12rpx;
   box-shadow: 0 1rpx 6rpx rgba(0, 0, 0, 0.04);
 }
 .rank-row--even {
-  background: #fafbff;
+  background: var(--bg-secondary);
 }
 
 .rank-num {
   width: 48rpx;
   font-size: 28rpx;
   font-weight: 700;
-  color: #999;
+  color: var(--text-tertiary);
   flex-shrink: 0;
 }
 .rank-face {
@@ -193,19 +206,19 @@ page {
   height: 56rpx;
   border-radius: 50%;
   margin: 0 16rpx;
-  background: #eee;
+  background: var(--border-color);
 }
 .rank-nick {
   flex: 1;
   font-size: 28rpx;
-  color: #212121;
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .rank-score {
   font-size: 24rpx;
-  color: #667eea;
+  color: var(--brand-primary);
   font-weight: 700;
 }
 
@@ -215,7 +228,7 @@ page {
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: var(--brand-primary);
   padding: 20rpx 24rpx;
   padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
   box-shadow: 0 -4rpx 16rpx rgba(102, 126, 234, 0.2);

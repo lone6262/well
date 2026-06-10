@@ -11,7 +11,7 @@
 .emergency-big-btn {
   width: 100%;
   height: 160rpx;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: var(--brand-emergency);
   border-radius: 24rpx;
   border: none;
   padding: 0;

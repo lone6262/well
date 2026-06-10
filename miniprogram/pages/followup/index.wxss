@@ -1,11 +1,9 @@
 /* ===================================
    回访记录列表页 — 项目统一风格
-   配色：蓝紫渐变 #667eea → #764ba2
-   背景：#f8f9ff → #f0f2f5
    =================================== */
 
 page {
-  background: linear-gradient(180deg, #f8f9ff 0%, #f0f2f5 100%);
+  background: var(--bg-secondary);
   min-height: 100vh;
 }
 
@@ -14,9 +12,9 @@ page {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* ===== 顶部渐变头部 ===== */
+/* ===== 顶部头部 ===== */
 .page-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--brand-primary);
   border-radius: 0 0 32rpx 32rpx;
   overflow: hidden;
 }
@@ -61,6 +59,11 @@ page {
   margin-bottom: 8rpx;
 }
 
+.header-icon-img {
+  width: 28rpx;
+  height: 28rpx;
+}
+
 .header-title {
   display: block;
   font-size: 40rpx;
@@ -91,14 +94,14 @@ page {
   margin-right: 16rpx;
   border-radius: 30rpx;
   font-size: 26rpx;
-  color: #666;
+  color: var(--text-secondary);
   background: rgba(255,255,255,0.9);
   box-shadow: 0 2rpx 8rpx rgba(102,126,234,0.08);
   transition: all 0.25s;
 }
 
 .filter-active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--brand-primary);
   color: #fff;
   font-weight: 600;
   box-shadow: 0 4rpx 16rpx rgba(102,126,234,0.35);
@@ -115,8 +118,8 @@ page {
 .loading-spinner {
   width: 56rpx;
   height: 56rpx;
-  border: 4rpx solid #e8e8e8;
-  border-top-color: #667eea;
+  border: 4rpx solid var(--border-color);
+  border-top-color: var(--brand-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-bottom: 20rpx;
@@ -128,7 +131,7 @@ page {
 
 .state-text {
   font-size: 28rpx;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 .empty-card {
@@ -144,16 +147,22 @@ page {
 
 .empty-emoji { font-size: 80rpx; margin-bottom: 20rpx; }
 
+.empty-icon-img {
+  width: 72rpx;
+  height: 72rpx;
+  opacity: 0.4;
+}
+
 .empty-title {
   font-size: 32rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 12rpx;
 }
 
 .empty-desc {
   font-size: 26rpx;
-  color: #999;
+  color: var(--text-tertiary);
   text-align: center;
   line-height: 1.6;
 }
@@ -191,7 +200,13 @@ page {
 
 .card-pet-emoji { font-size: 36rpx; margin-right: 10rpx; }
 
-.card-pet-name { font-size: 32rpx; font-weight: bold; color: #333; }
+.card-pet-icon {
+  width: 32rpx;
+  height: 32rpx;
+  margin-right: 10rpx;
+}
+
+.card-pet-name { font-size: 32rpx; font-weight: bold; color: var(--text-primary); }
 
 /* 状态徽章 */
 .badge {
@@ -223,7 +238,7 @@ page {
 
 /* 症状区域 */
 .card-symptoms {
-  background: #f8f9ff;
+  background: var(--bg-secondary);
   border-radius: 12rpx;
   padding: 14rpx 18rpx;
   margin-bottom: 12rpx;
@@ -231,7 +246,7 @@ page {
 
 .card-symptoms-text {
   font-size: 26rpx;
-  color: #666;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
@@ -247,21 +262,26 @@ page {
   border-radius: 8rpx;
 }
 
+.vet-icon {
+  width: 22rpx;
+  height: 22rpx;
+}
+
 /* 卡片底部 */
 .card-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding-top: 14rpx;
-  border-top: 1rpx solid #f0f0f0;
+  border-top: 1rpx solid var(--border-color);
 }
 
-.card-date { font-size: 22rpx; color: #bbb; }
+.card-date { font-size: 22rpx; color: var(--text-tertiary); }
 
 .card-action {
   display: flex;
   align-items: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--brand-primary);
   padding: 8rpx 22rpx;
   border-radius: 20rpx;
 }
@@ -288,7 +308,12 @@ page {
   margin-right: 6rpx;
 }
 
-.done-text { font-size: 24rpx; color: #52c41a; }
+.done-icon-svg {
+  width: 22rpx;
+  height: 22rpx;
+}
+
+.done-text { font-size: 24rpx; color: var(--color-success); }
 
 /* ===== 加载更多 ===== */
 .load-more {
@@ -302,13 +327,13 @@ page {
 .loading-spinner-sm {
   width: 32rpx;
   height: 32rpx;
-  border: 3rpx solid #e8e8e8;
-  border-top-color: #667eea;
+  border: 3rpx solid var(--border-color);
+  border-top-color: var(--brand-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 
-.load-more-text { font-size: 24rpx; color: #999; }
+.load-more-text { font-size: 24rpx; color: var(--text-tertiary); }
 
 .no-more {
   display: flex;
@@ -321,10 +346,10 @@ page {
 .no-more-line {
   flex: 1;
   height: 1rpx;
-  background: #e8e8e8;
+  background: var(--border-color);
 }
 
-.no-more-text { font-size: 24rpx; color: #ccc; flex-shrink: 0; }
+.no-more-text { font-size: 24rpx; color: var(--text-tertiary); flex-shrink: 0; }
 
 /* 底部安全区 */
 .safe-bottom {

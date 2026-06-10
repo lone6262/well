@@ -25,7 +25,7 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(10rpx);
+  
 }
 
 .modal-container-modern {
@@ -158,7 +158,7 @@
 
 .type-active {
   border-color: #667EEA;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  background: var(--brand-primary-light);
 }
 
 .type-emoji {
@@ -201,7 +201,7 @@
 
 .gender-active {
   border-color: #667EEA;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  background: var(--brand-primary-light);
 }
 
 .gender-icon {
@@ -231,7 +231,7 @@
 
 .picker-selected {
   border-color: #667EEA;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  background: var(--brand-primary-light);
 }
 
 .avatar-upload-container {
@@ -316,7 +316,7 @@
 }
 
 .upload-btn {
-  background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+  background: var(--brand-primary);
   color: #FFFFFF;
 }
 
@@ -364,7 +364,7 @@
 }
 
 .modal-confirm {
-  background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+  background: var(--brand-primary);
   color: #FFFFFF;
 }
 

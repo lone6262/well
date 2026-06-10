@@ -1,5 +1,5 @@
 <view class="page-container">
-  <!-- 顶部渐变头部 -->
+  <!-- 顶部头部 -->
   <view class="page-header">
     <view class="header-inner">
       <view class="nav-bar">
@@ -9,7 +9,7 @@
         </view>
       </view>
       <view class="header-content">
-        <text class="header-icon">📋</text>
+        <image class="header-icon-img" src="/images/icons/clipboard.svg" mode="aspectFit" />
         <text class="header-title">回访记录</text>
         <text class="header-subtitle">跟踪宝贝的每一次康复进展</text>
       </view>
@@ -33,7 +33,7 @@
   <view class="list-area" wx:if="{{!loading}}">
     <!-- 空状态 -->
     <view class="empty-card" wx:if="{{empty}}">
-      <text class="empty-emoji">📝</text>
+      <image class="empty-icon-img" src="/images/icons/clipboard.svg" mode="aspectFit" />
       <text class="empty-title">暂无回访记录</text>
       <text class="empty-desc">完成症状自查后，系统会在24小时后提醒您进行回访</text>
     </view>
@@ -43,7 +43,7 @@
       <!-- 卡片头部 -->
       <view class="card-top">
         <view class="card-pet">
-          <text class="card-pet-emoji">{{item.status === 'pending' ? '🐱' : (item.status === 'improved' ? '😊' : (item.status === 'worsened' ? '😟' : '🐾'))}}</text>
+          <image class="card-pet-icon" src="/images/icons/paw.svg" mode="aspectFit" />
           <text class="card-pet-name">{{item.pet_name}}</text>
         </view>
         <view class="badge badge-{{item.status}}">{{item.statusText}}</view>
@@ -56,7 +56,8 @@
 
       <!-- 就医标记 -->
       <view class="card-vet" wx:if="{{item.visited_vet}}">
-        <text class="vet-tag">🏥 已就医</text>
+        <image class="vet-icon" src="/images/icons/hospital.svg" mode="aspectFit" />
+        <text class="vet-tag"> 已就医</text>
       </view>
 
       <!-- 卡片底部 -->
@@ -67,7 +68,7 @@
           <text class="action-arrow">›</text>
         </view>
         <view class="card-done" wx:else>
-          <text class="done-icon">✓</text>
+          <image class="done-icon" src="/images/icons/check.svg" mode="aspectFit" />
           <text class="done-text">已完成</text>
         </view>
       </view>

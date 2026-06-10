@@ -16,7 +16,7 @@
   <view class="content" wx:if="{{!loading}}">
     <!-- 续费到期提醒 -->
     <view class="renew-reminder" wx:if="{{showRenewReminder}}">
-      <text class="reminder-icon">⏰</text>
+      <image class="reminder-icon" src="/images/icons/warning.svg" mode="aspectFit" />
       <text class="reminder-text">会员将在 {{daysRemaining}} 天后到期，续费享优惠价</text>
       <text class="reminder-link" bindtap="goToPurchase">立即续费 ></text>
     </view>
@@ -24,7 +24,7 @@
     <!-- 会员状态卡 -->
     <view class="member-card {{isMember ? 'active-card' : 'inactive-card'}}">
       <view class="member-badge">
-        <text class="badge-icon">{{isMember ? '👑' : '☆'}}</text>
+        <image class="badge-icon" src="{{isMember ? '/images/icons/crown.svg' : '/images/icons/star.svg'}}" mode="aspectFit" />
       </view>
       <view class="member-info">
         <view class="member-type">{{isMember ? typeText : '尚未开通会员'}}</view>
@@ -82,7 +82,7 @@
     <view class="family-entry" wx:if="{{isMember && isFamilyMember}}" bindtap="goToFamily">
       <view class="family-row">
         <view class="family-info">
-          <text class="family-icon">👨‍👩‍👧‍👦</text>
+          <image class="family-icon" src="/images/icons/paw.svg" mode="aspectFit" />
           <text class="family-title">管理家庭成员</text>
         </view>
         <text class="family-arrow">></text>
@@ -93,7 +93,7 @@
     <view class="points-entry" bindtap="goToPoints">
       <view class="points-row">
         <view class="points-info">
-          <text class="points-icon">🎁</text>
+          <image class="points-icon" src="/images/icons/gift.svg" mode="aspectFit" />
           <text class="points-title">购买点数包</text>
           <text class="points-subtitle">≈¥6.6/次，比单买更划算</text>
         </view>
@@ -106,7 +106,7 @@
       <view class="section-title">会员权益</view>
       <view class="benefits-list">
         <view class="benefit-item">
-          <view class="benefit-icon-wrap blue-icon"><text class="benefit-icon">📋</text></view>
+          <view class="benefit-icon-wrap blue-icon"><image class="benefit-icon" src="/images/icons/clipboard.svg" mode="aspectFit" /></view>
           <view class="benefit-text">
             <text class="benefit-name">每月{{memberInfo.report_credits_total || 3}}次AI报告</text>
             <text class="benefit-desc">价值 ¥{{benefitValue}}/月</text>
@@ -114,7 +114,7 @@
           <view class="benefit-status" wx:if="{{isMember}}">✓</view>
         </view>
         <view class="benefit-item">
-          <view class="benefit-icon-wrap green-icon"><text class="benefit-icon">🔄</text></view>
+          <view class="benefit-icon-wrap green-icon"><image class="benefit-icon" src="/images/icons/stethoscope.svg" mode="aspectFit" /></view>
           <view class="benefit-text">
             <text class="benefit-name">无限症状自查</text>
             <text class="benefit-desc">不限次数使用</text>
@@ -122,7 +122,7 @@
           <view class="benefit-status" wx:if="{{isMember}}">✓</view>
         </view>
         <view class="benefit-item">
-          <view class="benefit-icon-wrap orange-icon"><text class="benefit-icon">💊</text></view>
+          <view class="benefit-icon-wrap orange-icon"><image class="benefit-icon" src="/images/icons/pill.svg" mode="aspectFit" /></view>
           <view class="benefit-text">
             <text class="benefit-name">疫苗/驱虫提醒</text>
             <text class="benefit-desc">到期自动提醒</text>
@@ -130,7 +130,7 @@
           <view class="benefit-status" wx:if="{{isMember}}">✓</view>
         </view>
         <view class="benefit-item">
-          <view class="benefit-icon-wrap purple-icon"><text class="benefit-icon">📁</text></view>
+          <view class="benefit-icon-wrap purple-icon"><image class="benefit-icon" src="/images/icons/clipboard.svg" mode="aspectFit" /></view>
           <view class="benefit-text">
             <text class="benefit-name">历史报告永久保存</text>
             <text class="benefit-desc">随时查看所有报告</text>
@@ -139,7 +139,7 @@
         </view>
         <!-- 家庭会员专属 -->
         <view class="benefit-item" wx:if="{{isFamilyMember}}">
-          <view class="benefit-icon-wrap pink-icon"><text class="benefit-icon">👨‍👩‍👧‍👦</text></view>
+          <view class="benefit-icon-wrap pink-icon"><image class="benefit-icon" src="/images/icons/paw.svg" mode="aspectFit" /></view>
           <view class="benefit-text">
             <text class="benefit-name">家庭成员共享</text>
             <text class="benefit-desc">最多 4 人共享额度</text>

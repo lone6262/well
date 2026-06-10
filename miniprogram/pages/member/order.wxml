@@ -14,10 +14,12 @@
     <!-- 套餐切换标签 -->
     <view class="tab-bar">
       <view class="tab-item {{activeTab === 'personal' ? 'tab-active' : ''}}" bindtap="switchTab" data-tab="personal">
-        <text class="tab-text">👤 个人会员</text>
+        <image class="tab-icon" src="/images/icons/crown.svg" mode="aspectFit" />
+        <text class="tab-text">个人会员</text>
       </view>
       <view class="tab-item {{activeTab === 'family' ? 'tab-active' : ''}}" bindtap="switchTab" data-tab="family">
-        <text class="tab-text">👨‍👩‍👧‍👦 家庭会员</text>
+        <image class="tab-icon" src="/images/icons/paw.svg" mode="aspectFit" />
+        <text class="tab-text">家庭会员</text>
       </view>
     </view>
 
@@ -121,7 +123,7 @@
   <!-- 支付处理覆盖层 -->
   <view class="pay-processing-mask" wx:if="{{showPayProcessing}}">
     <view class="pay-processing-content">
-      <text class="pay-processing-icon">💸</text>
+      <image class="pay-processing-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />
       <view class="pay-processing-spinner"></view>
       <text class="pay-processing-title">正在处理{{upgradeMode ? "升级" : (renewMode ? "续费" : "支付")}}...</text>
       <text class="pay-processing-desc">请稍候，正在连接支付服务</text>

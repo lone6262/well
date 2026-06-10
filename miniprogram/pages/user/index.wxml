@@ -14,7 +14,7 @@
           <view class="user-name-row">
             <view class="user-name-text">{{userInfo.nickname || '宠物爱好者'}}</view>
             <view class="edit-name-btn" bindtap="editNickname" wx:if="{{userInfo.isLoggedIn}}">
-              <text class="edit-icon">✏️</text>
+              <image class="edit-icon" src="/images/icons/clipboard.svg" mode="aspectFit" aria-label="编辑昵称" />
             </view>
           </view>
           <view class="user-status-badge">
@@ -65,7 +65,7 @@
     <scroll-view class="pets-scroll" scroll-x="{{true}}" show-scrollbar="false">
       <view class="pet-card" wx:for="{{userPets}}" wx:key="petId" bindtap="viewPetDetail" data-pet="{{item}}">
         <view class="pet-avatar">
-          <text class="pet-emoji">{{item.type === 'cat' ? '🐱' : '🐶'}}</text>
+          <image class="pet-emoji" src="/images/icons/paw.svg" mode="aspectFit" />
         </view>
         <text class="pet-name">{{item.name}}</text>
         <view class="pet-health-dot {{item.healthStatus}}"></view>
@@ -93,7 +93,7 @@
         <view class="menu-item" bindtap="viewHistory" aria-label="查看自查记录">
           <view class="menu-item-left">
             <view class="menu-icon primary-icon">
-              <text class="icon-text">📋</text>
+              <image class="menu-icon-img" src="/images/icons/clipboard.svg" mode="aspectFit" />
             </view>
             <text class="menu-item-text">自查记录</text>
           </view>
@@ -106,7 +106,7 @@
         <view class="menu-item" bindtap="viewFollowupRecords" aria-label="查看回访记录">
           <view class="menu-item-left">
             <view class="menu-icon success-icon">
-              <text class="icon-text">🔄</text>
+              <image class="menu-icon-img" src="/images/icons/clipboard.svg" mode="aspectFit" />
             </view>
             <text class="menu-item-text">回访记录</text>
           </view>
@@ -118,7 +118,7 @@
         <view class="menu-item" bindtap="viewReports" aria-label="查看健康报告">
           <view class="menu-item-left">
             <view class="menu-icon accent-icon">
-              <text class="icon-text">📄</text>
+              <image class="menu-icon-img" src="/images/icons/clipboard.svg" mode="aspectFit" />
             </view>
             <text class="menu-item-text">健康报告</text>
           </view>
@@ -131,7 +131,7 @@
         <view class="menu-item" bindtap="viewMemberCenter" aria-label="查看会员中心">
           <view class="menu-item-left">
             <view class="menu-icon purple-icon">
-              <text class="icon-text">👑</text>
+              <image class="menu-icon-img" src="/images/icons/crown.svg" mode="aspectFit" />
             </view>
             <text class="menu-item-text">会员中心</text>
           </view>
@@ -144,7 +144,7 @@
         <view class="menu-item" bindtap="viewOrders" aria-label="查看我的订单">
           <view class="menu-item-left">
             <view class="menu-icon info-icon">
-              <text class="icon-text">💰</text>
+              <image class="menu-icon-img" src="/images/icons/clipboard.svg" mode="aspectFit" />
             </view>
             <text class="menu-item-text">我的订单</text>
           </view>
@@ -157,7 +157,7 @@
         <view class="menu-item" bindtap="viewCoupons" aria-label="我的优惠券">
           <view class="menu-item-left">
             <view class="menu-icon warning-icon">
-              <text class="icon-text">🎫</text>
+              <image class="menu-icon-img" src="/images/icons/gift.svg" mode="aspectFit" />
             </view>
             <text class="menu-item-text">优惠券</text>
           </view>
@@ -170,7 +170,7 @@
         <view class="menu-item" bindtap="viewPoints" aria-label="积分中心">
           <view class="menu-item-left">
             <view class="menu-icon success-icon">
-              <text class="icon-text">🎁</text>
+              <image class="menu-icon-img" src="/images/icons/gift.svg" mode="aspectFit" />
             </view>
             <text class="menu-item-text">点数中心</text>
           </view>
@@ -183,7 +183,7 @@
         <view class="menu-item" bindtap="viewInvite" aria-label="邀请好友">
           <view class="menu-item-left">
             <view class="menu-icon accent-icon">
-              <text class="icon-text">🤝</text>
+              <image class="menu-icon-img" src="/images/icons/gift.svg" mode="aspectFit" />
             </view>
             <text class="menu-item-text">邀请好友</text>
           </view>
@@ -205,7 +205,7 @@
         <view class="menu-item" bindtap="shareApp" aria-label="分享给好友">
           <view class="menu-item-left">
             <view class="menu-icon success-icon">
-              <text class="icon-text">📤</text>
+              <image class="menu-icon-img" src="/images/icons/paw.svg" mode="aspectFit" />
             </view>
             <text class="menu-item-text">分享给好友</text>
           </view>
@@ -218,7 +218,7 @@
         <view class="menu-item" bindtap="contactUs" aria-label="联系我们">
           <view class="menu-item-left">
             <view class="menu-icon warning-icon">
-              <text class="icon-text">💬</text>
+              <image class="menu-icon-img" src="/images/icons/phone.svg" mode="aspectFit" />
             </view>
             <text class="menu-item-text">联系我们</text>
           </view>
@@ -230,7 +230,7 @@
         <view class="menu-item" bindtap="about" aria-label="关于我们">
           <view class="menu-item-left">
             <view class="menu-icon secondary-icon">
-              <text class="icon-text">ℹ️</text>
+              <image class="menu-icon-img" src="/images/icons/clipboard.svg" mode="aspectFit" />
             </view>
             <text class="menu-item-text">关于我们</text>
           </view>
@@ -242,7 +242,7 @@
         <view class="menu-item" bindtap="settings" aria-label="设置">
           <view class="menu-item-left">
             <view class="menu-icon gray-icon">
-              <text class="icon-text">🔧</text>
+              <image class="menu-icon-img" src="/images/icons/clipboard.svg" mode="aspectFit" />
             </view>
             <text class="menu-item-text">设置</text>
           </view>
@@ -257,7 +257,7 @@
   <!-- 免责声明 -->
   <view class="disclaimer-card">
     <view class="disclaimer-header">
-      <text class="disclaimer-icon">⚠️</text>
+      <image class="disclaimer-icon" src="/images/icons/warning.svg" mode="aspectFit" aria-label="重要提示" />
       <text class="disclaimer-title">重要提示</text>
     </view>
     <text class="disclaimer-text">
