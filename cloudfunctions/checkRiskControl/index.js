@@ -101,11 +101,11 @@ exports.main = async (event, context) => {
     };
   } catch (error) {
     console.error('[checkRiskControl] 风控检查异常:', error.message);
-    // 风控异常时放行但记录日志，避免阻断正常用户
+    // 风控异常时拒绝，遵循 fail-closed 原则防止绕过
     return {
-      code: RESPONSE_CODE.SUCCESS,
-      msg: '风控检查异常，已放行',
-      data: { passed: true, need_manual_review: false, error: error.message },
+      code: RESPONSE_CODE.ERROR,
+      msg: '风控服务暂时不可用，请稍后重试',
+      data: { passed: false, reason: 'risk_control_error', error: error.message },
     };
   }
 };

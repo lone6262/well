@@ -145,18 +145,29 @@ exports.main = async (event, context) => {
     }
 
     // ========================================
-    // 6. 更新订单状态为已支付
+    // 6. 更新订单状态为已支付（并发安全：仅更新 PENDING 状态）
     // ========================================
     const now = new Date();
-    await db.collection(COLLECTIONS.ORDERS).doc(order._id).update({
-      data: {
-        status: ORDER_STATUS.PAID,
-        transaction_id: transaction_id || order.transaction_id || '',
-        paid_at: now,
-        profit: order.amount,
-        updated_at: now
-      }
-    });
+    const updateResult = await db.collection(COLLECTIONS.ORDERS)
+      .where({
+        _id: order._id,
+        status: ORDER_STATUS.PENDING
+      })
+      .update({
+        data: {
+          status: ORDER_STATUS.PAID,
+          transaction_id: transaction_id || order.transaction_id || '',
+          paid_at: now,
+          profit: order.amount,
+          updated_at: now
+        }
+      });
+
+    // 并发回调或重复回调：状态已被其他进程更新，幂等返回
+    if (!updateResult.stats || updateResult.stats.updated === 0) {
+      console.warn('[payCallback] 订单状态已变更，跳过重复处理:', order._id);
+      return wechatResponse('OK');
+    }
 
     // ========================================
     // 7. 标记优惠券为已使用
@@ -257,8 +268,8 @@ function verifyWechatPaySign(event) {
     // 商户密钥从环境变量读取（上线前配置）
     const mchKey = process.env.WECHAT_PAY_MCH_KEY || '';
     if (!mchKey) {
-      console.warn('[payCallback] WECHAT_PAY_MCH_KEY 未配置，跳过签名验证');
-      return true; // 开发阶段放行
+      console.error('[payCallback] WECHAT_PAY_MCH_KEY 未配置，拒绝回调（签名验证无法执行）');
+      return false;
     }
 
     const stringSignTemp = stringA + '&key=' + mchKey;

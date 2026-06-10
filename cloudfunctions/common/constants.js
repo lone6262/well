@@ -487,6 +487,16 @@ async function warmupConfig(db) {
     } catch (e) {
       console.error('[constants] system_config 查询失败，服务可能不可用:', e.message);
     }
+
+    // 验证必需字段是否加载成功
+    const requiredFields = ['TOKEN_SECRET'];
+    const missingFields = requiredFields.filter(function(field) {
+      return !SERVER_CONFIG[field];
+    });
+    if (missingFields.length > 0) {
+      console.error('[constants] 必需配置缺失:', missingFields.join(', '), '— 部分功能可能不可用');
+    }
+
     _configWarmedUp = true;
   })();
 

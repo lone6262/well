@@ -92,8 +92,12 @@ function createLogger(prefix) {
       }
     },
     error: function() {
-      // error 级别不脱敏，方便排查问题
-      console.error.apply(console, [label].concat(Array.prototype.slice.call(arguments)));
+      // error 级别也进行基础脱敏（保留 Error 对象的堆栈信息用于调试）
+      var args = Array.prototype.slice.call(arguments);
+      var sanitizedArgs = args.map(function(a) {
+        return a instanceof Error ? a : sanitize(a);
+      });
+      console.error.apply(console, [label].concat(sanitizedArgs));
     }
   };
 }

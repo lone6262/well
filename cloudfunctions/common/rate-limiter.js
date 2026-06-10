@@ -37,6 +37,19 @@ async function checkRateLimit(db, openid, action, maxRequests, windowMs, failOpe
       data: { openid: openid, action: action, created_at: new Date() }
     });
 
+    // 概率性清理过期记录（约 1% 概率，避免每次调用都清理）
+    if (Math.random() < 0.01) {
+      try {
+        await db.collection(COLLECTIONS.RATE_LIMITS || 'rate_limits')
+          .where({ created_at: db.command.lt(cutoff) })
+          .limit(100)
+          .remove();
+      } catch (cleanupErr) {
+        // 清理失败不影响主流程
+        console.warn('[rate-limiter] 过期记录清理失败:', cleanupErr.message);
+      }
+    }
+
     return true;
   } catch (error) {
     console.error('[rate-limiter] check failed:', error.message);

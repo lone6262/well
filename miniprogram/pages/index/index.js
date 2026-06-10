@@ -65,25 +65,35 @@ Page({
       self.lastLoadedOpenid = app.globalData.openid
     }
 
-    // 优化：只在首次加载或5分钟后才刷新医院数据
-    // 但 fallback 假数据（id 以 'f' 开头）必须重试加载真实数据
-    const now = Date.now()
-    const lastUpdateTime = self.data.lastUpdateTimeTimestamp || 0
-    const REFRESH_INTERVAL = 5 * 60 * 1000
-    var isFallbackData = self.data.nearbyHospitals.some(function(h) {
-      return h.id && typeof h.id === 'string' && h.id.charAt(0) === 'f'
-    })
+    // 医院数据和回访检查需要云函数就绪
+    // 如果已登录直接执行，否则等登录回调
+    const loadHospitalsIfReady = function() {
+      const now = Date.now()
+      const lastUpdateTime = self.data.lastUpdateTimeTimestamp || 0
+      const REFRESH_INTERVAL = 5 * 60 * 1000
+      var isFallbackData = self.data.nearbyHospitals.some(function(h) {
+        return h.id && typeof h.id === 'string' && h.id.charAt(0) === 'f'
+      })
 
-    if (now - lastUpdateTime > REFRESH_INTERVAL || !self.data.nearbyHospitals.length || isFallbackData) {
-      console.log(isFallbackData ? '当前为 fallback 数据，强制刷新' : '刷新附近医院数据')
-      self.loadNearbyHospitals()
-      self.setData({ lastUpdateTimeTimestamp: now })
-    } else {
-      console.log('医院数据仍在有效期内，跳过刷新')
+      if (now - lastUpdateTime > REFRESH_INTERVAL || !self.data.nearbyHospitals.length || isFallbackData) {
+        console.log(isFallbackData ? '当前为 fallback 数据，强制刷新' : '刷新附近医院数据')
+        self.loadNearbyHospitals()
+        self.setData({ lastUpdateTimeTimestamp: now })
+      } else {
+        console.log('医院数据仍在有效期内，跳过刷新')
+      }
+
+      // 检查待处理的回访记录
+      self.checkPendingFollowups()
     }
 
-    // 检查待处理的回访记录
-    self.checkPendingFollowups()
+    if (app.globalData.openid && app.globalData.token) {
+      loadHospitalsIfReady()
+    } else {
+      app.onLoginComplete(function() {
+        loadHospitalsIfReady()
+      })
+    }
   },
 
   // 数据加载方法 - 使用dataLoader模块

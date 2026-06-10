@@ -57,8 +57,8 @@ function displayArticles(articles) {
     return `
       <tr>
         <td>${escapeHtml(article.title)}</td>
-        <td>${categoryName}</td>
-        <td><span class="badge ${statusInfo.class}">${statusInfo.text}</span></td>
+        <td>${escapeHtml(categoryName)}</td>
+        <td><span class="badge ${statusInfo.class}">${escapeHtml(statusInfo.text)}</span></td>
         <td>${article.view_count || 0}</td>
         <td>${formatDate(article.published_at)}</td>
         <td>

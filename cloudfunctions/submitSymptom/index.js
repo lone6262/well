@@ -32,6 +32,18 @@ const MID_RISK_KEYWORDS = [
   '频繁', '越来越', '恶化', '未见好转', '超过'
 ];
 
+// 敏感词表（与 miniprogram/config/sensitiveWords.js 保持同步）
+const MEDICAL_SENSITIVE_WORDS = [
+  '激素', '抗生素', '处方药', '剧毒', '致命',
+  '癌症', '肿瘤', '安乐死', '人药', '自行用药',
+  '自己开药', '自己打针', '毒药', '老鼠药', '禁用药物'
+];
+const HARMFUL_CONTENT_KEYWORDS = [
+  '赌博', '赌场', '博彩', '诈骗', '传销',
+  '色情', '毒品', '枪支', '暴力'
+];
+const ALL_SENSITIVE_WORDS = MEDICAL_SENSITIVE_WORDS.concat(HARMFUL_CONTENT_KEYWORDS);
+
 // 特定症状组（用于中风险判断）
 const SPECIFIC_SYMPTOMS = {
   VOMIT_GROUP: ['vomit', 'diarrhea', 'fever'],  // 呕吐、腹泻、发热
@@ -258,6 +270,20 @@ exports.main = async (event, context) => {
         msg: '描述内容过长，请控制在10000字以内',
         data: {}
       };
+    }
+
+    // 1.7. 敏感词检查（后端校验，防止绕过前端直接调用云函数）
+    if (description && description.length > 0) {
+      var hasSensitive = ALL_SENSITIVE_WORDS.some(function(word) {
+        return description.indexOf(word) !== -1;
+      });
+      if (hasSensitive) {
+        return {
+          code: RESPONSE_CODE.ERROR,
+          msg: '描述中包含不当内容，请修改后重新提交',
+          data: {}
+        };
+      }
     }
 
     // 2. 调用规则引擎评估风险

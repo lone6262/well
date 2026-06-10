@@ -16,6 +16,10 @@ const TOKEN_EXPIRY = 24 * 60 * 60 * 1000;
  * 生成管理员 Token
  */
 function generateAdminToken() {
+  if (!SERVER_CONFIG.ADMIN_SECRET) {
+    throw new Error('[adminLogin] ADMIN_SECRET 未配置，无法生成 Token');
+  }
+
   const payload = {
     type: 'admin',
     timestamp: Date.now(),
@@ -24,7 +28,7 @@ function generateAdminToken() {
 
   const payloadStr = JSON.stringify(payload);
   const signature = crypto
-    .createHmac('sha256', SERVER_CONFIG.ADMIN_SECRET || 'default-admin-secret')
+    .createHmac('sha256', SERVER_CONFIG.ADMIN_SECRET)
     .update(payloadStr)
     .digest('hex');
 
@@ -36,16 +40,23 @@ function generateAdminToken() {
  */
 function verifyAdminToken(token) {
   try {
+    if (!SERVER_CONFIG.ADMIN_SECRET) return false;
+
     const parts = token.split('.');
     if (parts.length !== 2) return false;
 
     const payload = JSON.parse(Buffer.from(parts[0], 'base64').toString());
     const signature = crypto
-      .createHmac('sha256', SERVER_CONFIG.ADMIN_SECRET || 'default-admin-secret')
+      .createHmac('sha256', SERVER_CONFIG.ADMIN_SECRET)
       .update(Buffer.from(parts[0], 'base64').toString())
       .digest('hex');
 
-    if (signature !== parts[1]) return false;
+    // 使用恒定时间比较防止时序攻击
+    const sigBuf = Buffer.from(parts[1], 'hex');
+    const expectedBuf = Buffer.from(signature, 'hex');
+    if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
+      return false;
+    }
 
     // 检查是否过期
     if (Date.now() - payload.timestamp > payload.expiresIn) return false;

@@ -57,9 +57,9 @@ function displayOrders(orders) {
       <tr>
         <td><code>${escapeHtml((order.out_trade_no || '').substring(0, 12))}...</code></td>
         <td>${escapeHtml(order.userInfo?.nickName || '未知用户')}</td>
-        <td>${typeText}</td>
+        <td>${escapeHtml(typeText)}</td>
         <td>¥${order.amountDisplay || '0.00'}</td>
-        <td><span class="badge ${statusInfo.class}">${statusInfo.text}</span></td>
+        <td><span class="badge ${statusInfo.class}">${escapeHtml(statusInfo.text)}</span></td>
         <td>${formatDateTime(order.created_at)}</td>
         <td>
           ${order.status === 'paid' ? `<button class="btn btn-sm btn-outline" onclick="refundOrder('${order._id}')">退款</button>` : '-'}

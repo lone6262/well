@@ -27,6 +27,7 @@ App({
     cloudDevelopmentAvailable: true, // 新增：云开发是否可用
     isGuest: true, // 游客模式标识
     loginCallbacks: [], // 登录完成回调函数列表
+    MAX_LOGIN_CALLBACKS: 50, // 回调队列最大数量，防止内存泄漏
     // 新增：位置权限管理
     locationPermission: 'unknown', // unknown/granted/denied
     latitude: null,
@@ -60,6 +61,11 @@ App({
       }
     } else {
       // 加入队列，等静默登录完成后统一触发
+      // 防止回调队列无限增长导致内存泄漏
+      if (this.globalData.loginCallbacks.length >= this.globalData.MAX_LOGIN_CALLBACKS) {
+        console.warn('登录回调队列已满，丢弃最早的回调')
+        this.globalData.loginCallbacks.shift()
+      }
       this.globalData.loginCallbacks.push(callback)
     }
   },
@@ -130,6 +136,14 @@ App({
 
       // 步骤3: 首次启动免责声明
       this.checkFirstLaunch();
+
+      // 步骤4: 超时保护 — 30秒后清空回调队列，防止内存泄漏
+      setTimeout(function() {
+        if (self.globalData.loginCallbacks && self.globalData.loginCallbacks.length > 0) {
+          console.warn('登录回调队列超时，清空未执行的回调:', self.globalData.loginCallbacks.length)
+          self.globalData.loginCallbacks = []
+        }
+      }, 30000)
 
     } catch (error) {
       console.error('启动序列异常:', error);
