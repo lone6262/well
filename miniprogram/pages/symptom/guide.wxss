@@ -1,36 +1,13 @@
 /* ===================================
-   症状自查页面 - 现代化UI设计系统
-   Symptom Check Page - Modern UI Design System
+   症状自查页面 v2.0
+   Symptom Check — "Warm Professionalism"
    =================================== */
-
-/* === 设计变量 === */
-page {
-  --primary-color: #3b82f6;
-  --primary-light: #eff6ff;
-  --secondary-color: #6b7280;
-  --success-color: #10b981;
-  --bg-color: #f8f9fa;
-  --card-bg: #ffffff;
-  --border-color: #e5e7eb;
-  --text-primary: #111827;
-  --text-secondary: #6b7280;
-  --text-light: #9ca3af;
-  --spacing-xs: 8rpx;
-  --spacing-sm: 16rpx;
-  --spacing-md: 24rpx;
-  --spacing-lg: 32rpx;
-  --spacing-xl: 48rpx;
-  --radius-sm: 8rpx;
-  --radius-md: 12rpx;
-  --radius-lg: 16rpx;
-  --radius-xl: 24rpx;
-}
 
 /* === 页面容器 === */
 .page {
   min-height: 100vh;
   background: var(--bg-color);
-  padding-bottom: 120rpx;
+  padding-bottom: 140rpx;
 }
 
 /* === 顶部导航 === */
@@ -38,87 +15,98 @@ page {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-md) var(--spacing-lg);
-  background: var(--card-bg);
+  padding: 16rpx 32rpx;
+  background: var(--bg-card);
   border-bottom: 1rpx solid var(--border-color);
 }
 
 .nav-back {
-  min-width: 88rpx;
-  min-height: 88rpx;
-  width: 88rpx;
-  height: 88rpx;
+  width: 64rpx;
+  height: 64rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-color);
-  border-radius: var(--radius-md);
-  font-size: 32rpx;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+}
+
+.nav-back-arrow {
+  font-size: var(--font-size-md);
   color: var(--text-primary);
 }
 
 .nav-title {
   flex: 1;
   text-align: center;
-  font-size: 32rpx;
-  font-weight: 700;
+  font-size: var(--font-size-md);
+  font-weight: 600;
   color: var(--text-primary);
 }
 
-.nav-step {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--primary-light);
-  color: var(--primary-color);
-  border-radius: var(--radius-sm);
-  font-size: 24rpx;
+.nav-step-badge {
+  padding: 6rpx 16rpx;
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
   font-weight: 600;
 }
 
-/* === 进度条 === */
+/* === 进度条 — 纯色 === */
 .progress-bar {
-  height: 8rpx;
-  background: var(--border-color);
+  height: 6rpx;
+  background: var(--border-light);
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: var(--primary-color);
-  transition: width 0.3s;
+  background: var(--brand-primary);
+  transition: width 300ms var(--ease-standard);
 }
 
 /* === 内容区域 === */
 .content {
-  padding: var(--spacing-lg);
+  padding: 32rpx;
 }
 
-/* === 步骤标题 === */
+/* === 步骤标题 — 圆形编号替代 emoji === */
 .step-header {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-xl);
+  gap: 20rpx;
+  margin-bottom: 40rpx;
 }
 
-.step-icon {
-  font-size: 48rpx;
+.step-number {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: var(--radius-full);
+  background: var(--brand-primary);
+  color: var(--text-inverse);
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .step-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
+  gap: 4rpx;
 }
 
 .step-title {
-  font-size: 32rpx;
-  font-weight: 700;
+  font-size: var(--font-size-md);
+  font-weight: 600;
   color: var(--text-primary);
 }
 
 .step-desc {
-  font-size: 26rpx;
+  font-size: var(--font-size-sm);
   color: var(--text-secondary);
 }
 
@@ -126,174 +114,190 @@ page {
 .pet-list {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: var(--spacing-md);
+  gap: 16rpx;
 }
 
 .pet-card {
-  background: var(--card-bg);
+  background: var(--bg-card);
   border: 2rpx solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-md);
+  border-radius: var(--radius-2xl);
+  padding: 24rpx;
   text-align: center;
-  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+              background-color var(--duration-fast) var(--ease-standard);
 }
 
-.pet-card.active {
-  background: var(--primary-light);
-  border-color: var(--primary-color);
+.pet-card--active {
+  background: var(--brand-primary-light);
+  border-color: var(--brand-primary);
 }
 
-.pet-emoji {
-  font-size: 64rpx;
-  display: block;
-  margin-bottom: var(--spacing-sm);
-}
-
-.pet-avatar-sm {
+.pet-card-avatar {
   width: 64rpx;
   height: 64rpx;
-  border-radius: 50%;
-  display: block;
-  margin-bottom: var(--spacing-sm);
+  border-radius: var(--radius-full);
 }
 
-.pet-name {
-  display: block;
-  font-size: 28rpx;
+.pet-card-fallback {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: var(--radius-full);
+  background: var(--brand-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pet-card-fallback-icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.pet-card-name {
+  font-size: var(--font-size-base);
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: var(--spacing-xs);
 }
 
-.pet-info {
-  display: block;
-  font-size: 24rpx;
+.pet-card-info {
+  font-size: var(--font-size-xs);
   color: var(--text-secondary);
 }
 
-.pet-card.add {
+/* 添加宠物 */
+.pet-card--add {
   border-style: dashed;
-  border-color: var(--text-light);
+  border-color: var(--border-dark);
+  justify-content: center;
 }
 
-.pet-card.add .pet-emoji {
-  color: var(--text-light);
+.pet-card-add-icon {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: var(--radius-full);
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  color: var(--text-tertiary);
+  margin-bottom: 4rpx;
 }
 
-/* === 已选信息 === */
+/* === 已选信息条 === */
 .selected-info {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--primary-color);
-  color: #ffffff;
-  padding: var(--spacing-md);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--spacing-md);
-  font-size: 28rpx;
-  font-weight: 600;
-}
-
-.clear-btn {
-  margin-left: var(--spacing-sm);
-  opacity: 0.9;
-}
-
-/* === 症状展示区域 === */
-.symptom-area {
-  padding: var(--spacing-sm) 0;
-}
-
-/* === 分类区块 === */
-.category-block {
-  margin-bottom: var(--spacing-lg);
-}
-
-.category-block:last-child {
-  margin-bottom: 260rpx;
-}
-
-.category-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--card-bg);
-  padding: var(--spacing-md);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--spacing-sm);
-  font-size: 28rpx;
-  font-weight: 700;
-  color: var(--text-primary);
-  border-left: 4rpx solid var(--primary-color);
-}
-
-.category-title .count {
-  font-size: 24rpx;
-  color: var(--text-secondary);
-  font-weight: 400;
-}
-
-/* === 症状列表 === */
-.symptom-list {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--spacing-sm);
-}
-
-.symptom-item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  background: var(--card-bg);
-  border: 2rpx solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm);
-  position: relative;
-  overflow: hidden;
-}
-
-.symptom-item.selected {
-  background: var(--primary-light);
-  border-color: var(--primary-color);
-}
-
-.symptom-emoji {
-  font-size: 32rpx;
-  flex-shrink: 0;
-}
-
-.symptom-name {
-  flex: 1;
-  font-size: 24rpx;
-  color: var(--text-primary);
+  background: var(--brand-primary);
+  color: var(--text-inverse);
+  padding: 20rpx 24rpx;
+  border-radius: var(--radius-xl);
+  margin-bottom: 24rpx;
+  font-size: var(--font-size-base);
   font-weight: 500;
 }
 
-.symptom-check {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 48rpx;
-  height: 48rpx;
-  background: var(--primary-color);
-  color: #ffffff;
-  border-radius: 0 var(--radius-md) 0 var(--radius-md);
+.clear-btn {
+  opacity: 0.85;
+}
+
+/* === 症状分类 — 色点替代 emoji === */
+.symptom-area {
+  padding: 8rpx 0;
+}
+
+.category-block {
+  margin-bottom: 32rpx;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-bottom: 16rpx;
+  padding-left: 4rpx;
+}
+
+.category-dot {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: var(--radius-full);
+  background: var(--brand-primary);
+}
+
+.category-name {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.category-count {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+/* === 症状列表 — 胶囊式 === */
+.symptom-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.symptom-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 14rpx 20rpx;
+  background: var(--bg-card);
+  border: 1rpx solid var(--border-color);
+  border-radius: var(--radius-full);
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              border-color var(--duration-fast) var(--ease-standard);
+}
+
+.symptom-chip--active {
+  background: var(--brand-primary-light);
+  border-color: var(--brand-primary);
+}
+
+.symptom-chip-name {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.symptom-chip--active .symptom-chip-name {
+  color: var(--brand-primary);
+  font-weight: 600;
+}
+
+.symptom-chip-check {
+  width: 24rpx;
+  height: 24rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24rpx;
-  font-weight: bold;
 }
 
-/* === 已选标签 === */
+.symptom-chip-check-icon {
+  width: 20rpx;
+  height: 20rpx;
+}
+
+/* === 已选标签栏 === */
 .selected-tags {
   position: fixed;
   bottom: 120rpx;
   left: 0;
   right: 0;
-  background: var(--card-bg);
+  background: var(--bg-card);
   border-top: 1rpx solid var(--border-color);
-  padding: var(--spacing-sm) var(--spacing-lg);
+  padding: 16rpx 32rpx;
   z-index: 10;
 }
 
@@ -301,91 +305,100 @@ page {
   white-space: nowrap;
 }
 
-.tag {
+.selected-tag {
   display: inline-flex;
   align-items: center;
-  background: var(--primary-color);
-  color: #ffffff;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--radius-md);
-  margin-right: var(--spacing-sm);
-  font-size: 24rpx;
-  white-space: nowrap;
+  gap: 6rpx;
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
+  padding: 8rpx 16rpx;
+  border-radius: var(--radius-full);
+  margin-right: 12rpx;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
 }
 
-.tag-close {
-  margin-left: var(--spacing-xs);
-  padding: 0 var(--spacing-xs);
-  opacity: 0.8;
+.selected-tag-close {
+  font-size: var(--font-size-sm);
+  opacity: 0.6;
+  padding: 0 4rpx;
 }
 
 /* === 表单区块 === */
 .form-block {
-  background: var(--card-bg);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-md);
-  margin-bottom: var(--spacing-md);
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  padding: 24rpx;
+  margin-bottom: 20rpx;
   border: 1rpx solid var(--border-color);
 }
 
-.form-title {
+.form-label {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  margin-bottom: var(--spacing-sm);
-  font-size: 28rpx;
-  font-weight: 700;
+  gap: 8rpx;
+  margin-bottom: 16rpx;
+}
+
+.form-label-text {
+  font-size: var(--font-size-base);
+  font-weight: 600;
   color: var(--text-primary);
 }
 
-.form-title .required {
-  color: #ef4444;
+.form-required {
+  font-size: var(--font-size-base);
+  color: var(--brand-emergency);
 }
 
-.textarea {
+.form-textarea {
   width: 100%;
   min-height: 200rpx;
-  background: var(--bg-color);
-  border: 2rpx solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm);
-  font-size: 28rpx;
+  background: var(--bg-secondary);
+  border: 1rpx solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 16rpx;
+  font-size: var(--font-size-base);
   color: var(--text-primary);
-  line-height: 1.6;
+  line-height: var(--line-height-normal);
   box-sizing: border-box;
 }
 
-.char-count {
+.form-char-count {
   display: block;
   text-align: right;
-  font-size: 24rpx;
-  color: var(--text-secondary);
-  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  margin-top: 8rpx;
 }
 
-/* === 选项按钮组 === */
+/* === 选项按钮 — 胶囊式 === */
 .option-group {
   display: flex;
-  gap: var(--spacing-sm);
+  gap: 12rpx;
+  margin-top: 16rpx;
 }
 
-.option-btn {
+.option-pill {
   flex: 1;
   text-align: center;
-  background: var(--bg-color);
-  border: 2rpx solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm);
-  font-size: 28rpx;
+  background: var(--bg-secondary);
+  border: 1rpx solid var(--border-color);
+  border-radius: var(--radius-full);
+  padding: 16rpx 12rpx;
+  font-size: var(--font-size-base);
+  font-weight: 500;
   color: var(--text-primary);
-  font-weight: 600;
-  transition: all 0.2s;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              border-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
 }
 
-.option-btn.active {
-  background: var(--primary-light);
-  border-color: var(--primary-color);
-  color: var(--primary-color);
+.option-pill--active {
+  background: var(--brand-primary-light);
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+  font-weight: 600;
 }
 
 /* === 底部按钮栏 === */
@@ -395,46 +408,50 @@ page {
   left: 0;
   right: 0;
   display: flex;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md);
-  padding-bottom: calc(var(--spacing-md) + constant(safe-area-inset-bottom));
-  padding-bottom: calc(var(--spacing-md) + env(safe-area-inset-bottom));
-  background: var(--card-bg);
+  gap: 16rpx;
+  padding: 20rpx 32rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  background: var(--bg-card);
   border-top: 1rpx solid var(--border-color);
   box-sizing: border-box;
   z-index: 100;
 }
 
-/* === 按钮样式 === */
-.btn {
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--radius-md);
-  font-size: 28rpx;
-  font-weight: 600;
-  border: none;
-  transition: all 0.2s;
+.bottom-btn-secondary {
+  padding: 0 32rpx;
+  height: 88rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-radius: var(--radius-xl);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  border: none;
 }
 
-.btn-secondary {
-  background: var(--bg-color);
-  color: var(--text-primary);
-  border: 2rpx solid var(--border-color);
+.bottom-btn-primary {
+  flex: 1;
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand-primary);
+  color: var(--text-inverse);
+  border-radius: var(--radius-xl);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  border: none;
+  transition: opacity var(--duration-fast) var(--ease-standard);
 }
 
-.btn-primary {
-  background: var(--primary-color);
-  color: #ffffff;
-}
-
-.btn.flex-1 {
+.bottom-btn-primary--flex {
   flex: 1;
 }
 
-.btn[disabled] {
-  opacity: 0.5;
-  background: var(--border-color);
-  color: var(--text-light);
+.bottom-btn-primary--disabled {
+  opacity: 0.45;
+  background: var(--border-dark);
+  color: var(--text-tertiary);
 }

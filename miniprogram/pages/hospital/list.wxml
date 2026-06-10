@@ -1,151 +1,111 @@
-<!--宠物医院列表页面 - 全新设计-->
-<view class="hospital-page">
+<!--医院列表页面 — Warm Professionalism v2.0-->
+<view class="page">
 
-  <!-- 顶部状态栏 -->
+  <!-- 状态栏 -->
   <view class="status-bar">
-    <view class="location-info">
-      <text class="location-icon">📍</text>
-      <text class="location-text">{{locationText}}</text>
+    <view class="status-bar-left">
+      <image class="status-bar-icon" src="/images/icons/pin.svg" mode="aspectFit" aria-label="定位" />
+      <text class="status-bar-text">{{locationText}}</text>
     </view>
-    <view class="api-status {{apiAvailable ? 'status-ok' : 'status-limited'}}">
-      <text class="status-dot"></text>
-      <text class="status-text">{{apiAvailable ? '实时数据' : '推荐数据'}}</text>
+    <view class="status-bar-right status-bar--{{apiAvailable ? 'ok' : 'limited'}}">
+      <view class="status-dot"></view>
+      <text>{{apiAvailable ? '实时数据' : '推荐数据'}}</text>
     </view>
   </view>
 
-  <!-- 紧急医院快捷入口 -->
-  <view class="emergency-section" wx:if="{{emergencyHospitals.length > 0}}">
-    <view class="emergency-header">
-      <text class="emergency-title">🚨 24小时急诊</text>
-      <text class="emergency-count">{{emergencyHospitals.length}}家</text>
+  <!-- 24小时急诊横滑 -->
+  <view class="er-section" wx:if="{{emergencyHospitals.length > 0}}">
+    <view class="er-header">
+      <view class="er-header-left">
+        <image class="er-header-icon" src="/images/icons/alert.svg" mode="aspectFit" aria-label="急诊" />
+        <text class="er-header-title">24小时急诊</text>
+      </view>
+      <text class="er-header-count">{{emergencyHospitals.length}}家</text>
     </view>
-    <scroll-view class="emergency-scroll" scroll-x="{{true}}" show-scrollbar="{{false}}">
-      <view class="emergency-card"
-            wx:for="{{emergencyHospitals}}"
-            wx:key="hospitalId"
-            bindtap="quickNavigate"
-            data-hospital="{{item}}">
-        <view class="emergency-marker">
-          <text class="marker-icon">🏥</text>
-          <text class="marker-badge">24H</text>
+    <scroll-view class="er-scroll" scroll-x="{{true}}" show-scrollbar="{{false}}">
+      <view class="er-card" wx:for="{{emergencyHospitals}}" wx:key="hospitalId"
+            bindtap="quickNavigate" data-hospital="{{item}}">
+        <view class="er-card-icon-wrap">
+          <image class="er-card-icon" src="/images/icons/hospital.svg" mode="aspectFit" aria-label="医院" />
         </view>
-        <text class="emergency-name">{{item.name}}</text>
-        <text class="emergency-distance">{{item.distanceDisplay}}</text>
+        <view class="er-card-badge">24H</view>
+        <text class="er-card-name">{{item.name}}</text>
+        <text class="er-card-distance">{{item.distanceDisplay}}</text>
       </view>
     </scroll-view>
   </view>
 
-  <!-- 快速操作区 -->
+  <!-- 快速操作 -->
   <view class="quick-actions">
-    <button class="action-btn primary-btn" bindtap="navigateToNearest">
-      <text class="btn-icon">🧭</text>
-      <text class="btn-text">最近医院</text>
+    <button class="quick-btn quick-btn--primary" bindtap="navigateToNearest">
+      <image class="quick-btn-icon" src="/images/icons/compass.svg" mode="aspectFit" aria-label="导航" />
+      <text>最近医院</text>
     </button>
-    <button class="action-btn secondary-btn" bindtap="showMapMode">
-      <text class="btn-icon">🗺️</text>
-      <text class="btn-text">地图模式</text>
+    <button class="quick-btn quick-btn--secondary" bindtap="showMapMode">
+      <image class="quick-btn-icon" src="/images/icons/compass.svg" mode="aspectFit" aria-label="地图" />
+      <text>地图模式</text>
     </button>
   </view>
 
   <!-- 医院主列表 -->
-  <view class="hospital-list" role="list">
-    <!-- 列表头部 -->
+  <view class="list-section" role="list">
     <view class="list-header">
       <text class="list-title">附近医院</text>
-      <view class="list-sort">
-        <text class="sort-text">按距离排序</text>
-        <text class="sort-icon">↓</text>
-      </view>
+      <text class="list-sort">按距离排序 ↓</text>
     </view>
 
-    <!-- 医院卡片 -->
-    <view class="hospital-cards">
-      <view class="hospital-card"
-            wx:for="{{displayHospitals}}"
-            wx:key="hospitalId"
-            bindtap="viewHospital"
-            data-id="{{item.hospitalId}}"
-            aria-label="医院 {{item.name}}，距离{{item.distanceDisplay}}">
-
-        <!-- 卡片头部 -->
-        <view class="card-header">
-          <view class="hospital-main-info">
-            <text class="hospital-name">{{item.name}}</text>
-            <view class="hospital-tags">
-              <text class="tag tag-24h" wx:if="{{item.is24h}}">24H</text>
-              <text class="tag tag-emergency" wx:if="{{item.hasEmergency}}">急诊</text>
-              <text class="tag tag-rating">⭐ {{item.rating}}</text>
-            </view>
-          </view>
-          <view class="distance-tag">
-            <text class="distance-text">{{item.distanceDisplay}}</text>
+    <view class="hospital-card" wx:for="{{displayHospitals}}" wx:key="hospitalId"
+          bindtap="viewHospital" data-id="{{item.hospitalId}}"
+          aria-label="医院 {{item.name}}，距离{{item.distanceDisplay}}">
+      <view class="hospital-card-top">
+        <view class="hospital-card-main">
+          <text class="hospital-card-name">{{item.name}}</text>
+          <view class="hospital-card-tags">
+            <text class="hospital-tag hospital-tag--24h" wx:if="{{item.is24h}}">24H</text>
+            <text class="hospital-tag hospital-tag--er" wx:if="{{item.hasEmergency}}">急诊</text>
           </view>
         </view>
-
-        <!-- 卡片内容 -->
-        <view class="card-content">
-          <view class="info-row">
-            <text class="info-icon">📍</text>
-            <text class="info-text">{{item.address}}</text>
-          </view>
-          <view class="info-row">
-            <text class="info-icon">📞</text>
-            <text class="info-text">{{item.phone}}</text>
-          </view>
+        <view class="hospital-card-distance">{{item.distanceDisplay}}</view>
+      </view>
+      <view class="hospital-card-info">
+        <view class="hospital-card-row">
+          <image class="hospital-card-row-icon" src="/images/icons/pin.svg" mode="aspectFit" />
+          <text>{{item.address}}</text>
         </view>
-
-        <!-- 卡片底部操作 -->
-        <view class="card-footer">
-          <button class="footer-btn call-btn"
-                  catchtap="callHospital"
-                  data-phone="{{item.phone}}"
-                  data-id="{{item.hospitalId}}">
-            <text class="footer-icon">📞</text>
-            <text>电话</text>
-          </button>
-          <button class="footer-btn navigate-btn"
-                  catchtap="navigateToHospital"
-                  data-hospital="{{item}}">
-            <text class="footer-icon">🧭</text>
-            <text>导航</text>
-          </button>
-          <button class="footer-btn detail-btn"
-                  catchtap="showHospitalDetail"
-                  data-hospital="{{item}}">
-            <text class="footer-icon">📋</text>
-            <text>详情</text>
-          </button>
+        <view class="hospital-card-row">
+          <image class="hospital-card-row-icon" src="/images/icons/phone.svg" mode="aspectFit" />
+          <text>{{item.phone}}</text>
+        </view>
+      </view>
+      <view class="hospital-card-footer">
+        <view class="hospital-card-action hospital-card-action--call"
+              catchtap="callHospital" data-phone="{{item.phone}}" data-id="{{item.hospitalId}}">
+          <image class="hospital-card-action-icon" src="/images/icons/phone.svg" mode="aspectFit" />电话
+        </view>
+        <view class="hospital-card-action hospital-card-action--nav"
+              catchtap="navigateToHospital" data-hospital="{{item}}">
+          <image class="hospital-card-action-icon" src="/images/icons/compass.svg" mode="aspectFit" />导航
+        </view>
+        <view class="hospital-card-action hospital-card-action--detail"
+              catchtap="showHospitalDetail" data-hospital="{{item}}">
+          <image class="hospital-card-action-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />详情
         </view>
       </view>
     </view>
 
-    <!-- 加载更多按钮 -->
-    <view class="load-more-section" wx:if="{{displayCount < hospitals.length && !isLoading}}" bindtap="loadMoreHospitals">
-      <text class="load-more-text">查看更多医院（已显示{{displayCount}}/{{hospitals.length}}）</text>
-      <text class="load-more-icon">▼</text>
+    <view class="load-more" wx:if="{{displayCount < hospitals.length && !isLoading}}" bindtap="loadMoreHospitals">
+      查看更多（{{displayCount}}/{{hospitals.length}}）▼
     </view>
   </view>
 
-  <state-view
-    wx:if="{{isLoading}}"
-    type="loading"
-    title="正在加载医院信息..."
-  />
+  <state-view wx:if="{{isLoading}}" type="loading" title="正在加载医院信息..." />
+  <state-view wx:if="{{!isLoading && displayHospitals.length === 0}}" type="empty" icon="hospital"
+    title="暂无医院信息" description="{{apiAvailable ? '附近没有找到宠物医院' : 'API配额受限'}}"
+    show-action="{{true}}" action-text="重新加载" bind:action="reloadHospitals" />
 
-  <state-view
-    wx:if="{{!isLoading && displayHospitals.length === 0}}"
-    type="empty"
-    icon="🏥"
-    title="暂无医院信息"
-    description="{{apiAvailable ? '附近没有找到宠物医院' : 'API配额受限，显示推荐医院'}}"
-    action-text="🔄 重新加载"
-    show-action="{{true}}"
-    bind:action="reloadHospitals"
-  />
-
-  <!-- 底部地图按钮 -->
+  <!-- 地图 FAB -->
   <view class="map-fab" bindtap="showFullMap">
-    <text class="fab-icon">🗺️</text>
+    <image class="map-fab-icon" src="/images/icons/compass.svg" mode="aspectFit" aria-label="地图" />
   </view>
 
 </view>

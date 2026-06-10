@@ -1,678 +1,184 @@
-/* 风险结果页面样式 - 自适应修复版本 */
-page {
-  width: 100%;
-  overflow-x: hidden;
-}
+/* 风险结果页 v2.0 — Warm Professionalism */
+page { width: 100%; overflow-x: hidden; }
 
-/* V1.5 会员标识 */
-.member-indicator {
-  display: flex;
-  align-items: center;
-  padding: 16rpx 24rpx;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  border-radius: 12rpx;
-  margin-bottom: 20rpx;
-}
-.member-indicator-icon { font-size: 28rpx; margin-right: 10rpx; }
-.member-indicator-text { flex: 1; font-size: 24rpx; color: #fff; font-weight: 500; }
-.member-indicator-arrow { font-size: 24rpx; color: rgba(255,255,255,0.7); }
-
-.container {
-  width: 100%;
+.page {
   max-width: 750rpx;
   margin: 0 auto;
-  padding: 20rpx;
-  background-color: #f5f5f5;
+  padding: 20rpx 24rpx;
+  background: var(--bg-color);
   min-height: 100vh;
   box-sizing: border-box;
 }
 
-/* 风险卡片 - 自适应 */
-.risk-card {
-  border-radius: 16rpx;
-  padding: 40rpx 20rpx;
-  text-align: center;
-  color: white;
-  margin-bottom: 24rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.risk-icon {
-  font-size: 80rpx;
-  margin-bottom: 16rpx;
-}
-
-.risk-title {
-  font-size: 48rpx;
-  font-weight: bold;
-  margin-bottom: 16rpx;
-  word-break: break-all;
-}
-
-.risk-description {
-  font-size: 28rpx;
-  line-height: 1.6;
-  word-break: break-all;
-}
-
-/* 信息区域 - 自适应 */
-.info-section {
-  background: white;
-  border-radius: 16rpx;
-  padding: 32rpx 24rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.section-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 16rpx;
-  word-break: break-all;
-}
-
-.rule-info {
-  font-size: 28rpx;
-  color: #666;
-  line-height: 1.6;
-  padding: 16rpx;
-  background-color: #f9f9f9;
-  border-radius: 8rpx;
-  word-break: break-all;
-}
-
-/* 宠物信息 - 自适应 */
-.pet-info {
-  display: flex;
-  flex-direction: column;
-  gap: 12rpx;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.info-item {
-  display: flex;
-  font-size: 28rpx;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.info-label {
-  color: #666;
-  min-width: 160rpx;
-  flex-shrink: 0;
-}
-
-.info-value {
-  color: #333;
-  font-weight: bold;
-  flex: 1;
-  word-break: break-all;
-}
-
-/* 症状标签 - 自适应 */
-.symptom-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8rpx;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.symptom-tag {
-  padding: 8rpx 16rpx;
-  background-color: #e6f7ff;
-  color: #4A90E2;
-  border-radius: 4rpx;
-  font-size: 24rpx;
-  white-space: nowrap;
-}
-
-/* 免责声明 - 自适应 */
-.disclaimer-section {
-  background: #fff7e6;
-  border: 2rpx solid #ffd591;
-  border-radius: 16rpx;
-  padding: 24rpx;
-  margin-bottom: 20rpx;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.disclaimer-title {
-  font-size: 28rpx;
-  font-weight: bold;
-  color: #fa8c16;
-  margin-bottom: 12rpx;
-}
-
-.disclaimer-content {
-  font-size: 24rpx;
-  color: #666;
-  line-height: 1.6;
-  word-break: break-all;
-}
-
-/* 操作按钮 - 自适应 */
-.action-section {
-  display: flex;
-  flex-direction: column;
-  gap: 16rpx;
-  padding: 20rpx 0 40rpx;
-  width: 100%;
-  max-width: 750rpx;
-  margin: 0 auto;
-  box-sizing: border-box;
-}
-
-.action-btn {
-  width: 100%;
-  max-width: 750rpx;
-  margin: 0 auto;
-  border-radius: 12rpx;
-  padding: 24rpx;
-  font-size: 32rpx;
-  border: none;
-  text-align: center;
-  box-sizing: border-box;
-  white-space: nowrap;
-}
-
-.emergency-btn {
-  background: linear-gradient(135deg, #f5222d 0%, #ff4d4f 100%);
-  color: white;
-  font-weight: bold;
-}
-
-.primary-btn {
-  background: #4A90E2;
-  color: white;
-}
-
-.secondary-btn {
-  background: #f0f0f0;
-  color: #333;
-}
-
-/* 小屏幕适配 */
-@media (max-width: 375px) {
-  .risk-card {
-    padding: 32rpx 16rpx;
-  }
-
-  .risk-icon {
-    font-size: 70rpx;
-  }
-
-  .risk-title {
-    font-size: 42rpx;
-  }
-
-  .risk-description {
-    font-size: 26rpx;
-  }
-
-  .info-section {
-    padding: 24rpx 16rpx;
-  }
-
-  .section-title {
-    font-size: 28rpx;
-  }
-
-  .info-item {
-    font-size: 26rpx;
-  }
-
-  .info-label {
-    min-width: 140rpx;
-  }
-
-  .action-btn {
-    padding: 20rpx;
-    font-size: 30rpx;
-  }
-
-  .disclaimer-section {
-    padding: 20rpx 16rpx;
-  }
-}
-
-/* 大屏幕适配 */
-@media (min-width: 414px) {
-  .container {
-    padding: 24rpx;
-  }
-
-  .risk-card {
-    padding: 48rpx 24rpx;
-  }
-
-  .action-section {
-    flex-direction: row;
-  }
-
-  .action-btn {
-    padding: 28rpx 24rpx;
-  }
-}
-
-/* 横屏适配 */
-@media (orientation: landscape) {
-  .risk-card {
-    padding: 32rpx 24rpx;
-  }
-
-  .risk-icon {
-    font-size: 70rpx;
-  }
-
-  .action-section {
-    padding: 16rpx 0 32rpx;
-  }
-
-  .action-btn {
-    padding: 20rpx;
-  }
-}
-
-/* 安全区域适配 */
-.safe-area-bottom {
-  padding-bottom: constant(safe-area-inset-bottom);
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-/* 文本溢出处理 */
-.text-ellipsis {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.break-word {
-  word-wrap: break-word;
-  word-break: break-all;
-}
-
-/* AI报告卡片 */
-.ai-report-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 16rpx;
-  padding: 32rpx;
-  margin: 20rpx;
-  box-shadow: 0 4rpx 16rpx rgba(102, 126, 234, 0.3);
-}
-
-.report-card-header {
-  color: #ffffff;
-  font-size: 32rpx;
-  font-weight: bold;
-  margin-bottom: 12rpx;
-}
-
-.report-card-desc {
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 24rpx;
-  margin-bottom: 20rpx;
-}
-
-.quota-exhausted-notice {
-  background: rgba(255, 200, 50, 0.2);
-  border: 1rpx solid rgba(255, 200, 50, 0.5);
-  border-radius: 8rpx;
-  padding: 12rpx 16rpx;
-  color: #FFE082;
-  font-size: 24rpx;
-  margin-bottom: 16rpx;
-  line-height: 1.8;
-}
-
-.upgrade-link {
-  display: block;
-  color: #FFD54F;
-  font-weight: 600;
-  text-decoration: underline;
-  margin-top: 6rpx;
-}
-
-.report-card-price {
-  margin-bottom: 12rpx;
+/* 会员标识 */
+.member-indicator {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 12rpx;
+  padding: 16rpx 24rpx;
+  background: var(--brand-primary-light);
+  border-radius: var(--radius-xl);
+  margin-bottom: 20rpx;
+  border: 1rpx solid var(--border-color);
+}
+.member-indicator-icon { width: 24rpx; height: 24rpx; margin-right: 10rpx; }
+.member-indicator-text { flex: 1; font-size: var(--font-size-sm); color: var(--brand-primary); font-weight: 500; }
+.member-indicator-arrow { font-size: var(--font-size-sm); color: var(--text-tertiary); }
+
+/* 风险卡片 — 状态卡片模式 */
+.risk-card {
+  border-radius: var(--radius-3xl);
+  padding: 40rpx 28rpx;
+  text-align: center;
+  color: var(--text-inverse);
+  margin-bottom: 24rpx;
+}
+.risk-card--low { background: var(--color-success); }
+.risk-card--mid { background: var(--color-warning); }
+.risk-card--high { background: var(--brand-emergency); }
+
+.risk-card-icon-wrap {
+  width: 72rpx; height: 72rpx;
+  margin: 0 auto 16rpx;
+  background: rgba(255,255,255,0.2);
+  border-radius: var(--radius-full);
+  display: flex; align-items: center; justify-content: center;
+}
+.risk-card-icon { width: 40rpx; height: 40rpx; filter: brightness(0) invert(1); }
+.risk-card-title { display: block; font-size: var(--font-size-2xl); font-weight: 700; margin-bottom: 12rpx; }
+.risk-card-desc { display: block; font-size: var(--font-size-base); line-height: var(--line-height-normal); opacity: 0.9; }
+
+/* 信息卡片 — content-card 模式 */
+.info-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  border: 1rpx solid var(--border-color);
+  border-left: 4rpx solid var(--brand-primary);
+}
+.info-card-title { display: block; font-size: var(--font-size-md); font-weight: 600; color: var(--text-primary); margin-bottom: 12rpx; }
+.info-card-rule { display: block; font-size: var(--font-size-sm); color: var(--text-secondary); line-height: var(--line-height-relaxed); background: var(--bg-secondary); padding: 16rpx; border-radius: var(--radius-md); }
+
+.info-card-row { display: flex; align-items: center; gap: 8rpx; margin-bottom: 8rpx; }
+.info-card-label { font-size: var(--font-size-sm); color: var(--text-secondary); min-width: 140rpx; }
+.info-card-value { font-size: var(--font-size-sm); color: var(--text-primary); font-weight: 600; }
+
+/* 症状标签 */
+.symptom-tags { display: flex; flex-wrap: wrap; gap: 8rpx; }
+.symptom-tag {
+  padding: 8rpx 16rpx; background: var(--brand-primary-light); color: var(--brand-primary);
+  border-radius: var(--radius-full); font-size: var(--font-size-xs); font-weight: 500;
 }
 
-.member-link {
-  color: #667eea;
-  font-size: 24rpx;
-  font-weight: 500;
+/* 免责声明 */
+.disclaimer-card {
+  background: var(--color-warning-light); border: 1rpx solid var(--color-warning);
+  border-radius: var(--radius-2xl); padding: 20rpx 24rpx; margin-bottom: 20rpx;
 }
+.disclaimer-header { display: flex; align-items: center; gap: 8rpx; margin-bottom: 10rpx; }
+.disclaimer-icon { width: 24rpx; height: 24rpx; }
+.disclaimer-title { font-size: var(--font-size-base); font-weight: 600; color: var(--color-warning); }
+.disclaimer-text { font-size: var(--font-size-sm); color: var(--text-secondary); line-height: var(--line-height-relaxed); }
 
-.price-tag {
-  color: #ffd700;
-  font-size: 36rpx;
-  font-weight: bold;
+/* AI 报告卡 — 白底 + 左边框 */
+.report-card {
+  background: var(--bg-card); border-radius: var(--radius-2xl);
+  padding: 28rpx; margin-bottom: 20rpx;
+  border: 1rpx solid var(--border-color);
+  border-left: 4rpx solid var(--brand-primary);
 }
+.report-card-header { display: flex; align-items: center; gap: 10rpx; margin-bottom: 12rpx; }
+.report-card-icon { width: 28rpx; height: 28rpx; }
+.report-card-title { font-size: var(--font-size-md); font-weight: 600; color: var(--text-primary); }
+.report-card-desc { display: block; font-size: var(--font-size-sm); color: var(--text-secondary); margin-bottom: 16rpx; }
+
+.report-quota-notice {
+  background: var(--color-warning-light); border-radius: var(--radius-md);
+  padding: 12rpx 16rpx; margin-bottom: 16rpx; font-size: var(--font-size-xs);
+  color: var(--color-warning); line-height: 1.8;
+}
+.report-upgrade-link { display: block; font-weight: 600; margin-top: 6rpx; }
+
+.report-price-row { display: flex; align-items: center; flex-wrap: wrap; gap: 12rpx; margin-bottom: 12rpx; }
+.report-price { font-size: var(--font-size-2xl); font-weight: 700; color: var(--brand-primary); }
+.report-member-link { font-size: var(--font-size-sm); color: var(--brand-primary); font-weight: 500; }
+
+.report-compliance { display: block; font-size: var(--font-size-xs); color: var(--text-tertiary); text-align: center; padding: 12rpx 0; margin-bottom: 8rpx; }
 
 .report-btn {
-  background: #ffffff;
-  color: #667eea;
-  border-radius: 40rpx;
-  font-weight: bold;
+  width: 100%; background: var(--brand-primary); color: var(--text-inverse);
+  border-radius: var(--radius-full); font-weight: 600; border: none;
 }
 
 /* 已购买报告 */
-.report-purchased-card {
-  background: #ffffff;
-  border-radius: 16rpx;
-  padding: 24rpx;
-  margin: 20rpx;
-  text-align: center;
-  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.05);
-}
+.report-done-card { background: var(--bg-card); border-radius: var(--radius-2xl); padding: 24rpx; margin-bottom: 20rpx; border: 1rpx solid var(--border-color); text-align: center; }
+.report-done-header { display: flex; align-items: center; justify-content: center; gap: 10rpx; margin-bottom: 16rpx; }
+.report-done-icon { width: 28rpx; height: 28rpx; }
+.report-done-text { font-size: var(--font-size-base); font-weight: 600; color: var(--color-success); }
+.report-done-btn { background: var(--brand-primary); color: var(--text-inverse); border-radius: var(--radius-full); border: none; }
 
-.purchased-header {
-  font-size: 30rpx;
-  color: #52c41a;
-  margin-bottom: 16rpx;
+/* 操作按钮 */
+.actions { display: flex; flex-direction: column; gap: 12rpx; padding-bottom: 40rpx; }
+.action-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10rpx;
+  width: 100%; padding: 24rpx; border-radius: var(--radius-xl);
+  font-size: var(--font-size-md); font-weight: 600; border: none;
+  transition: transform var(--duration-fast) var(--ease-standard);
 }
+.action-btn:active { transform: scale(0.97); }
+.action-btn-icon { width: 28rpx; height: 28rpx; filter: brightness(0) invert(1); }
+.action-btn--emergency { background: var(--brand-emergency); color: var(--text-inverse); }
+.action-btn--primary { background: var(--brand-primary); color: var(--text-inverse); }
+.action-btn--secondary { background: var(--bg-secondary); color: var(--text-primary); }
+.action-btn--secondary .action-btn-icon { filter: none; }
 
-.view-report-btn {
-  background: #4A90E2;
-  color: #ffffff;
-  border-radius: 40rpx;
-  font-size: 28rpx;
+/* 高风险警告框 */
+.high-risk-box {
+  background: var(--color-danger-light); border: 1rpx solid var(--brand-emergency);
+  border-radius: var(--radius-2xl); padding: 32rpx 24rpx; margin-bottom: 20rpx; text-align: center;
 }
+.high-risk-icon { width: 56rpx; height: 56rpx; margin-bottom: 12rpx; }
+.high-risk-title { display: block; font-size: var(--font-size-lg); font-weight: 700; color: var(--brand-emergency); margin-bottom: 10rpx; }
+.high-risk-desc { display: block; font-size: var(--font-size-sm); color: var(--text-primary); line-height: var(--line-height-relaxed); margin-bottom: 16rpx; }
+.high-risk-symptoms { display: flex; flex-wrap: wrap; justify-content: center; gap: 8rpx; margin-bottom: 16rpx; }
+.high-risk-tag { padding: 6rpx 16rpx; background: var(--brand-emergency); color: var(--text-inverse); border-radius: var(--radius-full); font-size: var(--font-size-xs); }
+.high-risk-note { display: block; font-size: var(--font-size-xs); color: var(--brand-emergency); padding: 12rpx; background: rgba(255,255,255,0.6); border-radius: var(--radius-md); }
 
-/* === 支付选项面板 === */
+/* 支付面板 */
+.pay-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-overlay); z-index: 1000; display: flex; align-items: flex-end; }
+.pay-panel { width: 100%; max-width: 750rpx; background: var(--bg-card); border-radius: var(--radius-3xl) var(--radius-3xl) 0 0; padding: 32rpx 24rpx; padding-bottom: calc(32rpx + env(safe-area-inset-bottom)); }
+.pay-panel-header { text-align: center; margin-bottom: 28rpx; }
+.pay-panel-title { display: block; font-size: var(--font-size-lg); font-weight: 700; color: var(--text-primary); margin-bottom: 8rpx; }
+.pay-panel-desc { display: block; font-size: var(--font-size-sm); color: var(--text-tertiary); }
 
-.pay-options-mask {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
+.pay-option { display: flex; align-items: center; justify-content: space-between; padding: 24rpx; border: 2rpx solid var(--border-color); border-radius: var(--radius-2xl); margin-bottom: 16rpx; position: relative; overflow: hidden; }
+.pay-option--recommend { border-color: var(--brand-primary); background: var(--brand-primary-light); }
+.pay-option--hover { transform: scale(0.98); }
+.pay-recommend-badge { position: absolute; top: 0; right: 0; background: var(--brand-primary); color: var(--text-inverse); font-size: 18rpx; padding: 4rpx 16rpx; border-radius: 0 0 0 var(--radius-md); }
 
-.pay-options-panel {
-  width: 100%;
-  max-width: 750rpx;
-  background: #ffffff;
-  border-radius: 24rpx 24rpx 0 0;
-  padding: 32rpx 24rpx;
-  padding-bottom: calc(32rpx + env(safe-area-inset-bottom));
-}
+.pay-option-left { display: flex; align-items: center; gap: 16rpx; flex: 1; }
+.pay-option-icon { width: 40rpx; height: 40rpx; }
+.pay-option-info { display: flex; flex-direction: column; gap: 4rpx; }
+.pay-option-name { font-size: var(--font-size-base); font-weight: 700; color: var(--text-primary); }
+.pay-option-desc { font-size: var(--font-size-xs); color: var(--text-tertiary); }
+.pay-option-price { font-size: var(--font-size-2xl); font-weight: 700; color: var(--brand-emergency); flex-shrink: 0; }
+.pay-option-price small { font-size: var(--font-size-xs); color: var(--text-tertiary); font-weight: normal; }
+.pay-cancel { text-align: center; font-size: var(--font-size-base); color: var(--text-tertiary); padding: 20rpx 0 0; }
 
-.pay-panel-header {
-  text-align: center;
-  margin-bottom: 32rpx;
-}
+/* 免责弹窗 */
+.modal-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-overlay); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 40rpx; }
+.modal { width: 100%; max-width: 600rpx; background: var(--bg-card); border-radius: var(--radius-3xl); padding: 40rpx 32rpx; }
+.modal-title { font-size: var(--font-size-lg); font-weight: 700; color: var(--color-warning); text-align: center; margin-bottom: 28rpx; display: flex; align-items: center; justify-content: center; gap: 10rpx; }
+.modal-title-icon { width: 28rpx; height: 28rpx; }
+.modal-content { margin-bottom: 28rpx; }
+.modal-item { font-size: var(--font-size-base); color: var(--text-primary); line-height: 1.8; margin-bottom: 12rpx; }
+.modal-highlight { color: var(--brand-emergency); font-weight: 700; }
 
-.pay-panel-title {
-  display: block;
-  font-size: 34rpx;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 8rpx;
-}
+.modal-checkbox-row { display: flex; align-items: center; gap: 16rpx; padding: 16rpx 0; margin-bottom: 20rpx; }
+.modal-checkbox { width: 40rpx; height: 40rpx; border: 2rpx solid var(--border-dark); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.modal-checkbox--checked { background: var(--brand-primary); border-color: var(--brand-primary); }
+.modal-checkbox-check { width: 24rpx; height: 24rpx; filter: brightness(0) invert(1); }
+.modal-checkbox-label { font-size: var(--font-size-base); color: var(--text-primary); }
 
-.pay-panel-desc {
-  display: block;
-  font-size: 24rpx;
-  color: #999;
-}
-
-.pay-option-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24rpx;
-  border: 2rpx solid #f0f0f0;
-  border-radius: 16rpx;
-  margin-bottom: 16rpx;
-  position: relative;
-  overflow: hidden;
-  transition: all 200ms ease;
-}
-
-.pay-option-recommend {
-  border-color: #667eea;
-  background: rgba(102, 126, 234, 0.04);
-}
-
-.pay-option-hover {
-  transform: scale(0.98);
-  background: #f9f9fb;
-}
-
-.pay-recommend-badge {
-  position: absolute;
-  top: 0;
-  right: 0;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: #ffffff;
-  font-size: 20rpx;
-  padding: 4rpx 16rpx;
-  border-radius: 0 0 0 12rpx;
-}
-
-.pay-option-left {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-  flex: 1;
-}
-
-.pay-option-icon {
-  font-size: 48rpx;
-}
-
-.pay-option-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4rpx;
-}
-
-.pay-option-name {
-  font-size: 30rpx;
-  font-weight: bold;
-  color: #333;
-}
-
-.pay-option-desc {
-  font-size: 22rpx;
-  color: #999;
-}
-
-.pay-option-price {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #f5222d;
-  flex-shrink: 0;
-}
-
-.pay-option-price small {
-  font-size: 22rpx;
-  color: #999;
-  font-weight: normal;
-}
-
-.pay-panel-cancel {
-  text-align: center;
-  font-size: 28rpx;
-  color: #999;
-  padding: 20rpx 0 0;
-}
-
-/* === 高风险警告框 === */
-.high-risk-warning-box {
-  background: linear-gradient(135deg, #fff1f0 0%, #ffccc7 100%);
-  border: 2rpx solid #ffa39e;
-  border-radius: 16rpx;
-  padding: 32rpx 24rpx;
-  margin-bottom: 20rpx;
-  text-align: center;
-}
-
-.warning-icon {
-  font-size: 80rpx;
-  margin-bottom: 12rpx;
-}
-
-.warning-title {
-  font-size: 34rpx;
-  font-weight: bold;
-  color: #cf1322;
-  margin-bottom: 12rpx;
-}
-
-.warning-desc {
-  font-size: 26rpx;
-  color: #a8071a;
-  line-height: 1.6;
-  margin-bottom: 16rpx;
-}
-
-.warning-symptoms {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8rpx;
-  margin-bottom: 16rpx;
-}
-
-.warning-symptom-tag {
-  padding: 6rpx 16rpx;
-  background: #f5222d;
-  color: #ffffff;
-  border-radius: 20rpx;
-  font-size: 24rpx;
-}
-
-.warning-note {
-  font-size: 24rpx;
-  color: #cf1322;
-  padding: 12rpx;
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: 8rpx;
-  line-height: 1.5;
-}
-
-/* === 合规提示 === */
-.compliance-notice {
-  font-size: 22rpx;
-  color: rgba(255, 255, 255, 0.75);
-  text-align: center;
-  padding: 12rpx 0;
-  margin-bottom: 8rpx;
-  line-height: 1.5;
-}
-
-/* === 免责声明弹窗 === */
-.disclaimer-modal-mask {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40rpx;
-}
-
-.disclaimer-modal {
-  width: 100%;
-  max-width: 600rpx;
-  background: #ffffff;
-  border-radius: 24rpx;
-  padding: 40rpx 32rpx;
-  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.15);
-}
-
-.disclaimer-modal-title {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #fa8c16;
-  text-align: center;
-  margin-bottom: 28rpx;
-}
-
-.disclaimer-modal-content {
-  margin-bottom: 28rpx;
-}
-
-.disclaimer-modal-item {
-  font-size: 28rpx;
-  color: #333;
-  line-height: 1.8;
-  margin-bottom: 12rpx;
-  padding-left: 8rpx;
-}
-
-.disclaimer-highlight {
-  color: #f5222d;
-  font-weight: bold;
-}
-
-.disclaimer-checkbox-row {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-  padding: 16rpx 0;
-  margin-bottom: 20rpx;
-}
-
-.disclaimer-checkbox {
-  width: 40rpx;
-  height: 40rpx;
-  border: 2rpx solid #d9d9d9;
-  border-radius: 8rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28rpx;
-  color: #ffffff;
-  flex-shrink: 0;
-  transition: all 200ms ease;
-}
-
-.disclaimer-checkbox.checked {
-  background: #4A90E2;
-  border-color: #4A90E2;
-}
-
-.disclaimer-checkbox-label {
-  font-size: 28rpx;
-  color: #333;
-  line-height: 1.4;
-}
-
-.disclaimer-confirm-btn {
-  width: 100%;
-  background: #4A90E2;
-  color: #ffffff;
-  border-radius: 40rpx;
-  font-size: 32rpx;
-  font-weight: bold;
-  padding: 20rpx 0;
-  border: none;
-}
-
-.disclaimer-confirm-btn.disabled {
-  background: #d9d9d9;
-  color: #ffffff;
-}
+.modal-confirm { width: 100%; background: var(--brand-primary); color: var(--text-inverse); border-radius: var(--radius-full); font-size: var(--font-size-md); font-weight: 700; padding: 20rpx 0; border: none; }
+.modal-confirm--disabled { background: var(--border-dark); }

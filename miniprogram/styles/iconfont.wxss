@@ -1,0 +1,102 @@
+/* ===================================
+   宠脉AI - 图标系统 v2.0
+   Icon System — SVG Data URI
+
+   使用方式：WXML 中 <text class="icon icon-xxx"></text>
+
+   待办：接入 iconfont.cn 生成的 base64 woff2 字体文件后，
+   替换此文件中的 background-image 方案为 @font-face 方案。
+   =================================== */
+
+/* === 图标基础样式 === */
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40rpx;
+  height: 40rpx;
+  font-size: 0;
+  line-height: 1;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.icon-sm {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.icon-lg {
+  width: 48rpx;
+  height: 48rpx;
+}
+
+.icon-xl {
+  width: 64rpx;
+  height: 64rpx;
+}
+
+/* === 图标颜色变体 === */
+.icon-brand { color: var(--brand-primary); }
+.icon-secondary { color: var(--brand-secondary); }
+.icon-emergency { color: var(--brand-emergency); }
+.icon-success { color: var(--color-success); }
+.icon-warning { color: var(--color-warning); }
+.icon-danger { color: var(--color-danger); }
+.icon-muted { color: var(--text-tertiary); }
+.icon-inverse { color: var(--text-inverse); }
+
+/* === 图标映射表 === */
+/* 每个图标使用 image 组件 + SVG 文件路径 */
+/* WXML: <image class="icon" src="/images/icons/paw.svg" /> */
+
+/* 图标尺寸工具类 */
+.icon-img {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.icon-img-sm {
+  width: 28rpx;
+  height: 28rpx;
+}
+
+.icon-img-lg {
+  width: 48rpx;
+  height: 48rpx;
+}
+
+.icon-img-xl {
+  width: 64rpx;
+  height: 64rpx;
+}
+
+/* 图标容器（带背景圆） */
+.icon-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+}
+
+.icon-box-sm {
+  width: 48rpx;
+  height: 48rpx;
+}
+
+.icon-box-md {
+  width: 72rpx;
+  height: 72rpx;
+}
+
+.icon-box-lg {
+  width: 96rpx;
+  height: 96rpx;
+}
+
+.icon-box-brand { background: var(--brand-primary-light); }
+.icon-box-success { background: var(--color-success-light); }
+.icon-box-warning { background: var(--color-warning-light); }
+.icon-box-danger { background: var(--color-danger-light); }
+.icon-box-info { background: var(--color-info-light); }
+.icon-box-secondary { background: var(--brand-secondary-light); }

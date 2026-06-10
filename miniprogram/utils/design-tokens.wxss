@@ -1,6 +1,6 @@
 /* ===================================
-   宠物症状自查小程序 - 设计系统
-   Design System (微信小程序兼容版本)
+   宠脉AI - 设计系统 v2.0
+   Design System — "Warm Professionalism"
    =================================== */
 
 /* === CSS 自定义属性（Design Tokens） === */
@@ -8,28 +8,50 @@
 /* 所有 var() 引用必须在此声明，否则静默失效 */
 
 page {
-  /* --- 颜色 --- */
-  --primary-color: #4A90E2;
-  --primary-light: #e3f2fd;
-  --primary-100: #bbdefb;
-  --primary-700: #1976d2;
-  --brand-primary: #4A90E2;
+  /* --- 品牌色 Brand Colors --- */
+  /* 主色：深陶土 #B35D3A（白字对比度 ≥ 4.5:1 WCAG AA） */
+  --brand-primary: #B35D3A;
+  --brand-primary-light: #F5EDE8;
+  --brand-primary-dark: #8B3F20;
+  --brand-secondary: #5B8C7A;
+  --brand-secondary-light: #E8F0EC;
+  --brand-accent: #E8A87C;
+  --brand-emergency: #D94F4F;
 
-  /* 背景色 */
-  --bg-color: #ffffff;
-  --bg-secondary: #f8f9fa;
-  --card-bg: #ffffff;
-  --bg-overlay: rgba(0, 0, 0, 0.5);
+  /* --- 功能色 Functional Colors --- */
+  --color-success: #6B9E7D;
+  --color-success-light: #EEF4F1;
+  --color-warning: #D4A855;
+  --color-warning-light: #FDF6E9;
+  --color-danger: #D94F4F;
+  --color-danger-light: #FDF0F0;
+  --color-info: #7B9EB8;
+  --color-info-light: #EEF3F7;
 
-  /* 文字色 */
-  --text-primary: #212121;
-  --text-secondary: #757575;
-  --text-light: #9e9e9e;
+  /* --- 背景色 Background Colors --- */
+  --bg-color: #FDFAF7;
+  --bg-secondary: #F5F0EB;
+  --bg-card: #FFFFFF;
+  --bg-overlay: rgba(45, 42, 38, 0.5);
 
-  /* 边框色 */
-  --border-color: #e0e0e0;
+  /* --- 文字色 Text Colors --- */
+  --text-primary: #2D2A26;
+  --text-secondary: #7A7267;
+  --text-tertiary: #A39E97;
+  --text-disabled: #C4BFB8;
+  --text-inverse: #FFFFFF;
 
-  /* --- 间距（8rpx 基线） --- */
+  /* --- 边框色 Border Colors --- */
+  --border-color: #E8E2DC;
+  --border-light: #F0EBE6;
+  --border-dark: #C4BFB8;
+
+  /* --- 兼容变量（deprecated，Phase 6 清理） --- */
+  --compat-blue: #4A90E2;
+  --compat-primary: #4A90E2;
+  --compat-primary-light: #e3f2fd;
+
+  /* --- 间距 Spacing（8rpx 基线） --- */
   --spacing-xs: 8rpx;
   --spacing-sm: 12rpx;
   --spacing-md: 16rpx;
@@ -37,192 +59,185 @@ page {
   --spacing-xl: 32rpx;
   --spacing-2xl: 48rpx;
 
-  /* --- 字体 --- */
-  --font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  --font-size-base: 28rpx;
+  /* --- 字体 Typography --- */
+  --font-family-base: "PingFang SC", "Noto Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-size-xs: 20rpx;
   --font-size-sm: 24rpx;
-  --line-height-normal: 1.5;
+  --font-size-base: 28rpx;
+  --font-size-md: 32rpx;
+  --font-size-lg: 36rpx;
+  --font-size-xl: 40rpx;
+  --font-size-2xl: 48rpx;
+  --font-size-3xl: 56rpx;
+  --font-size-4xl: 64rpx;
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.6;
+  --line-height-relaxed: 1.75;
 
-  /* --- 圆角 --- */
+  /* --- 圆角 Border Radius --- */
   --radius-sm: 4rpx;
   --radius-md: 8rpx;
   --radius-lg: 12rpx;
+  --radius-xl: 16rpx;
+  --radius-2xl: 20rpx;
+  --radius-3xl: 24rpx;
+  --radius-full: 9999rpx;
+
+  /* --- 阴影 Shadows（暖色调） --- */
+  --shadow-xs: 0 1rpx 2rpx rgba(45, 42, 38, 0.04);
+  --shadow-sm: 0 1rpx 3rpx rgba(45, 42, 38, 0.06);
+  --shadow-md: 0 4rpx 8rpx rgba(45, 42, 38, 0.08);
 
   /* --- Z-index 层级 --- */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
   --z-modal-backdrop: 1040;
   --z-modal: 1050;
+  --z-popover: 1060;
   --z-tooltip: 1070;
 
-  /* --- 动画 --- */
+  /* --- 动画 Animation --- */
+  --duration-fast: 150ms;
   --duration-base: 200ms;
   --duration-slow: 300ms;
-  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
+  --ease-accelerate: cubic-bezier(0.4, 0, 1, 1);
 }
 
 /* === 暗黑模式 Dark Mode === */
 @media (prefers-color-scheme: dark) {
   page {
-    --primary-color: #5a9fe6;
-    --primary-light: #1a2a3a;
-    --primary-100: #1e3a5f;
-    --primary-700: #90caf9;
-    --brand-primary: #5a9fe6;
+    /* 品牌色（暗底需提亮） */
+    --brand-primary: #D4896A;
+    --brand-primary-light: #3A2A22;
+    --brand-primary-dark: #B06A48;
+    --brand-secondary: #7BA896;
+    --brand-secondary-light: #1E2E28;
+    --brand-accent: #E8A87C;
+    --brand-emergency: #E06060;
 
-    --bg-color: #121212;
-    --bg-secondary: #1e1e1e;
-    --card-bg: #2d2d2d;
+    /* 功能色 */
+    --color-success: #7DB892;
+    --color-success-light: #1A2E22;
+    --color-warning: #D4A855;
+    --color-warning-light: #2E2818;
+    --color-danger: #E06060;
+    --color-danger-light: #2E1A1A;
+    --color-info: #8AB0C8;
+    --color-info-light: #1A2830;
+
+    /* 背景色（暖黑系） */
+    --bg-color: #1C1917;
+    --bg-secondary: #252220;
+    --bg-card: #2A2725;
     --bg-overlay: rgba(0, 0, 0, 0.7);
 
-    --text-primary: #e0e0e0;
-    --text-secondary: #a0a0a0;
-    --text-light: #757575;
+    /* 文字色 */
+    --text-primary: #E8E2DC;
+    --text-secondary: #A39E97;
+    --text-tertiary: #7A7267;
+    --text-disabled: #5A5550;
+    --text-inverse: #1C1917;
 
-    --border-color: #3a3a3a;
+    /* 边框色 */
+    --border-color: #3A3632;
+    --border-light: #302C28;
+    --border-dark: #4A4640;
+
+    /* 阴影（暗模式下更柔和） */
+    --shadow-xs: 0 1rpx 2rpx rgba(0, 0, 0, 0.2);
+    --shadow-sm: 0 1rpx 3rpx rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4rpx 8rpx rgba(0, 0, 0, 0.4);
   }
 }
 
-/* === 颜色系统 Color System === */
+/* === 品牌色工具类 Brand Color Utilities === */
 
-/* 主色调 Primary Colors - 文字颜色 */
-.color-primary-50 { color: #e3f2fd; }
-.color-primary-100 { color: #bbdefb; }
-.color-primary-200 { color: #90caf9; }
-.color-primary-300 { color: #64b5f6; }
-.color-primary-400 { color: #42a5f5; }
-.color-primary-500 { color: #2196f3; } /* 主色 */
-.color-primary-600 { color: #1e88e5; }
-.color-primary-700 { color: #1976d2; }
-.color-primary-800 { color: #1565c0; }
-.color-primary-900 { color: #0d47a1; }
+.color-brand-primary { color: var(--brand-primary); }
+.color-brand-secondary { color: var(--brand-secondary); }
+.color-brand-accent { color: var(--brand-accent); }
+.color-brand-emergency { color: var(--brand-emergency); }
 
-/* 主色调 - 背景颜色 */
-.bg-primary-50 { background-color: #e3f2fd; }
-.bg-primary-100 { background-color: #bbdefb; }
-.bg-primary-200 { background-color: #90caf9; }
-.bg-primary-300 { background-color: #64b5f6; }
-.bg-primary-400 { background-color: #42a5f5; }
-.bg-primary-500 { background-color: #2196f3; }
-.bg-primary-600 { background-color: #1e88e5; }
-.bg-primary-700 { background-color: #1976d2; }
-.bg-primary-800 { background-color: #1565c0; }
-.bg-primary-900 { background-color: #0d47a1; }
+.bg-brand-primary { background-color: var(--brand-primary); }
+.bg-brand-primary-light { background-color: var(--brand-primary-light); }
+.bg-brand-secondary { background-color: var(--brand-secondary); }
+.bg-brand-emergency { background-color: var(--brand-emergency); }
 
-/* 辅助色 Secondary Colors */
-.color-secondary-500 { color: #ff9800; }
-.color-secondary-600 { color: #fb8c00; }
-.bg-secondary-50 { background-color: #fff3e0; }
-.bg-secondary-500 { background-color: #ff9800; }
+/* === 语义色工具类 Semantic Color Utilities === */
 
-/* 语义色 Semantic Colors */
-.color-success-500 { color: #4caf50; }
-.color-success-600 { color: #43a047; }
-.color-warning-500 { color: #ffc107; }
-.color-warning-600 { color: #ffb300; }
-.color-danger-400 { color: #ef5350; }
-.color-danger-500 { color: #f44336; }
-.color-danger-600 { color: #e53935; }
-.color-info-500 { color: #2196f3; }
-.color-info-600 { color: #1e88e5; }
+.color-success { color: var(--color-success); }
+.color-warning { color: var(--color-warning); }
+.color-danger { color: var(--color-danger); }
+.color-info { color: var(--color-info); }
 
-.bg-success-50 { background-color: #e8f5e9; }
-.bg-success-500 { background-color: #4caf50; }
-.bg-success-600 { background-color: #43a047; }
-.bg-warning-50 { background-color: #fff8e1; }
-.bg-warning-500 { background-color: #ffc107; }
-.bg-warning-600 { background-color: #ffb300; }
-.bg-danger-50 { background-color: #ffebee; }
-.bg-danger-500 { background-color: #f44336; }
-.bg-danger-600 { background-color: #e53935; }
-.bg-info-50 { background-color: #e3f2fd; }
-.bg-info-500 { background-color: #2196f3; }
-.bg-info-600 { background-color: #1e88e5; }
+.bg-success-light { background-color: var(--color-success-light); }
+.bg-success { background-color: var(--color-success); }
+.bg-warning-light { background-color: var(--color-warning-light); }
+.bg-warning { background-color: var(--color-warning); }
+.bg-danger-light { background-color: var(--color-danger-light); }
+.bg-danger { background-color: var(--color-danger); }
+.bg-info-light { background-color: var(--color-info-light); }
+.bg-info { background-color: var(--color-info); }
 
-/* 中性色 Neutral Colors */
-.color-gray-50 { color: #fafafa; }
-.color-gray-100 { color: #f5f5f5; }
-.color-gray-200 { color: #eeeeee; }
-.color-gray-300 { color: #e0e0e0; }
-.color-gray-400 { color: #bdbdbd; }
-.color-gray-500 { color: #9e9e9e; }
-.color-gray-600 { color: #757575; }
-.color-gray-700 { color: #616161; }
-.color-gray-800 { color: #424242; }
-.color-gray-900 { color: #212121; }
+/* === 背景色工具类 Background Utilities === */
 
-.bg-gray-50 { background-color: #fafafa; }
-.bg-gray-100 { background-color: #f5f5f5; }
-.bg-gray-200 { background-color: #eeeeee; }
-.bg-gray-300 { background-color: #e0e0e0; }
-.bg-gray-400 { background-color: #bdbdbd; }
-.bg-gray-500 { background-color: #9e9e9e; }
-.bg-gray-600 { background-color: #757575; }
-.bg-gray-700 { background-color: #616161; }
-.bg-gray-800 { background-color: #424242; }
-.bg-gray-900 { background-color: #212121; }
+.bg-page { background-color: var(--bg-color); }
+.bg-surface { background-color: var(--bg-secondary); }
+.bg-card { background-color: var(--bg-card); }
 
-/* 背景色 Background Colors */
-.bg-primary { background-color: #ffffff; }
-.bg-secondary { background-color: #f8f9fa; }
-.bg-tertiary { background-color: #f5f5f5; }
-.bg-overlay { background-color: rgba(0, 0, 0, 0.5); }
+/* === 文字色工具类 Text Color Utilities === */
 
-/* 文本色 Text Colors */
-.text-primary { color: #212121; }
-.text-secondary { color: #757575; }
-.text-tertiary { color: #9e9e9e; }
-.text-disabled { color: #bdbdbd; }
-.text-inverse { color: #ffffff; }
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-tertiary { color: var(--text-tertiary); }
+.text-disabled { color: var(--text-disabled); }
+.text-inverse { color: var(--text-inverse); }
 
-/* 边框色 Border Colors */
-.border-light { border-color: #e0e0e0; }
-.border-medium { border-color: #bdbdbd; }
-.border-dark { border-color: #757575; }
+/* === 边框色工具类 Border Color Utilities === */
 
-/* 品牌色 Brand Colors */
-.bg-brand-primary { background-color: #4A90E2; }
-.bg-brand-secondary { background-color: #50E3C2; }
-.bg-brand-accent { background-color: #F5A623; }
-.bg-brand-emergency { background-color: #F5222D; }
+.border-light { border-color: var(--border-light); }
+.border-default { border-color: var(--border-color); }
+.border-dark { border-color: var(--border-dark); }
 
-.color-brand-primary { color: #4A90E2; }
-.color-brand-secondary { color: #50E3C2; }
-.color-brand-accent { color: #F5A623; }
-.color-brand-emergency { color: #F5222D; }
+/* === 字体系统 Typography Utilities === */
 
-/* === 字体系统 Typography System === */
+.text-xs { font-size: var(--font-size-xs); }
+.text-sm { font-size: var(--font-size-sm); }
+.text-base { font-size: var(--font-size-base); }
+.text-md { font-size: var(--font-size-md); }
+.text-lg { font-size: var(--font-size-lg); }
+.text-xl { font-size: var(--font-size-xl); }
+.text-2xl { font-size: var(--font-size-2xl); }
+.text-3xl { font-size: var(--font-size-3xl); }
 
-/* 字体大小 Font Sizes */
-.text-xs { font-size: 20rpx; }   /* 10px */
-.text-sm { font-size: 24rpx; }   /* 12px */
-.text-base { font-size: 28rpx; } /* 14px */
-.text-md { font-size: 32rpx; }   /* 16px */
-.text-lg { font-size: 36rpx; }   /* 18px */
-.text-xl { font-size: 40rpx; }   /* 20px */
-.text-2xl { font-size: 48rpx; }  /* 24px */
-.text-3xl { font-size: 56rpx; }  /* 28px */
-.text-4xl { font-size: 64rpx; }  /* 32px */
-
-/* 字重 Font Weights */
 .font-light { font-weight: 300; }
 .font-normal { font-weight: 400; }
 .font-medium { font-weight: 500; }
 .font-semibold { font-weight: 600; }
 .font-bold { font-weight: 700; }
 
-/* 行高 Line Heights */
-.leading-tight { line-height: 1.2; }
-.leading-normal { line-height: 1.5; }
-.leading-relaxed { line-height: 1.75; }
+.leading-tight { line-height: var(--line-height-tight); }
+.leading-normal { line-height: var(--line-height-normal); }
+.leading-relaxed { line-height: var(--line-height-relaxed); }
 
-/* === 间距系统 Spacing System === */
+/* Overline 标签样式 */
+.text-overline {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 2rpx;
+  text-transform: uppercase;
+}
+
+/* === 间距系统 Spacing Utilities === */
+
 .m-xs { margin: 8rpx; }
 .m-sm { margin: 12rpx; }
 .m-md { margin: 16rpx; }
 .m-lg { margin: 24rpx; }
 .m-xl { margin: 32rpx; }
 .m-2xl { margin: 48rpx; }
-.m-3xl { margin: 64rpx; }
-.m-4xl { margin: 96rpx; }
 
 .p-xs { padding: 8rpx; }
 .p-sm { padding: 12rpx; }
@@ -230,65 +245,26 @@ page {
 .p-lg { padding: 24rpx; }
 .p-xl { padding: 32rpx; }
 .p-2xl { padding: 48rpx; }
-.p-3xl { padding: 64rpx; }
-.p-4xl { padding: 96rpx; }
 
-/* === 圆角系统 Border Radius === */
-.rounded-none { border-radius: 0; }
-.rounded-sm { border-radius: 4rpx; }
-.rounded-md { border-radius: 8rpx; }
-.rounded-lg { border-radius: 12rpx; }
-.rounded-xl { border-radius: 16rpx; }
-.rounded-2xl { border-radius: 24rpx; }
-.rounded-3xl { border-radius: 32rpx; }
-.rounded-full { border-radius: 9999rpx; }
+/* === 圆角系统 Border Radius Utilities === */
 
-/* === 阴影系统 Shadow System === */
-.shadow-xs { box-shadow: 0 1rpx 2rpx 0 rgba(0, 0, 0, 0.05); }
-.shadow-sm { box-shadow: 0 1rpx 3rpx 0 rgba(0, 0, 0, 0.1), 0 1rpx 2rpx 0 rgba(0, 0, 0, 0.06); }
-.shadow-md { box-shadow: 0 4rpx 6rpx -1rpx rgba(0, 0, 0, 0.1), 0 2rpx 4rpx -1rpx rgba(0, 0, 0, 0.06); }
-.shadow-lg { box-shadow: 0 10rpx 15rpx -3rpx rgba(0, 0, 0, 0.1), 0 4rpx 6rpx -2rpx rgba(0, 0, 0, 0.05); }
-.shadow-xl { box-shadow: 0 20rpx 25rpx -5rpx rgba(0, 0, 0, 0.1), 0 10rpx 10rpx -5rpx rgba(0, 0, 0, 0.04); }
-.shadow-2xl { box-shadow: 0 25rpx 50rpx -12rpx rgba(0, 0, 0, 0.25); }
-.shadow-inner { box-shadow: inset 0 2rpx 4rpx 0 rgba(0, 0, 0, 0.06); }
+.rounded-sm { border-radius: var(--radius-sm); }
+.rounded-md { border-radius: var(--radius-md); }
+.rounded-lg { border-radius: var(--radius-lg); }
+.rounded-xl { border-radius: var(--radius-xl); }
+.rounded-2xl { border-radius: var(--radius-2xl); }
+.rounded-3xl { border-radius: var(--radius-3xl); }
+.rounded-full { border-radius: var(--radius-full); }
 
-/* 特殊用途阴影 */
-.shadow-primary { box-shadow: 0 4rpx 16rpx rgba(33, 150, 243, 0.2); }
-.shadow-danger { box-shadow: 0 4rpx 16rpx rgba(244, 67, 54, 0.2); }
-.shadow-success { box-shadow: 0 4rpx 16rpx rgba(76, 175, 80, 0.2); }
+/* === 阴影系统 Shadow Utilities === */
 
-/* === 动画系统 Animation System === */
+.shadow-xs { box-shadow: var(--shadow-xs); }
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-none { box-shadow: none; }
 
-/* 缓动函数 */
-.ease-in-out { transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
-.ease-out { transition-timing-function: cubic-bezier(0, 0, 0.2, 1); }
-.ease-in { transition-timing-function: cubic-bezier(0.4, 0, 1, 1); }
+/* === Flex 布局 Flex Layout === */
 
-/* 动画时长 */
-.duration-fast { transition-duration: 150ms; }
-.duration-base { transition-duration: 200ms; }
-.duration-slow { transition-duration: 300ms; }
-.duration-slower { transition-duration: 500ms; }
-
-/* === Z-index 系统 === */
-.z-dropdown { z-index: 1000; }
-.z-sticky { z-index: 1020; }
-.z-fixed { z-index: 1030; }
-.z-modal-backdrop { z-index: 1040; }
-.z-modal { z-index: 1050; }
-.z-popover { z-index: 1060; }
-.z-tooltip { z-index: 1070; }
-
-/* === 渐变色 Gradients === */
-.gradient-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-.gradient-ocean { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-.gradient-sunset { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
-.gradient-forest { background: linear-gradient(135deg, #38ef7d 0%, #11998e 100%); }
-.gradient-danger { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-
-/* === 通用工具类 Utilities === */
-
-/* Flex布局 */
 .flex { display: flex; }
 .flex-col { flex-direction: column; }
 .flex-wrap { flex-wrap: wrap; }
@@ -301,45 +277,47 @@ page {
 .justify-end { justify-content: flex-end; }
 .flex-1 { flex: 1; }
 
-/* 文本对齐 */
+/* === 文本对齐 Text Alignment === */
+
 .text-center { text-align: center; }
 .text-left { text-align: left; }
 .text-right { text-align: right; }
 
-/* 溢出处理 */
+/* === 溢出 Overflow === */
+
 .overflow-hidden { overflow: hidden; }
 .overflow-auto { overflow: auto; }
-.overflow-scroll { overflow: scroll; }
 
-/* 定位 */
+/* === 定位 Position === */
+
 .relative { position: relative; }
 .absolute { position: absolute; }
 .fixed { position: fixed; }
 
-/* 显示 */
+/* === 显示 Display === */
+
 .block { display: block; }
 .inline-block { display: inline-block; }
 .hidden { display: none; }
 
-/* 宽度 */
+/* === 尺寸 Size === */
+
 .w-full { width: 100%; }
 .h-full { height: 100%; }
 
-/* 透明度 */
+/* === 透明度 Opacity === */
+
 .opacity-0 { opacity: 0; }
 .opacity-50 { opacity: 0.5; }
 .opacity-100 { opacity: 1; }
 
-/* 过渡动画 */
-.transition { transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1); }
-.transition-fast { transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1); }
-.transition-slow { transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1); }
+/* === 过渡动画 Transitions === */
 
-/* === 响应式断点（小程序使用rpx自动适配） === */
-/* 小程序使用rpx单位自动适配不同屏幕，无需媒体查询 */
+.transition { transition: all var(--duration-base) var(--ease-standard); }
+.transition-fast { transition: all var(--duration-fast) var(--ease-standard); }
+.transition-slow { transition: all var(--duration-slow) var(--ease-standard); }
 
-/* === 安全区域适配 === */
+/* === 安全区域 Safe Area === */
+
 .safe-area-top { padding-top: constant(safe-area-inset-top); padding-top: env(safe-area-inset-top); }
 .safe-area-bottom { padding-bottom: constant(safe-area-inset-bottom); padding-bottom: env(safe-area-inset-bottom); }
-.safe-area-left { padding-left: constant(safe-area-inset-left); padding-left: env(safe-area-inset-left); }
-.safe-area-right { padding-right: constant(safe-area-inset-right); padding-right: env(safe-area-inset-right); }

@@ -1,434 +1,141 @@
-/*紧急救助页面 - 极简样式*/
+/* 急救页 v2.0 — 白底 + 暖红强调，无渐变无毛玻璃 */
 
-.emergency-page {
+.page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
-  padding: 20rpx;
-  position: relative;
+  background: var(--bg-color);
+  padding: 0 24rpx 40rpx;
 }
 
-/* === 顶部状态栏 === */
-.emergency-status {
-  display: flex;
-  align-items: center;
-  gap: 10rpx;
-  background: rgba(255, 255, 255, 0.2);
-  padding: 15rpx 25rpx;
-  border-radius: 30rpx;
-  margin-bottom: 30rpx;
-  backdrop-filter: blur(10rpx);
+/* 顶部暖红警示条 */
+.alert-bar {
+  display: flex; align-items: center; gap: 12rpx;
+  background: var(--brand-emergency);
+  padding: 20rpx 28rpx;
+  color: var(--text-inverse);
+  margin: 0 -24rpx 28rpx;
 }
-
-.status-dot {
-  width: 12rpx;
-  height: 12rpx;
-  background: #fff;
-  border-radius: 50%;
+.alert-bar-dot {
+  width: 12rpx; height: 12rpx;
+  background: var(--text-inverse);
+  border-radius: var(--radius-full);
   animation: pulse 2s ease-in-out infinite;
 }
-
 @keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.2); }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
+.alert-bar-text { font-size: var(--font-size-sm); font-weight: 500; }
 
-.status-text {
-  font-size: 26rpx;
-  color: #fff;
-  font-weight: 500;
-}
-
-/* === 最近医院卡片 === */
-.nearest-hospital-card {
-  background: #fff;
-  border-radius: 30rpx;
-  padding: 40rpx;
-  margin-bottom: 30rpx;
-  box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.2);
+/* 最近医院卡片 */
+.nearest-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  padding: 36rpx 28rpx;
+  margin-bottom: 24rpx;
+  border: 1rpx solid var(--border-color);
   position: relative;
 }
-
-.hospital-badge {
-  position: absolute;
-  top: -10rpx;
-  right: 30rpx;
-  background: linear-gradient(135deg, #ffa502 0%, #ff6348 100%);
-  color: #fff;
-  padding: 10rpx 20rpx;
-  border-radius: 20rpx;
-  font-size: 22rpx;
-  font-weight: bold;
-  box-shadow: 0 5rpx 15rpx rgba(255, 99, 72, 0.4);
+.nearest-badge {
+  position: absolute; top: -8rpx; right: 28rpx;
+  background: var(--brand-primary); color: var(--text-inverse);
+  padding: 8rpx 20rpx; border-radius: var(--radius-full);
+  font-size: var(--font-size-xs); font-weight: 700;
 }
+.nearest-name { display: block; font-size: var(--font-size-xl); font-weight: 700; color: var(--text-primary); margin-bottom: 16rpx; line-height: 1.3; }
 
-.hospital-name {
-  font-size: 42rpx;
-  font-weight: bold;
-  color: #2d3436;
-  margin-bottom: 20rpx;
-  line-height: 1.3;
+.nearest-meta { display: flex; gap: 16rpx; margin-bottom: 12rpx; }
+.nearest-meta-item {
+  display: flex; align-items: center; gap: 6rpx;
+  font-size: var(--font-size-sm); color: var(--text-secondary);
+  background: var(--bg-secondary); padding: 8rpx 16rpx; border-radius: var(--radius-full);
 }
+.nearest-meta-icon { width: 20rpx; height: 20rpx; }
+.nearest-meta-item--24h { background: var(--color-danger-light); color: var(--brand-emergency); font-weight: 600; }
+.nearest-address { display: block; font-size: var(--font-size-sm); color: var(--text-secondary); line-height: 1.5; margin-bottom: 24rpx; }
 
-.hospital-info {
-  display: flex;
-  gap: 20rpx;
-  margin-bottom: 15rpx;
+.nearest-actions { display: flex; gap: 16rpx; }
+.nearest-btn {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 10rpx;
+  padding: 24rpx; border-radius: var(--radius-xl);
+  font-size: var(--font-size-base); font-weight: 600; border: none;
+  transition: transform var(--duration-fast) var(--ease-standard);
 }
+.nearest-btn:active { transform: scale(0.97); }
+.nearest-btn-icon { width: 28rpx; height: 28rpx; filter: brightness(0) invert(1); }
+.nearest-btn--call { background: var(--color-success); color: var(--text-inverse); }
+.nearest-btn--nav { background: var(--brand-primary); color: var(--text-inverse); }
 
-.info-item {
-  font-size: 26rpx;
-  color: #636e72;
-  background: #f8f9fa;
-  padding: 8rpx 16rpx;
-  border-radius: 15rpx;
-}
-
-.hospital-address {
-  font-size: 28rpx;
-  color: #2d3436;
-  margin-bottom: 30rpx;
-  line-height: 1.5;
-}
-
-/* === 紧急操作按钮 === */
-.emergency-actions {
-  display: flex;
-  gap: 20rpx;
-}
-
-.action-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10rpx;
-  padding: 25rpx;
-  border-radius: 20rpx;
-  font-size: 30rpx;
-  font-weight: bold;
-  border: none;
-  box-shadow: 0 5rpx 15rpx rgba(0, 0, 0, 0.1);
-}
-
-.primary-action {
-  background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
-  color: #fff;
-}
-
-.secondary-action {
-  background: linear-gradient(135deg, #0984e3 0%, #6c5ce7 100%);
-  color: #fff;
-}
-
-.btn-icon {
-  font-size: 36rpx;
-}
-
-.btn-text {
-  font-size: 30rpx;
-}
-
-
-/* === 其他医院区域 - 全新设计 === */
-.other-hospitals-section {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 25rpx;
-  padding: 0;
-  margin-bottom: 30rpx;
-  backdrop-filter: blur(10rpx);
+/* 其他医院区域 */
+.other-section {
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  margin-bottom: 24rpx;
+  border: 1rpx solid var(--border-color);
   overflow: hidden;
 }
-
-/* === 展开头部 === */
-.expand-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 30rpx;
-  background: rgba(255, 255, 255, 0.1);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+.other-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 24rpx 28rpx;
+  border-bottom: 1rpx solid var(--border-light);
 }
+.other-header-left { display: flex; align-items: center; gap: 14rpx; }
+.other-header-icon { width: 28rpx; height: 28rpx; }
+.other-header-text { display: flex; flex-direction: column; gap: 4rpx; }
+.other-header-title { font-size: var(--font-size-base); font-weight: 600; color: var(--text-primary); }
+.other-header-sub { font-size: var(--font-size-xs); color: var(--text-tertiary); }
+.other-arrow { font-size: var(--font-size-sm); color: var(--text-tertiary); }
 
-.expand-content {
-  display: flex;
-  align-items: center;
-  gap: 15rpx;
-}
+.other-list { padding: 16rpx 20rpx; }
 
-.expand-icon-large {
-  font-size: 40rpx;
-}
-
-.expand-text-group {
-  display: flex;
-  flex-direction: column;
-  gap: 5rpx;
-}
-
-.expand-title {
-  font-size: 30rpx;
-  font-weight: bold;
-  color: #fff;
-}
-
-.expand-subtitle {
-  font-size: 22rpx;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.expand-arrow {
-  transition: transform 0.3s ease;
-}
-
-.arrow-up {
-  transform: rotate(180deg);
-}
-
-.arrow-down {
-  transform: rotate(0deg);
-}
-
-.arrow-icon {
-  font-size: 28rpx;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-/* === 医院卡片网格 === */
-.hospitals-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 20rpx;
-  padding: 25rpx;
-}
-
-.hospital-card-mini {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 20rpx;
-  padding: 25rpx;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
-}
-
-.hospital-card-mini:active {
-  transform: scale(0.98);
-  background: rgba(255, 255, 255, 0.25);
-}
-
-/* === 卡片头部 === */
-.card-header-mini {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15rpx;
-}
-
-.hospital-badge-group {
-  display: flex;
-  gap: 8rpx;
-}
-
-.badge-24h {
-  background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
-  color: #fff;
-  font-size: 20rpx;
-  font-weight: bold;
-  padding: 6rpx 12rpx;
-  border-radius: 10rpx;
-}
-
-.badge-emergency {
-  background: linear-gradient(135deg, #ff7675 0%, #d63031 100%);
-  color: #fff;
-  font-size: 20rpx;
-  font-weight: bold;
-  padding: 6rpx 12rpx;
-  border-radius: 10rpx;
-}
-
-.hospital-distance-mini {
-  font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.15);
-  padding: 8rpx 16rpx;
-  border-radius: 15rpx;
-  font-weight: 500;
-}
-
-/* === 卡片内容 === */
-.hospital-content-mini {
-  margin-bottom: 20rpx;
-}
-
-.hospital-name-mini {
-  display: block;
-  font-size: 30rpx;
-  font-weight: bold;
-  color: #fff;
+.other-card {
+  padding: 20rpx; border-bottom: 1rpx solid var(--border-light);
   margin-bottom: 12rpx;
-  line-height: 1.3;
+}
+.other-card:last-child { border-bottom: none; margin-bottom: 0; }
+
+.other-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10rpx; }
+.other-card-badges { display: flex; gap: 8rpx; }
+.other-badge {
+  font-size: 18rpx; font-weight: 700; padding: 4rpx 12rpx; border-radius: var(--radius-full);
+}
+.other-badge--24h { background: var(--color-success-light); color: var(--color-success); }
+.other-badge--er { background: var(--color-danger-light); color: var(--brand-emergency); }
+.other-card-distance { font-size: var(--font-size-sm); color: var(--brand-primary); font-weight: 500; }
+
+.other-card-name { display: block; font-size: var(--font-size-base); font-weight: 600; color: var(--text-primary); margin-bottom: 8rpx; }
+.other-card-address { display: block; font-size: var(--font-size-xs); color: var(--text-secondary); margin-bottom: 16rpx; }
+
+.other-card-actions { display: flex; gap: 16rpx; }
+.other-card-action {
+  display: flex; align-items: center; gap: 6rpx;
+  font-size: var(--font-size-xs); font-weight: 500; color: var(--text-secondary);
+}
+.other-card-action-icon { width: 22rpx; height: 22rpx; }
+
+.other-more {
+  text-align: center; padding: 20rpx;
+  font-size: var(--font-size-sm); color: var(--brand-primary); font-weight: 500;
 }
 
-.hospital-details-mini {
-  display: flex;
-  flex-direction: column;
-  gap: 8rpx;
+/* 紧急提示 */
+.tips-card {
+  background: var(--bg-card); border-radius: var(--radius-2xl);
+  padding: 24rpx 28rpx; margin-bottom: 24rpx;
+  border: 1rpx solid var(--border-color);
 }
+.tips-header { display: flex; align-items: center; gap: 10rpx; margin-bottom: 16rpx; }
+.tips-icon { width: 22rpx; height: 22rpx; }
+.tips-title { font-size: var(--font-size-sm); font-weight: 600; color: var(--brand-emergency); }
+.tips-list { display: flex; flex-direction: column; gap: 10rpx; }
+.tips-item { font-size: var(--font-size-sm); color: var(--text-secondary); line-height: 1.6; }
 
-.detail-text-mini {
-  font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.8);
-  line-height: 1.5;
-}
-
-/* === 卡片操作 === */
-.card-actions-mini {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 20rpx;
-  padding: 0 24rpx;
-  box-sizing: border-box;
-}
-
-.mini-action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8rpx;
-  padding: 18rpx 28rpx;
-  border-radius: 15rpx;
-  font-size: 24rpx;
-  line-height: 1;
-  font-weight: 500;
-  width: auto;
-  flex-shrink: 0;
-}
-
-.call-mini {
-  background: rgba(0, 184, 148, 0.8);
-  color: #fff;
-}
-
-.navigate-mini {
-  background: rgba(9, 132, 227, 0.8);
-  color: #fff;
-}
-
-.mini-btn-icon {
-  font-size: 28rpx;
-}
-
-.mini-btn-text {
-  font-size: 24rpx;
-}
-
-/* === 展开提示 === */
-.expand-hint {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 10rpx;
+/* 返回链接 */
+.back-link {
+  display: flex; align-items: center; gap: 10rpx;
   padding: 20rpx;
-  background: rgba(255, 255, 255, 0.05);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-card); border-radius: var(--radius-xl);
+  border: 1rpx solid var(--border-color);
 }
-
-.hint-text {
-  font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.hint-icon {
-  font-size: 20rpx;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-/* === 紧急提示 === */
-.emergency-tips {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 25rpx;
-  padding: 25rpx;
-  margin-bottom: 30rpx;
-  backdrop-filter: blur(10rpx);
-}
-
-.tips-title {
-  display: block;
-  font-size: 26rpx;
-  font-weight: bold;
-  color: #fff;
-  margin-bottom: 15rpx;
-}
-
-.tips-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12rpx;
-}
-
-.tip-item {
-  font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.9);
-  line-height: 1.6;
-}
-
-/* === 返回按钮 === */
-.back-btn {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 10rpx;
-  background: rgba(255, 255, 255, 0.2);
-  padding: 20rpx;
-  border-radius: 15rpx;
-  backdrop-filter: blur(10rpx);
-}
-
-.back-btn-active {
-  background: rgba(255, 255, 255, 0.35);
-}
-
-.back-arrow {
-  width: 16rpx;
-  height: 16rpx;
-  border-left: 4rpx solid #fff;
-  border-bottom: 4rpx solid #fff;
-  transform: rotate(45deg);
-  -webkit-transform: rotate(45deg);
-}
-
-.back-text {
-  font-size: 28rpx;
-  color: #fff;
-  font-weight: 500;
-}
-/* === 加载更多按钮 === */
-.load-more-btn {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 8rpx;
-  padding: 24rpx;
-  margin: 10rpx 25rpx 25rpx;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 15rpx;
-  color: #fff;
-  font-size: 26rpx;
-  font-weight: 500;
-}
-
-.load-more-btn:active {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.load-more-text {
-  font-size: 26rpx;
-  color: #fff;
-}
-
-.load-more-arrow {
-  font-size: 20rpx;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-
+.back-link--active { background: var(--bg-secondary); }
+.back-link-arrow { font-size: var(--font-size-md); color: var(--text-secondary); }
+.back-link-text { font-size: var(--font-size-base); color: var(--text-secondary); font-weight: 500; }

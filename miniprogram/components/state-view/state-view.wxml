@@ -1,6 +1,16 @@
 <view class="state-view state-view--{{type}} state-view--{{theme}} {{card ? 'state-view--card' : ''}}" role="status" aria-live="polite">
+
+  <!-- Loading 态：品牌色 spinner -->
   <view class="state-view__spinner" wx:if="{{type === 'loading'}}"></view>
-  <text class="state-view__icon" wx:elif="{{icon}}">{{icon}}</text>
+
+  <!-- Empty/Error 态：SVG 图标 -->
+  <image
+    wx:elif="{{icon}}"
+    class="state-view__icon"
+    src="/images/icons/{{icon}}.svg"
+    mode="aspectFit"
+    aria-label="{{icon}}"
+  />
 
   <text class="state-view__title" wx:if="{{title}}">{{title}}</text>
   <text class="state-view__description" wx:if="{{description}}">{{description}}</text>

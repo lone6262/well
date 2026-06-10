@@ -1,82 +1,122 @@
 /* ===================================
-   现代化UI组件库 (微信小程序兼容版本)
-   Modern UI Component Library
+   宠脉AI - UI 组件库 v2.0
+   Component Library — "Warm Professionalism"
    =================================== */
 
 @import "design-tokens.wxss";
 
-/* === 通用组件基础样式 === */
+/* === 卡片 Cards === */
 
-/* 容器 Container */
-.container-modern {
-  width: 100%;
-  max-width: 750rpx;
-  margin: 0 auto;
-  padding: 0 24rpx;
-  box-sizing: border-box;
-  background-color: #f8f9fa;
-  min-height: 100vh;
-}
-
-/* === 现代化卡片组件 Modern Cards === */
-
+/* 内容卡片 — 医院、文章、记录 */
 .card {
-  background: #ffffff;
-  border-radius: 16rpx;
-  padding: 24rpx;
-  box-shadow: 0 1rpx 3rpx 0 rgba(0, 0, 0, 0.1), 0 1rpx 2rpx 0 rgba(0, 0, 0, 0.06);
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  padding: 28rpx;
+  border: 1rpx solid var(--border-color);
   margin-bottom: 24rpx;
-  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform var(--duration-base) var(--ease-standard),
+              border-color var(--duration-base) var(--ease-standard);
 }
 
 .card:active {
-  transform: scale(0.98);
-  box-shadow: 0 4rpx 6rpx -1rpx rgba(0, 0, 0, 0.1), 0 2rpx 4rpx -1rpx rgba(0, 0, 0, 0.06);
+  transform: scale(0.97);
+  border-color: var(--brand-primary);
 }
 
-.card-elevated {
-  box-shadow: 0 10rpx 15rpx -3rpx rgba(0, 0, 0, 0.1), 0 4rpx 6rpx -2rpx rgba(0, 0, 0, 0.05);
+.card-accent {
+  border-left: 4rpx solid var(--brand-primary);
 }
 
-.card-interactive {
-  cursor: pointer;
+.card-accent-success {
+  border-left-color: var(--color-success);
+}
+
+.card-accent-warning {
+  border-left-color: var(--color-warning);
+}
+
+.card-accent-danger {
+  border-left-color: var(--color-danger);
+}
+
+/* 功能磁贴 — 首页 6 宫格 */
+.tile {
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  padding: 24rpx;
+  border: 1rpx solid var(--border-color);
   position: relative;
   overflow: hidden;
+  transition: transform var(--duration-base) var(--ease-standard);
 }
 
-.card-interactive::before {
+.tile::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  opacity: 0;
-  transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 0;
+  height: 4rpx;
 }
 
-.card-interactive:active::before {
-  opacity: 0.1;
+.tile-accent-primary::before { background: var(--brand-primary); }
+.tile-accent-success::before { background: var(--color-success); }
+.tile-accent-warning::before { background: var(--color-warning); }
+.tile-accent-info::before { background: var(--color-info); }
+.tile-accent-emergency::before { background: var(--brand-emergency); }
+.tile-accent-secondary::before { background: var(--brand-secondary); }
+
+.tile:active {
+  transform: scale(0.97);
 }
 
-/* === 现代化按钮组件 Modern Buttons === */
+/* 状态卡片 — 风险结果、健康状态 */
+.card-status {
+  border-radius: var(--radius-3xl);
+  padding: 36rpx;
+  margin-bottom: 24rpx;
+}
+
+.card-status-success {
+  background: var(--color-success-light);
+  color: var(--text-primary);
+}
+
+.card-status-warning {
+  background: var(--color-warning-light);
+  color: var(--text-primary);
+}
+
+.card-status-danger {
+  background: var(--color-danger-light);
+  color: var(--text-primary);
+}
+
+.card-status-info {
+  background: var(--color-info-light);
+  color: var(--text-primary);
+}
+
+/* === 按钮 Buttons === */
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8rpx;
   padding: 16rpx 32rpx;
-  border-radius: 12rpx;
-  font-size: 28rpx;
+  border-radius: var(--radius-xl);
+  font-size: var(--font-size-base);
   font-weight: 500;
   text-align: center;
   border: none;
-  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform var(--duration-fast) var(--ease-standard),
+              background-color var(--duration-fast) var(--ease-standard),
+              opacity var(--duration-fast) var(--ease-standard);
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
+  height: 88rpx;
 }
 
 .btn::after {
@@ -84,51 +124,64 @@
 }
 
 .btn-primary {
-  background: #4A90E2;
-  color: #ffffff;
-  box-shadow: 0 4rpx 16rpx rgba(33, 150, 243, 0.2);
+  background: var(--brand-primary);
+  color: var(--text-inverse);
 }
 
 .btn-primary:active {
-  background: #1976d2;
-  transform: translateY(2rpx);
+  background: var(--brand-primary-dark);
+  transform: scale(0.97);
 }
 
 .btn-secondary {
-  background: #f5f5f5;
-  color: #212121;
+  background: var(--bg-card);
+  color: var(--brand-primary);
+  border: 2rpx solid var(--brand-primary);
 }
 
 .btn-secondary:active {
-  background: #eeeeee;
+  background: var(--brand-primary-light);
+  transform: scale(0.97);
 }
 
 .btn-danger {
-  background: #F5222D;
-  color: #ffffff;
-  box-shadow: 0 4rpx 16rpx rgba(244, 67, 54, 0.2);
+  background: var(--brand-emergency);
+  color: var(--text-inverse);
+}
+
+.btn-danger:active {
+  transform: scale(0.97);
+  opacity: 0.9;
 }
 
 .btn-success {
-  background: #4caf50;
-  color: #ffffff;
-  box-shadow: 0 4rpx 16rpx rgba(76, 175, 80, 0.2);
+  background: var(--color-success);
+  color: var(--text-inverse);
+}
+
+.btn-success:active {
+  transform: scale(0.97);
+  opacity: 0.9;
 }
 
 .btn-ghost {
   background: transparent;
-  color: #4A90E2;
-  border: 2rpx solid #4A90E2;
+  color: var(--brand-primary);
+}
+
+.btn-ghost:active {
+  opacity: 0.7;
 }
 
 .btn-sm {
   padding: 12rpx 24rpx;
-  font-size: 24rpx;
+  font-size: var(--font-size-sm);
+  height: 64rpx;
 }
 
 .btn-lg {
   padding: 24rpx 48rpx;
-  font-size: 32rpx;
+  font-size: var(--font-size-md);
 }
 
 .btn-block {
@@ -136,19 +189,15 @@
   display: flex;
 }
 
-/* === 按钮组 Button Group === */
-
-.btn-group {
-  display: flex;
-  gap: 16rpx;
-  width: 100%;
+/* 胶囊按钮 */
+.btn-pill {
+  border-radius: var(--radius-full);
+  padding: 8rpx 24rpx;
+  height: auto;
+  font-size: var(--font-size-sm);
 }
 
-.btn-group .btn {
-  flex: 1;
-}
-
-/* === 现代化输入框组件 Modern Inputs === */
+/* === 输入框 Inputs === */
 
 .input-group {
   margin-bottom: 24rpx;
@@ -156,29 +205,28 @@
 
 .input-label {
   display: block;
-  font-size: 24rpx;
-  font-weight: 500;
-  color: #757575;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
   margin-bottom: 12rpx;
+  letter-spacing: 2rpx;
 }
 
 .input-modern {
   width: 100%;
   height: 80rpx;
   padding: 0 24rpx;
-  border: 2rpx solid #e0e0e0;
-  border-radius: 12rpx;
-  background: #fafafa;
-  font-size: 28rpx;
-  color: #212121;
-  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1rpx solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  transition: border-color var(--duration-base) var(--ease-standard);
   box-sizing: border-box;
 }
 
 .input-modern:focus {
-  border-color: #4A90E2;
-  background: #ffffff;
-  box-shadow: 0 0 0 4rpx rgba(74, 144, 226, 0.1);
+  border-color: var(--brand-primary);
 }
 
 .textarea-modern {
@@ -187,106 +235,109 @@
   resize: vertical;
 }
 
-/* === 现代化标签组件 Modern Tags === */
+/* === 标签 Tags === */
 
 .tag {
-  display: inline-block;
-  padding: 8rpx 12rpx;
-  border-radius: 8rpx;
-  font-size: 24rpx;
+  display: inline-flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 8rpx 16rpx;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
   font-weight: 500;
   white-space: nowrap;
 }
 
-.tag-primary {
-  background: #e3f2fd;
-  color: #1e88e5;
+.tag-brand {
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
 }
 
 .tag-success {
-  background: #e8f5e9;
-  color: #43a047;
+  background: var(--color-success-light);
+  color: var(--color-success);
 }
 
 .tag-warning {
-  background: #fff8e1;
-  color: #ffb300;
+  background: var(--color-warning-light);
+  color: var(--color-warning);
 }
 
 .tag-danger {
-  background: #ffebee;
-  color: #e53935;
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+.tag-info {
+  background: var(--color-info-light);
+  color: var(--color-info);
 }
 
 .tag-outline {
   background: transparent;
-  border: 2rpx solid #e0e0e0;
-  color: #757575;
+  border: 1rpx solid var(--border-color);
+  color: var(--text-secondary);
 }
 
-/* === 现代化徽章组件 Modern Badges === */
+/* === 徽章 Badges === */
 
 .badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 4rpx;
   min-width: 32rpx;
   height: 32rpx;
-  padding: 0 8rpx;
-  border-radius: 9999rpx;
-  font-size: 20rpx;
-  font-weight: 700;
-  color: #ffffff;
+  padding: 0 12rpx;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--text-inverse);
 }
 
-.badge-primary {
-  background: #4A90E2;
+.badge-brand {
+  background: var(--brand-primary);
 }
 
 .badge-danger {
-  background: #F5222D;
+  background: var(--brand-emergency);
 }
 
 .badge-success {
-  background: #4caf50;
+  background: var(--color-success);
 }
 
-/* === 现代化头像组件 Modern Avatars === */
+/* VIP 徽章 */
+.badge-vip {
+  background: var(--brand-primary);
+  color: var(--text-inverse);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  padding: 4rpx 16rpx;
+  border-radius: var(--radius-full);
+}
+
+/* === 头像 Avatars === */
 
 .avatar {
   width: 80rpx;
   height: 80rpx;
-  border-radius: 9999rpx;
+  border-radius: var(--radius-full);
   overflow: hidden;
-  background: #eeeeee;
+  background: var(--border-light);
   flex-shrink: 0;
 }
 
-.avatar-sm {
-  width: 64rpx;
-  height: 64rpx;
-}
+.avatar-sm { width: 64rpx; height: 64rpx; }
+.avatar-md { width: 80rpx; height: 80rpx; }
+.avatar-lg { width: 120rpx; height: 120rpx; }
+.avatar-xl { width: 160rpx; height: 160rpx; }
 
-.avatar-md {
-  width: 80rpx;
-  height: 80rpx;
-}
-
-.avatar-lg {
-  width: 120rpx;
-  height: 120rpx;
-}
-
-.avatar-xl {
-  width: 160rpx;
-  height: 160rpx;
-}
-
-/* === 现代化分隔线 Modern Dividers === */
+/* === 分隔线 Dividers === */
 
 .divider {
   height: 1rpx;
-  background: #e0e0e0;
+  background: var(--border-color);
   margin: 24rpx 0;
 }
 
@@ -302,24 +353,24 @@
   content: '';
   flex: 1;
   height: 1rpx;
-  background: #e0e0e0;
+  background: var(--border-color);
 }
 
 .divider-text text {
   padding: 0 24rpx;
-  font-size: 24rpx;
-  color: #9e9e9e;
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
 }
 
-/* === 现代化加载状态 Modern Loading === */
+/* === 加载 Loading === */
 
-.loading {
+.loading-spinner {
   display: inline-block;
   width: 40rpx;
   height: 40rpx;
-  border: 4rpx solid #e0e0e0;
-  border-top-color: #4A90E2;
-  border-radius: 9999rpx;
+  border: 4rpx solid var(--border-color);
+  border-top-color: var(--brand-primary);
+  border-radius: var(--radius-full);
   animation: spin 0.8s linear infinite;
 }
 
@@ -327,7 +378,7 @@
   to { transform: rotate(360deg); }
 }
 
-/* === 现代化空状态 Modern Empty States === */
+/* === 空状态 Empty State === */
 
 .empty-state {
   display: flex;
@@ -341,290 +392,225 @@
 .empty-icon {
   font-size: 120rpx;
   margin-bottom: 24rpx;
-  opacity: 0.5;
+  color: var(--text-tertiary);
 }
 
 .empty-title {
-  font-size: 36rpx;
+  font-size: var(--font-size-lg);
   font-weight: 500;
-  color: #212121;
+  color: var(--text-primary);
   margin-bottom: 12rpx;
 }
 
 .empty-description {
-  font-size: 28rpx;
-  color: #757575;
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
   margin-bottom: 32rpx;
+  line-height: var(--line-height-relaxed);
 }
 
-/* === 现代化网格系统 Modern Grid System === */
+/* === 网格 Grid === */
 
 .grid {
   display: grid;
-  gap: 16rpx;
+  gap: var(--spacing-md);
 }
 
-.grid-2 {
-  grid-template-columns: repeat(2, 1fr);
-}
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
 
-.grid-3 {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.grid-4 {
-  grid-template-columns: repeat(4, 1fr);
-}
-
-/* === 现代化Flexbox工具类 Modern Flex Utilities === */
-
-.flex { display: flex; }
-.flex-col { flex-direction: column; }
-.flex-wrap { flex-wrap: wrap; }
-
-.items-start { align-items: flex-start; }
-.items-center { align-items: center; }
-.items-end { align-items: flex-end; }
-
-.justify-start { justify-content: flex-start; }
-.justify-center { justify-content: center; }
-.justify-end { justify-content: flex-end; }
-.justify-between { justify-content: space-between; }
-.justify-around { justify-content: space-around; }
-
-.flex-1 { flex: 1; }
-.flex-auto { flex: auto; }
-.flex-none { flex: none; }
-
-/* === 现代化文本工具类 Modern Text Utilities === */
-
-.text-primary { color: #212121; }
-.text-secondary { color: #757575; }
-.text-tertiary { color: #9e9e9e; }
-.text-inverse { color: #ffffff; }
-
-.text-center { text-align: center; }
-.text-left { text-align: left; }
-.text-right { text-align: right; }
-
-/* === 现代化背景工具类 Modern Background Utilities === */
-
-.bg-primary { background-color: #ffffff; }
-.bg-secondary { background-color: #f8f9fa; }
-.bg-tertiary { background-color: #f5f5f5; }
-
-/* === 现代化圆角工具类 Modern Radius Utilities === */
-
-.rounded-none { border-radius: 0; }
-.rounded-sm { border-radius: 4rpx; }
-.rounded-md { border-radius: 8rpx; }
-.rounded-lg { border-radius: 12rpx; }
-.rounded-xl { border-radius: 16rpx; }
-.rounded-2xl { border-radius: 24rpx; }
-.rounded-3xl { border-radius: 32rpx; }
-.rounded-full { border-radius: 9999rpx; }
-
-/* === 现代化阴影工具类 Modern Shadow Utilities === */
-
-.shadow-sm { box-shadow: 0 1rpx 3rpx 0 rgba(0, 0, 0, 0.1), 0 1rpx 2rpx 0 rgba(0, 0, 0, 0.06); }
-.shadow-md { box-shadow: 0 4rpx 6rpx -1rpx rgba(0, 0, 0, 0.1), 0 2rpx 4rpx -1rpx rgba(0, 0, 0, 0.06); }
-.shadow-lg { box-shadow: 0 10rpx 15rpx -3rpx rgba(0, 0, 0, 0.1), 0 4rpx 6rpx -2rpx rgba(0, 0, 0, 0.05); }
-.shadow-xl { box-shadow: 0 20rpx 25rpx -5rpx rgba(0, 0, 0, 0.1), 0 10rpx 10rpx -5rpx rgba(0, 0, 0, 0.04); }
-.shadow-none { box-shadow: none; }
-
-/* === 现代化动画工具类 Modern Animation Utilities === */
-
-.transition { transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1); }
-.transition-fast { transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1); }
-.transition-slow { transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1); }
-
-.hover-lift:active {
-  transform: translateY(-4rpx);
-  box-shadow: 0 10rpx 15rpx -3rpx rgba(0, 0, 0, 0.1), 0 4rpx 6rpx -2rpx rgba(0, 0, 0, 0.05);
-}
-
-.hover-scale:active {
-  transform: scale(1.05);
-}
-
-/* === 现代化位置工具类 Modern Position Utilities === */
-
-.relative { position: relative; }
-.absolute { position: absolute; }
-.fixed { position: fixed; }
-.sticky { position: sticky; }
-
-/* === 现代化显示工具类 Modern Display Utilities === */
-
-.block { display: block; }
-.inline-block { display: inline-block; }
-.inline { display: inline; }
-.hidden { display: none; }
-
-/* === 现代化溢出工具类 Modern Overflow Utilities === */
-
-.overflow-hidden { overflow: hidden; }
-.overflow-auto { overflow: auto; }
-.overflow-scroll { overflow: scroll; }
-
-/* === 现代化透明度工具类 Modern Opacity Utilities === */
-
-.opacity-0 { opacity: 0; }
-.opacity-50 { opacity: 0.5; }
-.opacity-100 { opacity: 1; }
-
-/* === 现代化渐变背景 Modern Gradient Backgrounds === */
-
-.gradient-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.gradient-ocean {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.gradient-sunset {
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-}
-
-.gradient-forest {
-  background: linear-gradient(135deg, #38ef7d 0%, #11998e 100%);
-}
-
-.gradient-danger {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-/* === 现代化玻璃态效果 Modern Glassmorphism === */
-
-.glass {
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10rpx);
-  -webkit-backdrop-filter: blur(10rpx);
-  border: 1rpx solid rgba(255, 255, 255, 0.18);
-}
-
-/* === 现代化卡片悬停效果 Modern Card Hover Effects === */
-
-.card-hover {
-  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.card-hover:active {
-  transform: translateY(-4rpx);
-  box-shadow: 0 10rpx 15rpx -3rpx rgba(0, 0, 0, 0.1), 0 4rpx 6rpx -2rpx rgba(0, 0, 0, 0.05);
-}
-
-/* === 现代化脉冲动画 Modern Pulse Animation === */
-
-.pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-/* === 现代化闪烁动画 Modern Bounce Animation === */
-
-.bounce {
-  animation: bounce 1s infinite;
-}
-
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(-5%);
-    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
-  }
-  50% {
-    transform: translateY(0);
-    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
-  }
-}
-
-/* === 现代化旋转动画 Modern Spin Animation === */
-
-.spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* === 现代化通知组件 Modern Alert Components === */
+/* === 通知 Alerts === */
 
 .alert {
   padding: 16rpx 24rpx;
-  border-radius: 12rpx;
+  border-radius: var(--radius-lg);
   margin-bottom: 24rpx;
   display: flex;
   align-items: center;
+  gap: 12rpx;
 }
 
 .alert-success {
-  background: #e8f5e9;
-  color: #43a047;
-  border-left: 4rpx solid #4caf50;
+  background: var(--color-success-light);
+  color: var(--color-success);
+  border-left: 4rpx solid var(--color-success);
 }
 
 .alert-warning {
-  background: #fff8e1;
-  color: #ffb300;
-  border-left: 4rpx solid #ffc107;
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+  border-left: 4rpx solid var(--color-warning);
 }
 
 .alert-danger {
-  background: #ffebee;
-  color: #e53935;
-  border-left: 4rpx solid #f44336;
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+  border-left: 4rpx solid var(--color-danger);
 }
 
 .alert-info {
-  background: #e3f2fd;
-  color: #1e88e5;
-  border-left: 4rpx solid #2196f3;
+  background: var(--color-info-light);
+  color: var(--color-info);
+  border-left: 4rpx solid var(--color-info);
 }
 
-/* === 现代化进度条 Modern Progress Bar === */
+/* === 进度条 Progress Bar === */
 
 .progress {
   width: 100%;
   height: 8rpx;
-  background: #eeeeee;
-  border-radius: 9999rpx;
+  background: var(--border-light);
+  border-radius: var(--radius-full);
   overflow: hidden;
 }
 
 .progress-bar {
   height: 100%;
-  background: #4A90E2;
-  border-radius: 9999rpx;
-  transition: width 500ms cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--brand-primary);
+  border-radius: var(--radius-full);
+  transition: width 500ms var(--ease-standard);
 }
 
-.progress-bar-success {
-  background: #4caf50;
+.progress-bar-success { background: var(--color-success); }
+.progress-bar-warning { background: var(--color-warning); }
+.progress-bar-danger { background: var(--color-danger); }
+
+/* === 图标容器 Icon Container === */
+
+.icon-circle {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  flex-shrink: 0;
 }
 
-.progress-bar-warning {
-  background: #ffc107;
+.icon-circle-brand {
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
 }
 
-.progress-bar-danger {
-  background: #f44336;
+.icon-circle-success {
+  background: var(--color-success-light);
+  color: var(--color-success);
 }
 
-/* === 响应式工具类 Responsive Utilities === */
+.icon-circle-warning {
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+}
 
-/* 小程序使用rpx自动适配，不需要媒体查询 */
+.icon-circle-danger {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+.icon-circle-info {
+  background: var(--color-info-light);
+  color: var(--color-info);
+}
+
+.icon-circle-secondary {
+  background: var(--brand-secondary-light);
+  color: var(--brand-secondary);
+}
+
+/* === 动画 Animations === */
+
+.pulse-subtle {
+  animation: pulseSubtle 3s var(--ease-standard) infinite;
+}
+
+@keyframes pulseSubtle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.06); }
+}
+
+.fade-in {
+  animation: fadeIn var(--duration-base) var(--ease-standard);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.slide-up {
+  animation: slideUp var(--duration-slow) var(--ease-standard);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.scale-in {
+  animation: scaleIn var(--duration-base) var(--ease-standard);
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* 交错入场动画（仅核心列表） */
+.stagger-item {
+  opacity: 0;
+  transform: translateY(16rpx);
+  animation: staggerIn var(--duration-slow) var(--ease-standard) forwards;
+}
+
+@keyframes staggerIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* === 骨架屏 Skeleton === */
+
+.skeleton {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: skeletonShimmer 1.5s infinite;
+}
+
+@keyframes skeletonShimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+/* === 按钮组 Button Group === */
+
+.btn-group {
+  display: flex;
+  gap: 16rpx;
+  width: 100%;
+}
+
+.btn-group .btn {
+  flex: 1;
+}
+
+/* === 悬停效果 Hover Effects === */
+
+.hover-lift:active {
+  transform: translateY(-2rpx);
+}
+
+.hover-scale:active {
+  transform: scale(0.97);
+}

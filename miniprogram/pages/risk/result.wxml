@@ -1,135 +1,136 @@
-<!--风险结果页面-->
-<view class="container">
+<!--风险结果页面 — Warm Professionalism v2.0-->
+<view class="page">
+
   <!-- 会员标识 -->
   <view class="member-indicator" wx:if="{{isMember}}" bindtap="goToMember">
-    <text class="member-indicator-icon">👑</text>
+    <image class="member-indicator-icon" src="/images/icons/crown.svg" mode="aspectFit" aria-label="会员" />
     <text class="member-indicator-text">会员用户</text>
-    <text class="member-indicator-arrow">></text>
+    <text class="member-indicator-arrow">›</text>
   </view>
 
-  <!-- 风险等级卡片 -->
-  <view class="risk-card" style="background-color: {{riskDisplayInfo.color}};">
-    <view class="risk-icon">{{riskDisplayInfo.icon}}</view>
-    <view class="risk-title">{{riskDisplayInfo.title}}</view>
-    <view class="risk-description">{{riskDisplayInfo.description}}</view>
+  <!-- 风险等级卡片 — 状态卡片模式 -->
+  <view class="risk-card risk-card--{{riskLevel}}" style="background-color: {{riskDisplayInfo.color}};">
+    <view class="risk-card-icon-wrap">
+      <image class="risk-card-icon" src="/images/icons/{{riskLevel === 'high' ? 'alert' : (riskLevel === 'mid' ? 'warning' : 'check')}}.svg" mode="aspectFit" aria-label="{{riskDisplayInfo.title}}" />
+    </view>
+    <text class="risk-card-title">{{riskDisplayInfo.title}}</text>
+    <text class="risk-card-desc">{{riskDisplayInfo.description}}</text>
   </view>
 
-  <!-- 匹配规则说明 -->
-  <view class="info-section">
-    <view class="section-title">评估依据</view>
-    <view class="rule-info">{{matchedRule}}</view>
+  <!-- 评估依据 -->
+  <view class="info-card">
+    <text class="info-card-title">评估依据</text>
+    <text class="info-card-rule">{{matchedRule}}</text>
   </view>
 
   <!-- 宠物信息 -->
-  <view class="info-section">
-    <view class="section-title">宠物信息</view>
-    <view class="pet-info">
-      <view class="info-item">
-        <text class="info-label">宠物名称：</text>
-        <text class="info-value">{{petInfo.name}}</text>
-      </view>
-      <view class="info-item">
-        <text class="info-label">宠物类型：</text>
-        <text class="info-value">{{petInfo.type === 'cat' ? '猫' : '狗'}}</text>
-      </view>
+  <view class="info-card">
+    <text class="info-card-title">宠物信息</text>
+    <view class="info-card-row">
+      <text class="info-card-label">宠物名称</text>
+      <text class="info-card-value">{{petInfo.name}}</text>
+    </view>
+    <view class="info-card-row">
+      <text class="info-card-label">宠物类型</text>
+      <text class="info-card-value">{{petInfo.type === 'cat' ? '猫' : '狗'}}</text>
     </view>
   </view>
 
   <!-- 已选症状 -->
-  <view class="info-section">
-    <view class="section-title">已选症状</view>
+  <view class="info-card">
+    <text class="info-card-title">已选症状</text>
     <view class="symptom-tags">
-      <view class="symptom-tag" wx:for="{{selectedSymptoms}}" wx:key="*this">
-        {{item}}
-      </view>
+      <view class="symptom-tag" wx:for="{{selectedSymptoms}}" wx:key="*this">{{item}}</view>
     </view>
   </view>
 
-  <!-- 免责声明 -->
-  <view class="disclaimer-section">
-    <view class="disclaimer-title">⚠️ 免责声明</view>
-    <view class="disclaimer-content">
-      本评估结果基于您提供的症状信息，由规则引擎辅助生成，不能作为最终诊断依据。若宠物出现持续恶化、痛苦加剧或高风险提示，请务必及时就医。
+  <!-- 免责声明 — 图标替代 emoji -->
+  <view class="disclaimer-card">
+    <view class="disclaimer-header">
+      <image class="disclaimer-icon" src="/images/icons/warning.svg" mode="aspectFit" aria-label="警告" />
+      <text class="disclaimer-title">免责声明</text>
     </view>
+    <text class="disclaimer-text">本评估结果基于您提供的症状信息，由规则引擎辅助生成，不能作为最终诊断依据。若宠物出现持续恶化、痛苦加剧或高风险提示，请务必及时就医。</text>
   </view>
 
-  <!-- AI报告入口卡片（高风险不显示，优先就医） -->
-  <view class="ai-report-card" wx:if="{{!loading && quotaInfo && !reportPurchased && riskLevel !== 'high'}}">
-    <view class="report-card-header">📋 AI健康报告</view>
-    <view class="report-card-desc">包含症状分析、护理建议、就医指导等8大章节</view>
-    <!-- 会员额度耗尽提示 -->
-    <view class="quota-exhausted-notice" wx:if="{{quotaInfo.member_quota_exhausted}}">
-      <text>⚠️ 本月免费额度已用完（{{quotaInfo.member_quota_used}}/{{quotaInfo.member_quota_total}}），本次 ¥9.90</text>
-      <text class="upgrade-link" bindtap="goToMember">升级年度会员，每月更多免费额度 →</text>
+  <!-- AI报告入口卡片（白底 + 品牌色左边框） -->
+  <view class="report-card" wx:if="{{!loading && quotaInfo && !reportPurchased && riskLevel !== 'high'}}">
+    <view class="report-card-header">
+      <image class="report-card-icon" src="/images/icons/clipboard.svg" mode="aspectFit" aria-label="报告" />
+      <text class="report-card-title">AI健康报告</text>
     </view>
-    <view class="report-card-price">
-      <text class="price-tag" wx:if="{{quotaInfo.quota_source === 'first_report'}}">首份仅需 ¥1.00</text>
-      <text class="price-tag" wx:elif="{{quotaInfo.has_free_quota}}">免费获取</text>
-      <text class="price-tag" wx:else>¥9.90</text>
-      <text class="member-link" wx:if="{{quotaInfo.quota_source === 'paid' && !quotaInfo.member_quota_exhausted}}" bindtap="goToMember">成为会员，免费获取 →</text>
+    <text class="report-card-desc">包含症状分析、护理建议、就医指导等8大章节</text>
+
+    <view class="report-quota-notice" wx:if="{{quotaInfo.member_quota_exhausted}}">
+      <text>本月免费额度已用完（{{quotaInfo.member_quota_used}}/{{quotaInfo.member_quota_total}}），本次 ¥9.90</text>
+      <text class="report-upgrade-link" bindtap="goToMember">升级年度会员 →</text>
     </view>
-    <!-- 合规：付费前固定提示 -->
-    <view class="compliance-notice">
-      ⚕️ 本报告仅为健康参考，不构成医疗诊断，如有紧急症状请立即就医
+
+    <view class="report-price-row">
+      <text class="report-price" wx:if="{{quotaInfo.quota_source === 'first_report'}}">首份 ¥1.00</text>
+      <text class="report-price" wx:elif="{{quotaInfo.has_free_quota}}">免费获取</text>
+      <text class="report-price" wx:else>¥9.90</text>
+      <text class="report-member-link" wx:if="{{quotaInfo.quota_source === 'paid' && !quotaInfo.member_quota_exhausted}}" bindtap="goToMember">成为会员，免费获取 ›</text>
     </view>
+
+    <text class="report-compliance">本报告仅为健康参考，不构成医疗诊断，如有紧急症状请立即就医</text>
     <button class="report-btn" bindtap="getAIReport" loading="{{purchasing}}">
       {{quotaInfo.has_free_quota && quotaInfo.price === 0 ? '免费获取报告' : '获取AI报告'}}
     </button>
   </view>
 
-  <!-- 已有报告提示（高风险不显示） -->
-  <view class="report-purchased-card" wx:if="{{!loading && reportPurchased && riskLevel !== 'high'}}">
-    <view class="purchased-header">✅ 已获取AI报告</view>
-    <button class="view-report-btn" bindtap="viewExistingReport">查看报告详情</button>
+  <!-- 已有报告 -->
+  <view class="report-done-card" wx:if="{{!loading && reportPurchased && riskLevel !== 'high'}}">
+    <view class="report-done-header">
+      <image class="report-done-icon" src="/images/icons/check.svg" mode="aspectFit" aria-label="已获取" />
+      <text class="report-done-text">已获取AI报告</text>
+    </view>
+    <button class="report-done-btn" bindtap="viewExistingReport">查看报告详情</button>
   </view>
 
-  <!-- 操作按钮 -->
-  <view class="action-section">
-    <!-- 高风险：全屏红色警告 + 紧急操作 -->
+  <!-- 操作按钮区 -->
+  <view class="actions">
+    <!-- 高风险 -->
     <block wx:if="{{riskLevel === 'high'}}">
-      <view class="high-risk-warning-box">
-        <view class="warning-icon">🚨</view>
-        <view class="warning-title">您的宠物可能处于危险中</view>
-        <view class="warning-desc">检测到高风险症状，请立即联系附近宠物医院，切勿延误。</view>
-        <view class="warning-symptoms">
-          <text class="warning-symptom-tag" wx:for="{{selectedSymptoms}}" wx:key="*this">{{item}}</text>
+      <view class="high-risk-box">
+        <image class="high-risk-icon" src="/images/icons/alert.svg" mode="aspectFit" aria-label="危险" />
+        <text class="high-risk-title">您的宠物可能处于危险中</text>
+        <text class="high-risk-desc">检测到高风险症状，请立即联系附近宠物医院，切勿延误。</text>
+        <view class="high-risk-symptoms">
+          <text class="high-risk-tag" wx:for="{{selectedSymptoms}}" wx:key="*this">{{item}}</text>
         </view>
-        <view class="warning-note">⚠️ AI 报告无法替代紧急救治，请优先就医</view>
+        <text class="high-risk-note">AI 报告无法替代紧急救治，请优先就医</text>
       </view>
-      <button class="emergency-btn" bindtap="goToEmergency">
-        🚨 前往急救通道
+      <button class="action-btn action-btn--emergency" bindtap="goToEmergency">
+        <image class="action-btn-icon" src="/images/icons/alert.svg" mode="aspectFit" />前往急救通道
       </button>
-      <button class="primary-btn" bindtap="viewHospitals">
-        🏥 查看附近医院
+      <button class="action-btn action-btn--primary" bindtap="viewHospitals">
+        <image class="action-btn-icon" src="/images/icons/hospital.svg" mode="aspectFit" />查看附近医院
       </button>
     </block>
 
-    <!-- 中风险：显示查看医院和返回首页按钮 -->
+    <!-- 中风险 -->
     <block wx:if="{{riskLevel === 'mid'}}">
-      <button class="primary-btn" bindtap="viewHospitals">
-        🏥 查看附近医院
+      <button class="action-btn action-btn--primary" bindtap="viewHospitals">
+        <image class="action-btn-icon" src="/images/icons/hospital.svg" mode="aspectFit" />查看附近医院
       </button>
-      <button class="secondary-btn" bindtap="goHome">
-        返回首页
-      </button>
+      <button class="action-btn action-btn--secondary" bindtap="goHome">返回首页</button>
     </block>
 
-    <!-- 低风险：只显示返回首页按钮 -->
-    <button class="secondary-btn" wx:if="{{riskLevel === 'low'}}" bindtap="goHome">
-      返回首页
-    </button>
+    <!-- 低风险 -->
+    <button class="action-btn action-btn--secondary" wx:if="{{riskLevel === 'low'}}" bindtap="goHome">返回首页</button>
   </view>
 
   <!-- 支付选项面板 -->
-  <view class="pay-options-mask" wx:if="{{showPayOptions}}" bindtap="closePayOptions">
-    <view class="pay-options-panel" catchtap="">
+  <view class="pay-mask" wx:if="{{showPayOptions}}" bindtap="closePayOptions">
+    <view class="pay-panel" catchtap="">
       <view class="pay-panel-header">
         <text class="pay-panel-title">获取AI健康报告</text>
         <text class="pay-panel-desc">包含症状分析、护理建议、就医指导等8大章节</text>
       </view>
-      <view class="pay-option-item" bindtap="paySingleReport" hover-class="pay-option-hover">
+      <view class="pay-option" bindtap="paySingleReport" hover-class="pay-option--hover">
         <view class="pay-option-left">
-          <text class="pay-option-icon">📋</text>
+          <image class="pay-option-icon" src="/images/icons/clipboard.svg" mode="aspectFit" aria-label="报告" />
           <view class="pay-option-info">
             <text class="pay-option-name">单份报告</text>
             <text class="pay-option-desc">一次性获取完整AI报告</text>
@@ -137,10 +138,10 @@
         </view>
         <text class="pay-option-price">¥9.90</text>
       </view>
-      <view class="pay-option-item pay-option-recommend" bindtap="chooseMembership" hover-class="pay-option-hover">
+      <view class="pay-option pay-option--recommend" bindtap="chooseMembership" hover-class="pay-option--hover">
         <view class="pay-recommend-badge">推荐</view>
         <view class="pay-option-left">
-          <text class="pay-option-icon">👑</text>
+          <image class="pay-option-icon" src="/images/icons/crown.svg" mode="aspectFit" aria-label="会员" />
           <view class="pay-option-info">
             <text class="pay-option-name">开通会员</text>
             <text class="pay-option-desc">每月3份免费报告 + 无限自查</text>
@@ -148,28 +149,30 @@
         </view>
         <text class="pay-option-price">¥19.90<small>/月</small></text>
       </view>
-      <view class="pay-panel-cancel" bindtap="closePayOptions">取消</view>
+      <view class="pay-cancel" bindtap="closePayOptions">取消</view>
     </view>
   </view>
 
-  <!-- 免责声明强制勾选弹窗 -->
-  <view class="disclaimer-modal-mask" wx:if="{{showDisclaimerModal}}">
-    <view class="disclaimer-modal">
-      <view class="disclaimer-modal-title">⚠️ 重要声明</view>
-      <view class="disclaimer-modal-content">
-        <view class="disclaimer-modal-item">1. 本 AI 健康报告仅为健康参考，<text class="disclaimer-highlight">不构成兽医诊断</text>。</view>
-        <view class="disclaimer-modal-item">2. 如您的宠物出现紧急症状（抽搐、昏迷、大出血等），请立即就医，不要等待报告。</view>
-        <view class="disclaimer-modal-item">3. 报告内容基于您提供的症状信息，由 AI 辅助生成，可能存在局限性。</view>
+  <!-- 免责声明弹窗 -->
+  <view class="modal-mask" wx:if="{{showDisclaimerModal}}">
+    <view class="modal">
+      <view class="modal-title">
+        <image class="modal-title-icon" src="/images/icons/warning.svg" mode="aspectFit" aria-label="重要" />
+        重要声明
       </view>
-      <view class="disclaimer-checkbox-row" bindtap="toggleDisclaimerAgree">
-        <view class="disclaimer-checkbox {{disclaimerAgreed ? 'checked' : ''}}">
-          <text wx:if="{{disclaimerAgreed}}">✓</text>
+      <view class="modal-content">
+        <view class="modal-item">1. 本 AI 健康报告仅为健康参考，<text class="modal-highlight">不构成兽医诊断</text>。</view>
+        <view class="modal-item">2. 如您的宠物出现紧急症状（抽搐、昏迷、大出血等），请立即就医，不要等待报告。</view>
+        <view class="modal-item">3. 报告内容基于您提供的症状信息，由 AI 辅助生成，可能存在局限性。</view>
+      </view>
+      <view class="modal-checkbox-row" bindtap="toggleDisclaimerAgree">
+        <view class="modal-checkbox {{disclaimerAgreed ? 'modal-checkbox--checked' : ''}}">
+          <image wx:if="{{disclaimerAgreed}}" class="modal-checkbox-check" src="/images/icons/check.svg" mode="aspectFit" />
         </view>
-        <text class="disclaimer-checkbox-label">我已知晓并同意以上声明</text>
+        <text class="modal-checkbox-label">我已知晓并同意以上声明</text>
       </view>
-      <button class="disclaimer-confirm-btn {{disclaimerAgreed ? '' : 'disabled'}}" bindtap="confirmDisclaimer">
-        确认并继续
-      </button>
+      <button class="modal-confirm {{disclaimerAgreed ? '' : 'modal-confirm--disabled'}}" bindtap="confirmDisclaimer">确认并继续</button>
     </view>
   </view>
+
 </view>

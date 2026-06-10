@@ -30,17 +30,17 @@
     "pages/member/family"
   ],
   "window": {
-    "backgroundColor": "#F6F6F6",
-    "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#4A90E2",
+    "backgroundColor": "#F5F0EB",
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#B35D3A",
     "navigationBarTitleText": "宠物症状自查",
     "navigationBarTextStyle": "white"
   },
   "tabBar": {
-    "color": "#666666",
-    "selectedColor": "#4A90E2",
-    "backgroundColor": "#ffffff",
-    "borderStyle": "black",
+    "color": "#7A7267",
+    "selectedColor": "#B35D3A",
+    "backgroundColor": "#FDFAF7",
+    "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/index/index",

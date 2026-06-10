@@ -1,84 +1,71 @@
 /* ===================================
-   现代化首页样式 (微信小程序兼容版本)
-   Modern Homepage Styles
+   宠脉AI 首页样式 v2.0
+   Homepage — "Warm Professionalism"
    =================================== */
-
-@import "../../utils/ui-components.wxss";
-@import "emergency-btn.wxss";
-@import "followup-modal.wxss";
 
 /* === 页面容器 === */
 
 .page-container {
   min-height: 100vh;
-  background: linear-gradient(180deg, #f8f9ff 0%, #f0f2f5 100%);
-  padding-bottom: 96rpx;
+  background: var(--bg-color);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 96rpx);
 }
 
-/* === 顶部欢迎区域 === */
+/* === 顶部欢迎区域 — 纯陶土色，无渐变 === */
 
 .welcome-section {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 48rpx 24rpx 24rpx;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 0 0 32rpx 32rpx;
+  padding: 48rpx 32rpx 32rpx;
+  background: var(--brand-primary);
+  border-radius: 0 0 var(--radius-3xl) var(--radius-3xl);
   margin-bottom: 32rpx;
-  position: relative;
-  overflow: hidden;
-}
-
-.welcome-section::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -20%;
-  width: 200rpx;
-  height: 200rpx;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
 }
 
 .welcome-content {
   flex: 1;
-  z-index: 1;
 }
 
 .welcome-greeting {
   display: flex;
   align-items: center;
   gap: 12rpx;
-  margin-bottom: 12rpx;
+  margin-bottom: 8rpx;
 }
 
-.greeting-emoji {
-  font-size: 40rpx;
+.greeting-icon {
+  width: 36rpx;
+  height: 36rpx;
+  filter: brightness(0) invert(1);
 }
 
 .greeting-text {
-  font-size: 40rpx;
-  font-weight: 700;
-  color: #ffffff;
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--text-inverse);
 }
 
 .welcome-subtitle {
-  font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.9);
+  margin-top: 4rpx;
 }
 
+.welcome-subtitle text {
+  font-size: var(--font-size-sm);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* 用户头像 */
 .user-avatar-section {
   position: relative;
-  margin-left: 24rpx;
-  z-index: 1;
+  flex-shrink: 0;
 }
 
 .user-avatar {
-  width: 88rpx;
-  height: 88rpx;
-  border-radius: 9999rpx;
-  border: 4rpx solid rgba(255, 255, 255, 0.3);
-  background: #eeeeee;
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: var(--radius-full);
+  border: 4rpx solid rgba(255, 255, 255, 0.4);
 }
 
 .avatar-badge {
@@ -87,38 +74,179 @@
   right: -4rpx;
   width: 32rpx;
   height: 32rpx;
-  background: #F5A623;
-  border-radius: 9999rpx;
+  background: var(--text-inverse);
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20rpx;
-  border: 2rpx solid #ffffff;
 }
 
-/* === 主要功能网格 === */
+.avatar-badge-icon {
+  width: 20rpx;
+  height: 20rpx;
+}
+
+/* === 紧急救助按钮 — 无渐变 === */
+
+.emergency-wrapper {
+  padding: 0 32rpx;
+  margin-bottom: 32rpx;
+}
+
+.emergency-btn {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  width: 100%;
+  padding: 28rpx 32rpx;
+  background: var(--brand-emergency);
+  border-radius: var(--radius-2xl);
+  border: none;
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.emergency-btn::after { border: none; }
+
+.emergency-btn-press {
+  transform: scale(0.97);
+  opacity: 0.95;
+}
+
+.emergency-btn-icon-wrap {
+  width: 64rpx;
+  height: 64rpx;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.emergency-btn-icon {
+  width: 36rpx;
+  height: 36rpx;
+  filter: brightness(0) invert(1);
+}
+
+.emergency-btn-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.emergency-title {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--text-inverse);
+}
+
+.emergency-desc {
+  font-size: var(--font-size-sm);
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 4rpx;
+}
+
+/* === 会员 Banner — 无渐变 === */
+
+.member-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 32rpx 32rpx;
+  padding: 20rpx 24rpx;
+  background: var(--brand-primary-light);
+  border: 1rpx solid var(--border-color);
+  border-radius: var(--radius-xl);
+}
+
+.member-banner--inactive {
+  background: var(--bg-card);
+}
+
+.member-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex: 1;
+}
+
+.member-banner-icon-wrap {
+  width: 36rpx;
+  height: 36rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.member-banner-icon {
+  width: 28rpx;
+  height: 28rpx;
+}
+
+.member-banner-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.member-banner-action {
+  font-size: var(--font-size-sm);
+  color: var(--brand-primary);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+/* === 功能网格 — 白底磁贴，无渐变 === */
 
 .main-features {
-  padding: 0 24rpx;
-  margin-bottom: 48rpx;
+  padding: 0 32rpx;
+  margin-bottom: 40rpx;
 }
 
 .section-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 24rpx;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.section-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.section-header-icon {
+  width: 28rpx;
+  height: 28rpx;
 }
 
 .section-title {
-  font-size: 36rpx;
-  font-weight: 700;
-  color: #212121;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.section-refresh {
+  font-size: var(--font-size-sm);
+  color: var(--brand-primary);
 }
 
 .section-more {
-  font-size: 24rpx;
-  color: #4A90E2;
+  font-size: var(--font-size-sm);
+  color: var(--brand-primary);
+}
+
+.section-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.update-time {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
 }
 
 .features-grid {
@@ -127,543 +255,401 @@
   gap: 16rpx;
 }
 
-.feature-card {
-  background: #ffffff;
-  border-radius: 16rpx;
+/* 磁贴卡片 */
+.tile {
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
   padding: 24rpx;
+  border: 1rpx solid var(--border-color);
   position: relative;
   overflow: hidden;
-  box-shadow: 0 1rpx 3rpx 0 rgba(0, 0, 0, 0.1), 0 1rpx 2rpx 0 rgba(0, 0, 0, 0.06);
-  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
-  min-height: 200rpx;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-}
-
-.primary-gradient {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.success-gradient {
-  background: linear-gradient(135deg, #38ef7d 0%, #11998e 100%);
-}
-
-.warning-gradient {
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-}
-
-.info-gradient {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-}
-
-.member-gradient {
-  background: linear-gradient(135deg, #f5af19 0%, #f12711 100%);
-}
-
-.invite-gradient {
-  background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
-}
-
-.followup-gradient {
-  background: linear-gradient(135deg, #0cebeb 0%, #20e3b2 50%, #29ffc6 100%);
-}
-
-.reward-badge {
-  background: rgba(255, 215, 0, 0.3);
-  border: 1rpx solid rgba(255, 215, 0, 0.5);
-}
-
-.feature-icon-large {
-  font-size: 64rpx;
-  margin-bottom: 12rpx;
-}
-
-.feature-content {
-  display: flex;
-  flex-direction: column;
-  gap: 8rpx;
-}
-
-.feature-title {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: #ffffff;
-}
-
-.feature-desc {
-  font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.feature-badge {
-  position: absolute;
-  top: 12rpx;
-  right: 12rpx;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10rpx);
-  padding: 8rpx 12rpx;
-  border-radius: 8rpx;
-  font-size: 20rpx;
-  font-weight: 700;
-  color: #ffffff;
-  border: 1rpx solid rgba(255, 255, 255, 0.3);
-}
-
-.feature-card-pressed {
-  transform: scale(0.95);
-  box-shadow: 0 4rpx 6rpx -1rpx rgba(0, 0, 0, 0.1), 0 2rpx 4rpx -1rpx rgba(0, 0, 0, 0.06);
-}
-
-/* === 宠物健康状态卡片 === */
-
-.health-status-card {
-  background: #ffffff;
-  border-radius: 24rpx;
-  padding: 32rpx;
-  margin: 0 24rpx 48rpx;
-  box-shadow: 0 4rpx 6rpx -1rpx rgba(0, 0, 0, 0.1), 0 2rpx 4rpx -1rpx rgba(0, 0, 0, 0.06);
-}
-
-.health-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24rpx;
-}
-
-.health-title-section {
-  display: flex;
-  align-items: center;
   gap: 12rpx;
 }
 
-.health-icon {
-  font-size: 40rpx;
+.tile::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4rpx;
 }
 
-.health-title {
-  font-size: 36rpx;
-  font-weight: 700;
-  color: #212121;
+.tile-pressed {
+  transform: scale(0.97);
 }
 
-.health-refresh {
-  font-size: 24rpx;
-  color: #4A90E2;
-  padding: 12rpx 16rpx;
-  background: #e3f2fd;
-  border-radius: 12rpx;
-}
-
-.pets-scroll {
-  width: 100%;
-}
-
-.pets-horizontal {
-  white-space: nowrap;
-}
-
-.pet-health-card {
-  display: inline-block;
-  width: 160rpx;
-  background: #f8f9fa;
-  border-radius: 12rpx;
-  padding: 16rpx;
-  margin-right: 16rpx;
-  text-align: center;
-  vertical-align: top;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.pet-health-card-hover {
-  transform: translateY(-2rpx);
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
-  background: #fff;
-}
-
-.pet-avatar-wrapper {
-  position: relative;
-  margin-bottom: 12rpx;
+.tile-icon-wrap {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: var(--radius-full);
   display: flex;
+  align-items: center;
   justify-content: center;
 }
 
-.pet-avatar-card {
-  font-size: 60rpx;
-  line-height: 88rpx;
-  text-align: center;
-  width: 88rpx;
-  height: 88rpx;
-  border-radius: 9999rpx;
-  background: #f5f5f5;
-  display: inline-block;
+.tile-accent-primary .tile-icon-wrap { background: var(--brand-primary-light); }
+.tile-accent-success .tile-icon-wrap { background: var(--color-success-light); }
+.tile-accent-warning .tile-icon-wrap { background: var(--color-warning-light); }
+.tile-accent-info .tile-icon-wrap { background: var(--color-info-light); }
+.tile-accent-secondary .tile-icon-wrap { background: var(--brand-secondary-light); }
+
+.tile-icon {
+  width: 28rpx;
+  height: 28rpx;
 }
 
-.pet-avatar-image {
-  width: 88rpx;
-  height: 88rpx;
-  border-radius: 9999rpx;
-  background: #f5f5f5;
-  object-fit: cover;
+.tile-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rpx;
+}
+
+.tile-title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tile-desc {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+.tile-badge {
+  position: absolute;
+  top: 12rpx;
+  right: 12rpx;
+  font-size: 18rpx;
+  font-weight: 700;
+  color: var(--brand-primary);
+  background: var(--brand-primary-light);
+  padding: 4rpx 12rpx;
+  border-radius: var(--radius-full);
+}
+
+/* === 宠物健康状态 === */
+
+.health-section {
+  padding: 0 32rpx;
+  margin-bottom: 40rpx;
+}
+
+.pets-scroll {
+  white-space: nowrap;
+}
+
+.pet-card {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  width: 160rpx;
+  margin-right: 20rpx;
+  padding: 24rpx 12rpx;
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  border: 1rpx solid var(--border-color);
+  vertical-align: top;
+}
+
+.pet-card-hover {
+  transform: scale(0.97);
+}
+
+.pet-card-avatar-wrap {
+  position: relative;
+  margin-bottom: 12rpx;
+}
+
+.pet-card-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: var(--radius-full);
+}
+
+.pet-card-avatar-fallback {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: var(--radius-full);
+  background: var(--brand-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pet-card-avatar-icon {
+  width: 32rpx;
+  height: 32rpx;
 }
 
 .pet-health-dot {
   position: absolute;
-  bottom: 0;
-  right: 20rpx;
-  width: 20rpx;
-  height: 20rpx;
-  border-radius: 9999rpx;
-  border: 3rpx solid #ffffff;
+  bottom: 2rpx;
+  right: 2rpx;
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: var(--radius-full);
+  border: 3rpx solid var(--bg-card);
 }
 
-.health-good {
-  background: #4caf50;
+.dot-good { background: var(--color-success); }
+.dot-warning { background: var(--color-warning); }
+
+.pet-card-name {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4rpx;
 }
 
-.health-warning {
-  background: #ffc107;
+.pet-card-status {
+  font-size: var(--font-size-xs);
 }
 
-.pet-name-card {
-  display: block;
-  font-size: 24rpx;
-  font-weight: 500;
-  color: #212121;
-  margin-bottom: 8rpx;
-  white-space: normal;
+.status-good { color: var(--color-success); }
+.status-warning { color: var(--color-warning); }
+
+/* 添加宠物卡片 */
+.pet-card-add {
+  border: 2rpx dashed var(--border-color);
+  background: var(--bg-secondary);
+  justify-content: center;
 }
 
-.pet-status-card {
-  display: block;
-  font-size: 20rpx;
-  padding: 8rpx 12rpx;
-  border-radius: 8rpx;
-  white-space: normal;
-}
-
-.status-good {
-  background: #e8f5e9;
-  color: #43a047;
-}
-
-.status-warning {
-  background: #fff8e1;
-  color: #ffb300;
-}
-
-.pet-add-card {
-  display: inline-flex;
-  flex-direction: column;
+.pet-card-add-icon {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 160rpx;
-  height: 180rpx;
-  background: #f5f5f5;
-  border-radius: 12rpx;
-  border: 2rpx dashed #bdbdbd;
-  vertical-align: top;
+  font-size: 36rpx;
+  color: var(--text-tertiary);
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+  margin-bottom: 8rpx;
 }
 
-.add-icon-large {
-  font-size: 56rpx;
-  color: #9e9e9e;
-  margin-bottom: 12rpx;
+.pet-card-add-text {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
 }
 
-.add-pet-text {
-  font-size: 24rpx;
-  color: #9e9e9e;
+/* === 附近医院 === */
+
+.nearby-section {
+  padding: 0 32rpx;
+  margin-bottom: 40rpx;
 }
 
-/* === 附近医院快捷预览 === */
-
-.nearby-hospitals-section {
-  padding: 0 24rpx;
-  margin-bottom: 48rpx;
-}
-
-.section-header-nearby {
-  display: flex;
-  justify-content: space-between;
+.live-tag {
+  display: inline-flex;
   align-items: center;
-  margin-bottom: 24rpx;
+  gap: 6rpx;
+  padding: 4rpx 12rpx;
+  background: var(--color-success-light);
+  border-radius: var(--radius-full);
 }
 
-.hospital-header-left {
+.live-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: var(--radius-full);
+  background: var(--color-success);
+}
+
+.live-text {
+  font-size: 18rpx;
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+.hospital-list {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 12rpx;
 }
 
-.section-icon {
-  font-size: 40rpx;
-}
-
-.section-title-nearby {
-  font-size: 36rpx;
-  font-weight: 700;
-  color: #212121;
-}
-
-.section-more-nearby {
-  font-size: 24rpx;
-  color: #4A90E2;
-}
-
-.hospitals-preview-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16rpx;
-}
-
-.hospital-preview-card {
+.hospital-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #ffffff;
-  border-radius: 12rpx;
   padding: 24rpx;
-  box-shadow: 0 1rpx 3rpx 0 rgba(0, 0, 0, 0.1), 0 1rpx 2rpx 0 rgba(0, 0, 0, 0.06);
-  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  border: 1rpx solid var(--border-color);
+  transition: transform var(--duration-fast) var(--ease-standard);
 }
 
-.hospital-preview-card:active {
-  transform: scale(0.98);
-  box-shadow: 0 4rpx 6rpx -1rpx rgba(0, 0, 0, 0.1), 0 2rpx 4rpx -1rpx rgba(0, 0, 0, 0.06);
+.hospital-card:active {
+  transform: scale(0.97);
 }
 
-.hospital-info-compact {
+.hospital-card-info {
   flex: 1;
   min-width: 0;
 }
 
-.hospital-name-row {
+.hospital-card-name-row {
   display: flex;
   align-items: center;
   gap: 12rpx;
   margin-bottom: 8rpx;
 }
 
-.hospital-name-compact {
-  font-size: 32rpx;
-  font-weight: 500;
-  color: #212121;
+.hospital-card-name {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.hospital-badge-compact {
-  background: #ffebee;
-  color: #e53935;
-  font-size: 20rpx;
+.hospital-card-badge {
+  font-size: 18rpx;
   font-weight: 700;
-  padding: 8rpx 12rpx;
-  border-radius: 8rpx;
-}
-
-.hospital-details-compact {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  font-size: 24rpx;
-  color: #757575;
-}
-
-.hospital-separator {
-  color: #9e9e9e;
-}
-
-.hospital-action-compact {
-  margin-left: 16rpx;
+  padding: 2rpx 12rpx;
+  border-radius: var(--radius-full);
   flex-shrink: 0;
 }
 
-.navigate-icon-compact {
-  font-size: 40rpx;
+.badge-24h {
+  background: var(--color-danger-light);
+  color: var(--brand-emergency);
 }
 
-/* === 底部健康提示 === */
-
-.health-tip-card {
-  background: linear-gradient(135deg, #fff7e6 0%, #ffe8cc 100%);
-  border-radius: 16rpx;
-  padding: 24rpx;
-  margin: 0 24rpx;
-  border-left: 4rpx solid #F5A623;
-  box-shadow: 0 1rpx 3rpx 0 rgba(0, 0, 0, 0.1), 0 1rpx 2rpx 0 rgba(0, 0, 0, 0.06);
+.badge-normal {
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
 }
 
-.tip-header {
+.hospital-card-details {
   display: flex;
   align-items: center;
-  gap: 12rpx;
-  margin-bottom: 12rpx;
+  gap: 8rpx;
 }
 
-.tip-icon {
-  font-size: 40rpx;
-}
-
-.tip-title {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: #F5A623;
-}
-
-.tip-content {
-  padding-left: 44rpx;
-}
-
-.tip-text {
-  font-size: 24rpx;
-  color: #757575;
-  line-height: 1.75;
-}
-
-/* === 会员 Banner === */
-
-.member-banner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 0 24rpx 24rpx;
-  padding: 20rpx 24rpx;
-  background: linear-gradient(135deg, #f5af19 0%, #f12711 100%);
-  border-radius: 16rpx;
-  box-shadow: 0 4rpx 12rpx rgba(241, 39, 17, 0.2);
-}
-
-.member-banner-content {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-}
-
-.member-banner-icon {
-  font-size: 32rpx;
-}
-
-.member-banner-text {
-  font-size: 26rpx;
-  color: #ffffff;
+.hospital-card-distance {
+  font-size: var(--font-size-sm);
+  color: var(--brand-primary);
   font-weight: 500;
 }
 
-.member-banner-action {
-  font-size: 26rpx;
-  color: rgba(255, 255, 255, 0.9);
+.hospital-card-sep {
+  color: var(--text-tertiary);
 }
 
-/* 非会员引导 Banner */
-.member-banner-inactive {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.25);
-}
-
-/* === 今日科普 - 精美卡片 === */
-
-.knowledge-daily-card {
-  margin: 0 24rpx 48rpx;
-  background: #ffffff;
-  border-radius: 20rpx;
+.hospital-card-address {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
   overflow: hidden;
-  box-shadow: 0 4rpx 20rpx rgba(102, 126, 234, 0.1), 0 1rpx 3rpx rgba(0, 0, 0, 0.06);
-  transition: transform 200ms ease, box-shadow 200ms ease;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.knowledge-daily-card-active {
+.hospital-card-action {
+  width: 56rpx;
+  height: 56rpx;
+  background: var(--brand-primary-light);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+
+.hospital-card-nav-icon {
+  width: 28rpx;
+  height: 28rpx;
+}
+
+/* === 今日科普卡片 — 无彩虹渐变 === */
+
+.daily-card {
+  margin: 0 32rpx 40rpx;
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  border: 1rpx solid var(--border-color);
+  overflow: hidden;
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.daily-card-active {
   transform: scale(0.98);
-  box-shadow: 0 2rpx 10rpx rgba(102, 126, 234, 0.08);
 }
 
-/* 顶部装饰渐变条 */
-.daily-card-gradient-bar {
-  height: 6rpx;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 30%, #f5af19 60%, #f12711 100%);
+.daily-card-bar {
+  height: 4rpx;
+  background: var(--brand-primary);
 }
 
-/* 内容区 */
 .daily-card-body {
-  padding: 28rpx 28rpx 24rpx;
+  padding: 24rpx 28rpx;
 }
 
-/* 标签行：左badge + 右箭头 */
 .daily-card-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20rpx;
+  margin-bottom: 16rpx;
 }
 
 .daily-card-badge {
   display: flex;
   align-items: center;
   gap: 8rpx;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-  padding: 8rpx 16rpx;
-  border-radius: 20rpx;
 }
 
-.badge-icon {
-  font-size: 24rpx;
+.daily-card-badge-icon {
+  width: 24rpx;
+  height: 24rpx;
 }
 
-.badge-label {
-  font-size: 22rpx;
+.daily-card-badge-label {
+  font-size: var(--font-size-sm);
   font-weight: 600;
-  color: #667eea;
-  letter-spacing: 1rpx;
+  color: var(--brand-primary);
 }
 
-.daily-card-arrow {
+.daily-card-link {
   display: flex;
   align-items: center;
-  gap: 6rpx;
+  gap: 4rpx;
 }
 
-.arrow-text {
-  font-size: 22rpx;
-  color: #999;
+.daily-card-link-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
 }
 
-.arrow-chevron {
-  width: 12rpx;
-  height: 12rpx;
-  border-top: 3rpx solid #bbb;
-  border-right: 3rpx solid #bbb;
-  transform: rotate(45deg);
-  -webkit-transform: rotate(45deg);
+.daily-card-link-arrow {
+  font-size: var(--font-size-md);
+  color: var(--text-tertiary);
 }
 
-/* 标题 */
 .daily-card-title {
   display: block;
-  font-size: 32rpx;
-  font-weight: 700;
-  color: #212121;
-  line-height: 1.5;
-  margin-bottom: 12rpx;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: var(--line-height-normal);
+  margin-bottom: 8rpx;
 }
 
-/* 摘要 */
 .daily-card-summary {
   display: block;
-  font-size: 24rpx;
-  color: #757575;
-  line-height: 1.7;
-  margin-bottom: 20rpx;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: var(--line-height-relaxed);
+  margin-bottom: 16rpx;
 }
 
-/* 底部标签 */
-.daily-card-footer {
+.daily-card-tags {
   display: flex;
-  gap: 24rpx;
+  gap: 20rpx;
 }
 
 .daily-tag {
@@ -672,198 +658,169 @@
   gap: 8rpx;
 }
 
-.tag-dot {
-  width: 12rpx;
-  height: 12rpx;
-  border-radius: 50%;
-  background: #667eea;
+.daily-tag-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: var(--radius-full);
+  background: var(--brand-primary);
 }
 
-.tag-dot.dot-blue {
-  background: #4facfe;
+.daily-tag-dot--alt {
+  background: var(--color-info);
 }
 
-.tag-text {
-  font-size: 20rpx;
-  color: #999;
+.daily-tag-text {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
 }
 
-/* === 实时更新指示器样式 === */
+/* === 健康提示卡片（降级） === */
 
-.live-indicator {
+.tip-card {
+  margin: 0 32rpx 40rpx;
+  padding: 24rpx 28rpx;
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  border: 1rpx solid var(--border-color);
+}
+
+.tip-card-header {
   display: flex;
   align-items: center;
-  gap: 8rpx;
-  padding: 6rpx 12rpx;
-  background: linear-gradient(135deg, #38ef7d 0%, #11998e 100%);
-  border-radius: 20rpx;
-  margin-left: 16rpx;
+  gap: 10rpx;
+  margin-bottom: 12rpx;
 }
 
-.live-dot {
-  width: 16rpx;
-  height: 16rpx;
-  background: #ffffff;
-  border-radius: 50%;
-  animation: pulse-dot 1.5s ease-in-out infinite;
+.tip-card-icon {
+  width: 24rpx;
+  height: 24rpx;
 }
 
-@keyframes pulse-dot {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.7;
-    transform: scale(1.2);
-  }
-}
-
-.live-text {
-  font-size: 20rpx;
+.tip-card-title {
+  font-size: var(--font-size-sm);
   font-weight: 600;
-  color: #ffffff;
-  letter-spacing: 1rpx;
+  color: var(--brand-primary);
 }
 
-.hospital-header-right {
+.tip-card-text {
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  line-height: var(--line-height-relaxed);
+}
+
+/* === 回访提醒弹窗 === */
+
+.followup-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-overlay);
   display: flex;
   align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal-backdrop);
+}
+
+.followup-modal {
+  width: 600rpx;
+  background: var(--bg-card);
+  border-radius: var(--radius-3xl);
+  padding: 48rpx 36rpx 36rpx;
+  text-align: center;
+}
+
+.followup-modal-icon {
+  margin-bottom: 24rpx;
+}
+
+.followup-modal-paw {
+  width: 64rpx;
+  height: 64rpx;
+}
+
+.followup-modal-title {
+  display: block;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8rpx;
+}
+
+.followup-modal-subtitle {
+  display: block;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: var(--line-height-relaxed);
+  margin-bottom: 20rpx;
+}
+
+.followup-modal-pet {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  padding: 12rpx 24rpx;
+  background: var(--brand-primary-light);
+  border-radius: var(--radius-full);
+}
+
+.followup-pet-name {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--brand-primary);
+}
+
+.followup-pet-sep {
+  color: var(--text-tertiary);
+}
+
+.followup-pet-symptoms {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.followup-modal-actions {
+  display: flex;
   gap: 16rpx;
+  margin-top: 32rpx;
 }
 
-.update-time-text {
-  font-size: 22rpx;
-  color: #909399;
-  font-weight: 400;
+.followup-btn-later {
+  flex: 1;
+  height: 80rpx;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-radius: var(--radius-xl);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  border: none;
+  line-height: 80rpx;
 }
 
-.badge-24h {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
-  color: #ffffff;
+.followup-btn-later::after { border: none; }
+
+.followup-btn-go {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  height: 80rpx;
+  background: var(--brand-primary);
+  color: var(--text-inverse);
+  border-radius: var(--radius-xl);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  border: none;
+  line-height: 80rpx;
 }
 
-.badge-normal {
-  background: #f0f2f5;
-  color: #909399;
-}
+.followup-btn-go::after { border: none; }
 
-/* === 设备自适应媒体查询 === */
-
-/* 极小屏幕设备优化（iPhone SE等） */
-@media (max-width: 321px) {
-  .emergency-big-btn {
-    height: 120rpx;
-  }
-
-  .emergency-icon-large {
-    font-size: 40rpx;
-    margin-bottom: 4rpx;
-  }
-
-  .emergency-title-main {
-    font-size: 32rpx;
-  }
-
-  .emergency-desc-small {
-    font-size: 20rpx;
-  }
-}
-
-/* 小屏设备优化 */
-@media (max-width: 375px) {
-  .welcome-section {
-    padding: 32rpx 16rpx 16rpx;
-  }
-
-  .greeting-text {
-    font-size: 36rpx;
-  }
-
-  .features-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16rpx;
-  }
-
-  .feature-card {
-    min-height: 180rpx;
-  }
-
-  .pet-health-card {
-    width: 140rpx;
-  }
-
-  .hospital-name-compact {
-    font-size: 28rpx;
-  }
-
-  .emergency-big-btn {
-    height: 140rpx;
-  }
-
-  .emergency-icon-large {
-    font-size: 48rpx;
-    margin-bottom: 6rpx;
-  }
-
-  .emergency-title-main {
-    font-size: 36rpx;
-  }
-
-  .emergency-desc-small {
-    font-size: 22rpx;
-  }
-}
-
-/* 大屏设备 */
-@media (min-width: 414px) {
-  .features-grid {
-    gap: 16rpx;
-  }
-
-  .pet-health-card {
-    width: 160rpx;
-  }
-
-  .emergency-big-btn {
-    height: 180rpx;
-  }
-
-  .emergency-icon-large {
-    font-size: 64rpx;
-    margin-bottom: 10rpx;
-  }
-
-  .emergency-title-main {
-    font-size: 44rpx;
-  }
-
-  .emergency-desc-small {
-    font-size: 26rpx;
-  }
-}
-
-/* 横屏适配 */
-@media (orientation: landscape) {
-  .features-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16rpx;
-  }
-
-  .emergency-big-btn {
-    height: 120rpx;
-  }
-
-  .emergency-icon-large {
-    font-size: 40rpx;
-    margin-bottom: 4rpx;
-  }
-
-  .emergency-title-main {
-    font-size: 32rpx;
-  }
-
-  .emergency-desc-small {
-    font-size: 20rpx;
-  }
+.followup-btn-icon {
+  width: 24rpx;
+  height: 24rpx;
+  filter: brightness(0) invert(1);
 }

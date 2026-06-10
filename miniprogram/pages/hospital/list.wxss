@@ -1,386 +1,129 @@
-/*宠物医院列表页面 - 全新样式*/
+/* 医院列表页 v2.0 — Warm Professionalism */
 
-.hospital-page {
-  min-height: 100vh;
-  background: #f8f9fa;
-}
+.page { min-height: 100vh; background: var(--bg-color); }
 
-/* === 顶部状态栏 === */
+/* 状态栏 */
 .status-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20rpx 30rpx;
-  background: #fff;
-  border-bottom: 1px solid #eee;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20rpx 32rpx;
+  background: var(--bg-card);
+  border-bottom: 1rpx solid var(--border-color);
 }
-
-.location-info {
-  display: flex;
-  align-items: center;
-  gap: 10rpx;
+.status-bar-left { display: flex; align-items: center; gap: 8rpx; }
+.status-bar-icon { width: 24rpx; height: 24rpx; }
+.status-bar-text { font-size: var(--font-size-sm); color: var(--text-secondary); }
+.status-bar-right {
+  display: flex; align-items: center; gap: 8rpx;
+  padding: 6rpx 14rpx; border-radius: var(--radius-full);
+  font-size: var(--font-size-xs); font-weight: 500;
 }
+.status-bar--ok { background: var(--color-success-light); color: var(--color-success); }
+.status-bar--limited { background: var(--color-warning-light); color: var(--color-warning); }
+.status-dot { width: 10rpx; height: 10rpx; border-radius: var(--radius-full); background: currentColor; }
 
-.location-icon {
-  font-size: 28rpx;
+/* 急诊横滑区域 */
+.er-section { padding: 24rpx 32rpx 16rpx; }
+.er-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16rpx; }
+.er-header-left { display: flex; align-items: center; gap: 10rpx; }
+.er-header-icon { width: 28rpx; height: 28rpx; }
+.er-header-title { font-size: var(--font-size-md); font-weight: 600; color: var(--text-primary); }
+.er-header-count { font-size: var(--font-size-xs); color: var(--text-inverse); background: var(--brand-emergency); padding: 6rpx 14rpx; border-radius: var(--radius-full); font-weight: 600; }
+
+.er-scroll { white-space: nowrap; }
+.er-card {
+  display: inline-flex; flex-direction: column; align-items: center;
+  width: 180rpx; padding: 20rpx 16rpx;
+  background: var(--bg-card); border: 1rpx solid var(--border-color);
+  border-radius: var(--radius-2xl); margin-right: 16rpx;
+  vertical-align: top;
 }
-
-.location-text {
-  font-size: 26rpx;
-  color: #666;
+.er-card-icon-wrap {
+  width: 48rpx; height: 48rpx;
+  background: var(--color-danger-light); border-radius: var(--radius-full);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 10rpx; position: relative;
 }
-
-.api-status {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  padding: 8rpx 16rpx;
-  border-radius: 20rpx;
-  font-size: 22rpx;
+.er-card-icon { width: 28rpx; height: 28rpx; }
+.er-card-badge {
+  position: absolute; top: -6rpx; right: -8rpx;
+  background: var(--brand-emergency); color: var(--text-inverse);
+  font-size: 16rpx; padding: 2rpx 8rpx; border-radius: var(--radius-full); font-weight: 700;
 }
+.er-card-name { display: block; font-size: var(--font-size-sm); font-weight: 600; color: var(--text-primary); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%; margin-bottom: 4rpx; }
+.er-card-distance { display: block; font-size: var(--font-size-xs); color: var(--text-tertiary); text-align: center; }
 
-.status-ok {
-  background: #e8f5e8;
-  color: #4caf50;
+/* 快速操作 */
+.quick-actions { display: flex; gap: 16rpx; padding: 8rpx 32rpx 20rpx; }
+.quick-btn {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 10rpx;
+  padding: 22rpx; border-radius: var(--radius-xl);
+  font-size: var(--font-size-base); font-weight: 500; border: none;
 }
+.quick-btn::after { border: none; }
+.quick-btn-icon { width: 24rpx; height: 24rpx; }
+.quick-btn--primary { background: var(--brand-primary); color: var(--text-inverse); }
+.quick-btn--primary .quick-btn-icon { filter: brightness(0) invert(1); }
+.quick-btn--secondary { background: var(--bg-card); color: var(--text-primary); border: 1rpx solid var(--border-color); }
 
-.status-limited {
-  background: #fff3e0;
-  color: #ff9800;
-}
+/* 医院主列表 */
+.list-section { padding: 0 32rpx 120rpx; }
+.list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16rpx; }
+.list-title { font-size: var(--font-size-md); font-weight: 600; color: var(--text-primary); }
+.list-sort { font-size: var(--font-size-sm); color: var(--text-tertiary); }
 
-.status-dot {
-  width: 12rpx;
-  height: 12rpx;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-/* === 紧急医院区域 === */
-.emergency-section {
-  padding: 30rpx;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  margin: 20rpx;
-  border-radius: 20rpx;
-}
-
-.emergency-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20rpx;
-}
-
-.emergency-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #fff;
-}
-
-.emergency-count {
-  font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.8);
-  background: rgba(255, 255, 255, 0.2);
-  padding: 8rpx 16rpx;
-  border-radius: 20rpx;
-}
-
-.emergency-scroll {
-  white-space: nowrap;
-}
-
-.emergency-card {
-  display: inline-block;
-  width: 200rpx;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 16rpx;
-  padding: 20rpx;
-  margin-right: 20rpx;
-  text-align: center;
-  backdrop-filter: blur(10rpx);
-}
-
-.emergency-marker {
-  position: relative;
-  margin-bottom: 15rpx;
-}
-
-.marker-icon {
-  font-size: 48rpx;
-}
-
-.marker-badge {
-  position: absolute;
-  top: -5rpx;
-  right: 20rpx;
-  background: #ff5722;
-  color: #fff;
-  font-size: 18rpx;
-  padding: 4rpx 8rpx;
-  border-radius: 10rpx;
-  font-weight: bold;
-}
-
-.emergency-name {
-  display: block;
-  font-size: 26rpx;
-  color: #fff;
-  margin-bottom: 8rpx;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.emergency-distance {
-  display: block;
-  font-size: 22rpx;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-/* === 快速操作区 === */
-.quick-actions {
-  display: flex;
-  gap: 20rpx;
-  padding: 0 20rpx 20rpx;
-}
-
-.action-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10rpx;
-  padding: 25rpx;
-  border-radius: 16rpx;
-  font-size: 28rpx;
-  border: none;
-}
-
-.primary-btn {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  color: #fff;
-}
-
-.secondary-btn {
-  background: #fff;
-  color: #333;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
-}
-
-.btn-icon {
-  font-size: 32rpx;
-}
-
-.btn-text {
-  font-weight: 500;
-}
-
-/* === 医院主列表 === */
-.hospital-list {
-  padding: 0 20rpx 20rpx;
-}
-
-.list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20rpx;
-}
-
-.list-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #333;
-}
-
-.list-sort {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  color: #999;
-  font-size: 24rpx;
-}
-
-/* === 医院卡片 === */
 .hospital-card {
-  background: #fff;
-  border-radius: 20rpx;
-  padding: 25rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+  background: var(--bg-card); border-radius: var(--radius-2xl);
+  padding: 24rpx; margin-bottom: 16rpx;
+  border: 1rpx solid var(--border-color);
+  border-left: 4rpx solid var(--brand-primary);
+}
+.hospital-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16rpx; }
+.hospital-card-main { flex: 1; }
+.hospital-card-name { display: block; font-size: var(--font-size-md); font-weight: 600; color: var(--text-primary); margin-bottom: 8rpx; }
+.hospital-card-tags { display: flex; gap: 8rpx; flex-wrap: wrap; }
+.hospital-tag { padding: 4rpx 12rpx; border-radius: var(--radius-full); font-size: 18rpx; font-weight: 600; }
+.hospital-tag--24h { background: var(--color-success-light); color: var(--color-success); }
+.hospital-tag--er { background: var(--color-danger-light); color: var(--brand-emergency); }
+
+.hospital-card-distance {
+  background: var(--brand-primary-light); padding: 8rpx 16rpx;
+  border-radius: var(--radius-lg); font-size: var(--font-size-sm);
+  color: var(--brand-primary); font-weight: 500; flex-shrink: 0; margin-left: 16rpx;
 }
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 20rpx;
+.hospital-card-info { margin-bottom: 16rpx; }
+.hospital-card-row { display: flex; align-items: flex-start; gap: 10rpx; margin-bottom: 10rpx; }
+.hospital-card-row:last-child { margin-bottom: 0; }
+.hospital-card-row-icon { width: 20rpx; height: 20rpx; flex-shrink: 0; margin-top: 4rpx; }
+.hospital-card-row text { font-size: var(--font-size-sm); color: var(--text-secondary); line-height: 1.5; }
+
+.hospital-card-footer {
+  display: flex; gap: 12rpx;
+  border-top: 1rpx solid var(--border-light); padding-top: 16rpx;
+}
+.hospital-card-action {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6rpx;
+  padding: 14rpx; border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm); font-weight: 500;
+}
+.hospital-card-action-icon { width: 22rpx; height: 22rpx; }
+.hospital-card-action--call { background: var(--color-success-light); color: var(--color-success); }
+.hospital-card-action--nav { background: var(--brand-primary-light); color: var(--brand-primary); }
+.hospital-card-action--detail { background: var(--color-info-light); color: var(--color-info); }
+
+.load-more {
+  text-align: center; padding: 24rpx;
+  font-size: var(--font-size-sm); color: var(--brand-primary); font-weight: 500;
+  background: var(--bg-card); border-radius: var(--radius-xl);
+  border: 1rpx solid var(--border-color);
 }
 
-.hospital-main-info {
-  flex: 1;
-}
-
-.hospital-name {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #333;
-  display: block;
-  margin-bottom: 12rpx;
-}
-
-.hospital-tags {
-  display: flex;
-  gap: 10rpx;
-  flex-wrap: wrap;
-}
-
-.tag {
-  padding: 6rpx 12rpx;
-  border-radius: 8rpx;
-  font-size: 20rpx;
-  font-weight: 500;
-}
-
-.tag-24h {
-  background: #e3f2fd;
-  color: #2196f3;
-}
-
-.tag-emergency {
-  background: #ffebee;
-  color: #f44336;
-}
-
-.tag-rating {
-  background: #fff8e1;
-  color: #ffc107;
-}
-
-.distance-tag {
-  background: #f5f5f5;
-  padding: 10rpx 16rpx;
-  border-radius: 12rpx;
-  margin-left: 20rpx;
-}
-
-.distance-text {
-  font-size: 24rpx;
-  color: #666;
-  font-weight: 500;
-}
-
-/* === 卡片内容 === */
-.card-content {
-  margin-bottom: 20rpx;
-}
-
-.info-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12rpx;
-  margin-bottom: 15rpx;
-}
-
-.info-row:last-child {
-  margin-bottom: 0;
-}
-
-.info-icon {
-  font-size: 28rpx;
-  flex-shrink: 0;
-}
-
-.info-text {
-  font-size: 26rpx;
-  color: #666;
-  line-height: 1.5;
-}
-
-/* === 卡片底部操作 === */
-.card-footer {
-  display: flex;
-  gap: 15rpx;
-  border-top: 1px solid #f0f0f0;
-  padding-top: 20rpx;
-}
-
-.footer-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8rpx;
-  padding: 18rpx;
-  border-radius: 12rpx;
-  font-size: 24rpx;
-  border: none;
-  background: #f8f9fa;
-  color: #666;
-}
-
-.call-btn {
-  background: #e8f5e8;
-  color: #4caf50;
-}
-
-.navigate-btn {
-  background: #e3f2fd;
-  color: #2196f3;
-}
-
-.detail-btn {
-  background: #fff3e0;
-  color: #ff9800;
-}
-
-.footer-icon {
-  font-size: 28rpx;
-}
-
-
-/* === 地图悬浮按钮 === */
+/* 地图 FAB */
 .map-fab {
-  position: fixed;
-  bottom: 100rpx;
-  right: 30rpx;
-  width: 100rpx;
-  height: 100rpx;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8rpx 24rpx rgba(79, 172, 254, 0.4);
+  position: fixed; bottom: 100rpx; right: 32rpx;
+  width: 96rpx; height: 96rpx;
+  background: var(--brand-secondary); border-radius: var(--radius-full);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-md);
 }
-
-.fab-icon {
-  font-size: 48rpx;
-}
-/* === 加载更多按钮 === */
-.load-more-section {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12rpx;
-  padding: 28rpx 24rpx;
-  margin: 16rpx 16rpx 0;
-  background: #ffffff;
-  border-radius: 16rpx;
-  box-shadow: 0 1rpx 3rpx 0 rgba(0, 0, 0, 0.1);
-}
-
-.load-more-section:active {
-  background: #f5f5f5;
-}
-
-.load-more-text {
-  font-size: 26rpx;
-  color: #4A90E2;
-  font-weight: 500;
-}
-
-.load-more-icon {
-  font-size: 22rpx;
-  color: #4A90E2;
-}
+.map-fab-icon { width: 36rpx; height: 36rpx; filter: brightness(0) invert(1); }

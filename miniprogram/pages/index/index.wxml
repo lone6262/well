@@ -1,11 +1,11 @@
-<!--现代化首页设计 Modern Homepage Design-->
+<!--宠脉AI 首页 — Warm Professionalism v2.0-->
 <view class="page-container">
 
   <!-- 顶部欢迎区域 -->
   <view class="welcome-section">
     <view class="welcome-content">
       <view class="welcome-greeting">
-        <text class="greeting-emoji">👋</text>
+        <image class="greeting-icon" src="/images/icons/paw.svg" mode="aspectFit" aria-label="品牌图标" />
         <text class="greeting-text">你好，宠物主人</text>
       </view>
       <view class="welcome-subtitle">
@@ -16,32 +16,42 @@
     <!-- 用户头像 -->
     <view class="user-avatar-section" bindtap="toUser">
       <image class="user-avatar" src="{{userInfo.avatarUrl || '/images/avatar.png'}}" />
-      <view class="avatar-badge">🐾</view>
+      <view class="avatar-badge">
+        <image class="avatar-badge-icon" src="/images/icons/paw.svg" mode="aspectFit" aria-label="宠物标识" />
+      </view>
     </view>
   </view>
 
-  <!-- 紧急救助通道 - 重新设计版本：简洁大按钮 -->
+  <!-- 紧急救助通道 -->
   <view class="emergency-wrapper">
-    <button class="emergency-big-btn" bindtap="toEmergency" hover-class="emergency-big-btn-press">
-      <view class="emergency-icon-large pulse-animation">🚨</view>
-      <view class="emergency-title-main">紧急救助</view>
-      <view class="emergency-desc-small">24小时一键求助</view>
+    <button class="emergency-btn" bindtap="toEmergency" hover-class="emergency-btn-press">
+      <view class="emergency-btn-icon-wrap pulse-subtle">
+        <image class="emergency-btn-icon" src="/images/icons/alert.svg" mode="aspectFit" aria-label="急救" />
+      </view>
+      <view class="emergency-btn-text">
+        <text class="emergency-title">紧急救助</text>
+        <text class="emergency-desc">24小时一键求助</text>
+      </view>
     </button>
   </view>
 
   <!-- 会员 Banner -->
   <view class="member-banner" wx:if="{{isMember}}" bindtap="goToMember">
     <view class="member-banner-content">
-      <text class="member-banner-icon">👑</text>
+      <view class="member-banner-icon-wrap">
+        <image class="member-banner-icon" src="/images/icons/crown.svg" mode="aspectFit" aria-label="会员" />
+      </view>
       <text class="member-banner-text">会员特权已激活 · 剩余{{memberDaysRemaining}}天</text>
     </view>
     <text class="member-banner-action">查看权益 ›</text>
   </view>
 
   <!-- 非会员引导 Banner -->
-  <view class="member-banner member-banner-inactive" wx:if="{{!isMember}}" bindtap="goToMember">
+  <view class="member-banner member-banner--inactive" wx:if="{{!isMember}}" bindtap="goToMember">
     <view class="member-banner-content">
-      <text class="member-banner-icon">⭐</text>
+      <view class="member-banner-icon-wrap">
+        <image class="member-banner-icon" src="/images/icons/crown.svg" mode="aspectFit" aria-label="开通会员" />
+      </view>
       <text class="member-banner-text">开通会员，AI报告低至¥1/次</text>
     </view>
     <text class="member-banner-action">立即开通 ›</text>
@@ -51,133 +61,141 @@
   <view class="main-features" role="navigation" aria-label="快捷功能">
     <view class="section-header">
       <text class="section-title">快速服务</text>
-      <text class="section-more" bindtap="showMoreFeatures">查看全部 →</text>
     </view>
 
     <view class="features-grid">
       <!-- 症状自查 -->
-      <view class="feature-card primary-gradient" bindtap="toSymptom" hover-class="feature-card-pressed" aria-label="症状自查">
-        <view class="feature-icon-large">🩺</view>
-        <view class="feature-content">
-          <text class="feature-title">症状自查</text>
-          <text class="feature-desc">智能评估健康</text>
+      <view class="tile tile-accent-primary" bindtap="toSymptom" hover-class="tile-pressed" aria-label="症状自查">
+        <view class="tile-icon-wrap">
+          <image class="tile-icon" src="/images/icons/stethoscope.svg" mode="aspectFit" aria-label="症状自查" />
         </view>
-        <view class="feature-badge">AI</view>
+        <view class="tile-content">
+          <text class="tile-title">症状自查</text>
+          <text class="tile-desc">智能评估健康</text>
+        </view>
+        <view class="tile-badge">AI</view>
       </view>
 
       <!-- 附近医院 -->
-      <view class="feature-card success-gradient" bindtap="toHospital" hover-class="feature-card-pressed" aria-label="附近医院">
-        <view class="feature-icon-large">🏥</view>
-        <view class="feature-content">
-          <text class="feature-title">附近医院</text>
-          <text class="feature-desc">快速定位导航</text>
+      <view class="tile tile-accent-info" bindtap="toHospital" hover-class="tile-pressed" aria-label="附近医院">
+        <view class="tile-icon-wrap">
+          <image class="tile-icon" src="/images/icons/hospital.svg" mode="aspectFit" aria-label="附近医院" />
         </view>
-        <view class="feature-badge">MAP</view>
+        <view class="tile-content">
+          <text class="tile-title">附近医院</text>
+          <text class="tile-desc">快速定位导航</text>
+        </view>
       </view>
 
       <!-- 健康档案 -->
-      <view class="feature-card warning-gradient" bindtap="toPetProfile" hover-class="feature-card-pressed" aria-label="健康档案">
-        <view class="feature-icon-large">📋</view>
-        <view class="feature-content">
-          <text class="feature-title">健康档案</text>
-          <text class="feature-desc">记录成长点滴</text>
+      <view class="tile tile-accent-success" bindtap="toPetProfile" hover-class="tile-pressed" aria-label="健康档案">
+        <view class="tile-icon-wrap">
+          <image class="tile-icon" src="/images/icons/clipboard.svg" mode="aspectFit" aria-label="健康档案" />
         </view>
-        <view class="feature-badge">NEW</view>
+        <view class="tile-content">
+          <text class="tile-title">健康档案</text>
+          <text class="tile-desc">记录成长点滴</text>
+        </view>
       </view>
 
       <!-- 科普知识 -->
-      <view class="feature-card info-gradient" bindtap="toKnowledge" hover-class="feature-card-pressed" aria-label="科普知识">
-        <view class="feature-icon-large">📚</view>
-        <view class="feature-content">
-          <text class="feature-title">科普知识</text>
-          <text class="feature-desc">专业养宠指南</text>
+      <view class="tile tile-accent-secondary" bindtap="toKnowledge" hover-class="tile-pressed" aria-label="科普知识">
+        <view class="tile-icon-wrap">
+          <image class="tile-icon" src="/images/icons/clipboard.svg" mode="aspectFit" aria-label="科普知识" />
         </view>
-        <view class="feature-badge">HOT</view>
+        <view class="tile-content">
+          <text class="tile-title">科普知识</text>
+          <text class="tile-desc">专业养宠指南</text>
+        </view>
       </view>
 
       <!-- 会员中心 -->
-      <view class="feature-card member-gradient" bindtap="goToMember" hover-class="feature-card-pressed" aria-label="会员中心">
-        <view class="feature-icon-large">👑</view>
-        <view class="feature-content">
-          <text class="feature-title">会员中心</text>
-          <text class="feature-desc">专属权益</text>
+      <view class="tile tile-accent-warning" bindtap="goToMember" hover-class="tile-pressed" aria-label="会员中心">
+        <view class="tile-icon-wrap">
+          <image class="tile-icon" src="/images/icons/crown.svg" mode="aspectFit" aria-label="会员中心" />
         </view>
-        <view class="feature-badge" wx:if="{{isMember}}">VIP</view>
+        <view class="tile-content">
+          <text class="tile-title">会员中心</text>
+          <text class="tile-desc">专属权益</text>
+        </view>
+        <view class="tile-badge" wx:if="{{isMember}}">VIP</view>
       </view>
 
       <!-- 邀请好友 -->
-      <view class="feature-card invite-gradient" bindtap="goToInvite" hover-class="feature-card-pressed" aria-label="邀请好友">
-        <view class="feature-icon-large">🎁</view>
-        <view class="feature-content">
-          <text class="feature-title">邀请好友</text>
-          <text class="feature-desc">双方获奖</text>
+      <view class="tile tile-accent-primary" bindtap="goToInvite" hover-class="tile-pressed" aria-label="邀请好友">
+        <view class="tile-icon-wrap">
+          <image class="tile-icon" src="/images/icons/gift.svg" mode="aspectFit" aria-label="邀请好友" />
         </view>
-        <view class="feature-badge reward-badge">奖</view>
+        <view class="tile-content">
+          <text class="tile-title">邀请好友</text>
+          <text class="tile-desc">双方获奖</text>
+        </view>
       </view>
 
       <!-- 回访记录 -->
-      <view class="feature-card followup-gradient" bindtap="goToFollowupList" hover-class="feature-card-pressed" aria-label="回访记录">
-        <view class="feature-icon-large">📝</view>
-        <view class="feature-content">
-          <text class="feature-title">回访记录</text>
-          <text class="feature-desc">追踪恢复情况</text>
+      <view class="tile tile-accent-info" bindtap="goToFollowupList" hover-class="tile-pressed" aria-label="回访记录">
+        <view class="tile-icon-wrap">
+          <image class="tile-icon" src="/images/icons/clipboard.svg" mode="aspectFit" aria-label="回访记录" />
+        </view>
+        <view class="tile-content">
+          <text class="tile-title">回访记录</text>
+          <text class="tile-desc">追踪恢复情况</text>
         </view>
       </view>
     </view>
   </view>
 
   <!-- 宠物健康状态卡片 -->
-  <view class="health-status-card">
-    <view class="health-header">
-      <view class="health-title-section">
-        <text class="health-icon">💚</text>
-        <text class="health-title">宠物健康状态</text>
+  <view class="health-section">
+    <view class="section-header">
+      <view class="section-header-left">
+        <image class="section-header-icon" src="/images/icons/paw.svg" mode="aspectFit" aria-label="健康" />
+        <text class="section-title">宠物健康状态</text>
       </view>
-      <text class="health-refresh" bindtap="refreshHealthStatus">刷新</text>
+      <text class="section-refresh" bindtap="refreshHealthStatus">刷新</text>
     </view>
 
-    <view class="pets-scroll">
-      <scroll-view class="pets-horizontal" scroll-x="true" show-scrollbar="false">
-        <view class="pet-health-card" wx:for="{{petsList}}" wx:key="id" bindtap="viewPetDetail" data-pet-id="{{item.id}}" data-pet-name="{{item.name}}" hover-class="pet-health-card-hover">
-          <view class="pet-avatar-wrapper">
-            <!-- 真实头像或emoji头像 -->
-            <image wx:if="{{item.isRealAvatar}}" class="pet-avatar-image" src="{{item.avatar}}" mode="aspectFill"/>
-            <text wx:else class="pet-avatar-card">{{item.avatar}}</text>
-            <view class="pet-health-dot {{item.healthStatus === 'good' ? 'health-good' : 'health-warning'}}"></view>
+    <scroll-view class="pets-scroll" scroll-x="true" show-scrollbar="false">
+      <view class="pet-card" wx:for="{{petsList}}" wx:key="id" bindtap="viewPetDetail" data-pet-id="{{item.id}}" data-pet-name="{{item.name}}" hover-class="pet-card-hover">
+        <view class="pet-card-avatar-wrap">
+          <image wx:if="{{item.isRealAvatar}}" class="pet-card-avatar" src="{{item.avatar}}" mode="aspectFill"/>
+          <view wx:else class="pet-card-avatar-fallback">
+            <image class="pet-card-avatar-icon" src="{{item.petType === 'cat' ? '/images/icons/paw.svg' : '/images/icons/paw.svg'}}" mode="aspectFit" />
           </view>
-          <text class="pet-name-card">{{item.name}}</text>
-          <text class="pet-status-card {{item.healthStatus === 'good' ? 'status-good' : 'status-warning'}}">
-            {{item.healthStatus === 'good' ? '状态良好' : '需要关注'}}
-          </text>
+          <view class="pet-health-dot {{item.healthStatus === 'good' ? 'dot-good' : 'dot-warning'}}"></view>
         </view>
+        <text class="pet-card-name">{{item.name}}</text>
+        <text class="pet-card-status {{item.healthStatus === 'good' ? 'status-good' : 'status-warning'}}">
+          {{item.healthStatus === 'good' ? '状态良好' : '需要关注'}}
+        </text>
+      </view>
 
-        <!-- 添加宠物按钮 -->
-        <view class="pet-add-card" bindtap="addPet">
-          <view class="add-icon-large">+</view>
-          <text class="add-pet-text">添加宠物</text>
-        </view>
-      </scroll-view>
-    </view>
+      <!-- 添加宠物 -->
+      <view class="pet-card pet-card-add" bindtap="addPet">
+        <view class="pet-card-add-icon">+</view>
+        <text class="pet-card-add-text">添加宠物</text>
+      </view>
+    </scroll-view>
   </view>
 
   <!-- 附近医院快捷预览 -->
-  <view class="nearby-hospitals-section">
-    <view class="section-header-nearby">
-      <view class="hospital-header-left">
-        <text class="section-icon">📍</text>
-        <text class="section-title-nearby">附近24小时医院</text>
-        <view class="live-indicator">
+  <view class="nearby-section">
+    <view class="section-header">
+      <view class="section-header-left">
+        <image class="section-header-icon" src="/images/icons/pin.svg" mode="aspectFit" aria-label="定位" />
+        <text class="section-title">附近24小时医院</text>
+        <view class="live-tag">
           <view class="live-dot"></view>
           <text class="live-text">实时</text>
         </view>
       </view>
-      <view class="hospital-header-right">
-        <text class="update-time-text">{{lastUpdateTime || '更新中...'}}</text>
-        <text class="section-more-nearby" bindtap="toHospital">查看更多 →</text>
+      <view class="section-header-right">
+        <text class="update-time">{{lastUpdateTime || '更新中...'}}</text>
+        <text class="section-more" bindtap="toHospital">更多 ›</text>
       </view>
     </view>
 
-    <view class="hospitals-preview-list">
+    <view class="hospital-list">
       <state-view
         wx:if="{{isLoadingHospitals && nearbyHospitals.length === 0}}"
         type="loading"
@@ -185,28 +203,27 @@
         card="{{true}}"
       />
 
-      <!-- 医院列表显示 -->
-      <view class="hospital-preview-card" wx:for="{{nearbyHospitals}}" wx:key="id" bindtap="navigateToHospital" data-hospital="{{item}}">
-        <view class="hospital-info-compact">
-          <view class="hospital-name-row">
-            <text class="hospital-name-compact">{{item.name}}</text>
-            <view class="hospital-badge-compact {{item.is24h ? 'badge-24h' : 'badge-normal'}}">{{item.is24h ? '24H' : '常规'}}</view>
+      <view class="hospital-card" wx:for="{{nearbyHospitals}}" wx:key="id" bindtap="navigateToHospital" data-hospital="{{item}}">
+        <view class="hospital-card-info">
+          <view class="hospital-card-name-row">
+            <text class="hospital-card-name">{{item.name}}</text>
+            <view class="hospital-card-badge {{item.is24h ? 'badge-24h' : 'badge-normal'}}">{{item.is24h ? '24H' : '常规'}}</view>
           </view>
-          <view class="hospital-details-compact">
-            <text class="hospital-distance-compact">{{item.distance}}</text>
-            <text class="hospital-separator">·</text>
-            <text class="hospital-address-compact">{{item.address}}</text>
+          <view class="hospital-card-details">
+            <text class="hospital-card-distance">{{item.distance}}</text>
+            <text class="hospital-card-sep">·</text>
+            <text class="hospital-card-address">{{item.address}}</text>
           </view>
         </view>
-        <view class="hospital-action-compact">
-          <view class="navigate-icon-compact">🧭</view>
+        <view class="hospital-card-action">
+          <image class="hospital-card-nav-icon" src="/images/icons/compass.svg" mode="aspectFit" aria-label="导航" />
         </view>
       </view>
 
       <state-view
         wx:if="{{!isLoadingHospitals && nearbyHospitals.length === 0}}"
         type="empty"
-        icon="🏥"
+        icon="hospital"
         title="暂无附近医院数据"
         description="请检查定位权限或稍后重试"
         card="{{true}}"
@@ -214,59 +231,55 @@
     </view>
   </view>
 
-  <!-- 今日科普 - 精美卡片 -->
-  <view class="knowledge-daily-card" bindtap="toKnowledgeDetail" data-id="{{dailyKnowledge._id}}" wx:if="{{dailyKnowledge}}" hover-class="knowledge-daily-card-active">
-    <!-- 顶部装饰渐变条 -->
-    <view class="daily-card-gradient-bar"></view>
-    <!-- 内容区 -->
+  <!-- 今日科普 -->
+  <view class="daily-card" bindtap="toKnowledgeDetail" data-id="{{dailyKnowledge._id}}" wx:if="{{dailyKnowledge}}" hover-class="daily-card-active">
+    <view class="daily-card-bar"></view>
     <view class="daily-card-body">
-      <!-- 标签行 -->
       <view class="daily-card-top">
         <view class="daily-card-badge">
-          <text class="badge-icon">📖</text>
-          <text class="badge-label">今日科普</text>
+          <image class="daily-card-badge-icon" src="/images/icons/clipboard.svg" mode="aspectFit" aria-label="科普" />
+          <text class="daily-card-badge-label">今日科普</text>
         </view>
-        <view class="daily-card-arrow">
-          <text class="arrow-text">阅读全文</text>
-          <view class="arrow-chevron"></view>
+        <view class="daily-card-link">
+          <text class="daily-card-link-text">阅读全文</text>
+          <text class="daily-card-link-arrow">›</text>
         </view>
       </view>
-      <!-- 标题 -->
       <text class="daily-card-title">{{dailyKnowledge.title}}</text>
-      <!-- 摘要 -->
       <text class="daily-card-summary" wx:if="{{dailyKnowledge.summary}}">{{dailyKnowledge.summary}}</text>
-      <!-- 底部标签 -->
-      <view class="daily-card-footer">
+      <view class="daily-card-tags">
         <view class="daily-tag">
-          <text class="tag-dot"></text>
-          <text class="tag-text">专业知识</text>
+          <view class="daily-tag-dot"></view>
+          <text class="daily-tag-text">专业知识</text>
         </view>
         <view class="daily-tag">
-          <text class="tag-dot dot-blue"></text>
-          <text class="tag-text">每日更新</text>
+          <view class="daily-tag-dot daily-tag-dot--alt"></view>
+          <text class="daily-tag-text">每日更新</text>
         </view>
       </view>
     </view>
   </view>
 
-  <!-- 健康提示（无科普数据时降级显示） -->
-  <view class="health-tip-card" wx:if="{{!dailyKnowledge}}">
-    <view class="tip-header">
-      <text class="tip-icon">💡</text>
-      <text class="tip-title">今日健康提示</text>
+  <!-- 健康提示（降级） -->
+  <view class="tip-card" wx:if="{{!dailyKnowledge}}">
+    <view class="tip-card-header">
+      <image class="tip-card-icon" src="/images/icons/alert.svg" mode="aspectFit" aria-label="提示" />
+      <text class="tip-card-title">今日健康提示</text>
     </view>
-    <view class="tip-content">
-      <text class="tip-text">{{dailyTip}}</text>
+    <view class="tip-card-body">
+      <text class="tip-card-text">{{dailyTip}}</text>
     </view>
   </view>
 
-  <!-- 回访提醒弹窗 — 温馨治愈风 -->
+  <!-- 回访提醒弹窗 -->
   <view class="followup-mask" wx:if="{{showFollowupPopup}}" bindtap="closeFollowupPopup">
     <view class="followup-modal" catchtap="">
-      <view class="followup-modal-deco">🐾</view>
+      <view class="followup-modal-icon">
+        <image class="followup-modal-paw" src="/images/icons/paw.svg" mode="aspectFit" aria-label="宠物" />
+      </view>
       <view class="followup-modal-body">
         <text class="followup-modal-title">宝贝恢复了吗？</text>
-        <text class="followup-modal-subtitle">告诉我们的恢复情况，帮助更好地照顾它</text>
+        <text class="followup-modal-subtitle">告诉我们恢复情况，帮助更好地照顾它</text>
         <view class="followup-modal-pet" wx:if="{{pendingFollowup}}">
           <text class="followup-pet-name">{{pendingFollowup.pet_name || '宠物'}}</text>
           <text class="followup-pet-sep">·</text>
@@ -275,7 +288,10 @@
       </view>
       <view class="followup-modal-actions">
         <button class="followup-btn-later" bindtap="closeFollowupPopup">稍后再说</button>
-        <button class="followup-btn-go" bindtap="goToFollowup">🐾 去反馈</button>
+        <button class="followup-btn-go" bindtap="goToFollowup">
+          <image class="followup-btn-icon" src="/images/icons/paw.svg" mode="aspectFit" aria-label="反馈" />
+          去反馈
+        </button>
       </view>
     </view>
   </view>

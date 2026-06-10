@@ -1,153 +1,102 @@
-<!--紧急救助页面 - 极简设计-->
-<view class="emergency-page">
+<!--紧急救助页面 — 白底 + 暖红强调，Warm Professionalism v2.0-->
+<view class="page">
 
-  <!-- 顶部状态栏 -->
-  <view class="emergency-status">
-    <view class="status-dot"></view>
-    <text class="status-text">紧急救助中</text>
+  <!-- 顶部暖红警示条 -->
+  <view class="alert-bar">
+    <view class="alert-bar-dot"></view>
+    <text class="alert-bar-text">紧急救助中</text>
   </view>
 
-  <!-- 最近医院卡片 -->
-  <view class="nearest-hospital-card" wx:if="{{nearestHospital}}">
-    <view class="hospital-badge">⚡ 最近</view>
-
-    <!-- 医院名称 -->
-    <view class="hospital-name">{{nearestHospital.name}}</view>
-
-    <!-- 关键信息 -->
-    <view class="hospital-info">
-      <text class="info-item">📍 {{nearestHospital.distanceDisplay}}</text>
-      <text class="info-item">🕐 24小时</text>
+  <!-- 最近医院卡片 — 白底 -->
+  <view class="nearest-card" wx:if="{{nearestHospital}}">
+    <view class="nearest-badge">最近</view>
+    <text class="nearest-name">{{nearestHospital.name}}</text>
+    <view class="nearest-meta">
+      <view class="nearest-meta-item">
+        <image class="nearest-meta-icon" src="/images/icons/pin.svg" mode="aspectFit" />
+        <text>{{nearestHospital.distanceDisplay}}</text>
+      </view>
+      <view class="nearest-meta-item nearest-meta-item--24h">24小时</view>
     </view>
+    <text class="nearest-address">{{nearestHospital.address}}</text>
 
-    <!-- 地址 -->
-    <view class="hospital-address">{{nearestHospital.address}}</view>
-
-    <!-- 一键操作按钮 -->
-    <view class="emergency-actions">
-      <button class="action-btn primary-action"
-              bindtap="callHospital"
-              data-phone="{{nearestHospital.phone}}"
-              data-name="{{nearestHospital.name}}">
-        <text class="btn-icon">📞</text>
-        <text class="btn-text">立即拨打</text>
+    <view class="nearest-actions">
+      <button class="nearest-btn nearest-btn--call" bindtap="callHospital"
+              data-phone="{{nearestHospital.phone}}" data-name="{{nearestHospital.name}}">
+        <image class="nearest-btn-icon" src="/images/icons/phone.svg" mode="aspectFit" aria-label="拨打" />
+        <text>立即拨打</text>
       </button>
-
-      <button class="action-btn secondary-action"
-              bindtap="navigateToHospital"
+      <button class="nearest-btn nearest-btn--nav" bindtap="navigateToHospital"
               data-hospital="{{nearestHospital}}">
-        <text class="btn-icon">🧭</text>
-        <text class="btn-text">开始导航</text>
+        <image class="nearest-btn-icon" src="/images/icons/compass.svg" mode="aspectFit" aria-label="导航" />
+        <text>开始导航</text>
       </button>
     </view>
   </view>
 
-  <state-view
-    wx:if="{{isLoading}}"
-    type="loading"
-    title="正在定位最近医院..."
-    theme="dark"
-  />
+  <state-view wx:if="{{isLoading}}" type="loading" title="正在定位最近医院..." />
+  <state-view wx:if="{{!isLoading && !nearestHospital}}" type="error" icon="cross"
+    title="定位失败" description="无法获取您的位置信息"
+    show-action="{{true}}" action-text="重新定位" bind:action="retryLocation" />
 
-  <state-view
-    wx:if="{{!isLoading && !nearestHospital}}"
-    type="error"
-    icon="❌"
-    title="定位失败"
-    description="无法获取您的位置信息"
-    action-text="🔄 重新定位"
-    show-action="{{true}}"
-    theme="dark"
-    bind:action="retryLocation"
-  />
-
-  <!-- 其他医院列表（全新设计） -->
-  <view class="other-hospitals-section" wx:if="{{otherHospitals.length > 0}}">
-    <!-- 展开按钮 -->
-    <view class="expand-header" bindtap="toggleOtherHospitals">
-      <view class="expand-content">
-        <text class="expand-icon-large">🏥</text>
-        <view class="expand-text-group">
-          <text class="expand-title">其他附近医院</text>
-          <text class="expand-subtitle">{{otherHospitals.length}}家可选择医院，已显示{{displayOtherHospitals.length}}家</text>
+  <!-- 其他医院 -->
+  <view class="other-section" wx:if="{{otherHospitals.length > 0}}">
+    <view class="other-header" bindtap="toggleOtherHospitals">
+      <view class="other-header-left">
+        <image class="other-header-icon" src="/images/icons/hospital.svg" mode="aspectFit" aria-label="医院" />
+        <view class="other-header-text">
+          <text class="other-header-title">其他附近医院</text>
+          <text class="other-header-sub">{{otherHospitals.length}}家可选择</text>
         </view>
       </view>
-      <view class="expand-arrow {{showOther ? 'arrow-up' : 'arrow-down'}}">
-        <text class="arrow-icon">{{showOther ? '▲' : '▼'}}</text>
-      </view>
+      <text class="other-arrow">{{showOther ? '▲' : '▼'}}</text>
     </view>
 
-    <!-- 医院卡片网格 -->
-    <view class="hospitals-grid" wx:if="{{showOther}}">
-      <view class="hospital-card-mini"
-            wx:for="{{displayOtherHospitals}}"
-            wx:key="hospitalId"
-            bindtap="selectHospital"
-            data-hospital="{{item}}">
-
-        <!-- 卡片头部 -->
-        <view class="card-header-mini">
-          <view class="hospital-badge-group">
-            <text class="badge-24h" wx:if="{{item.is24h}}">24H</text>
-            <text class="badge-emergency" wx:if="{{item.hasEmergency}}">急诊</text>
+    <view class="other-list" wx:if="{{showOther}}">
+      <view class="other-card" wx:for="{{displayOtherHospitals}}" wx:key="hospitalId"
+            bindtap="selectHospital" data-hospital="{{item}}">
+        <view class="other-card-top">
+          <view class="other-card-badges">
+            <text class="other-badge other-badge--24h" wx:if="{{item.is24h}}">24H</text>
+            <text class="other-badge other-badge--er" wx:if="{{item.hasEmergency}}">急诊</text>
           </view>
-          <text class="hospital-distance-mini">{{item.distanceDisplay}}</text>
+          <text class="other-card-distance">{{item.distanceDisplay}}</text>
         </view>
-
-        <!-- 医院信息 -->
-        <view class="hospital-content-mini">
-          <text class="hospital-name-mini">{{item.name}}</text>
-          <view class="hospital-details-mini">
-            <text class="detail-text-mini">📍 {{item.address}}</text>
+        <text class="other-card-name">{{item.name}}</text>
+        <text class="other-card-address">{{item.address}}</text>
+        <view class="other-card-actions">
+          <view class="other-card-action" catchtap="callHospital" data-phone="{{item.phone}}" data-name="{{item.name}}">
+            <image class="other-card-action-icon" src="/images/icons/phone.svg" mode="aspectFit" />拨打
           </view>
-        </view>
-
-        <!-- 快速操作 -->
-        <view class="card-actions-mini">
-          <view class="mini-action-btn call-mini"
-                  catchtap="callHospital"
-                  data-phone="{{item.phone}}"
-                  data-name="{{item.name}}">
-            <text class="mini-btn-icon">📞</text>
-            <text class="mini-btn-text">拨打</text>
-          </view>
-          <view class="mini-action-btn navigate-mini"
-                  catchtap="navigateToHospital"
-                  data-hospital="{{item}}">
-            <text class="mini-btn-icon">🧭</text>
-            <text class="mini-btn-text">导航</text>
+          <view class="other-card-action" catchtap="navigateToHospital" data-hospital="{{item}}">
+            <image class="other-card-action-icon" src="/images/icons/compass.svg" mode="aspectFit" />导航
           </view>
         </view>
       </view>
     </view>
 
-    <!-- 加载更多按钮 -->
-    <view class="load-more-btn" wx:if="{{showOther && displayCount < otherHospitals.length}}" bindtap="loadMoreHospitals">
-      <text class="load-more-text">查看更多医院（{{displayCount}}/{{otherHospitals.length}}）</text>
-      <text class="load-more-arrow">▼</text>
-    </view>
-
-    <!-- 展开提示 -->
-    <view class="expand-hint" bindtap="toggleOtherHospitals" wx:if="{{showOther}}">
-      <text class="hint-text">收起列表</text>
-      <text class="hint-icon">▲</text>
+    <view class="other-more" wx:if="{{showOther && displayCount < otherHospitals.length}}" bindtap="loadMoreHospitals">
+      查看更多（{{displayCount}}/{{otherHospitals.length}}）
     </view>
   </view>
 
   <!-- 紧急提示 -->
-  <view class="emergency-tips">
-    <text class="tips-title">⚠️ 紧急处理建议</text>
+  <view class="tips-card">
+    <view class="tips-header">
+      <image class="tips-icon" src="/images/icons/warning.svg" mode="aspectFit" aria-label="提示" />
+      <text class="tips-title">紧急处理建议</text>
+    </view>
     <view class="tips-list">
-      <text class="tip-item">1. 保持冷静，观察宠物状态</text>
-      <text class="tip-item">2. 拨打医院电话告知情况</text>
-      <text class="tip-item">3. 准备宠物相关医疗记录</text>
+      <text class="tips-item">1. 保持冷静，观察宠物状态</text>
+      <text class="tips-item">2. 拨打医院电话告知情况</text>
+      <text class="tips-item">3. 准备宠物相关医疗记录</text>
     </view>
   </view>
 
   <!-- 返回按钮 -->
-  <view class="back-btn" bindtap="goBack" hover-class="back-btn-active">
-    <view class="back-arrow"></view>
-    <text class="back-text">返回首页</text>
+  <view class="back-link" bindtap="goBack" hover-class="back-link--active">
+    <text class="back-link-arrow">←</text>
+    <text class="back-link-text">返回首页</text>
   </view>
 
 </view>

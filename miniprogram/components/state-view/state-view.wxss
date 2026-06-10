@@ -3,74 +3,84 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-3xl, 64rpx) var(--spacing-lg, 32rpx);
+  padding: 64rpx 24rpx;
   text-align: center;
-  color: var(--text-secondary, #6b7280);
+  color: var(--text-secondary);
 }
 
 .state-view--card {
-  margin: var(--spacing-sm, 16rpx) 0;
-  border-radius: var(--radius-xl, 24rpx);
-  background: #fff;
+  margin: 16rpx 0;
+  border-radius: var(--radius-2xl);
+  background: var(--bg-card);
+  border: 1rpx solid var(--border-color);
 }
 
+/* Spinner — 品牌色 */
 .state-view__spinner {
-  width: 56rpx;
-  height: 56rpx;
-  margin-bottom: var(--spacing-md, 24rpx);
-  border: 6rpx solid var(--border-light, #e5e7eb);
-  border-top-color: var(--primary-500, #2563eb);
+  width: 48rpx;
+  height: 48rpx;
+  margin-bottom: 24rpx;
+  border: 4rpx solid var(--border-color);
+  border-top-color: var(--brand-primary);
   border-radius: 50%;
-  animation: state-view-spin 0.9s linear infinite;
+  animation: state-view-spin 1s linear infinite;
 }
 
+/* 图标区域 */
 .state-view__icon {
-  margin-bottom: var(--spacing-md, 24rpx);
-  font-size: 64rpx;
-  line-height: 1;
+  width: 72rpx;
+  height: 72rpx;
+  margin-bottom: 24rpx;
+  opacity: 0.5;
 }
 
 .state-view__title {
-  color: var(--text-primary, #111827);
-  font-size: var(--font-size-lg, 32rpx);
+  color: var(--text-primary);
+  font-size: var(--font-size-lg);
   font-weight: 600;
   line-height: 1.4;
 }
 
 .state-view__description {
-  max-width: 520rpx;
-  margin-top: var(--spacing-xs, 8rpx);
-  color: var(--text-secondary, #6b7280);
-  font-size: var(--font-size-sm, 26rpx);
-  line-height: 1.5;
+  max-width: 480rpx;
+  margin-top: 8rpx;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
 }
 
+/* 操作按钮 */
 .state-view__action {
   min-width: 176rpx;
-  min-height: 88rpx;
-  margin-top: var(--spacing-lg, 32rpx);
-  padding: 0 var(--spacing-xl, 40rpx);
+  min-height: 80rpx;
+  margin-top: 32rpx;
+  padding: 0 40rpx;
   border: none;
-  border-radius: var(--radius-full, 999rpx);
-  background: var(--primary-500, #2563eb);
-  color: #fff;
-  font-size: var(--font-size-base, 28rpx);
-  line-height: 88rpx;
+  border-radius: var(--radius-full);
+  background: var(--brand-primary);
+  color: var(--text-inverse);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  line-height: 80rpx;
 }
 
-.state-view--dark .state-view__title,
-.state-view--dark .state-view__description,
-.state-view--dark .state-view__icon {
-  color: #fff;
+/* 暗色主题 */
+.state-view--dark .state-view__title {
+  color: var(--text-inverse);
+}
+
+.state-view--dark .state-view__description {
+  color: var(--text-tertiary);
 }
 
 .state-view--dark .state-view__spinner {
-  border-color: rgba(255, 255, 255, 0.3);
-  border-top-color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+  border-top-color: var(--brand-accent);
 }
 
+/* 错误态按钮 */
 .state-view--error .state-view__action {
-  background: var(--danger-500, #ef4444);
+  background: var(--brand-emergency);
 }
 
 @keyframes state-view-spin {
