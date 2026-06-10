@@ -39,6 +39,21 @@ function escapeHtml(text) {
 }
 
 /**
+ * 转义 HTML 属性值中的特殊字符（防止 onclick 等属性中的 XSS）
+ * @param {string} str - 要转义的字符串
+ * @returns {string} 转义后的安全字符串
+ */
+function escapeAttr(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+/**
  * 渲染分页
  */
 function renderPagination(containerId, pagination, callback) {
@@ -91,14 +106,61 @@ function renderPagination(containerId, pagination, callback) {
   });
 }
 
+const modalFocusState = {};
+
+function getFocusableElements(container) {
+  return Array.from(container.querySelectorAll(
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )).filter(element => element.offsetParent !== null);
+}
+
+function trapModalFocus(modal, event) {
+  if (event.key !== 'Tab') return;
+
+  const focusable = getFocusableElements(modal);
+  if (focusable.length === 0) {
+    event.preventDefault();
+    return;
+  }
+
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
 /**
  * 打开弹窗
  */
 function openModal(modalId) {
   const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.classList.remove('hidden');
+  if (!modal) return;
+
+  modalFocusState[modalId] = document.activeElement;
+  modal.classList.remove('hidden');
+
+  const focusable = getFocusableElements(modal);
+  if (focusable.length > 0) {
+    focusable[0].focus();
   }
+
+  if (!modalFocusState[modalId + 'Keydown']) {
+    modalFocusState[modalId + 'Keydown'] = function(event) {
+      if (event.key === 'Escape') {
+        closeModal(modalId);
+        return;
+      }
+      trapModalFocus(modal, event);
+    };
+  }
+
+  document.addEventListener('keydown', modalFocusState[modalId + 'Keydown']);
 }
 
 /**
@@ -106,8 +168,16 @@ function openModal(modalId) {
  */
 function closeModal(modalId) {
   const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.classList.add('hidden');
+  if (!modal) return;
+
+  modal.classList.add('hidden');
+  if (modalFocusState[modalId + 'Keydown']) {
+    document.removeEventListener('keydown', modalFocusState[modalId + 'Keydown']);
+  }
+
+  const previousFocus = modalFocusState[modalId];
+  if (previousFocus && typeof previousFocus.focus === 'function') {
+    previousFocus.focus();
   }
 }
 
@@ -217,13 +287,28 @@ async function initSettingsModule() {
  * 保存配置
  */
 async function saveConfig() {
+  const settingsRoot = document.getElementById('tab-settings');
+  const validation = validateAndShow({
+    priceFirstReport: { number: true, min: 0, message: '首份报告价格不能小于 0' },
+    priceStandardReport: { number: true, min: 0, message: '标准报告价格不能小于 0' },
+    priceMemberMonthly: { number: true, min: 0, message: '个人月卡价格不能小于 0' },
+    priceMemberYearly: { number: true, min: 0, message: '个人年卡价格不能小于 0' },
+    creditsMonthlyReports: { number: true, min: 0, message: '月卡额度不能小于 0' },
+    creditsYearlyReports: { number: true, min: 0, message: '年卡额度不能小于 0' }
+  }, { root: settingsRoot });
+
+  if (!validation.valid) {
+    showToast('请修正配置错误后再保存', 'error');
+    return;
+  }
+
   const updates = {
     firstReport: Math.round(parseFloat(document.getElementById('priceFirstReport').value) * 100),
     standardReport: Math.round(parseFloat(document.getElementById('priceStandardReport').value) * 100),
     memberMonthly: Math.round(parseFloat(document.getElementById('priceMemberMonthly').value) * 100),
     memberYearly: Math.round(parseFloat(document.getElementById('priceMemberYearly').value) * 100),
-    monthlyReports: parseInt(document.getElementById('creditsMonthlyReports').value),
-    yearlyReports: parseInt(document.getElementById('creditsYearlyReports').value)
+    monthlyReports: parseInt(document.getElementById('creditsMonthlyReports').value, 10),
+    yearlyReports: parseInt(document.getElementById('creditsYearlyReports').value, 10)
   };
 
   showLoading('保存中...');

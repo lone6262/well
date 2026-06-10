@@ -1,0 +1,100 @@
+/* 回访提醒弹窗样式 — 从 index.wxss 提取 */
+
+.followup-mask {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
+}
+
+.followup-modal {
+  width: 100%;
+  max-width: 600rpx;
+  background: #ffffff;
+  border-radius: 28rpx;
+  overflow: hidden;
+  box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.15);
+}
+
+.followup-modal-deco {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  text-align: center;
+  font-size: 72rpx;
+  padding: 32rpx 0 16rpx;
+}
+
+.followup-modal-body {
+  padding: 28rpx 32rpx 32rpx;
+  text-align: center;
+}
+
+.followup-modal-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.followup-modal-subtitle {
+  display: block;
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 20rpx;
+}
+
+.followup-modal-pet {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  background: #f8f9ff;
+  border-radius: 16rpx;
+  padding: 16rpx 20rpx;
+  margin-bottom: 4rpx;
+}
+
+.followup-pet-name { font-size: 28rpx; font-weight: bold; color: #333; }
+
+.followup-pet-sep { margin: 0 12rpx; color: #d9d9d9; }
+
+.followup-pet-symptoms { font-size: 26rpx; color: #666; }
+
+.followup-modal-actions {
+  display: flex;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.followup-btn-later {
+  flex: 1;
+  height: 96rpx;
+  line-height: 96rpx;
+  font-size: 30rpx;
+  color: #999;
+  background: #fff;
+  border: none;
+  border-right: 1rpx solid #f0f0f0;
+  border-radius: 0;
+  text-align: center;
+}
+
+.followup-btn-later::after { border: none; }
+
+.followup-btn-go {
+  flex: 1;
+  height: 96rpx;
+  line-height: 96rpx;
+  font-size: 30rpx;
+  font-weight: bold;
+  background: #fff;
+  color: #667eea;
+  border: none;
+  border-radius: 0;
+  text-align: center;
+}
+
+.followup-btn-go::after { border: none; }

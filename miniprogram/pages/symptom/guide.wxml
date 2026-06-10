@@ -3,7 +3,7 @@
 
   <!-- 顶部导航 -->
   <view class="nav-bar">
-    <view class="nav-back" bindtap="goBack">
+    <view class="nav-back" bindtap="goBack" aria-label="返回">
       <text>←</text>
     </view>
     <view class="nav-title">症状自查</view>
@@ -11,7 +11,7 @@
   </view>
 
   <!-- 进度条 -->
-  <view class="progress-bar">
+  <view class="progress-bar" aria-label="症状选择">
     <view class="progress-fill" style="width: {{(currentStep / 3) * 100}}%"></view>
   </view>
 
@@ -45,7 +45,7 @@
   </view>
 
   <!-- 步骤2：选择症状 -->
-  <view class="content" wx:if="{{currentStep === 2}}">
+  <view class="content" wx:if="{{currentStep === 2}}" role="form">
     <view class="step-header">
       <text class="step-icon">🩺</text>
       <view class="step-info">
@@ -73,7 +73,8 @@
                 wx:key="id"
                 bindtap="toggleSymptom"
                 data-category-index="{{catIndex}}"
-                data-id="{{symptom.id}}">
+                data-id="{{symptom.id}}"
+                aria-checked="{{symptom.selected}}">
             <text class="symptom-emoji">{{symptom.emoji}}</text>
             <text class="symptom-name">{{symptom.name}}</text>
             <text class="symptom-check" wx:if="{{symptom.selected}}">✓</text>
@@ -148,7 +149,7 @@
     <button class="btn btn-secondary" wx:if="{{currentStep > 1}}" bindtap="prevStep">
       上一步
     </button>
-    <button class="btn btn-primary {{currentStep > 1 ? 'flex-1' : ''}}" bindtap="nextStep" disabled="{{!canNext}}">
+    <button class="btn btn-primary {{currentStep > 1 ? 'flex-1' : ''}}" bindtap="nextStep" disabled="{{!canNext}}" aria-label="提交评估">
       {{currentStep === 3 ? '提交评估' : '下一步'}}
     </button>
   </view>

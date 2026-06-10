@@ -3,6 +3,7 @@
 
 const { TOAST_DURATION, CACHE_DURATION } = require('./utils/constants.js')
 const logger = require('./utils/logger.js')
+const log = logger.child('App')
 
 // 生产环境静默大部分日志，仅保留 warn 和 error
 // 正式版环境为 'release'，开发版为 'develop'，体验版为 'trial'
@@ -42,7 +43,7 @@ App({
   onLoginComplete(callback) {
     // 安全检查：确保 callback 是函数
     if (typeof callback !== 'function') {
-      console.error('onLoginComplete 需要传入函数作为参数')
+      log.error('onLoginComplete 需要传入函数作为参数')
       return
     }
 
@@ -57,13 +58,13 @@ App({
       try {
         callback(this.globalData.openid)
       } catch (error) {
-        console.error('立即执行登录回调失败:', error)
+        log.error('立即执行登录回调失败:', error)
       }
     } else {
       // 加入队列，等静默登录完成后统一触发
       // 防止回调队列无限增长导致内存泄漏
       if (this.globalData.loginCallbacks.length >= this.globalData.MAX_LOGIN_CALLBACKS) {
-        console.warn('登录回调队列已满，丢弃最早的回调')
+        log.warn('登录回调队列已满，丢弃最早的回调')
         this.globalData.loginCallbacks.shift()
       }
       this.globalData.loginCallbacks.push(callback)
@@ -74,7 +75,7 @@ App({
   _notifyLoginComplete(openid) {
     // 安全检查：确保 loginCallbacks 存在且为数组
     if (!this.globalData.loginCallbacks || !Array.isArray(this.globalData.loginCallbacks)) {
-      console.warn('loginCallbacks 不存在或不是数组，跳过回调执行')
+      log.warn('loginCallbacks 不存在或不是数组，跳过回调执行')
       return
     }
 
@@ -83,7 +84,7 @@ App({
       try {
         callback(openid)
       } catch (error) {
-        console.error('登录回调执行失败:', error)
+        log.error('登录回调执行失败:', error)
       }
     })
 
@@ -92,7 +93,7 @@ App({
   },
 
   onLaunch: function () {
-    console.log('=== 小程序启动 - 开始静默登录 ===');
+    log.info('小程序启动 - 开始静默登录')
 
     // 1. 从本地存储恢复登录状态（同步操作，优先级最高）
     this.restoreLoginState();
@@ -140,13 +141,13 @@ App({
       // 步骤4: 超时保护 — 30秒后清空回调队列，防止内存泄漏
       setTimeout(function() {
         if (self.globalData.loginCallbacks && self.globalData.loginCallbacks.length > 0) {
-          console.warn('登录回调队列超时，清空未执行的回调:', self.globalData.loginCallbacks.length)
+          log.warn('登录回调队列超时，清空未执行的回调:', self.globalData.loginCallbacks.length)
           self.globalData.loginCallbacks = []
         }
       }, 30000)
 
     } catch (error) {
-      console.error('启动序列异常:', error);
+      log.error('启动序列异常:', error);
       // 最终降级：进入离线模式
       if (!self.globalData.openid) {
         self.enterOfflineMode();
@@ -159,7 +160,7 @@ App({
    */
   _initCloudAsync: function() {
     const self = this;
-    console.log('=== 开始初始化云开发 ===');
+    log.info('开始初始化云开发')
 
     try {
       // wx.cloud.init 是同步方法，不支持 success/fail 回调
@@ -167,11 +168,11 @@ App({
         env: 'cloud1-d8gdi44zqfec250b5',
         traceUser: true
       });
-      console.log('✅ 云开发初始化完成');
+      log.info('云开发初始化完成')
       self.globalData.cloudInitialized = true;
       self.globalData.cloudDevelopmentAvailable = true;
     } catch (error) {
-      console.log('❌ 云开发初始化异常:', error);
+      log.error('云开发初始化异常:', error);
       self.globalData.cloudInitialized = false;
       self.globalData.cloudDevelopmentAvailable = false;
     }
@@ -185,21 +186,21 @@ App({
   _silentLoginAsync: function() {
     const self = this;
     return new Promise(function(resolve) {
-      console.log('=== 开始静默登录 ===');
+      log.info('开始静默登录')
 
       wx.login({
         success: function(res) {
           if (res.code) {
-            console.log('获取code成功');
+            log.info('获取code成功')
             self._callLoginWithCallback(res.code, resolve);
           } else {
-            console.error('wx.login失败:', res.errMsg);
+            log.error('wx.login失败:', res.errMsg);
             self.enterGuestMode();
             resolve();
           }
         },
         fail: function(err) {
-          console.error('wx.login异常:', err);
+          log.error('wx.login异常:', err);
           self.enterGuestMode();
           resolve();
         }
@@ -214,7 +215,7 @@ App({
     let self = this;
 
     if (!this.globalData.cloudDevelopmentAvailable) {
-      console.log('⚠️ 云开发不可用，使用模拟登录');
+      log.warn('云开发不可用，使用模拟登录')
       this.simulatedLogin();
       if (resolveCallback) resolveCallback();
       return;
@@ -227,7 +228,7 @@ App({
         let result = res.result;
 
         if (result && result.code === 0) {
-          console.log('✅ 静默登录成功');
+          log.info('静默登录成功')
 
           self.globalData.token = result.data.token;
           self.globalData.openid = result.data.openid;
@@ -241,13 +242,13 @@ App({
 
           self._notifyLoginComplete(result.data.openid);
         } else {
-          console.error('云函数登录失败');
+          log.error('云函数登录失败')
           self.enterGuestMode();
         }
         if (resolveCallback) resolveCallback();
       },
       fail: function(err) {
-        console.error('❌ 调用云函数失败:', err);
+        log.error('调用云函数失败:', err);
         self.globalData.cloudDevelopmentAvailable = false;
         self.simulatedLogin();
         if (resolveCallback) resolveCallback();
@@ -258,7 +259,7 @@ App({
   // === 游客模式（云开发不可用时的降级方案）===
   // 注意：降级模式下 isMember 始终为 false，用户需要网络恢复后重新登录才能使用会员功能
   enterOfflineMode: function() {
-    console.log('=== 进入离线模式 ===');
+    log.info('进入离线模式')
 
     // 不创建 mock openid，保持 openid 为空
     this.globalData.userInfo = {
@@ -282,91 +283,12 @@ App({
     this._notifyLoginComplete('');
   },
 
-  // === 静默登录实现（用户方案核心） ===
+  // === 静默登录（委托给 _silentLoginAsync）===
+  // 保留为公共 API 供外部页面调用（如 pet/profile.js）
   silentLogin: function() {
-    let self = this;
-
-    console.log('=== 开始静默登录 ===');
-
-    // 步骤1：wx.login() 获取code
-    wx.login({
-      success: function(res) {
-        if (res.code) {
-          console.log('获取code成功:', res.code);
-
-          // 步骤2-4：调用云函数完成后续步骤
-          self.callSilentLoginCloudFunction(res.code);
-        } else {
-          console.error('wx.login失败:', res.errMsg);
-          // 登录失败，进入游客模式
-          self.enterGuestMode();
-        }
-      },
-      fail: function(err) {
-        console.error('wx.login异常:', err);
-        // 登录失败，进入游客模式
-        self.enterGuestMode();
-      }
-    });
-  },
-
-  // 调用静默登录云函数
-  callSilentLoginCloudFunction: function(code) {
-    let self = this;
-
-    console.log('=== 准备调用silentLogin云函数 ===');
-
-    // 检查云开发是否可用
-    if (!this.globalData.cloudDevelopmentAvailable) {
-      console.log('⚠️ 云开发不可用，使用模拟登录');
-      this.simulatedLogin();
-      return;
-    }
-
-    wx.cloud.callFunction({
-      name: 'silentLogin',
-      data: { code: code },
-      success: function(res) {
-        console.log('云函数调用成功，响应:', res);
-        let result = res.result;
-
-        if (result && result.code === 0) {
-          console.log('✅ 静默登录成功');
-          console.log('是否新用户:', result.data.isNewUser);
-          console.log('游客模式:', !result.data.userInfo.isMember);
-
-          // 保存登录信息
-          self.globalData.token = result.data.token;
-          self.globalData.openid = result.data.openid;
-          self.globalData.userInfo = result.data.userInfo;
-          self.globalData.isGuest = !result.data.userInfo.isMember;
-
-          // 步骤4：前端存储token
-          wx.setStorageSync('token', result.data.token);
-          wx.setStorageSync('openid', result.data.openid);
-          wx.setStorageSync('userInfo', result.data.userInfo);
-          wx.setStorageSync('lastLoginTime', Date.now());
-
-          // 通知所有等待登录的页面
-          self._notifyLoginComplete(result.data.openid);
-
-          console.log('=== 静默登录完成，用户可无感知使用小程序 ===');
-        } else {
-          console.error('云函数登录失败，返回结果:', result);
-          self.enterGuestMode();
-        }
-      },
-      fail: function(err) {
-        console.error('❌ 调用云函数失败:', err);
-        console.error('错误详情:', err.errMsg);
-        console.log('⚠️ 云函数调用失败，进入降级模式，小程序仍可正常使用');
-
-        // 标记云开发不可用
-        self.globalData.cloudDevelopmentAvailable = false;
-
-        // 进入降级模式
-        self.simulatedLogin();
-      }
+    var self = this;
+    this._silentLoginAsync().then(function() {
+      log.info('silentLogin 委托完成');
     });
   },
 
@@ -378,7 +300,7 @@ App({
 
   // === 游客模式实现 ===
   enterGuestMode: function() {
-    console.log('=== 进入游客模式 ===');
+    log.info('进入游客模式')
 
     this.globalData.isGuest = true;
     this.globalData.userInfo = {
@@ -395,22 +317,22 @@ App({
   requestUserAuthorization: function(callback) {
     let self = this;
 
-    console.log('=== 请求用户授权资料 ===');
+    log.info('请求用户授权资料')
 
     // 只在用户主动触发时调用（如添加宠物）
     wx.getUserProfile({
       desc: '用于完善您的宠物档案信息',
       success: function(res) {
-        console.log('用户授权成功');
+        log.info('用户授权成功')
 
         let userInfo = res.userInfo;
-        console.log('获取用户资料:', userInfo);
+        log.info('获取用户资料:', userInfo)
 
         // 加密数据发后端解密保存（调用专门的云函数）
         self.saveUserProfile(userInfo, callback);
       },
       fail: function(err) {
-        console.log('用户拒绝授权:', err);
+        log.warn('用户拒绝授权:', err)
         // 用户拒绝授权，继续游客模式
         if (callback) {
           callback({ success: false, isGuest: true });
@@ -435,7 +357,7 @@ App({
         }
       },
       success: function(res) {
-        console.log('用户资料保存成功');
+        log.info('用户资料保存成功')
 
         // 更新本地用户信息
         let updatedUserInfo = {
@@ -455,76 +377,12 @@ App({
         }
       },
       fail: function(err) {
-        console.error('保存用户资料失败:', err);
+        log.error('保存用户资料失败:', err)
         if (callback) {
           callback({ success: false, error: err });
         }
       }
     });
-  },
-
-  // === Token续期实现 ===
-  refreshTokenIfNeeded: function() {
-    let self = this;
-    let token = wx.getStorageSync('token');
-
-    if (!token) {
-      // 没有token，重新静默登录
-      this.silentLogin();
-      return;
-    }
-
-    // 这里应该验证token是否过期
-    // 如果过期，自动重新走一遍步骤1-4
-    // 简化版：检查本地存储的登录时间
-    let lastLoginTime = wx.getStorageSync('lastLoginTime');
-    let now = Date.now();
-    let sevenDays = 7 * 24 * 60 * 60 * 1000;
-
-    if (now - lastLoginTime > sevenDays) {
-      console.log('Token过期，重新登录');
-      this.silentLogin();
-    }
-  },
-
-  // === 检查请求权限 ===
-  checkRequestPermission: function() {
-    // 每次请求时检测，如果401则自动续期
-    this.refreshTokenIfNeeded();
-  },
-
-  // === 云开发初始化 ===
-  initCloudDevelopment: function() {
-    console.log('=== 开始初始化云开发 ===');
-    console.log('云环境: cloud1-d8gdi44zqfec250b5');
-
-    try {
-      wx.cloud.init({
-        env: 'cloud1-d8gdi44zqfec250b5',
-        traceUser: true,
-        success: function() {
-          console.log('✅ 云开发初始化成功');
-          this.globalData.cloudInitialized = true;
-        }.bind(this),
-        fail: function(err) {
-          console.log('❌ 云开发初始化失败:', err);
-          this.globalData.cloudInitialized = false;
-
-          // 云开发初始化失败时，确保降级模式可以工作
-          console.log('⚠️ 进入云开发降级模式，使用模拟数据');
-
-          // 通知其他页面云开发不可用
-          this.globalData.cloudDevelopmentAvailable = false;
-        }.bind(this)
-      });
-    } catch (error) {
-      console.log('❌ 云开发初始化异常:', error);
-      this.globalData.cloudInitialized = false;
-      this.globalData.cloudDevelopmentAvailable = false;
-
-      // 异常时也要确保降级模式
-      console.log('⚠️ 云开发异常，确保降级模式可用');
-    }
   },
 
   // === 免责声明 ===
@@ -545,40 +403,40 @@ App({
 
   // === 恢复登录状态 ===
   restoreLoginState: function() {
-    console.log('=== 从本地存储恢复登录状态 ===');
+    log.info('从本地存储恢复登录状态')
 
     try {
       // 恢复openid
       let storedOpenid = wx.getStorageSync('openid');
       if (storedOpenid) {
         this.globalData.openid = storedOpenid;
-        console.log('✅ 登录状态已恢复');
+        log.info('登录状态已恢复')
       }
 
       // 恢复token
       let storedToken = wx.getStorageSync('token');
       if (storedToken) {
         this.globalData.token = storedToken;
-        console.log('✅ 恢复token');
+        log.info('恢复token')
       }
 
       // 恢复用户信息
       let storedUserInfo = wx.getStorageSync('userInfo');
       if (storedUserInfo) {
         this.globalData.userInfo = storedUserInfo;
-        console.log('✅ 恢复用户信息');
+        log.info('恢复用户信息')
       }
 
       // 恢复游客模式状态
       let isGuest = wx.getStorageSync('isGuest');
       if (typeof isGuest === 'boolean') {
         this.globalData.isGuest = isGuest;
-        console.log('✅ 恢复游客模式状态:', isGuest);
+        log.info('恢复游客模式状态:', isGuest)
       }
 
       // 如果有任何登录信息恢复成功，通知等待登录的页面
       if (this.globalData.openid) {
-        console.log('✅ 登录状态恢复完成');
+        log.info('登录状态恢复完成')
         // 注意：不在这里通知回调，等 _startupSequence 中云初始化完成后再通知
         // 避免在云开发未初始化时触发云函数调用
       }
@@ -587,7 +445,7 @@ App({
       const storedLocationPermission = wx.getStorageSync('locationPermission');
       if (storedLocationPermission) {
         this.globalData.locationPermission = storedLocationPermission;
-        console.log('✅ 恢复位置权限状态:', storedLocationPermission);
+        log.info('恢复位置权限状态:', storedLocationPermission)
       }
 
       // 恢复位置缓存
@@ -603,11 +461,11 @@ App({
           this.globalData.latitude = cachedLatitude;
           this.globalData.longitude = cachedLongitude;
           this.globalData.locationUpdateTime = cachedLocationTime;
-          console.log('✅ 恢复位置缓存信息');
+          log.info('恢复位置缓存信息')
         }
       }
     } catch (error) {
-      console.error('❌ 恢复登录状态失败:', error);
+      log.error('恢复登录状态失败:', error)
     }
   },
 
@@ -648,23 +506,23 @@ App({
     return new Promise(function(resolve) {
       // 如果已经授权过，直接返回
       if (self.globalData.locationPermission === 'granted') {
-        console.log('位置权限已授予，跳过请求');
+        log.info('位置权限已授予，跳过请求')
         resolve({ granted: true });
         return;
       }
 
       // 如果已经拒绝过，不重复请求
       if (self.globalData.locationPermission === 'denied') {
-        console.log('位置权限已拒绝，不重复请求');
+        log.info('位置权限已拒绝，不重复请求')
         resolve({ granted: false });
         return;
       }
 
-      console.log('首次请求位置权限，通过 wx.getSetting 检查...');
+      log.info('首次请求位置权限，通过 wx.getSetting 检查...')
 
       // 超时保护：4秒内必须出结果，否则视为未授权
       var permissionTimeout = setTimeout(function() {
-        console.log('权限检查超时，标记为 unknown 允许尝试 getLocation');
+        log.warn('权限检查超时，标记为 unknown 允许尝试 getLocation')
         resolve({ granted: true, firstTime: true });
       }, 4000);
 
@@ -675,25 +533,25 @@ App({
 
           if (hasPermission) {
             // 已有权限
-            console.log('用户已授权位置权限');
+            log.info('用户已授权位置权限')
             self.globalData.locationPermission = 'granted';
             wx.setStorageSync('locationPermission', 'granted');
             resolve({ granted: true });
           } else if (hasPermission === false) {
             // 用户明确拒绝过，引导去设置页
-            console.log('用户拒绝过位置权限');
+            log.info('用户拒绝过位置权限')
             self.globalData.locationPermission = 'denied';
             wx.setStorageSync('locationPermission', 'denied');
             resolve({ granted: false });
           } else {
             // 未请求过权限，标记为首次，由 wx.getLocation 触发系统弹窗
-            console.log('首次请求位置权限，将交由 wx.getLocation 触发授权弹窗');
+            log.info('首次请求位置权限，将交由 wx.getLocation 触发授权弹窗')
             resolve({ granted: true, firstTime: true });
           }
         },
         fail: function() {
           clearTimeout(permissionTimeout);
-          console.log('获取权限设置失败，允许尝试 wx.getLocation');
+          log.warn('获取权限设置失败，允许尝试 wx.getLocation')
           resolve({ granted: true, firstTime: true });
         }
       });
@@ -717,7 +575,7 @@ App({
           self.globalData.locationUpdateTime &&
           (currentTime - self.globalData.locationUpdateTime) < LOCATION_CACHE_DURATION) {
 
-        console.log('使用缓存位置信息');
+        log.info('使用缓存位置信息')
         resolve({
           latitude: self.globalData.latitude,
           longitude: self.globalData.longitude
@@ -730,17 +588,17 @@ App({
         if (!permissionResult.granted) {
           // 明确被拒绝过，使用默认位置
           var defaultLocation = self._resolveDefaultLocation(currentTime);
-          console.log('无位置权限，使用默认位置:', defaultLocation);
+          log.info('无位置权限，使用默认位置:', defaultLocation)
           resolve(defaultLocation);
           return;
         }
 
         // 有权限或首次请求 → 直接调用 wx.getLocation
         // 首次请求时 wx.getLocation 会自动弹出系统授权窗口
-        console.log('调用 wx.getLocation 获取位置...' + (permissionResult.firstTime ? '（首次，将弹出授权）' : ''));
+        log.info('调用 wx.getLocation 获取位置...' + (permissionResult.firstTime ? '（首次，将弹出授权）' : ''))
 
         var locationTimeout = setTimeout(function() {
-          console.log('wx.getLocation 超时，使用默认位置');
+          log.warn('wx.getLocation 超时，使用默认位置')
           resolve(self._resolveDefaultLocation(currentTime));
         }, 5000);
 
@@ -754,14 +612,14 @@ App({
             if (permissionResult.firstTime) {
               self.globalData.locationPermission = 'granted';
               wx.setStorageSync('locationPermission', 'granted');
-              console.log('首次位置授权成功');
+              log.info('首次位置授权成功')
             }
 
-            console.log('位置获取成功:', {
+            log.info('位置获取成功:', {
               latitude: res.latitude,
               longitude: res.longitude,
               accuracy: res.accuracy
-            });
+            })
 
             resolve({
               latitude: res.latitude,
@@ -770,13 +628,13 @@ App({
           },
           fail: function(error) {
             clearTimeout(locationTimeout);
-            console.log('位置获取失败:', error);
+            log.error('位置获取失败:', error)
 
             // 首次请求失败说明用户拒绝了授权
             if (permissionResult.firstTime) {
               self.globalData.locationPermission = 'denied';
               wx.setStorageSync('locationPermission', 'denied');
-              console.log('用户拒绝了位置授权');
+              log.info('用户拒绝了位置授权')
             }
 
             resolve(self._resolveDefaultLocation(currentTime));

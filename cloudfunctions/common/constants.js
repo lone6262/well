@@ -363,6 +363,14 @@ const AI_CONFIG = {
   CACHE_CLEANUP_PROBABILITY: 0.01  // 缓存清理概率（1%）
 };
 
+// === 地图搜索配置 ===
+const MAP_SEARCH = {
+  EARTH_RADIUS: 6371000,      // 地球半径（米）
+  DEFAULT_RADIUS: 5000,       // 默认搜索半径 5 公里
+  PAGE_SIZE: 20,              // 腾讯地图 API 每页结果数
+  TIMEOUT_MS: 10000           // HTTP 请求超时（10秒）
+};
+
 // === 排行榜配置 ===
 const RANKING_CONFIG = {
   TOP_N: 20,                  // Top N 排行
@@ -543,6 +551,8 @@ module.exports = {
   TIME,
   // AI 配置
   AI_CONFIG,
+  // 地图搜索配置
+  MAP_SEARCH,
   // 排行榜配置
   RANKING_CONFIG,
   // 限流配置

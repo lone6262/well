@@ -1,4 +1,6 @@
 // 风险结果页面逻辑 - 数据库版本
+const logger = require('../../utils/logger.js')
+const log = logger.child('RiskResult')
 let app = getApp()
 
 // 本地风险显示信息函数
@@ -52,7 +54,7 @@ Page({
     let riskLevel = options.riskLevel
     let petId = options.petId
 
-    console.log('风险结果页面加载, assessmentId:', assessmentId, 'riskLevel:', riskLevel, 'petId:', petId)
+    log.info('风险结果页面加载, assessmentId:', assessmentId, 'riskLevel:', riskLevel, 'petId:', petId)
 
     if (!assessmentId || !riskLevel) {
       wx.showToast({
@@ -90,11 +92,11 @@ Page({
     // 设置会员状态
     self.setData({ isMember: app.globalData.userInfo && app.globalData.userInfo.isMember || false })
 
-    console.log('从云函数加载评估详情, assessmentId:', assessmentId)
+    log.info('从云函数加载评估详情, assessmentId:', assessmentId)
 
     // 检查云开发是否可用
     if (!app.globalData.cloudDevelopmentAvailable) {
-      console.log('⚠️ 云开发不可用，使用本地模拟数据')
+      log.info('⚠️ 云开发不可用，使用本地模拟数据')
       self.loadLocalMockData()
       return
     }
@@ -106,7 +108,7 @@ Page({
         token: getApp().globalData.token
       },
       success: function(res) {
-        console.log('评估详情加载成功:', res.result)
+        log.info('评估详情加载成功:', res.result)
 
         if (res.result.code === 0) {
           let data = res.result.data
@@ -128,7 +130,7 @@ Page({
           self.processInviteRewardIfNeeded(assessmentId)
 
         } else {
-          console.log('评估记录获取失败:', res.result.msg)
+          log.info('评估记录获取失败:', res.result.msg)
           self.setData({
             loading: false
           })
@@ -139,13 +141,13 @@ Page({
         }
       },
       fail: function(err) {
-        console.error('评估详情加载失败:', err)
+        log.error('评估详情加载失败:', err)
         self.setData({
           loading: false
         })
 
         // 云函数调用失败，尝试本地模拟数据
-        console.log('⚠️ 云函数调用失败，尝试本地模拟数据')
+        log.info('⚠️ 云函数调用失败，尝试本地模拟数据')
         app.globalData.cloudDevelopmentAvailable = false
         self.loadLocalMockData()
       }
@@ -156,7 +158,7 @@ Page({
   loadLocalMockData: function() {
     let self = this
 
-    console.log('=== 使用本地模拟数据 ===')
+    log.info('=== 使用本地模拟数据 ===')
 
     let mockData = {
       assessmentDetail: {
@@ -238,7 +240,7 @@ Page({
       wx.setStorageSync('riskLevel', 'high')
       wx.setStorageSync('petId', this.data.petId)
     } catch (e) {
-      console.error('存储参数失败:', e)
+      log.error('存储参数失败:', e)
     }
 
     wx.switchTab({

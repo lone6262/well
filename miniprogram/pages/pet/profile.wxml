@@ -20,7 +20,7 @@
 
   <!-- 宠物卡片列表 -->
   <view class="pets-container" wx:if="{{petList.length > 0}}">
-    <view class="pet-card-modern" wx:for="{{petList}}" wx:key="petId">
+    <view class="pet-card-modern" wx:for="{{petList}}" wx:key="petId" aria-label="宠物卡片">
       <!-- 卡片头部 -->
       <view class="pet-card-header">
         <view class="pet-avatar-section">
@@ -134,7 +134,7 @@
   </view>
 
   <!-- 浮动添加按钮 -->
-  <view class="floating-add-btn" bindtap="addPet">
+  <view class="floating-add-btn" bindtap="addPet" aria-label="添加宠物">
     <view class="add-btn-circle">
       <text class="add-icon-large">+</text>
     </view>
@@ -211,6 +211,7 @@
           </view>
           <input class="form-input-modern"
                  placeholder="请输入宠物昵称"
+                 aria-label="宠物昵称"
                  placeholder-style="color: #999999;"
                  placeholder-class="placeholder-text"
                  value="{{formData.name}}"
@@ -247,6 +248,7 @@
             </view>
             <input class="form-input-modern"
                    placeholder="请输入品种"
+                   aria-label="品种"
                    placeholder-style="color: #999999;"
                    placeholder-class="placeholder-text"
                    value="{{formData.breed}}"
@@ -284,6 +286,7 @@
             <input class="form-input-modern"
                    type="number"
                    placeholder="请输入月数"
+                   aria-label="年龄（月）"
                    placeholder-style="color: #999999;"
                    placeholder-class="placeholder-text"
                    value="{{formData.age}}"
@@ -298,6 +301,7 @@
             <input class="form-input-modern"
                    type="digit"
                    placeholder="请输入体重"
+                   aria-label="体重（kg）"
                    placeholder-style="color: #999999;"
                    placeholder-class="placeholder-text"
                    value="{{formData.weight}}"

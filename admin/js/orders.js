@@ -3,40 +3,29 @@
  */
 
 let ordersCurrentPage = 1;
-let ordersTotalPages = 1;
-let ordersCurrentFilters = {
-  status: 'all',
-  type: 'all'
-};
 
-/**
- * 加载订单列表
- */
-async function loadOrders(page = 1) {
-  showLoading();
-
-  try {
-    const result = await callCloudFunction(CLOUD_FUNCTIONS.adminGetOrders, {
+// 使用 CRUD 公共加载器
+const loadOrders = createCrudLoader({
+  loadFn: function(page, pageSize, filters) {
+    return callCloudFunction(CLOUD_FUNCTIONS.adminGetOrders, {
       page: page,
-      pageSize: PAGINATION.defaultPageSize,
-      status: ordersCurrentFilters.status,
-      type: ordersCurrentFilters.type
+      pageSize: pageSize,
+      status: filters.status || 'all',
+      type: filters.type || 'all'
     });
-
-    if (result.code === 0) {
-      displayOrders(result.data.orders);
-      renderPagination('ordersPagination', result.data.pagination, loadOrders);
-      ordersCurrentPage = page;
-      ordersTotalPages = result.data.pagination.totalPages;
-    } else {
-      showToast(result.msg || '加载失败', 'error');
-    }
-  } catch (error) {
-    handleApiError(error);
-  } finally {
-    hideLoading();
+  },
+  displayFn: displayOrders,
+  paginationId: 'ordersPagination',
+  dataPath: 'data.orders',
+  getState: function() { return { page: ordersCurrentPage }; },
+  setState: function(state) { ordersCurrentPage = state.page; },
+  getFilters: function() {
+    return {
+      status: document.getElementById('orderStatusFilter').value,
+      type: document.getElementById('orderTypeFilter').value
+    };
   }
-}
+});
 
 /**
  * 显示订单列表
@@ -62,7 +51,7 @@ function displayOrders(orders) {
         <td><span class="badge ${statusInfo.class}">${escapeHtml(statusInfo.text)}</span></td>
         <td>${formatDateTime(order.created_at)}</td>
         <td>
-          ${order.status === 'paid' ? `<button class="btn btn-sm btn-outline" onclick="refundOrder('${order._id}')">退款</button>` : '-'}
+          ${order.status === 'paid' ? `<button class="btn btn-sm btn-outline" onclick="refundOrder('${escapeAttr(order._id)}')">退款</button>` : '-'}
         </td>
       </tr>
     `;
@@ -73,45 +62,22 @@ function displayOrders(orders) {
  * 退款订单
  */
 async function refundOrder(orderId) {
-  confirmAction('确定要退款此订单吗？', async () => {
-    showLoading('处理中...');
-
-    try {
-      const result = await callCloudFunction(CLOUD_FUNCTIONS.adminUpdateOrder, {
-        orderId: orderId,
-        status: 'refunded'
-      });
-
-      if (result.code === 0) {
-        showToast('退款成功', 'success');
-        loadOrders(ordersCurrentPage);
-      } else {
-        showToast(result.msg || '退款失败', 'error');
-      }
-    } catch (error) {
-      handleApiError(error);
-    } finally {
-      hideLoading();
-    }
-  });
+  confirmedAction('确定要退款此订单吗？', function() {
+    return callCloudFunction(CLOUD_FUNCTIONS.adminUpdateOrder, {
+      orderId: orderId,
+      status: 'refunded'
+    });
+  }, '退款成功', function() { loadOrders(ordersCurrentPage); });
 }
 
 /**
  * 初始化订单管理
  */
 function initOrdersModule() {
-  // 订单状态过滤
-  document.getElementById('orderStatusFilter').addEventListener('change', (e) => {
-    ordersCurrentFilters.status = e.target.value;
-    loadOrders(1);
-  });
+  bindFilterEvents([
+    { elementId: 'orderStatusFilter' },
+    { elementId: 'orderTypeFilter' }
+  ], loadOrders);
 
-  // 订单类型过滤
-  document.getElementById('orderTypeFilter').addEventListener('change', (e) => {
-    ordersCurrentFilters.type = e.target.value;
-    loadOrders(1);
-  });
-
-  // 初始加载
   loadOrders(1);
 }

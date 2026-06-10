@@ -1,4 +1,6 @@
 // 症状向导页面 - 全新设计逻辑
+const logger = require('../../utils/logger.js')
+const log = logger.child('SymptomGuide')
 let app = getApp()
 
 // 症状ID对照表（按文档要求使用英文ID）
@@ -135,7 +137,7 @@ Page({
   },
 
   onLoad: function(options) {
-    console.log('=== 症状自查页面加载 ===', options)
+    log.info('症状自查页面加载', options)
     // 支持从宠物档案页传入 petId 预选宠物
     if (options && options.petId) {
       this._preselectPetId = options.petId
@@ -145,7 +147,7 @@ Page({
 
   onShow: function() {
     let self = this
-    console.log('症状自查页面 onShow，重置页面状态')
+    log.info('症状自查页面 onShow，重置页面状态')
 
     // 重置页面状态，清除上一次的填写内容
     self.resetPageState()
@@ -176,13 +178,14 @@ Page({
       activeCategory: 0
     })
 
-    // 重置症状分类的选中状态
-    let categories = self.data.symptomCategories
-    for (let i = 0; i < categories.length; i++) {
-      for (let j = 0; j < categories[i].symptoms.length; j++) {
-        categories[i].symptoms[j].selected = false
-      }
-    }
+    // 重置症状分类的选中状态 - 使用不可变模式
+    let categories = self.data.symptomCategories.map(function(category) {
+      return Object.assign({}, category, {
+        symptoms: category.symptoms.map(function(s) {
+          return Object.assign({}, s, { selected: false })
+        })
+      })
+    })
 
     // 更新分类选中数量
     let updatedCategories = this.calculateSelectedCount(categories)
@@ -190,7 +193,7 @@ Page({
       symptomCategories: updatedCategories
     })
 
-    console.log('页面状态已重置')
+    log.info('页面状态已重置')
   },
 
   // === 页面初始化 ===
@@ -224,7 +227,7 @@ Page({
 
     // 登录检查
     if (!openid || (typeof openid === 'string' && openid.indexOf('mock_') === 0)) {
-      console.log('用户未登录，静默处理')
+      log.info('用户未登录，静默处理')
       self.setData({ petList: [] })
       return
     }
@@ -267,7 +270,7 @@ Page({
           }
         } else {
           // 没有宠物时静默处理，用户可通过「添加新宠物」入口主动添加
-          console.log('暂无宠物档案')
+          log.info('暂无宠物档案')
         }
       },
       fail: function() {
@@ -312,9 +315,12 @@ Page({
   // === 展开/收起分类 ===
   toggleCategory: function(e) {
     let categoryIndex = parseInt(e.currentTarget.dataset.index)
-    let categories = this.data.symptomCategories
-
-    categories[categoryIndex].expanded = !categories[categoryIndex].expanded
+    let categories = this.data.symptomCategories.map(function(category, idx) {
+      if (idx !== categoryIndex) return category
+      return Object.assign({}, category, {
+        expanded: !category.expanded
+      })
+    })
 
     this.setData({
       symptomCategories: categories
@@ -326,57 +332,52 @@ Page({
     let categoryIndex = parseInt(e.currentTarget.dataset.categoryIndex)
     let symptomId = e.currentTarget.dataset.id
 
-    console.log('=== 症状选择操作 ===')
-    console.log('分类索引:', categoryIndex)
-    console.log('症状ID:', symptomId)
+    log.info('症状选择操作')
+    log.info('分类索引:', categoryIndex)
+    log.info('症状ID:', symptomId)
 
-    // 找到对应的症状并切换状态
-    let categories = this.data.symptomCategories
-    let targetSymptom = categories[categoryIndex].symptoms.find(function(s) {
-      return s.id === symptomId
+    // 使用不可变模式切换症状状态
+    let categories = this.data.symptomCategories.map(function(category, idx) {
+      if (idx !== categoryIndex) return category
+      return Object.assign({}, category, {
+        symptoms: category.symptoms.map(function(s) {
+          if (s.id !== symptomId) return s
+          return Object.assign({}, s, { selected: !s.selected })
+        })
+      })
     })
 
-    if (targetSymptom) {
-      // 完全自由的多选：切换状态，不限制任何选择
-      let newSelectedState = !targetSymptom.selected
-      targetSymptom.selected = newSelectedState
-
-      console.log('症状:', targetSymptom.name)
-      console.log('选中状态:', newSelectedState)
-
-      // 更新已选症状ID列表和名称列表
-      let selectedSymptoms = [] // 英文ID用于提交
-      let selectedSymptomNames = [] // 中文名称用于显示
-      for (let i = 0; i < categories.length; i++) {
-        for (let j = 0; j < categories[i].symptoms.length; j++) {
-          if (categories[i].symptoms[j].selected) {
-            selectedSymptoms.push(categories[i].symptoms[j].id)
-            selectedSymptomNames.push(categories[i].symptoms[j].name)
-          }
+    // 提取已选症状ID列表和名称列表
+    let result = categories.reduce(function(acc, category) {
+      category.symptoms.forEach(function(s) {
+        if (s.selected) {
+          acc.ids.push(s.id)
+          acc.names.push(s.name)
         }
+      })
+      return acc
+    }, { ids: [], names: [] })
+
+    log.info('所有已选症状ID:', result.ids)
+    log.info('所有已选症状名称:', result.names)
+
+    // 更新分类选中数量
+    let updatedCategories = this.calculateSelectedCount(categories)
+
+    this.setData({
+      symptomCategories: updatedCategories,
+      selectedSymptoms: result.ids,
+      selectedSymptomNames: result.names
+    })
+
+    this.updateCanNext()
+
+    // 触觉反馈
+    wx.vibrateShort({
+      success: function() {
+        log.info('震动反馈成功')
       }
-
-      console.log('所有已选症状ID:', selectedSymptoms)
-      console.log('所有已选症状名称:', selectedSymptomNames)
-
-      // 更新分类选中数量
-      let updatedCategories = this.calculateSelectedCount(categories)
-
-      this.setData({
-        symptomCategories: updatedCategories,
-        selectedSymptoms: selectedSymptoms,
-        selectedSymptomNames: selectedSymptomNames
-      })
-
-      this.updateCanNext()
-
-      // 触觉反馈
-      wx.vibrateShort({
-        success: function() {
-          console.log('震动反馈成功')
-        }
-      })
-    }
+    })
   },
 
   // === 移除已选症状 ===
@@ -384,30 +385,36 @@ Page({
     let symptomName = e.currentTarget.dataset.symptom
     let removeIndex = e.currentTarget.dataset.index
 
-    // 找到对应的症状并取消选择
-    let categories = this.data.symptomCategories
     let selectedSymptoms = this.data.selectedSymptoms
     let selectedSymptomNames = this.data.selectedSymptomNames
 
-    for (let i = 0; i < categories.length; i++) {
-      for (let j = 0; j < categories[i].symptoms.length; j++) {
-        if (categories[i].symptoms[j].name === symptomName) {
-          categories[i].symptoms[j].selected = false
-        }
-      }
-    }
+    // 使用不可变模式取消症状选择
+    let categories = this.data.symptomCategories.map(function(category) {
+      return Object.assign({}, category, {
+        symptoms: category.symptoms.map(function(s) {
+          return Object.assign({}, s, {
+            selected: s.name === symptomName ? false : s.selected
+          })
+        })
+      })
+    })
 
-    // 从已选列表中移除（同时移除ID和名称）
-    selectedSymptoms.splice(removeIndex, 1)
-    selectedSymptomNames.splice(removeIndex, 1)
+    // 使用不可变模式从已选列表中移除
+    let idToRemove = selectedSymptoms[removeIndex]
+    let newSelectedSymptoms = selectedSymptoms.filter(function(id) {
+      return id !== idToRemove
+    })
+    let newSelectedSymptomNames = selectedSymptomNames.filter(function(_, idx) {
+      return idx !== removeIndex
+    })
 
     // 更新分类选中数量
     let updatedCategories = this.calculateSelectedCount(categories)
 
     this.setData({
       symptomCategories: updatedCategories,
-      selectedSymptoms: selectedSymptoms,
-      selectedSymptomNames: selectedSymptomNames
+      selectedSymptoms: newSelectedSymptoms,
+      selectedSymptomNames: newSelectedSymptomNames
     })
 
     this.updateCanNext()
@@ -416,16 +423,17 @@ Page({
   // === 清空所有症状 ===
   clearAllSymptoms: function() {
     let self = this
-    let categories = self.data.symptomCategories
 
-    console.log('=== 清空所有症状选择 ===')
+    log.info('清空所有症状选择')
 
-    // 清空所有选中状态
-    for (let i = 0; i < categories.length; i++) {
-      for (let j = 0; j < categories[i].symptoms.length; j++) {
-        categories[i].symptoms[j].selected = false
-      }
-    }
+    // 使用不可变模式清空所有选中状态
+    let categories = self.data.symptomCategories.map(function(category) {
+      return Object.assign({}, category, {
+        symptoms: category.symptoms.map(function(s) {
+          return Object.assign({}, s, { selected: false })
+        })
+      })
+    })
 
     // 更新分类选中数量
     let updatedCategories = this.calculateSelectedCount(categories)
@@ -538,15 +546,17 @@ Page({
   },
 
   // === 提交评估 ===
-  submitAssessment: function() {
+
+  // 验证提交数据的完整性
+  _validateSubmission: function() {
     let self = this
 
-    console.log('=== 开始提交评估 ===')
-    console.log('当前步骤:', self.data.currentStep)
-    console.log('已选宠物:', self.data.selectedPet)
-    console.log('已选症状数量:', self.data.selectedSymptoms.length)
-    console.log('已选症状详情:', self.data.selectedSymptoms)
-    console.log('症状分类数据:', self.data.symptomCategories)
+    log.info('开始提交评估')
+    log.info('当前步骤:', self.data.currentStep)
+    log.info('已选宠物:', self.data.selectedPet)
+    log.info('已选症状数量:', self.data.selectedSymptoms.length)
+    log.info('已选症状详情:', self.data.selectedSymptoms)
+    log.info('症状分类数据:', self.data.symptomCategories)
 
     // 基础验证
     if (!self.data.selectedPet) {
@@ -554,43 +564,43 @@ Page({
         title: '请先选择宠物',
         icon: 'none'
       })
-      return
+      return { valid: false, error: '请先选择宠物' }
     }
 
     // 如果selectedSymptoms为空，尝试从symptomCategories中重新提取
     if (self.data.selectedSymptoms.length === 0) {
-      console.log('检测到selectedSymptoms为空，尝试从symptomCategories中提取')
+      log.info('检测到selectedSymptoms为空，尝试从symptomCategories中提取')
 
-      let extractedSymptoms = []
-      let extractedSymptomNames = []
       let categories = self.data.symptomCategories
 
-      for (let i = 0; i < categories.length; i++) {
-        for (let j = 0; j < categories[i].symptoms.length; j++) {
-          if (categories[i].symptoms[j].selected) {
-            extractedSymptoms.push(categories[i].symptoms[j].id)
-            extractedSymptomNames.push(categories[i].symptoms[j].name)
+      // 使用不可变模式提取已选症状
+      let result = categories.reduce(function(acc, category) {
+        category.symptoms.forEach(function(s) {
+          if (s.selected) {
+            acc.ids.push(s.id)
+            acc.names.push(s.name)
           }
-        }
-      }
+        })
+        return acc
+      }, { ids: [], names: [] })
 
-      console.log('重新提取的症状ID:', extractedSymptoms)
-      console.log('重新提取的症状名称:', extractedSymptomNames)
+      log.info('重新提取的症状ID:', result.ids)
+      log.info('重新提取的症状名称:', result.names)
 
-      if (extractedSymptoms.length > 0) {
+      if (result.ids.length > 0) {
         // 如果从symptomCategories中提取到了症状，更新selectedSymptoms和selectedSymptomNames
         self.setData({
-          selectedSymptoms: extractedSymptoms,
-          selectedSymptomNames: extractedSymptomNames
+          selectedSymptoms: result.ids,
+          selectedSymptomNames: result.names
         })
-        console.log('已更新selectedSymptoms和selectedSymptomNames，继续提交')
+        log.info('已更新selectedSymptoms和selectedSymptomNames，继续提交')
       } else {
         // 如果确实没有选择症状，提示用户
         wx.showToast({
           title: '请至少选择一个症状',
           icon: 'none'
         })
-        return
+        return { valid: false, error: '请至少选择一个症状' }
       }
     }
 
@@ -610,10 +620,15 @@ Page({
           }
         }
       })
-      return
+      return { valid: false, error: '需要登录' }
     }
 
-    console.log('开始提交症状评估')
+    return { valid: true }
+  },
+
+  // 构建提交数据负载
+  _buildSubmitPayload: function() {
+    let self = this
 
     let submitData = {
       petId: self.data.selectedPet,
@@ -623,11 +638,69 @@ Page({
       token: app.globalData.token || ''
     }
 
-    console.log('提交数据:', submitData)
+    log.info('提交数据:', submitData)
+    return submitData
+  },
 
+  // 处理高风险紧急结果
+  _handleEmergencyResult: function(data) {
+    let self = this
+
+    log.info('处理高风险紧急结果')
+
+    // 高风险：直接跳转急救通道
+    try {
+      wx.setStorageSync('fromRiskResult', true)
+      wx.setStorageSync('riskLevel', 'high')
+      wx.setStorageSync('petId', self.data.selectedPet)
+    } catch (e) {
+      log.error('存储参数失败:', e)
+    }
+
+    wx.showModal({
+      title: '高风险警告',
+      content: data.advice,
+      showCancel: false,
+      confirmText: '前往急救',
+      success: function() {
+        wx.switchTab({
+          url: '/pages/emergency/index'
+        })
+      }
+    })
+  },
+
+  // 处理正常结果（中/低风险）
+  _handleNormalResult: function(data) {
+    let self = this
+
+    log.info('处理正常结果，风险等级:', data.riskLevel)
+
+    // 中/低风险：跳转到结果页面
+    wx.navigateTo({
+      url: '/pages/risk/result?assessmentId=' + data.recordId +
+            '&riskLevel=' + data.riskLevel +
+            '&petId=' + self.data.selectedPet
+    })
+  },
+
+  // 主提交函数：协调各步骤执行
+  submitAssessment: function() {
+    let self = this
+
+    // 1. 验证提交数据
+    let validation = self._validateSubmission()
+    if (!validation.valid) {
+      return
+    }
+
+    // 2. 构建提交负载
+    let submitData = self._buildSubmitPayload()
+
+    // 3. 显示加载状态
     wx.showLoading({ title: '正在评估风险，请稍候...' })
 
-    // 超时设置：5秒
+    // 4. 设置超时
     let timeout = setTimeout(function() {
       wx.hideLoading()
       wx.showToast({
@@ -636,48 +709,24 @@ Page({
       })
     }, 5000)
 
+    // 5. 调用云函数
     wx.cloud.callFunction({
       name: 'submitSymptom',
       data: submitData,
       success: function(res) {
         clearTimeout(timeout)
         wx.hideLoading()
-        console.log('症状评估提交结果:', res.result)
+        log.info('症状评估提交结果:', res.result)
 
         if (res.result.code === 0) {
-          // 按照文档要求处理返回结果
           let data = res.result.data
-          console.log('云函数返回数据:', data)
+          log.info('云函数返回数据:', data)
 
           // 根据action字段决定跳转行为
           if (data.action === 'emergency') {
-            // 高风险：直接跳转急救通道
-            try {
-              wx.setStorageSync('fromRiskResult', true)
-              wx.setStorageSync('riskLevel', 'high')
-              wx.setStorageSync('petId', self.data.selectedPet)
-            } catch (e) {
-              console.error('存储参数失败:', e)
-            }
-
-            wx.showModal({
-              title: '高风险警告',
-              content: data.advice,
-              showCancel: false,
-              confirmText: '前往急救',
-              success: function() {
-                wx.switchTab({
-                  url: '/pages/emergency/index'
-                })
-              }
-            })
+            self._handleEmergencyResult(data)
           } else {
-            // 中/低风险：跳转到结果页面
-            wx.navigateTo({
-              url: '/pages/risk/result?assessmentId=' + data.recordId +
-                    '&riskLevel=' + data.riskLevel +
-                    '&petId=' + self.data.selectedPet
-            })
+            self._handleNormalResult(data)
           }
         } else {
           wx.showToast({
@@ -689,7 +738,7 @@ Page({
       fail: function(err) {
         clearTimeout(timeout)
         wx.hideLoading()
-        console.error('症状评估提交失败:', err)
+        log.error('症状评估提交失败:', err)
         wx.showToast({
           title: '网络繁忙，请重试',
           icon: 'none'

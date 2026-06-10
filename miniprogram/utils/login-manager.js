@@ -1,5 +1,8 @@
 // login-manager.js - Login flow management utilities
 
+const logger = require('./logger.js')
+const log = logger.child('LoginManager')
+
 /**
  * Creates a login manager instance
  * @param {Object} app - The app instance (containing globalData and methods)
@@ -11,20 +14,20 @@ function createLoginManager(app) {
      * Performs silent login flow
      */
     silentLogin: function() {
-      console.log('=== Starting silent login ===');
+      log.info('=== Starting silent login ===');
 
       wx.login({
         success: (res) => {
           if (res.code) {
-            console.log('Code obtained successfully:', res.code);
+            log.info('Code obtained successfully:', res.code);
             this.callSilentLoginCloudFunction(res.code);
           } else {
-            console.error('wx.login failed:', res.errMsg);
+            log.error('wx.login failed:', res.errMsg);
             this.enterGuestMode();
           }
         },
         fail: (err) => {
-          console.error('wx.login exception:', err);
+          log.error('wx.login exception:', err);
           this.enterGuestMode();
         }
       });
@@ -36,10 +39,10 @@ function createLoginManager(app) {
      * @param {Function} resolveCallback - Optional callback for completion
      */
     callSilentLoginCloudFunction: function(code, resolveCallback) {
-      console.log('=== Preparing to call silentLogin cloud function ===');
+      log.info('=== Preparing to call silentLogin cloud function ===');
 
       if (!app.globalData.cloudDevelopmentAvailable) {
-        console.log('⚠️ Cloud development unavailable, using simulated login');
+        log.info('⚠️ Cloud development unavailable, using simulated login');
         this.simulatedLogin();
         if (resolveCallback) resolveCallback();
         return;
@@ -49,13 +52,13 @@ function createLoginManager(app) {
         name: 'silentLogin',
         data: { code: code },
         success: (res) => {
-          console.log('Cloud function called successfully, response:', res);
+          log.info('Cloud function called successfully, response:', res);
           const result = res.result;
 
           if (result && result.code === 0) {
-            console.log('✅ Silent login successful');
-            console.log('Is new user:', result.data.isNewUser);
-            console.log('Guest mode:', !result.data.userInfo.isMember);
+            log.info('✅ Silent login successful');
+            log.info('Is new user:', result.data.isNewUser);
+            log.info('Guest mode:', !result.data.userInfo.isMember);
 
             // Save login information
             app.globalData.token = result.data.token;
@@ -71,17 +74,17 @@ function createLoginManager(app) {
             // Notify all waiting pages
             app._notifyLoginComplete(result.data.openid);
 
-            console.log('=== Silent login complete, user can use app seamlessly ===');
+            log.info('=== Silent login complete, user can use app seamlessly ===');
           } else {
-            console.error('Cloud function login failed, result:', result);
+            log.error('Cloud function login failed, result:', result);
             this.enterGuestMode();
           }
           if (resolveCallback) resolveCallback();
         },
         fail: (err) => {
-          console.error('❌ Cloud function call failed:', err);
-          console.error('Error details:', err.errMsg);
-          console.log('⚠️ Cloud function call failed, entering degraded mode, app still usable');
+          log.error('❌ Cloud function call failed:', err);
+          log.error('Error details:', err.errMsg);
+          log.info('⚠️ Cloud function call failed, entering degraded mode, app still usable');
 
           app.globalData.cloudDevelopmentAvailable = false;
           this.simulatedLogin();
@@ -94,7 +97,7 @@ function createLoginManager(app) {
      * Enters guest mode (when cloud development is unavailable)
      */
     enterGuestMode: function() {
-      console.log('=== Entering guest mode ===');
+      log.info('=== Entering guest mode ===');
 
       app.globalData.isGuest = true;
       app.globalData.userInfo = {
@@ -110,7 +113,7 @@ function createLoginManager(app) {
      * Enters offline mode (when network is unavailable)
      */
     enterOfflineMode: function() {
-      console.log('=== Entering offline mode ===');
+      log.info('=== Entering offline mode ===');
 
       app.globalData.userInfo = {
         nickName: '宠物主人',
@@ -156,7 +159,7 @@ function createLoginManager(app) {
       const sevenDays = 7 * 24 * 60 * 60 * 1000;
 
       if (now - lastLoginTime > sevenDays) {
-        console.log('Token expired, re-logging in');
+        log.info('Token expired, re-logging in');
         this.silentLogin();
       }
     },
@@ -166,20 +169,20 @@ function createLoginManager(app) {
      * @param {Function} callback - Callback function with authorization result
      */
     requestUserAuthorization: function(callback) {
-      console.log('=== Requesting user profile authorization ===');
+      log.info('=== Requesting user profile authorization ===');
 
       wx.getUserProfile({
         desc: '用于完善您的宠物档案信息',
         success: (res) => {
-          console.log('User authorization successful');
+          log.info('User authorization successful');
 
           const userInfo = res.userInfo;
-          console.log('User profile obtained:', userInfo);
+          log.info('User profile obtained:', userInfo);
 
           this.saveUserProfile(userInfo, callback);
         },
         fail: (err) => {
-          console.log('User denied authorization:', err);
+          log.info('User denied authorization:', err);
           if (callback) {
             callback({ success: false, isGuest: true });
           }
@@ -205,7 +208,7 @@ function createLoginManager(app) {
           }
         },
         success: (res) => {
-          console.log('User profile saved successfully');
+          log.info('User profile saved successfully');
 
           const updatedUserInfo = {
             nickName: userInfo.nickName,
@@ -224,7 +227,7 @@ function createLoginManager(app) {
           }
         },
         fail: (err) => {
-          console.error('Failed to save user profile:', err);
+          log.error('Failed to save user profile:', err);
           if (callback) {
             callback({ success: false, error: err });
           }

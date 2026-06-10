@@ -1,0 +1,110 @@
+/* 紧急救助按钮样式 — 从 index.wxss 提取 */
+
+/* 紧急按钮外层容器 */
+.emergency-wrapper {
+  width: 100%;
+  padding: 0 24rpx;
+  margin-bottom: 48rpx;
+}
+
+/* 紧急按钮主体 - 垂直居中布局 */
+.emergency-big-btn {
+  width: 100%;
+  height: 160rpx;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  border-radius: 24rpx;
+  border: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8rpx 24rpx rgba(245, 87, 108, 0.3);
+
+  /* iOS兼容性 */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* 点击效果 */
+.emergency-big-btn-press {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+/* 大图标 - 简单直接 */
+.emergency-icon-large {
+  font-size: 56rpx;
+  line-height: 1;
+  margin-bottom: 8rpx;
+
+  /* iOS兼容性 */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* 主标题 - 居中显示 */
+.emergency-title-main {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+  margin-bottom: 4rpx;
+  text-align: center;
+
+  /* iOS兼容性 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 副标题 - 简洁说明 */
+.emergency-desc-small {
+  font-size: 24rpx;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.3;
+  text-align: center;
+
+  /* iOS兼容性 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 脉冲动画 - 简化版本 */
+.pulse-animation {
+  display: block;
+  animation: heartbeat 1.5s ease-in-out infinite;
+  -webkit-animation: heartbeat 1.5s ease-in-out infinite;
+
+  /* iOS兼容性 */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+    -webkit-transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+    -webkit-transform: scale(1.15);
+  }
+}
+
+@-webkit-keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+    -webkit-transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+    -webkit-transform: scale(1.15);
+  }
+}

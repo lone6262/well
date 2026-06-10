@@ -4,36 +4,27 @@
 
 let refundsCurrentPage = 1;
 
-/**
- * 加载退款列表
- */
-async function loadRefunds(page = 1) {
-  showLoading();
-
-  try {
-    const statusFilter = document.getElementById('refundStatusFilter').value;
-    const result = await callCloudFunction('adminGateway', {
+// 使用 CRUD 公共加载器
+const loadRefunds = createCrudLoader({
+  loadFn: function(page, pageSize, filters) {
+    return callCloudFunction('adminGateway', {
       action: 'getRefunds',
       page: page,
-      pageSize: PAGINATION.defaultPageSize,
-      status: statusFilter === 'all' ? undefined : statusFilter,
+      pageSize: pageSize,
+      status: filters.status === 'all' ? undefined : filters.status,
     });
-
-    if (result.code === 0) {
-      displayRefunds(result.data.refunds || []);
-      if (result.data.pagination) {
-        renderPagination('refundsPagination', result.data.pagination, loadRefunds);
-      }
-      refundsCurrentPage = page;
-    } else {
-      showToast(result.msg || '加载失败', 'error');
-    }
-  } catch (error) {
-    handleApiError(error);
-  } finally {
-    hideLoading();
+  },
+  displayFn: displayRefunds,
+  paginationId: 'refundsPagination',
+  dataPath: 'data.refunds',
+  getState: function() { return { page: refundsCurrentPage }; },
+  setState: function(state) { refundsCurrentPage = state.page; },
+  getFilters: function() {
+    return {
+      status: document.getElementById('refundStatusFilter').value
+    };
   }
-}
+});
 
 /**
  * 显示退款列表
@@ -61,8 +52,8 @@ function displayRefunds(refunds) {
         <td>${formatDateTime(refund.created_at)}</td>
         <td>
           ${refund.status === 'pending' ? `
-            <button class="btn btn-sm btn-primary" onclick="approveRefund('${refund._id}')">批准</button>
-            <button class="btn btn-sm btn-outline" onclick="rejectRefund('${refund._id}')">拒绝</button>
+            <button class="btn btn-sm btn-primary" onclick="approveRefund('${escapeAttr(refund._id)}')">批准</button>
+            <button class="btn btn-sm btn-outline" onclick="rejectRefund('${escapeAttr(refund._id)}')">拒绝</button>
           ` : '-'}
         </td>
       </tr>
@@ -74,26 +65,13 @@ function displayRefunds(refunds) {
  * 批准退款
  */
 async function approveRefund(refundId) {
-  confirmAction('确定批准此退款？退款将原路退回。', async () => {
-    showLoading('处理退款中...');
-    try {
-      const result = await callCloudFunction('adminGateway', {
-        action: 'processRefund',
-        refundId: refundId,
-        approved: true,
-      });
-      if (result.code === 0) {
-        showToast('退款已批准', 'success');
-        loadRefunds(refundsCurrentPage);
-      } else {
-        showToast(result.msg || '操作失败', 'error');
-      }
-    } catch (error) {
-      handleApiError(error);
-    } finally {
-      hideLoading();
-    }
-  });
+  confirmedAction('确定批准此退款？退款将原路退回。', function() {
+    return callCloudFunction('adminGateway', {
+      action: 'processRefund',
+      refundId: refundId,
+      approved: true,
+    });
+  }, '退款已批准', function() { loadRefunds(refundsCurrentPage); });
 }
 
 /**
@@ -103,33 +81,34 @@ async function rejectRefund(refundId) {
   const reason = prompt('请输入拒绝原因:');
   if (!reason) return;
 
-  showLoading('处理中...');
-  try {
-    const result = await callCloudFunction('adminGateway', {
+  const rejectReason = reason.trim();
+  if (!rejectReason) {
+    showToast('拒绝原因不能为空', 'error');
+    return;
+  }
+
+  if (rejectReason.length > 200) {
+    showToast('拒绝原因不能超过 200 个字符', 'error');
+    return;
+  }
+
+  confirmedAction('确定拒绝此退款？', function() {
+    return callCloudFunction('adminGateway', {
       action: 'processRefund',
       refundId: refundId,
       approved: false,
-      rejectReason: reason,
+      rejectReason: rejectReason,
     });
-    if (result.code === 0) {
-      showToast('已拒绝退款', 'success');
-      loadRefunds(refundsCurrentPage);
-    } else {
-      showToast(result.msg || '操作失败', 'error');
-    }
-  } catch (error) {
-    handleApiError(error);
-  } finally {
-    hideLoading();
-  }
+  }, '已拒绝退款', function() { loadRefunds(refundsCurrentPage); });
 }
 
 /**
  * 初始化退款管理
  */
 function initRefundsModule() {
-  document.getElementById('refundStatusFilter').addEventListener('change', () => {
-    loadRefunds(1);
-  });
+  bindFilterEvents([
+    { elementId: 'refundStatusFilter' }
+  ], loadRefunds);
+
   loadRefunds(1);
 }

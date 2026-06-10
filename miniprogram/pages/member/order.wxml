@@ -1,4 +1,4 @@
-﻿<!--会员购买页面-->
+<!--会员购买页面 — V1.5 支持个人/家庭多套餐-->
 <view class="container">
   <!-- 页面头部 -->
   <view class="page-header">
@@ -6,30 +6,38 @@
       <view class="back-arrow"></view>
       <text class="back-text">返回</text>
     </view>
-    <view class="page-title">{{upgradeMode ? "升级年度会员" : (renewMode ? "续费会员" : "开通会员")}}</view>
+    <view class="page-title">{{modeTitle}}</view>
     <view class="header-placeholder"></view>
   </view>
 
   <view class="content">
-    <!-- 选择套餐 -->
-    <view class="section-title">{{upgradeMode ? "升级方案" : (renewMode ? "续费方案" : "选择套餐")}}</view>
+    <!-- 套餐切换标签 -->
+    <view class="tab-bar">
+      <view class="tab-item {{activeTab === 'personal' ? 'tab-active' : ''}}" bindtap="switchTab" data-tab="personal">
+        <text class="tab-text">👤 个人会员</text>
+      </view>
+      <view class="tab-item {{activeTab === 'family' ? 'tab-active' : ''}}" bindtap="switchTab" data-tab="family">
+        <text class="tab-text">👨‍👩‍👧‍👦 家庭会员</text>
+      </view>
+    </view>
 
-    <view class="plans-wrapper">
+    <!-- 个人会员方案 -->
+    <view class="plans-wrapper" wx:if="{{activeTab === 'personal'}}">
       <!-- 月卡 -->
       <view class="plan-card {{selectedType === 'monthly' ? 'selected' : ''}} {{renewMode ? 'selected' : ''}}" bindtap="selectPlan" data-type="monthly">
         <view class="plan-check" wx:if="{{selectedType === 'monthly' || renewMode}}">✓</view>
-        <view class="plan-name">月度会员</view>
+        <view class="plan-name">个人月卡</view>
         <view class="plan-price">
           <text class="price-symbol">¥</text>
-          <text class="price-amount">{{monthlyPrice}}</text>
+          <text class="price-amount">19.90</text>
           <text class="price-unit">/月</text>
         </view>
-        <view class="plan-renew-hint" wx:if="{{!renewMode}}">续费仅 ¥{{monthlyRenewPrice}}/月</view>
-        <view class="plan-save">{{monthlySave}}</view>
+        <view class="plan-renew-hint">续费仅 ¥15.90/月</view>
+        <view class="plan-save">约3折</view>
         <view class="plan-features">
           <text class="feature-item">• 每月3次AI报告</text>
+          <text class="feature-item">• 最多3只宠物</text>
           <text class="feature-item">• 无限自查</text>
-          <text class="feature-item">• 报告永久保存</text>
         </view>
       </view>
 
@@ -37,18 +45,59 @@
       <view class="plan-card {{selectedType === 'yearly' ? 'selected' : ''}} recommend {{upgradeMode ? 'selected' : ''}}" bindtap="selectPlan" data-type="yearly">
         <view class="recommend-badge">{{upgradeMode ? "升级推荐" : "推荐"}}</view>
         <view class="plan-check" wx:if="{{selectedType === 'yearly' || upgradeMode}}">✓</view>
-        <view class="plan-name">年度会员</view>
+        <view class="plan-name">个人年卡</view>
         <view class="plan-price">
           <text class="price-symbol">¥</text>
-          <text class="price-amount">{{yearlyPrice}}</text>
+          <text class="price-amount">99.00</text>
           <text class="price-unit">/年</text>
         </view>
-        <view class="plan-renew-hint" wx:if="{{!renewMode}}">续费仅 ¥{{yearlyRenewPrice}}/年</view>
-        <view class="plan-save">{{yearlySave}}</view>
+        <view class="plan-renew-hint">续费仅 ¥89.00/年</view>
+        <view class="plan-save">省38%</view>
         <view class="plan-features">
           <text class="feature-item">• 每月3次AI报告</text>
+          <text class="feature-item">• 最多3只宠物</text>
           <text class="feature-item">• 无限自查</text>
-          <text class="feature-item">• 报告永久保存</text>
+          <text class="feature-item">• 专属内容</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 家庭会员方案 -->
+    <view class="plans-wrapper" wx:if="{{activeTab === 'family'}}">
+      <!-- 家庭月卡 -->
+      <view class="plan-card {{selectedType === 'family_monthly' ? 'selected' : ''}}" bindtap="selectPlan" data-type="family_monthly">
+        <view class="plan-check" wx:if="{{selectedType === 'family_monthly'}}">✓</view>
+        <view class="plan-name">家庭月卡</view>
+        <view class="plan-price">
+          <text class="price-symbol">¥</text>
+          <text class="price-amount">29.90</text>
+          <text class="price-unit">/月</text>
+        </view>
+        <view class="plan-renew-hint">续费仅 ¥25.90/月</view>
+        <view class="plan-save">全家共享</view>
+        <view class="plan-features">
+          <text class="feature-item">• 每月6次AI报告</text>
+          <text class="feature-item">• 最多5只宠物</text>
+          <text class="feature-item">• 最多4位家庭成员</text>
+        </view>
+      </view>
+
+      <!-- 家庭年卡（推荐） -->
+      <view class="plan-card {{selectedType === 'family_yearly' ? 'selected' : ''}} recommend" bindtap="selectPlan" data-type="family_yearly">
+        <view class="recommend-badge">最划算</view>
+        <view class="plan-check" wx:if="{{selectedType === 'family_yearly'}}">✓</view>
+        <view class="plan-name">家庭年卡</view>
+        <view class="plan-price">
+          <text class="price-symbol">¥</text>
+          <text class="price-amount">199.00</text>
+          <text class="price-unit">/年</text>
+        </view>
+        <view class="plan-renew-hint">续费仅 ¥179.00/年</view>
+        <view class="plan-save">≈¥16.58/月</view>
+        <view class="plan-features">
+          <text class="feature-item">• 每月6次AI报告</text>
+          <text class="feature-item">• 最多5只宠物</text>
+          <text class="feature-item">• 最多4位家庭成员</text>
           <text class="feature-item">• 专属内容</text>
         </view>
       </view>
@@ -69,14 +118,14 @@
     </view>
   </view>
 
-  <!-- 模拟支付处理覆盖层 -->
+  <!-- 支付处理覆盖层 -->
   <view class="pay-processing-mask" wx:if="{{showPayProcessing}}">
     <view class="pay-processing-content">
       <text class="pay-processing-icon">💸</text>
       <view class="pay-processing-spinner"></view>
       <text class="pay-processing-title">正在处理{{upgradeMode ? "升级" : (renewMode ? "续费" : "支付")}}...</text>
       <text class="pay-processing-desc">请稍候，正在连接支付服务</text>
-      <text class="pay-processing-amount">¥{{selectedType === 'yearly' ? yearlyPrice : monthlyPrice}}</text>
+      <text class="pay-processing-amount">¥{{selectedPrice}}</text>
       <text class="pay-processing-method">微信支付（模拟）</text>
     </view>
   </view>

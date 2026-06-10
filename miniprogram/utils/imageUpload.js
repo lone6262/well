@@ -3,6 +3,9 @@
  * 提供安全的图片上传功能，防止恶意文件注入
  */
 
+const logger = require('./logger.js')
+const log = logger.child('ImageUpload')
+
 const IMAGE_CONFIG = {
   // 允许的图片格式
   ALLOWED_TYPES: ['jpg', 'jpeg', 'png', 'webp'],
@@ -41,7 +44,7 @@ class ImageUploadService {
       wx.getImageInfo({
         src: filePath,
         success: (res) => {
-          console.log('📸 图片信息获取成功:', res)
+          log.info('📸 图片信息获取成功:', res)
 
           // 验证尺寸
           if (res.width < IMAGE_CONFIG.MIN_DIMENSIONS.width ||
@@ -76,7 +79,7 @@ class ImageUploadService {
           wx.getFileInfo({
             filePath: filePath,
             success: (fileInfo) => {
-              console.log('📁 文件大小:', fileInfo.size, 'bytes')
+              log.info('📁 文件大小:', fileInfo.size, 'bytes')
 
               // 验证文件大小
               if (fileInfo.size < IMAGE_CONFIG.MIN_SIZE) {
@@ -106,7 +109,7 @@ class ImageUploadService {
               })
             },
             fail: (err) => {
-              console.error('❌ 获取文件信息失败:', err)
+              log.error('❌ 获取文件信息失败:', err)
               reject({
                 code: 'FILE_INFO_ERROR',
                 message: '无法获取文件信息'
@@ -115,7 +118,7 @@ class ImageUploadService {
           })
         },
         fail: (err) => {
-          console.error('❌ 获取图片信息失败:', err)
+          log.error('❌ 获取图片信息失败:', err)
           reject({
             code: 'IMAGE_INFO_ERROR',
             message: '无法读取图片信息'
@@ -137,11 +140,11 @@ class ImageUploadService {
         src: filePath,
         quality: quality,
         success: (res) => {
-          console.log('✅ 图片压缩成功:', res)
+          log.info('✅ 图片压缩成功:', res)
           resolve(res.tempFilePath)
         },
         fail: (err) => {
-          console.error('❌ 图片压缩失败:', err)
+          log.error('❌ 图片压缩失败:', err)
           // 压缩失败，返回原图
           resolve(filePath)
         }
@@ -160,17 +163,17 @@ class ImageUploadService {
       // 生成云存储路径
       const cloudPath = `${IMAGE_CONFIG.CLOUD_PATH_PREFIX}${petId}_${Date.now()}.jpg`
 
-      console.log('☁️ 开始上传到云存储:', cloudPath)
+      log.info('☁️ 开始上传到云存储:', cloudPath)
 
       wx.cloud.uploadFile({
         cloudPath: cloudPath,
         filePath: filePath,
         success: (res) => {
-          console.log('✅ 云存储上传成功:', res)
+          log.info('✅ 云存储上传成功:', res)
           resolve(res.fileID)
         },
         fail: (err) => {
-          console.error('❌ 云存储上传失败:', err)
+          log.error('❌ 云存储上传失败:', err)
           reject({
             code: 'CLOUD_UPLOAD_ERROR',
             message: '云存储上传失败'
@@ -189,23 +192,23 @@ class ImageUploadService {
   async uploadImage(filePath, petId) {
     try {
       // 1. 验证图片
-      console.log('🔍 开始验证图片...')
+      log.info('🔍 开始验证图片...')
       const validationResult = await this.validateImage(filePath)
-      console.log('✅ 图片验证通过:', validationResult)
+      log.info('✅ 图片验证通过:', validationResult)
 
       // 2. 压缩图片
-      console.log('🗜️ 开始压缩图片...')
+      log.info('🗜️ 开始压缩图片...')
       const compressedPath = await this.compressImage(filePath, IMAGE_CONFIG.COMPRESS_QUALITY)
-      console.log('✅ 图片压缩完成')
+      log.info('✅ 图片压缩完成')
 
       // 3. 上传到云存储
-      console.log('☁️ 开始上传到云存储...')
+      log.info('☁️ 开始上传到云存储...')
       const cloudURL = await this.uploadToCloud(compressedPath, petId)
-      console.log('✅ 图片上传完成:', cloudURL)
+      log.info('✅ 图片上传完成:', cloudURL)
 
       return cloudURL
     } catch (error) {
-      console.error('❌ 图片上传失败:', error)
+      log.error('❌ 图片上传失败:', error)
       throw error
     }
   }
@@ -223,7 +226,7 @@ class ImageUploadService {
         sourceType: ['album', 'camera'],
         success: async (res) => {
           const filePath = res.tempFilePaths[0]
-          console.log('📱 用户选择图片:', filePath)
+          log.info('📱 用户选择图片:', filePath)
 
           try {
             const cloudURL = await this.uploadImage(filePath, petId)
@@ -233,7 +236,7 @@ class ImageUploadService {
           }
         },
         fail: (err) => {
-          console.error('❌ 选择图片失败:', err)
+          log.error('❌ 选择图片失败:', err)
           reject({
             code: 'CHOOSE_IMAGE_ERROR',
             message: '选择图片失败'
@@ -253,11 +256,11 @@ class ImageUploadService {
       wx.cloud.deleteFile({
         fileList: [fileID],
         success: (res) => {
-          console.log('✅ 云存储文件删除成功:', res)
+          log.info('✅ 云存储文件删除成功:', res)
           resolve()
         },
         fail: (err) => {
-          console.error('❌ 云存储文件删除失败:', err)
+          log.error('❌ 云存储文件删除失败:', err)
           reject(err)
         }
       })

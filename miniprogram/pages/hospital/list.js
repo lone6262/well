@@ -1,4 +1,6 @@
 // 医院列表页面 - 全新设计逻辑
+const logger = require('../../utils/logger.js')
+const log = logger.child('HospitalList')
 let app = getApp()
 let mapService = require('../../utils/mapService.js')
 let phoneUtil = require('../../utils/phone.js')
@@ -23,7 +25,7 @@ Page({
   },
 
   onLoad: function() {
-    console.log('医院列表页面加载')
+    log.info('医院列表页面加载')
     this.initPage()
   },
 
@@ -54,7 +56,7 @@ Page({
       // 加载医院数据
       return self.loadHospitals()
     }).catch(function(error) {
-      console.error('初始化失败:', error)
+      log.error('初始化失败:', error)
       self.setData({
         locationText: '北京（默认位置）',
         apiAvailable: false
@@ -77,7 +79,7 @@ Page({
           })
         },
         fail: function(error) {
-          console.error('获取位置失败:', error)
+          log.error('获取位置失败:', error)
           // 使用默认位置
           resolve({
             latitude: 22.543099,
@@ -145,11 +147,11 @@ Page({
         isLoading: false
       })
 
-      console.log('医院数据加载成功:', processedHospitals.length, '家')
+      log.info('医院数据加载成功:', processedHospitals.length, '家')
       return processedHospitals
 
     }).catch(function(error) {
-      console.error('医院数据加载失败:', error)
+      log.error('医院数据加载失败:', error)
 
       let offlineHospitals = self.getOfflineHospitals()
       let processedOffline = self.processHospitalData(offlineHospitals)
@@ -262,7 +264,7 @@ Page({
   // 查看医院详情
   viewHospital: function(e) {
     let hospitalId = e.currentTarget.dataset.id
-    console.log('查看医院详情:', hospitalId)
+    log.info('查看医院详情:', hospitalId)
 
     // 跳转到医院详情页
     wx.navigateTo({
@@ -280,7 +282,7 @@ Page({
   callHospital: function(e) {
     let phone = e.currentTarget.dataset.phone
     let self = this
-    console.log('拨打电话:', phone)
+    log.info('拨打电话:', phone)
 
     if (!phone || phone === '请电话确认' || phone === '暂无电话') {
       // 根据数据来源显示不同提示
@@ -345,7 +347,7 @@ Page({
   // 导航到医院
   navigateToHospital: function(e) {
     let hospital = e.currentTarget.dataset.hospital
-    console.log('导航到医院:', hospital.name)
+    log.info('导航到医院:', hospital.name)
 
     if (this.data.apiAvailable) {
       // 使用真实位置导航
@@ -382,7 +384,7 @@ Page({
 
   // 显示地图模式
   showMapMode: function() {
-    console.log('切换到地图模式')
+    log.info('切换到地图模式')
     wx.showToast({
       title: '地图模式开发中',
       icon: 'none'
@@ -391,14 +393,14 @@ Page({
 
   // 显示完整地图
   showFullMap: function() {
-    console.log('显示完整地图')
+    log.info('显示完整地图')
     this.showMapMode()
   },
 
   // 显示医院详情
   showHospitalDetail: function(e) {
     let hospital = e.currentTarget.dataset.hospital
-    console.log('显示医院详情:', hospital.name)
+    log.info('显示医院详情:', hospital.name)
 
     wx.showModal({
       title: hospital.name,
@@ -410,7 +412,7 @@ Page({
   // 快速导航到医院
   quickNavigate: function(e) {
     let hospital = e.currentTarget.dataset.hospital
-    console.log('快速导航到医院:', hospital.name)
+    log.info('快速导航到医院:', hospital.name)
 
     if (!hospital.latitude || !hospital.longitude) {
       wx.showToast({
@@ -454,13 +456,13 @@ Page({
 
   // 重新加载医院数据
   reloadHospitals: function() {
-    console.log('重新加载医院数据')
+    log.info('重新加载医院数据')
     this.loadHospitals()
   },
 
   // 刷新医院数据
   refreshHospitals: function() {
-    console.log('刷新医院数据')
+    log.info('刷新医院数据')
     this.loadHospitals()
   }
 })

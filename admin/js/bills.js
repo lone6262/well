@@ -4,36 +4,27 @@
 
 let billsCurrentPage = 1;
 
-/**
- * 加载对账记录
- */
-async function loadBills(page = 1) {
-  showLoading();
-
-  try {
-    const dateFilter = document.getElementById('billDateFilter').value;
-    const result = await callCloudFunction('adminGateway', {
+// 使用 CRUD 公共加载器
+const loadBills = createCrudLoader({
+  loadFn: function(page, pageSize, filters) {
+    return callCloudFunction('adminGateway', {
       action: 'getBills',
       page: page,
-      pageSize: PAGINATION.defaultPageSize,
-      billDate: dateFilter || undefined,
+      pageSize: pageSize,
+      billDate: filters.date || undefined,
     });
-
-    if (result.code === 0) {
-      displayBills(result.data.bills || []);
-      if (result.data.pagination) {
-        renderPagination('billsPagination', result.data.pagination, loadBills);
-      }
-      billsCurrentPage = page;
-    } else {
-      showToast(result.msg || '加载失败', 'error');
-    }
-  } catch (error) {
-    handleApiError(error);
-  } finally {
-    hideLoading();
+  },
+  displayFn: displayBills,
+  paginationId: 'billsPagination',
+  dataPath: 'data.bills',
+  getState: function() { return { page: billsCurrentPage }; },
+  setState: function(state) { billsCurrentPage = state.page; },
+  getFilters: function() {
+    return {
+      date: document.getElementById('billDateFilter').value
+    };
   }
-}
+});
 
 /**
  * 显示对账记录列表
@@ -66,7 +57,7 @@ function displayBills(bills) {
         <td><span class="badge ${statusInfo.class}">${statusInfo.text}</span></td>
         <td>${formatDateTime(bill.created_at)}</td>
         <td>
-          ${diffCount > 0 ? `<button class="btn btn-sm btn-outline" onclick="viewBillDetail('${bill._id}')">查看差异</button>` : '-'}
+          ${diffCount > 0 ? `<button class="btn btn-sm btn-outline" onclick="viewBillDetail('${escapeAttr(bill._id)}')">查看差异</button>` : '-'}
         </td>
       </tr>
     `;
@@ -119,24 +110,13 @@ async function viewBillDetail(billId) {
  */
 async function runBillCheck() {
   const billDate = document.getElementById('billDateFilter').value || getYesterdayStr();
-  confirmAction(`确定要对账 ${billDate} 的数据？`, async () => {
-    showLoading('对账中，请稍候...');
-    try {
-      const result = await callCloudFunction('checkDailyBill', {
-        billDate: billDate,
-      });
-      if (result.code === 0) {
-        showToast(`对账完成：${result.data.totalOrders} 笔订单，${result.data.diffCount} 笔差异`, 'success');
-        loadBills(1);
-      } else {
-        showToast(result.msg || '对账失败', 'error');
-      }
-    } catch (error) {
-      handleApiError(error);
-    } finally {
-      hideLoading();
-    }
-  });
+  confirmedAction(`确定要对账 ${billDate} 的数据？`, function() {
+    return callCloudFunction('checkDailyBill', {
+      billDate: billDate,
+    });
+  }, function(result) {
+    return `对账完成：${result.data.totalOrders} 笔订单，${result.data.diffCount} 笔差异`;
+  }, function() { loadBills(1); });
 }
 
 function getYesterdayStr() {

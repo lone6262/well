@@ -72,8 +72,8 @@ function displayRiskReviewOrders(orders) {
         <td>${escapeHtml(typeText)}</td>
         <td>${formatDateTime(order.created_at)}</td>
         <td>
-          <button class="btn btn-sm btn-primary" onclick="approveRiskOrder('${order._id}')">放行</button>
-          <button class="btn btn-sm btn-outline" onclick="blockRiskOrder('${order._id}')">冻结</button>
+          <button class="btn btn-sm btn-primary" onclick="approveRiskOrder('${escapeAttr(order._id)}')">放行</button>
+          <button class="btn btn-sm btn-outline" onclick="blockRiskOrder('${escapeAttr(order._id)}')">冻结</button>
         </td>
       </tr>
     `;

@@ -1,0 +1,14 @@
+<view class="state-view state-view--{{type}} state-view--{{theme}} {{card ? 'state-view--card' : ''}}" role="status" aria-live="polite">
+  <view class="state-view__spinner" wx:if="{{type === 'loading'}}"></view>
+  <text class="state-view__icon" wx:elif="{{icon}}">{{icon}}</text>
+
+  <text class="state-view__title" wx:if="{{title}}">{{title}}</text>
+  <text class="state-view__description" wx:if="{{description}}">{{description}}</text>
+
+  <button
+    class="state-view__action"
+    wx:if="{{showAction && actionText}}"
+    bindtap="onActionTap"
+    aria-label="{{actionText}}"
+  >{{actionText}}</button>
+</view>

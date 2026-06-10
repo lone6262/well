@@ -1,4 +1,6 @@
 // 领券中心
+const logger = require('../../utils/logger.js')
+const log = logger.child('CouponReceive')
 const app = getApp();
 
 Page({
@@ -36,7 +38,7 @@ Page({
         this.setData({ coupons });
       }
     } catch (err) {
-      console.error('加载优惠券失败:', err);
+      log.error('加载优惠券失败:', err);
       wx.showToast({ title: '加载失败', icon: 'none' });
     } finally {
       this.setData({ loading: false });

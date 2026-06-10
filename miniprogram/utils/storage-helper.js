@@ -1,12 +1,15 @@
 // storage-helper.js - Login state storage management utilities
 
+const logger = require('./logger.js')
+const log = logger.child('StorageHelper')
+
 /**
  * Saves login state to WeChat storage
  * @param {Object} globalData - The app's globalData object
  */
 function saveLoginState(globalData) {
   if (!globalData) {
-    console.error('saveLoginState: globalData is required');
+    log.error('saveLoginState: globalData is required')
     return;
   }
 
@@ -22,10 +25,10 @@ function saveLoginState(globalData) {
     }
     wx.setStorageSync('lastLoginTime', Date.now());
     wx.setStorageSync('isGuest', globalData.isGuest);
-    
-    console.log('✅ Login state saved to storage');
+
+    log.info('Login state saved to storage')
   } catch (error) {
-    console.error('❌ Failed to save login state:', error);
+    log.error('Failed to save login state:', error)
   }
 }
 
@@ -36,11 +39,11 @@ function saveLoginState(globalData) {
  */
 function restoreLoginState(globalData) {
   if (!globalData) {
-    console.error('restoreLoginState: globalData is required');
+    log.error('restoreLoginState: globalData is required')
     return null;
   }
 
-  console.log('=== Restoring login state from local storage ===');
+  log.info('Restoring login state from local storage')
 
   try {
     let restoredOpenid = null;
@@ -50,35 +53,35 @@ function restoreLoginState(globalData) {
     if (storedOpenid) {
       globalData.openid = storedOpenid;
       restoredOpenid = storedOpenid;
-      console.log('✅ Login state restored');
+      log.info('Login state restored')
     }
 
     // Restore token
     const storedToken = wx.getStorageSync('token');
     if (storedToken) {
       globalData.token = storedToken;
-      console.log('✅ Token restored');
+      log.info('Token restored')
     }
 
     // Restore user info
     const storedUserInfo = wx.getStorageSync('userInfo');
     if (storedUserInfo) {
       globalData.userInfo = storedUserInfo;
-      console.log('✅ User info restored');
+      log.info('User info restored')
     }
 
     // Restore guest mode status
     const isGuest = wx.getStorageSync('isGuest');
     if (typeof isGuest === 'boolean') {
       globalData.isGuest = isGuest;
-      console.log('✅ Guest mode status restored:', isGuest);
+      log.info('Guest mode status restored:', isGuest)
     }
 
     // Restore location permission status
     const storedLocationPermission = wx.getStorageSync('locationPermission');
     if (storedLocationPermission) {
       globalData.locationPermission = storedLocationPermission;
-      console.log('✅ Location permission status restored:', storedLocationPermission);
+      log.info('Location permission status restored:', storedLocationPermission)
     }
 
     // Restore location cache
@@ -94,13 +97,13 @@ function restoreLoginState(globalData) {
         globalData.latitude = cachedLatitude;
         globalData.longitude = cachedLongitude;
         globalData.locationUpdateTime = cachedLocationTime;
-        console.log('✅ Location cache restored');
+        log.info('Location cache restored')
       }
     }
 
     return restoredOpenid;
   } catch (error) {
-    console.error('❌ Failed to restore login state:', error);
+    log.error('Failed to restore login state:', error)
     return null;
   }
 }
@@ -115,9 +118,9 @@ function clearLoginState() {
     wx.removeStorageSync('userInfo');
     wx.removeStorageSync('lastLoginTime');
     wx.removeStorageSync('isGuest');
-    console.log('✅ Login state cleared from storage');
+    log.info('Login state cleared from storage')
   } catch (error) {
-    console.error('❌ Failed to clear login state:', error);
+    log.error('Failed to clear login state:', error)
   }
 }
 

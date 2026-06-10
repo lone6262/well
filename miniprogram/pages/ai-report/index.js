@@ -1,4 +1,6 @@
 // AI健康报告页面
+const logger = require('../../utils/logger.js')
+const log = logger.child('AiReport')
 let app = getApp()
 
 Page({
@@ -45,7 +47,7 @@ Page({
 
           // 校验报告内容有效性：如果关键字段全为空，展示友好提示
           if (!reportContent.risk_summary && !reportContent.home_care) {
-            console.warn('AI报告内容为空，显示提示信息')
+            log.warn('AI报告内容为空，显示提示信息')
             self.setData({ loading: false })
             wx.showModal({
               title: '报告生成中',
@@ -80,7 +82,7 @@ Page({
         }
       },
       fail: function(err) {
-        console.error('加载AI报告失败:', err)
+        log.error('加载AI报告失败:', err)
         self.setData({ loading: false })
         wx.showToast({ title: '加载失败', icon: 'none' })
       }

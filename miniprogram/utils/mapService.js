@@ -1,6 +1,8 @@
 // 地图服务模块 - 集成腾讯地图API - 实时24小时医院搜索增强版
 const MAP_CONFIG = require('./mapConfig.js')
 const { MAP_CONFIG: MAP_CONSTANTS, TOAST_DURATION } = require('./constants.js')
+const logger = require('./logger.js')
+const log = logger.child('MapService')
 
 /**
  * 地图服务类 - 实时增强版
@@ -22,12 +24,12 @@ class MapService {
     return new Promise((resolve, reject) => {
       // 如果还没有配置API密钥，使用模拟数据
       if (this.key === 'YOUR_TENCENT_MAP_KEY') {
-        console.log('使用模拟医院数据，请配置腾讯地图API密钥')
+        log.info('使用模拟医院数据，请配置腾讯地图API密钥')
         resolve(this.getMockHospitals(latitude, longitude))
         return
       }
 
-      console.log(`🔍 开始搜索附近医院，中心点: (${latitude}, ${longitude}), 半径: ${radius}米`)
+      log.info(`🔍 开始搜索附近医院，中心点: (${latitude}, ${longitude}), 半径: ${radius}米`)
 
       // 多关键词搜索策略，优先搜索24小时医院
       const searchKeywords = [
@@ -44,7 +46,7 @@ class MapService {
       searchKeywords.forEach((keyword, index) => {
         this.searchWithKeyword(latitude, longitude, radius, keyword)
           .then(keywordResults => {
-            console.log(`✅ 关键词"${keyword}"搜索到 ${keywordResults.length} 个结果`)
+            log.info(`✅ 关键词"${keyword}"搜索到 ${keywordResults.length} 个结果`)
 
             // 标记结果的搜索优先级（越靠前的关键词优先级越高）
             const taggedResults = keywordResults.map(result => ({
@@ -62,7 +64,7 @@ class MapService {
             }
           })
           .catch(error => {
-            console.error(`❌ 关键词"${keyword}"搜索失败:`, error)
+            log.error(`❌ 关键词"${keyword}"搜索失败:`, error)
             hasNetworkError = true
             completedSearches++
 
@@ -76,7 +78,7 @@ class MapService {
       // 设置超时，防止长时间无响应
       setTimeout(() => {
         if (completedSearches < searchKeywords.length) {
-          console.log('⏰ 搜索超时，返回已获取的结果')
+          log.info('⏰ 搜索超时，返回已获取的结果')
           this.processSearchResults(results, latitude, longitude, resolve, true)
         }
       }, MAP_CONSTANTS.API_TIMEOUT) // API超时
@@ -100,7 +102,7 @@ class MapService {
         success: (res) => {
           if (res.data.status === 0) {
             const hospitals = res.data.data.map(item => {
-              console.log('🔍 API返回数据:', item)
+              log.info('🔍 API返回数据:', item)
 
               // 计算距离：优先使用API返回的距离，否则手动计算
               let calculatedDistance = 0
@@ -126,17 +128,17 @@ class MapService {
                 rating: this.extractRating(item)
               }
 
-              console.log('✅ 映射后数据:', mapped)
+              log.info('✅ 映射后数据:', mapped)
               return mapped
             })
             resolve(hospitals)
           } else {
-            console.error(`腾讯地图API搜索失败(${keyword}):`, res.data.message)
+            log.error(`腾讯地图API搜索失败(${keyword}):`, res.data.message)
             resolve([])
           }
         },
         fail: (error) => {
-          console.error(`地图API调用失败(${keyword}):`, error)
+          log.error(`地图API调用失败(${keyword}):`, error)
           reject(error)
         }
       })
@@ -148,7 +150,7 @@ class MapService {
    */
   processSearchResults(rawResults, latitude, longitude, resolve, hasError) {
     if (rawResults.length === 0) {
-      console.log('❌ 没有搜索到结果，使用模拟数据')
+      log.info('❌ 没有搜索到结果，使用模拟数据')
       resolve(this.getMockHospitals(latitude, longitude))
       return
     }
@@ -163,7 +165,7 @@ class MapService {
     })
 
     const uniqueResults = Array.from(uniqueMap.values())
-    console.log(`🔄 去重后剩余 ${uniqueResults.length} 个医院`)
+    log.info(`🔄 去重后剩余 ${uniqueResults.length} 个医院`)
 
     // 排序：24小时医院优先，然后按距离，最后按搜索优先级
     const sortedResults = uniqueResults.sort((a, b) => {
@@ -185,7 +187,7 @@ class MapService {
     const resultsWith24Hours = this.ensure24HoursHospitals(sortedResults)
 
     const hours24Count = resultsWith24Hours.filter(h => h.is24h).length
-    console.log(`✅ 最终返回 ${resultsWith24Hours.length} 个医院，其中24小时: ${hours24Count}个`)
+    log.info(`✅ 最终返回 ${resultsWith24Hours.length} 个医院，其中24小时: ${hours24Count}个`)
 
     if (hasError) {
       wx.showToast({
@@ -299,7 +301,7 @@ class MapService {
     wx.makePhoneCall({
       phoneNumber: phoneNumber,
       fail: (error) => {
-        console.error('拨打电话失败:', error)
+        log.error('拨打电话失败:', error)
         wx.showToast({
           title: '拨号失败',
           icon: 'none'
@@ -352,7 +354,7 @@ class MapService {
     // 开启实时位置监控
     this.locationWatchId = wx.startLocationUpdate({
       success: () => {
-        console.log('📍 实时位置监控已启动')
+        log.info('📍 实时位置监控已启动')
 
         // 监听位置变化事件
         wx.onLocationChange((res) => {
@@ -370,7 +372,7 @@ class MapService {
             )
 
             if (distance > WATCH_DISTANCE && this.locationWatchCallback) {
-              console.log(`🚶 位置变化超过${WATCH_DISTANCE}米，触发回调`)
+              log.info(`🚶 位置变化超过${WATCH_DISTANCE}米，触发回调`)
               this.locationWatchCallback(currentLocation, distance)
             }
           }
@@ -379,7 +381,7 @@ class MapService {
         })
       },
       fail: (error) => {
-        console.error('实时位置监控启动失败:', error)
+        log.error('实时位置监控启动失败:', error)
       }
     })
   }
@@ -391,7 +393,7 @@ class MapService {
     if (this.locationWatchId) {
       wx.stopLocationUpdate({
         success: () => {
-          console.log('🛑 实时位置监控已停止')
+          log.info('🛑 实时位置监控已停止')
         }
       })
       this.locationWatchId = null

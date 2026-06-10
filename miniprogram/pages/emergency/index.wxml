@@ -42,21 +42,24 @@
     </view>
   </view>
 
-  <!-- 加载状态 -->
-  <view class="loading-state" wx:if="{{isLoading}}">
-    <view class="pulse-ring"></view>
-    <text class="loading-text">正在定位最近医院...</text>
-  </view>
+  <state-view
+    wx:if="{{isLoading}}"
+    type="loading"
+    title="正在定位最近医院..."
+    theme="dark"
+  />
 
-  <!-- 错误状态 -->
-  <view class="error-state" wx:if="{{!isLoading && !nearestHospital}}">
-    <text class="error-icon">❌</text>
-    <text class="error-title">定位失败</text>
-    <text class="error-desc">无法获取您的位置信息</text>
-    <button class="retry-btn" bindtap="retryLocation">
-      <text>🔄 重新定位</text>
-    </button>
-  </view>
+  <state-view
+    wx:if="{{!isLoading && !nearestHospital}}"
+    type="error"
+    icon="❌"
+    title="定位失败"
+    description="无法获取您的位置信息"
+    action-text="🔄 重新定位"
+    show-action="{{true}}"
+    theme="dark"
+    bind:action="retryLocation"
+  />
 
   <!-- 其他医院列表（全新设计） -->
   <view class="other-hospitals-section" wx:if="{{otherHospitals.length > 0}}">

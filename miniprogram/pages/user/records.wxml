@@ -10,11 +10,11 @@
     <text class="header-count">共{{records.length}}条</text>
   </view>
 
-  <!-- 加载状态 -->
-  <view class="loading-section" wx:if="{{loading}}">
-    <view class="loading-spinner"></view>
-    <text class="loading-text">正在加载记录...</text>
-  </view>
+  <state-view
+    wx:if="{{loading}}"
+    type="loading"
+    title="正在加载记录..."
+  />
 
   <!-- 记录列表 -->
   <view class="records-list" wx:if="{{!loading}}">
@@ -56,12 +56,13 @@
       </view>
     </view>
 
-    <!-- 空状态 -->
-    <view class="empty-section" wx:if="{{records.length === 0}}">
-      <text class="empty-icon">📋</text>
-      <text class="empty-title">暂无{{pageTitle}}</text>
-      <text class="empty-desc">进行症状自查后记录将显示在这里</text>
-    </view>
+    <state-view
+      wx:if="{{records.length === 0}}"
+      type="empty"
+      icon="📋"
+      title="暂无{{pageTitle}}"
+      description="进行症状自查后记录将显示在这里"
+    />
 
     <!-- 加载更多 -->
     <view class="load-more-btn" wx:if="{{hasMore}}" bindtap="loadMore">

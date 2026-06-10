@@ -1,4 +1,6 @@
 // 家庭成员管理页
+const logger = require('../../utils/logger.js')
+const log = logger.child('MemberFamily')
 const app = getApp();
 
 Page({
@@ -38,7 +40,7 @@ Page({
         wx.showToast({ title: res.result.msg || '加载失败', icon: 'none' });
       }
     } catch (err) {
-      console.error('加载家庭成员失败:', err);
+      log.error('加载家庭成员失败:', err);
       wx.showToast({ title: '加载失败', icon: 'none' });
     } finally {
       this.setData({ loading: false });

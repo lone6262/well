@@ -1,3 +1,5 @@
+const logger = require('./logger.js')
+const log = logger.child('Api')
 /**
  * 统一API调用层
  * 封装 wx.cloud.callFunction，提供一致的错误处理和响应格式
@@ -55,7 +57,7 @@ function _doCall(name, data, showError, resolve) {
 
   // 检查云开发是否可用
   if (!app.globalData.cloudDevelopmentAvailable) {
-    console.warn('[API] 云开发不可用，使用降级模式: ' + name);
+    log.warn('[API] 云开发不可用，使用降级模式: ' + name);
     resolve({
       success: false,
       code: -1,
@@ -95,7 +97,7 @@ function _doCall(name, data, showError, resolve) {
       }
     },
     fail: function(err) {
-      console.error('[API] 云函数调用失败:', name, err);
+      log.error('[API] 云函数调用失败:', name, err);
 
       // 标记云开发不可用（仅精确匹配网络/服务不可用错误码）
       if (err.errCode === -1 || err.errCode === -404011) {

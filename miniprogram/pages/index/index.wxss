@@ -4,6 +4,8 @@
    =================================== */
 
 @import "../../utils/ui-components.wxss";
+@import "emergency-btn.wxss";
+@import "followup-modal.wxss";
 
 /* === 页面容器 === */
 
@@ -92,117 +94,6 @@
   justify-content: center;
   font-size: 20rpx;
   border: 2rpx solid #ffffff;
-}
-
-/* === 紧急救助按钮 - 重新设计版本：简洁稳定零重叠 === */
-
-/* 紧急按钮外层容器 */
-.emergency-wrapper {
-  width: 100%;
-  padding: 0 24rpx;
-  margin-bottom: 48rpx;
-}
-
-/* 紧急按钮主体 - 垂直居中布局 */
-.emergency-big-btn {
-  width: 100%;
-  height: 160rpx;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  border-radius: 24rpx;
-  border: none;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 8rpx 24rpx rgba(245, 87, 108, 0.3);
-
-  /* iOS兼容性 */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-}
-
-/* 点击效果 */
-.emergency-big-btn-press {
-  transform: scale(0.98);
-  opacity: 0.9;
-}
-
-/* 大图标 - 简单直接 */
-.emergency-icon-large {
-  font-size: 56rpx;
-  line-height: 1;
-  margin-bottom: 8rpx;
-
-  /* iOS兼容性 */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-}
-
-/* 主标题 - 居中显示 */
-.emergency-title-main {
-  font-size: 40rpx;
-  font-weight: 700;
-  color: #ffffff;
-  line-height: 1.2;
-  margin-bottom: 4rpx;
-  text-align: center;
-
-  /* iOS兼容性 */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* 副标题 - 简洁说明 */
-.emergency-desc-small {
-  font-size: 24rpx;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.9);
-  line-height: 1.3;
-  text-align: center;
-
-  /* iOS兼容性 */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* 脉冲动画 - 简化版本 */
-.pulse-animation {
-  display: block;
-  animation: heartbeat 1.5s ease-in-out infinite;
-  -webkit-animation: heartbeat 1.5s ease-in-out infinite;
-
-  /* iOS兼容性 */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-}
-
-@keyframes heartbeat {
-  0%, 100% {
-    transform: scale(1);
-    -webkit-transform: scale(1);
-  }
-  50% {
-    transform: scale(1.15);
-    -webkit-transform: scale(1.15);
-  }
-}
-
-@-webkit-keyframes heartbeat {
-  0%, 100% {
-    transform: scale(1);
-    -webkit-transform: scale(1);
-  }
-  50% {
-    transform: scale(1.15);
-    -webkit-transform: scale(1.15);
-  }
 }
 
 /* === 主要功能网格 === */
@@ -630,8 +521,6 @@
   line-height: 1.75;
 }
 
-/* === 统一设备适配 - iOS兼容优化 === */
-
 /* === 会员 Banner === */
 
 .member-banner {
@@ -664,6 +553,12 @@
 .member-banner-action {
   font-size: 26rpx;
   color: rgba(255, 255, 255, 0.9);
+}
+
+/* 非会员引导 Banner */
+.member-banner-inactive {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.25);
 }
 
 /* === 今日科普 - 精美卡片 === */
@@ -793,132 +688,6 @@
   color: #999;
 }
 
-/* === 统一设备适配 - iOS兼容优化（续） === */
-
-/* 极小屏幕设备优化（iPhone SE等） - 专门防止文字重叠 */
-@media (max-width: 321px) {
-  .emergency-big-btn {
-    height: 120rpx;
-  }
-
-  .emergency-icon-large {
-    font-size: 40rpx;
-    margin-bottom: 4rpx;
-  }
-
-  .emergency-title-main {
-    font-size: 32rpx;
-  }
-
-  .emergency-desc-small {
-    font-size: 20rpx;
-  }
-}
-
-/* 小屏设备优化 - 保持2列布局 */
-@media (max-width: 375px) {
-  .welcome-section {
-    padding: 32rpx 16rpx 16rpx;
-  }
-
-  .greeting-text {
-    font-size: 36rpx;
-  }
-
-  /* 统一保持2列布局，避免单列显示 */
-  .features-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16rpx; /* 统一16rpx间距 */
-  }
-
-  .feature-card {
-    min-height: 180rpx; /* 统一卡片高度 */
-  }
-
-  .pet-health-card {
-    width: 140rpx;
-  }
-
-  .hospital-name-compact {
-    font-size: 28rpx;
-  }
-
-  /* iOS优化：小屏设备紧急按钮适配 */
-  .emergency-big-btn {
-    height: 140rpx;
-  }
-
-  .emergency-icon-large {
-    font-size: 48rpx;
-    margin-bottom: 6rpx;
-  }
-
-  .emergency-title-main {
-    font-size: 36rpx;
-  }
-
-  .emergency-desc-small {
-    font-size: 22rpx;
-  }
-}
-
-/* 大屏设备 - 统一使用iPhone标准间距 */
-@media (min-width: 414px) {
-  /* 强制统一间距，避免不同设备间距差异 */
-  .features-grid {
-    gap: 16rpx; /* 统一为iPhone的16rpx标准 */
-  }
-
-  .pet-health-card {
-    width: 160rpx; /* 适中的卡片宽度 */
-  }
-
-  /* iOS优化：大屏设备紧急按钮适配 */
-  .emergency-big-btn {
-    height: 180rpx;
-  }
-
-  .emergency-icon-large {
-    font-size: 64rpx;
-    margin-bottom: 10rpx;
-  }
-
-  .emergency-title-main {
-    font-size: 44rpx;
-  }
-
-  .emergency-desc-small {
-    font-size: 26rpx;
-  }
-}
-
-/* 横屏适配 - 保持2列布局一致性 */
-@media (orientation: landscape) {
-  /* 统一保持2列，避免横屏变成3列 */
-  .features-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16rpx; /* 统一间距 */
-  }
-
-  /* iOS优化：横屏紧急按钮适配 */
-  .emergency-big-btn {
-    height: 120rpx;
-  }
-
-  .emergency-icon-large {
-    font-size: 40rpx;
-    margin-bottom: 4rpx;
-  }
-
-  .emergency-title-main {
-    font-size: 32rpx;
-  }
-
-  .emergency-desc-small {
-    font-size: 20rpx;
-  }
-}
-
 /* === 实时更新指示器样式 === */
 
 .live-indicator {
@@ -979,174 +748,122 @@
   color: #909399;
 }
 
-/* === 医院加载状态样式 === */
-.hospitals-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 48rpx 24rpx;
-  background: #ffffff;
-  border-radius: 16rpx;
-  margin: 16rpx 0;
-}
+/* === 设备自适应媒体查询 === */
 
-.loading-skeleton {
-  width: 100%;
-  margin-bottom: 24rpx;
-}
-
-.skeleton-line {
-  height: 20rpx;
-  background: linear-gradient(90deg, #f0f2f5 25%, #e8eaf0 50%, #f0f2f5 75%);
-  border-radius: 4rpx;
-  margin-bottom: 12rpx;
-  animation: skeleton-loading 1.5s infinite;
-}
-
-.skeleton-line.short {
-  width: 60%;
-  animation-delay: 0.2s;
-}
-
-.loading-text {
-  font-size: 24rpx;
-  color: #909399;
-  text-align: center;
-  margin-top: 16rpx;
-}
-
-@keyframes skeleton-loading {
-  0% {
-    opacity: 0.3;
+/* 极小屏幕设备优化（iPhone SE等） */
+@media (max-width: 321px) {
+  .emergency-big-btn {
+    height: 120rpx;
   }
-  50% {
-    opacity: 1;
+
+  .emergency-icon-large {
+    font-size: 40rpx;
+    margin-bottom: 4rpx;
   }
-  100% {
-    opacity: 0.3;
+
+  .emergency-title-main {
+    font-size: 32rpx;
+  }
+
+  .emergency-desc-small {
+    font-size: 20rpx;
   }
 }
 
-.hospitals-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 48rpx 24rpx;
-  background: #ffffff;
-  border-radius: 16rpx;
-  margin: 16rpx 0;
+/* 小屏设备优化 */
+@media (max-width: 375px) {
+  .welcome-section {
+    padding: 32rpx 16rpx 16rpx;
+  }
+
+  .greeting-text {
+    font-size: 36rpx;
+  }
+
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16rpx;
+  }
+
+  .feature-card {
+    min-height: 180rpx;
+  }
+
+  .pet-health-card {
+    width: 140rpx;
+  }
+
+  .hospital-name-compact {
+    font-size: 28rpx;
+  }
+
+  .emergency-big-btn {
+    height: 140rpx;
+  }
+
+  .emergency-icon-large {
+    font-size: 48rpx;
+    margin-bottom: 6rpx;
+  }
+
+  .emergency-title-main {
+    font-size: 36rpx;
+  }
+
+  .emergency-desc-small {
+    font-size: 22rpx;
+  }
 }
 
-.empty-text {
-  font-size: 26rpx;
-  color: #2c3e50;
-  font-weight: 500;
-  margin-bottom: 12rpx;
+/* 大屏设备 */
+@media (min-width: 414px) {
+  .features-grid {
+    gap: 16rpx;
+  }
+
+  .pet-health-card {
+    width: 160rpx;
+  }
+
+  .emergency-big-btn {
+    height: 180rpx;
+  }
+
+  .emergency-icon-large {
+    font-size: 64rpx;
+    margin-bottom: 10rpx;
+  }
+
+  .emergency-title-main {
+    font-size: 44rpx;
+  }
+
+  .emergency-desc-small {
+    font-size: 26rpx;
+  }
 }
 
-.empty-hint {
-  font-size: 22rpx;
-  color: #909399;
+/* 横屏适配 */
+@media (orientation: landscape) {
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16rpx;
+  }
+
+  .emergency-big-btn {
+    height: 120rpx;
+  }
+
+  .emergency-icon-large {
+    font-size: 40rpx;
+    margin-bottom: 4rpx;
+  }
+
+  .emergency-title-main {
+    font-size: 32rpx;
+  }
+
+  .emergency-desc-small {
+    font-size: 20rpx;
+  }
 }
-
-/* === 回访提醒弹窗 — 项目统一风格 === */
-
-.followup-mask {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.45);
-  z-index: 1050;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40rpx;
-}
-
-.followup-modal {
-  width: 100%;
-  max-width: 600rpx;
-  background: #ffffff;
-  border-radius: 28rpx;
-  overflow: hidden;
-  box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.15);
-}
-
-.followup-modal-deco {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  text-align: center;
-  font-size: 72rpx;
-  padding: 32rpx 0 16rpx;
-}
-
-.followup-modal-body {
-  padding: 28rpx 32rpx 32rpx;
-  text-align: center;
-}
-
-.followup-modal-title {
-  display: block;
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 8rpx;
-}
-
-.followup-modal-subtitle {
-  display: block;
-  font-size: 24rpx;
-  color: #999;
-  margin-bottom: 20rpx;
-}
-
-.followup-modal-pet {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  background: #f8f9ff;
-  border-radius: 16rpx;
-  padding: 16rpx 20rpx;
-  margin-bottom: 4rpx;
-}
-
-.followup-pet-name { font-size: 28rpx; font-weight: bold; color: #333; }
-
-.followup-pet-sep { margin: 0 12rpx; color: #d9d9d9; }
-
-.followup-pet-symptoms { font-size: 26rpx; color: #666; }
-
-.followup-modal-actions {
-  display: flex;
-  border-top: 1rpx solid #f0f0f0;
-}
-
-.followup-btn-later {
-  flex: 1;
-  height: 96rpx;
-  line-height: 96rpx;
-  font-size: 30rpx;
-  color: #999;
-  background: #fff;
-  border: none;
-  border-right: 1rpx solid #f0f0f0;
-  border-radius: 0;
-  text-align: center;
-}
-
-.followup-btn-later::after { border: none; }
-
-.followup-btn-go {
-  flex: 1;
-  height: 96rpx;
-  line-height: 96rpx;
-  font-size: 30rpx;
-  font-weight: bold;
-  background: #fff;
-  color: #667eea;
-  border: none;
-  border-radius: 0;
-  text-align: center;
-}
-
-.followup-btn-go::after { border: none; }
-/* 设备自适应媒体查询 */

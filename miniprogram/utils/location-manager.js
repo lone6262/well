@@ -1,5 +1,8 @@
 // location-manager.js - Location management utilities
 
+const logger = require('./logger.js')
+const log = logger.child('LocationManager')
+
 /**
  * Creates a location manager instance
  * @param {Function} getGlobalData - Function that returns the app's globalData
@@ -30,7 +33,7 @@ function createLocationManager(getGlobalData) {
             globalData.locationUpdateTime &&
             (currentTime - globalData.locationUpdateTime) < LOCATION_CACHE_DURATION) {
 
-          console.log('Using cached location');
+          log.info('Using cached location');
           resolve({
             latitude: globalData.latitude,
             longitude: globalData.longitude
@@ -54,7 +57,7 @@ function createLocationManager(getGlobalData) {
                 wx.setStorageSync('cachedLongitude', res.longitude);
                 wx.setStorageSync('cachedLocationTime', currentTime);
 
-                console.log('Location obtained:', {
+                log.info('Location obtained:', {
                   latitude: res.latitude,
                   longitude: res.longitude,
                   accuracy: res.accuracy
@@ -66,7 +69,7 @@ function createLocationManager(getGlobalData) {
                 });
               },
               fail: function(error) {
-                console.log('Location acquisition failed:', error);
+                log.info('Location acquisition failed:', error);
 
                 // Use default location
                 globalData.latitude = DEFAULT_LOCATION.latitude;
@@ -77,7 +80,7 @@ function createLocationManager(getGlobalData) {
                 wx.setStorageSync('cachedLongitude', DEFAULT_LOCATION.longitude);
                 wx.setStorageSync('cachedLocationTime', currentTime);
 
-                console.log('Using default location:', DEFAULT_LOCATION);
+                log.info('Using default location:', DEFAULT_LOCATION);
                 resolve(DEFAULT_LOCATION);
               }
             });
@@ -91,7 +94,7 @@ function createLocationManager(getGlobalData) {
             wx.setStorageSync('cachedLongitude', DEFAULT_LOCATION.longitude);
             wx.setStorageSync('cachedLocationTime', currentTime);
 
-            console.log('No location permission, using default location:', DEFAULT_LOCATION);
+            log.info('No location permission, using default location:', DEFAULT_LOCATION);
             resolve(DEFAULT_LOCATION);
           }
         });
@@ -108,19 +111,19 @@ function createLocationManager(getGlobalData) {
       return new Promise(function(resolve) {
         // If already granted, return immediately
         if (globalData.locationPermission === 'granted') {
-          console.log('Location permission already granted, skipping request');
+          log.info('Location permission already granted, skipping request');
           resolve({ granted: true });
           return;
         }
 
         // If already denied, don't request again
         if (globalData.locationPermission === 'denied') {
-          console.log('Location permission already denied, not requesting again');
+          log.info('Location permission already denied, not requesting again');
           resolve({ granted: false });
           return;
         }
 
-        console.log('Requesting location permission for first time...');
+        log.info('Requesting location permission for first time...');
 
         // Check permission status using wx.getSetting
         wx.getSetting({
@@ -129,29 +132,29 @@ function createLocationManager(getGlobalData) {
 
             if (hasPermission) {
               // Already has permission
-              console.log('User already granted location permission');
+              log.info('User already granted location permission');
               globalData.locationPermission = 'granted';
               wx.setStorageSync('locationPermission', 'granted');
               resolve({ granted: true });
             } else if (hasPermission === false) {
               // User explicitly denied before
-              console.log('User denied location permission before');
+              log.info('User denied location permission before');
               globalData.locationPermission = 'denied';
               wx.setStorageSync('locationPermission', 'denied');
               resolve({ granted: false });
             } else {
               // First time requesting permission
-              console.log('Requesting location permission authorization...');
+              log.info('Requesting location permission authorization...');
               wx.authorize({
                 scope: 'scope.userLocation',
                 success: () => {
-                  console.log('Location permission granted');
+                  log.info('Location permission granted');
                   globalData.locationPermission = 'granted';
                   wx.setStorageSync('locationPermission', 'granted');
                   resolve({ granted: true });
                 },
                 fail: () => {
-                  console.log('Location permission denied');
+                  log.info('Location permission denied');
                   globalData.locationPermission = 'denied';
                   wx.setStorageSync('locationPermission', 'denied');
                   resolve({ granted: false });
@@ -160,18 +163,18 @@ function createLocationManager(getGlobalData) {
             }
           },
           fail: () => {
-            console.log('Failed to get permission settings, trying direct request');
+            log.info('Failed to get permission settings, trying direct request');
             // Try direct authorization
             wx.authorize({
               scope: 'scope.userLocation',
               success: () => {
-                console.log('Location permission granted');
+                log.info('Location permission granted');
                 globalData.locationPermission = 'granted';
                 wx.setStorageSync('locationPermission', 'granted');
                 resolve({ granted: true });
               },
               fail: () => {
-                console.log('Location permission denied');
+                log.info('Location permission denied');
                 globalData.locationPermission = 'denied';
                 wx.setStorageSync('locationPermission', 'denied');
                 resolve({ granted: false });

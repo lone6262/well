@@ -1,3 +1,5 @@
+const logger = require('./logger.js')
+const log = logger.child('FallbackManager')
 /**
  * 降级管理器
  * 统一处理云开发不可用时的本地数据降级逻辑
@@ -25,7 +27,7 @@ function withFallback(cloudFn, localFn, context) {
 
   if (app.globalData.cloudDevelopmentAvailable) {
     return cloudFn().catch(function(error) {
-      console.warn('云函数调用失败，使用本地' + label + ':', error);
+      log.warn('云函数调用失败，使用本地' + label + ':', error);
       return localFn();
     });
   }

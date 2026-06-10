@@ -1,4 +1,6 @@
 // 知识库文章详情页面
+const logger = require('../../utils/logger.js')
+const log = logger.child('KnowledgeDetail')
 let app = getApp()
 
 Page({
@@ -90,7 +92,7 @@ Page({
         }
       },
       fail: function(err) {
-        console.error('加载文章详情失败:', err)
+        log.error('加载文章详情失败:', err)
         self.setData({ loading: false })
         wx.showToast({ title: '加载失败', icon: 'none' })
       }

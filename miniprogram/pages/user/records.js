@@ -1,4 +1,6 @@
 // 自查记录/健康报告列表页面
+const logger = require('../../utils/logger.js')
+const log = logger.child('UserRecords')
 let app = getApp()
 
 Page({
@@ -81,7 +83,7 @@ Page({
         }
       },
       fail: function(err) {
-        console.error('加载记录失败:', err)
+        log.error('加载记录失败:', err)
         self.setData({ loading: false, records: [] })
         wx.showToast({ title: '加载失败', icon: 'none' })
       }
@@ -197,7 +199,7 @@ Page({
             },
             fail: function(err) {
               wx.hideLoading();
-              console.error('删除云函数调用失败:', err);
+              log.error('删除云函数调用失败:', err);
               wx.showToast({ title: '删除失败，请确认云函数已部署', icon: 'none', duration: 2000 });
             }
           });

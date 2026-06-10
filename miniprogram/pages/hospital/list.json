@@ -1,4 +1,7 @@
 {
   "navigationBarTitleText": "附近宠物医院",
-  "enablePullDownRefresh": true
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "state-view": "/components/state-view/state-view"
+  }
 }

@@ -48,7 +48,7 @@
   </view>
 
   <!-- 医院主列表 -->
-  <view class="hospital-list">
+  <view class="hospital-list" role="list">
     <!-- 列表头部 -->
     <view class="list-header">
       <text class="list-title">附近医院</text>
@@ -64,7 +64,8 @@
             wx:for="{{displayHospitals}}"
             wx:key="hospitalId"
             bindtap="viewHospital"
-            data-id="{{item.hospitalId}}">
+            data-id="{{item.hospitalId}}"
+            aria-label="医院 {{item.name}}，距离{{item.distanceDisplay}}">
 
         <!-- 卡片头部 -->
         <view class="card-header">
@@ -125,21 +126,22 @@
     </view>
   </view>
 
-  <!-- 加载状态 -->
-  <view class="loading-section" wx:if="{{isLoading}}">
-    <view class="loading-spinner"></view>
-    <text class="loading-text">正在加载医院信息...</text>
-  </view>
+  <state-view
+    wx:if="{{isLoading}}"
+    type="loading"
+    title="正在加载医院信息..."
+  />
 
-  <!-- 空状态 -->
-  <view class="empty-state" wx:if="{{!isLoading && displayHospitals.length === 0}}">
-    <text class="empty-icon">🏥</text>
-    <text class="empty-title">暂无医院信息</text>
-    <text class="empty-desc">{{apiAvailable ? '附近没有找到宠物医院' : 'API配额受限，显示推荐医院'}}</text>
-    <button class="retry-btn" bindtap="reloadHospitals">
-      <text>🔄 重新加载</text>
-    </button>
-  </view>
+  <state-view
+    wx:if="{{!isLoading && displayHospitals.length === 0}}"
+    type="empty"
+    icon="🏥"
+    title="暂无医院信息"
+    description="{{apiAvailable ? '附近没有找到宠物医院' : 'API配额受限，显示推荐医院'}}"
+    action-text="🔄 重新加载"
+    show-action="{{true}}"
+    bind:action="reloadHospitals"
+  />
 
   <!-- 底部地图按钮 -->
   <view class="map-fab" bindtap="showFullMap">

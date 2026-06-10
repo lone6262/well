@@ -1,4 +1,6 @@
 // 邀请好友页面 - 重设计版本
+const logger = require('../../utils/logger.js')
+const log = logger.child('InviteIndex')
 var app = getApp()
 
 Page({
@@ -52,7 +54,7 @@ Page({
         }
       },
       fail: function (err) {
-        console.warn('createInvite failed:', err)
+        log.warn('createInvite failed:', err)
       },
       complete: function () {
         self.setData({ loading: false })
@@ -82,7 +84,7 @@ Page({
         }
       },
       fail: function (err) {
-        console.warn('getInviteStats failed:', err)
+        log.warn('getInviteStats failed:', err)
       }
     })
   },
@@ -102,7 +104,7 @@ Page({
         }
       },
       fail: function (err) {
-        console.warn('getInviteRanking failed:', err)
+        log.warn('getInviteRanking failed:', err)
       }
     })
   },

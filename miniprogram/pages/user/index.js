@@ -1,4 +1,6 @@
 // 用户中心页面逻辑 - ES5完全兼容版本
+const logger = require('../../utils/logger.js')
+const log = logger.child('UserCenter')
 let app = getApp()
 
 Page({
@@ -16,7 +18,7 @@ Page({
       favoriteCount: 0
     },
     userPets: [],
-    appVersion: '1.0.0'
+    appVersion: '1.5.0'
   },
 
   onLoad: function() {
@@ -36,7 +38,7 @@ Page({
     // 修复：只要openid存在就认为是已登录，不依赖nickName
     let isLoggedIn = !!openid
 
-    console.log('用户中心 - 登录状态检查:', {
+    log.info('用户中心 - 登录状态检查:', {
       isLoggedIn: isLoggedIn,
       isGuest: app.globalData.isGuest,
       cloudDevelopmentAvailable: app.globalData.cloudDevelopmentAvailable
@@ -70,7 +72,7 @@ Page({
     let openid = app.getOpenid()
 
     if (!openid) {
-      console.log('用户未登录，使用默认统计数据')
+      log.info('用户未登录，使用默认统计数据')
       self.setData({
         userStats: {
           checkCount: 0,
@@ -83,11 +85,11 @@ Page({
       return
     }
 
-    console.log('从云端加载用户统计数据...')
+    log.info('从云端加载用户统计数据...')
 
     // 检查云开发是否可用
     if (!app.globalData.cloudDevelopmentAvailable) {
-      console.log('云开发不可用，使用本地统计数据')
+      log.info('云开发不可用，使用本地统计数据')
       self.loadLocalStats()
       return
     }
@@ -98,7 +100,7 @@ Page({
         token: app.globalData.token || wx.getStorageSync('token')
       },
       success: function(res) {
-        console.log('用户统计数据加载成功:', res.result)
+        log.info('用户统计数据加载成功:', res.result)
 
         if (res.result.code === 0) {
           let stats = res.result.data
@@ -116,12 +118,12 @@ Page({
           // 保存到本地存储
           wx.setStorageSync('userStats', self.data.userStats)
         } else {
-          console.log('云函数返回错误，使用本地数据')
+          log.warn('云函数返回错误，使用本地数据')
           self.loadLocalStats()
         }
       },
       fail: function(err) {
-        console.error('用户统计数据加载失败:', err)
+        log.error('用户统计数据加载失败:', err)
         self.loadLocalStats()
       }
     })
@@ -146,7 +148,7 @@ Page({
       userStats: userStats
     })
 
-    console.log('使用本地统计数据:', userStats)
+    log.info('使用本地统计数据:', userStats)
   },
 
   // 加载用户宠物信息 - 从云端获取
@@ -155,18 +157,18 @@ Page({
     let openid = app.getOpenid()
 
     if (!openid) {
-      console.log('用户未登录')
+      log.info('用户未登录')
       self.setData({
         userPets: []
       })
       return
     }
 
-    console.log('从云端加载用户宠物信息...')
+    log.info('从云端加载用户宠物信息...')
 
     // 检查云开发是否可用
     if (!app.globalData.cloudDevelopmentAvailable) {
-      console.log('云开发不可用，使用本地宠物数据')
+      log.info('云开发不可用，使用本地宠物数据')
       self.loadLocalPets()
       return
     }
@@ -177,7 +179,7 @@ Page({
         token: app.globalData.token
       },
       success: function(res) {
-        console.log('用户宠物加载成功:', res.result)
+        log.info('用户宠物加载成功:', res.result)
 
         if (res.result.code === 0 && res.result.data.petList) {
           let userPets = res.result.data.petList.map(function(pet) {
@@ -209,12 +211,12 @@ Page({
           // 保存到本地存储
           wx.setStorageSync('userPets', userPets)
         } else {
-          console.log('云端宠物数据为空，使用本地数据')
+          log.warn('云端宠物数据为空，使用本地数据')
           self.loadLocalPets()
         }
       },
       fail: function(err) {
-        console.error('用户宠物加载失败:', err)
+        log.error('用户宠物加载失败:', err)
         self.loadLocalPets()
       }
     })
@@ -228,7 +230,7 @@ Page({
     let localPets = wx.getStorageSync('userPets') || []
 
     if (localPets.length > 0) {
-      console.log('从本地存储加载宠物数据:', localPets)
+      log.info('从本地存储加载宠物数据:', localPets)
       self.setData({
         userPets: localPets
       })
@@ -242,7 +244,7 @@ Page({
       })
     } else {
       // 如果本地存储也没有，使用模拟数据
-      console.log('本地存储为空，使用演示数据')
+      log.info('本地存储为空，使用演示数据')
       let mockPets = [
         {
           id: 'mock_1',
@@ -286,20 +288,20 @@ Page({
 
     // 检查是否已经登录（有openid）
     if (app.getOpenid()) {
-      console.log('用户已经通过静默登录，直接获取用户资料')
+      log.info('用户已经通过静默登录，直接获取用户资料')
       // 已有openid，直接获取用户资料
       app.requestUserAuthorization(function(result) {
         if (result.success) {
-          console.log('用户资料获取成功:', result.userInfo)
+          log.info('用户资料获取成功:', result.userInfo)
           self.loadUserInfo()
         } else {
-          console.log('用户拒绝授权或获取失败，仍是游客模式')
+          log.info('用户拒绝授权或获取失败，仍是游客模式')
           self.loadUserInfo()
         }
       })
     } else {
       // 还没有openid，等待静默登录完成
-      console.log('等待静默登录完成...')
+      log.info('等待静默登录完成...')
 
       // 显示登录中提示
       wx.showLoading({
@@ -310,19 +312,19 @@ Page({
       // 注册登录完成回调
       app.onLoginComplete(function(openid) {
         wx.hideLoading()
-        console.log('静默登录完成')
+        log.info('静默登录完成')
 
         // 静默登录完成后，获取用户资料
         app.requestUserAuthorization(function(result) {
           if (result.success) {
-            console.log('用户资料获取成功:', result.userInfo)
+            log.info('用户资料获取成功:', result.userInfo)
             self.loadUserInfo()
             wx.showToast({
               title: '登录成功',
               icon: 'success'
             })
           } else {
-            console.log('用户拒绝授权或获取失败，仍是游客模式')
+            log.info('用户拒绝授权或获取失败，仍是游客模式')
             self.loadUserInfo()
           }
         })
@@ -359,7 +361,7 @@ Page({
       wx.setStorageSync('loginHistory', loginHistory.slice(-10))
     }
 
-    console.log('用户登录记录已保存到本地', loginRecord)
+    log.info('用户登录记录已保存到本地', loginRecord)
   },
 
   // 用户退出登录 - 统一清理登录状态
@@ -393,7 +395,7 @@ Page({
             userPets: []
           })
 
-          console.log('用户已退出登录，所有登录状态已清除')
+          log.info('用户已退出登录，所有登录状态已清除')
 
           wx.showToast({
             title: '已退出登录',
@@ -430,6 +432,21 @@ Page({
   // 查看我的订单
   viewOrders: function() {
     wx.navigateTo({ url: '/pages/order/list' })
+  },
+
+  // V1.5: 查看优惠券
+  viewCoupons: function() {
+    wx.navigateTo({ url: '/pages/coupon/list' })
+  },
+
+  // V1.5: 积分中心
+  viewPoints: function() {
+    wx.navigateTo({ url: '/pages/points/index' })
+  },
+
+  // V1.5: 邀请好友
+  viewInvite: function() {
+    wx.navigateTo({ url: '/pages/invite/index' })
   },
 
   // 查看宠物档案
@@ -475,7 +492,7 @@ Page({
       sourceType: ['album', 'camera'],
       success: function(res) {
         let tempFilePath = res.tempFilePaths[0]
-        console.log('用户选择头像:', tempFilePath)
+        log.info('用户选择头像:', tempFilePath)
 
         // 显示上传中
         wx.showLoading({
@@ -505,7 +522,7 @@ Page({
       cloudPath: cloudPath,
       filePath: filePath,
       success: function(res) {
-        console.log('头像上传成功:', res.fileID)
+        log.info('头像上传成功:', res.fileID)
         wx.hideLoading()
 
         // 更新用户头像
@@ -530,7 +547,7 @@ Page({
         self.syncUserInfoToCloud(userInfo)
       },
       fail: function(err) {
-        console.error('头像上传失败:', err)
+        log.error('头像上传失败:', err)
         wx.hideLoading()
 
         // 失败时使用本地存储
@@ -586,7 +603,7 @@ Page({
           let newNickname = res.content.trim()
 
           if (newNickname) {
-            console.log('用户修改昵称:', newNickname)
+            log.info('用户修改昵称:', newNickname)
 
             // 更新用户信息
             let userInfo = self.data.userInfo
@@ -626,7 +643,7 @@ Page({
     let self = this
     let openid = app.getOpenid()
 
-    console.log('同步用户信息到云端:', userInfo)
+    log.info('同步用户信息到云端:', userInfo)
 
     wx.cloud.callFunction({
       name: 'saveUserProfile',
@@ -639,10 +656,10 @@ Page({
         token: app.globalData.token
       },
       success: function(res) {
-        console.log('用户信息同步成功')
+        log.info('用户信息同步成功')
       },
       fail: function(err) {
-        console.error('用户信息同步失败:', err)
+        log.error('用户信息同步失败:', err)
       }
     })
   },

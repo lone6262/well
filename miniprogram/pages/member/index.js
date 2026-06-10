@@ -1,10 +1,11 @@
-﻿// 会员中心页面
+// 会员中心页面 — V1.5 商业化增强版
 let app = getApp()
 
 Page({
   data: {
     loading: true,
     isMember: false,
+    isFamilyMember: false,
     memberInfo: {
       type: '',
       expire_date: null,
@@ -17,23 +18,24 @@ Page({
     typeText: '',
     expireText: '',
     creditsText: '',
-    benefitValue: ''
+    couponCount: 0
   },
 
   onLoad: function() {
-    // 清除旧缓存，确保拉取最新数据
     try { wx.removeStorageSync('memberStatus') } catch (e) {}
     this.loadMemberStatus()
+    this.loadCouponCount()
   },
 
   onShow: function() {
-    // 每次显示时清除缓存强制刷新，确保购买/续费后数据同步
     try { wx.removeStorageSync('memberStatus') } catch (e) {}
     this.loadMemberStatus()
+    this.loadCouponCount()
   },
 
   onPullDownRefresh: function() {
     this.loadMemberStatus()
+    this.loadCouponCount()
   },
 
   loadMemberStatus: function() {
@@ -51,48 +53,43 @@ Page({
           let creditsText = data.is_member
             ? (data.report_credits_remaining + '/' + data.report_credits_total)
             : '0/0'
-          let benefitValue = data.is_member
-            ? (data.report_credits_total * 9.9).toFixed(1)
-            : '49.5'
+          let isFamily = data.type && data.type.startsWith('family_')
 
           self.setData({
             isMember: data.is_member,
+            isFamilyMember: isFamily,
             memberInfo: data,
             typeText: typeText,
             expireText: expireText,
             creditsText: creditsText,
-            benefitValue: benefitValue,
             loading: false
           })
 
-          // 缓存到本地
           try {
             wx.setStorageSync('memberStatus', data)
-          } catch (e) { /* ignore */ }
+          } catch (e) {}
         } else {
           self.setData({ loading: false })
           wx.showToast({ title: '获取会员信息失败', icon: 'none' })
         }
       },
       fail: function() {
-        // 使用缓存降级
         try {
           let cached = wx.getStorageSync('memberStatus')
           if (cached) {
+            let isFamily = cached.type && cached.type.startsWith('family_')
             self.setData({
               isMember: cached.is_member,
+              isFamilyMember: isFamily,
               memberInfo: cached,
               typeText: self.getTypeText(cached.type),
               expireText: cached.is_member ? self.formatDate(cached.expire_date) : '',
               creditsText: cached.is_member
                 ? (cached.report_credits_remaining + '/' + cached.report_credits_total)
-                : '0/0',
-              benefitValue: cached.report_credits_total
-                ? (cached.report_credits_total * 9.9).toFixed(1)
-                : '49.5'
+                : '0/0'
             })
           }
-        } catch (e) { /* ignore */ }
+        } catch (e) {}
         self.setData({ loading: false })
         wx.showToast({ title: '网络错误', icon: 'none' })
       },
@@ -102,43 +99,62 @@ Page({
     })
   },
 
-  goToPurchase: function() {
-    // 年度会员 → 无需操作
-    if (this.data.isMember && this.data.memberInfo.type === 'yearly') {
-      wx.showToast({
-        title: '您已是年度会员',
-        icon: 'none',
-        duration: 2000
-      })
-      return
-    }
-    // 月度会员 → 选择续费或升级
-    if (this.data.isMember && this.data.memberInfo.type === 'monthly') {
-      let self = this
-      wx.showActionSheet({
-        itemList: ['续费月度会员', '升级年度会员'],
-        success: function(res) {
-          if (res.tapIndex === 0) {
-            // 续费月度 - 检查额度是否已用完
-            if (self.data.memberInfo.report_credits_remaining > 0) {
-              wx.showToast({
-                title: '额度未用完，暂无需续费',
-                icon: 'none',
-                duration: 2000
-              })
-              return
-            }
-            wx.navigateTo({ url: '/pages/member/order?renew=monthly' })
-          } else if (res.tapIndex === 1) {
-            // 升级年度
-            wx.navigateTo({ url: '/pages/member/order?upgrade=true' })
-          }
+  /** V1.5: 加载可用优惠券数量 */
+  loadCouponCount: function() {
+    let self = this
+    wx.cloud.callFunction({
+      name: 'getUserCoupons',
+      data: { status: 'unused' },
+      success: function(res) {
+        if (res.result && res.result.code === 0) {
+          let list = res.result.data && res.result.data.list ? res.result.data.list : []
+          self.setData({ couponCount: list.length })
         }
-      })
-      return
-    }
-    // 非会员 → 跳转开通页
+      },
+      fail: function() { /* 静默失败 */ }
+    })
+  },
+
+  // ===== 导航方法 =====
+
+  goToPurchase: function() {
     wx.navigateTo({ url: '/pages/member/order' })
+  },
+
+  goToPurchaseMonthly: function() {
+    wx.navigateTo({ url: '/pages/member/order?defaultType=monthly' })
+  },
+
+  goToPurchaseYearly: function() {
+    wx.navigateTo({ url: '/pages/member/order?defaultType=yearly' })
+  },
+
+  goToPurchaseFamilyMonthly: function() {
+    wx.navigateTo({ url: '/pages/member/order?defaultType=family_monthly' })
+  },
+
+  goToPurchaseFamilyYearly: function() {
+    wx.navigateTo({ url: '/pages/member/order?defaultType=family_yearly' })
+  },
+
+  goToPoints: function() {
+    wx.navigateTo({ url: '/pages/points/index' })
+  },
+
+  goToCoupons: function() {
+    wx.navigateTo({ url: '/pages/coupon/list' })
+  },
+
+  goToBundle: function() {
+    wx.navigateTo({ url: '/pages/bundle/index' })
+  },
+
+  goToInvite: function() {
+    wx.navigateTo({ url: '/pages/invite/index' })
+  },
+
+  goToStatus: function() {
+    wx.navigateTo({ url: '/pages/member/status' })
   },
 
   goBack: function() {
@@ -148,7 +164,10 @@ Page({
   getTypeText: function(type) {
     let map = {
       'monthly': '月度会员',
-      'yearly': '年度会员'
+      'yearly': '年度会员',
+      'family_monthly': '家庭月度会员',
+      'family_yearly': '家庭年度会员',
+      'trial': '体验会员'
     }
     return map[type] || '普通用户'
   },

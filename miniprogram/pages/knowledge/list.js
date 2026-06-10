@@ -1,4 +1,6 @@
 // 宠物知识库列表页面
+const logger = require('../../utils/logger.js')
+const log = logger.child('KnowledgeList')
 let app = getApp()
 const { UNIT_CONVERSION } = require('../../utils/constants.js')
 
@@ -84,7 +86,7 @@ Page({
         }
       },
       fail: function(err) {
-        console.error('加载知识库失败:', err)
+        log.error('加载知识库失败:', err)
         self.setData({ loading: false, articles: [] })
         wx.showToast({ title: '加载失败', icon: 'none' })
       }
@@ -186,7 +188,7 @@ Page({
         }
       },
       fail: function(err) {
-        console.error('加载更多失败:', err)
+        log.error('加载更多失败:', err)
         self.setData({ loading: false })
         wx.showToast({ title: '加载失败', icon: 'none' })
       }

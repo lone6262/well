@@ -62,8 +62,8 @@ function displayArticles(articles) {
         <td>${article.view_count || 0}</td>
         <td>${formatDate(article.published_at)}</td>
         <td>
-          <button class="btn btn-sm btn-outline" onclick="editArticle('${article._id}')">编辑</button>
-          ${article.status !== 'archived' ? `<button class="btn btn-sm btn-outline" onclick="deleteArticle('${article._id}', false)">归档</button>` : `<button class="btn btn-sm btn-outline" onclick="deleteArticle('${article._id}', true)">删除</button>`}
+          <button class="btn btn-sm btn-outline" onclick="editArticle('${escapeAttr(article._id)}')">编辑</button>
+          ${article.status !== 'archived' ? `<button class="btn btn-sm btn-outline" onclick="deleteArticle('${escapeAttr(article._id)}', false)">归档</button>` : `<button class="btn btn-sm btn-outline" onclick="deleteArticle('${escapeAttr(article._id)}', true)">删除</button>`}
         </td>
       </tr>
     `;
@@ -111,7 +111,9 @@ async function loadArticleData(articleId) {
  * 重置文章表单
  */
 function resetArticleForm() {
-  document.getElementById('articleForm').reset();
+  const form = document.getElementById('articleForm');
+  form.reset();
+  clearFieldErrors(form);
   document.getElementById('articleId').value = '';
 }
 
@@ -121,15 +123,31 @@ function resetArticleForm() {
 async function saveArticle(e) {
   e.preventDefault();
 
+  const form = document.getElementById('articleForm');
+  const validation = validateAndShow({
+    articleTitle: [
+      { required: true, message: '请输入文章标题' },
+      { maxLength: 80, message: '标题最多 80 个字符' }
+    ],
+    articleSummary: { maxLength: 200, message: '摘要最多 200 个字符' },
+    articleContent: { required: true, message: '请输入文章内容' },
+    articleSortOrder: { number: true, min: 0, message: '排序必须是大于等于 0 的数字' }
+  }, { root: form });
+
+  if (!validation.valid) {
+    showToast('请修正表单错误后再保存', 'error');
+    return;
+  }
+
   const articleData = {
     articleId: document.getElementById('articleId').value || null,
-    title: document.getElementById('articleTitle').value,
+    title: document.getElementById('articleTitle').value.trim(),
     category: document.getElementById('articleCategory').value,
     targetPet: document.getElementById('articleTargetPet').value,
-    summary: document.getElementById('articleSummary').value,
-    content: document.getElementById('articleContent').value,
-    coverImage: document.getElementById('articleCoverImage').value,
-    sortOrder: parseInt(document.getElementById('articleSortOrder').value) || 0,
+    summary: document.getElementById('articleSummary').value.trim(),
+    content: document.getElementById('articleContent').value.trim(),
+    coverImage: document.getElementById('articleCoverImage').value.trim(),
+    sortOrder: parseInt(document.getElementById('articleSortOrder').value, 10) || 0,
     status: document.getElementById('articleStatus').value
   };
 

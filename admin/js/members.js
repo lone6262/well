@@ -4,41 +4,31 @@
 
 let membersCurrentPage = 1;
 
-/**
- * 加载会员列表
- */
-async function loadMembers(page = 1) {
-  showLoading();
-
-  try {
-    const typeFilter = document.getElementById('memberTypeFilter').value;
-    const statusFilter = document.getElementById('memberStatusFilter').value;
-    const searchInput = document.getElementById('memberSearchInput').value.trim();
-
-    const result = await callCloudFunction('adminGateway', {
+// 使用 CRUD 公共加载器
+const loadMembers = createCrudLoader({
+  loadFn: function(page, pageSize, filters) {
+    return callCloudFunction('adminGateway', {
       action: 'getMembers',
       page: page,
-      pageSize: PAGINATION.defaultPageSize,
-      memberType: typeFilter === 'all' ? undefined : typeFilter,
-      status: statusFilter === 'all' ? undefined : statusFilter,
-      keyword: searchInput || undefined,
+      pageSize: pageSize,
+      memberType: filters.type === 'all' ? undefined : filters.type,
+      status: filters.status === 'all' ? undefined : filters.status,
+      keyword: filters.keyword || undefined,
     });
-
-    if (result.code === 0) {
-      displayMembers(result.data.members || []);
-      if (result.data.pagination) {
-        renderPagination('membersPagination', result.data.pagination, loadMembers);
-      }
-      membersCurrentPage = page;
-    } else {
-      showToast(result.msg || '加载失败', 'error');
-    }
-  } catch (error) {
-    handleApiError(error);
-  } finally {
-    hideLoading();
+  },
+  displayFn: displayMembers,
+  paginationId: 'membersPagination',
+  dataPath: 'data.members',
+  getState: function() { return { page: membersCurrentPage }; },
+  setState: function(state) { membersCurrentPage = state.page; },
+  getFilters: function() {
+    return {
+      type: document.getElementById('memberTypeFilter').value,
+      status: document.getElementById('memberStatusFilter').value,
+      keyword: document.getElementById('memberSearchInput').value.trim()
+    };
   }
-}
+});
 
 /**
  * 显示会员列表
@@ -70,8 +60,8 @@ function displayMembers(members) {
         <td>${creditsUsed} / ${creditsTotal}</td>
         <td>${autoRenew}</td>
         <td>
-          <button class="btn btn-sm btn-outline" onclick="viewMemberDetail('${member._id}')">详情</button>
-          ${!isExpired ? `<button class="btn btn-sm btn-outline" onclick="cancelMember('${member._id}')">取消</button>` : ''}
+          <button class="btn btn-sm btn-outline" onclick="viewMemberDetail('${escapeAttr(member._id)}')">详情</button>
+          ${!isExpired ? `<button class="btn btn-sm btn-outline" onclick="cancelMember('${escapeAttr(member._id)}')">取消</button>` : ''}
         </td>
       </tr>
     `;
@@ -123,33 +113,22 @@ async function viewMemberDetail(memberId) {
  * 取消会员
  */
 async function cancelMember(memberId) {
-  confirmAction('确定要取消此会员？', async () => {
-    showLoading('处理中...');
-    try {
-      const result = await callCloudFunction('adminGateway', {
-        action: 'cancelMember',
-        memberId: memberId,
-      });
-      if (result.code === 0) {
-        showToast('会员已取消', 'success');
-        loadMembers(membersCurrentPage);
-      } else {
-        showToast(result.msg || '操作失败', 'error');
-      }
-    } catch (error) {
-      handleApiError(error);
-    } finally {
-      hideLoading();
-    }
-  });
+  confirmedAction('确定要取消此会员？', function() {
+    return callCloudFunction('adminGateway', {
+      action: 'cancelMember',
+      memberId: memberId,
+    });
+  }, '会员已取消', function() { loadMembers(membersCurrentPage); });
 }
 
 /**
  * 初始化会员管理
  */
 function initMembersModule() {
-  document.getElementById('memberTypeFilter').addEventListener('change', () => loadMembers(1));
-  document.getElementById('memberStatusFilter').addEventListener('change', () => loadMembers(1));
+  bindFilterEvents([
+    { elementId: 'memberTypeFilter' },
+    { elementId: 'memberStatusFilter' }
+  ], loadMembers);
 
   const searchBtn = document.getElementById('memberSearchBtn');
   if (searchBtn) {

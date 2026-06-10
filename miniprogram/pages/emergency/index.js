@@ -1,4 +1,6 @@
 // 急救通道页面 - 极简设计逻辑
+const logger = require('../../utils/logger.js')
+const log = logger.child('EmergencyIndex')
 let app = getApp()
 let mapService = require('../../utils/mapService.js')
 let phoneUtil = require('../../utils/phone.js')
@@ -22,7 +24,7 @@ Page({
   },
 
   onLoad: function() {
-    console.log('急救通道页面加载')
+    log.info('急救通道页面加载')
     this.initEmergencyPage()
   },
 
@@ -40,7 +42,7 @@ Page({
       // 加载医院数据
       return self.loadEmergencyHospitals()
     }).catch(function(error) {
-      console.error('初始化失败:', error)
+      log.error('初始化失败:', error)
       self.setData({
         isLoading: false,
         nearestHospital: null
@@ -135,11 +137,11 @@ Page({
         isLoading: false
       })
 
-      console.log('急救医院加载完成，最近医院:', nearest ? nearest.name : '无')
+      log.info('急救医院加载完成，最近医院:', nearest ? nearest.name : '无')
       return processedHospitals
 
     }).catch(function(error) {
-      console.error('医院加载失败:', error)
+      log.error('医院加载失败:', error)
 
       // 使用离线急救数据
       let offlineHospitals = self.getEmergencyOfflineData()
@@ -237,7 +239,7 @@ Page({
   callHospital: function(e) {
     let phone = e.currentTarget.dataset.phone
     let hospitalName = e.currentTarget.dataset.name || '宠物医院'
-    console.log('拨打急救电话:', phone, '医院:', hospitalName)
+    log.info('拨打急救电话:', phone, '医院:', hospitalName)
 
     // 电话号码验证和清理
     if (!phone) {
@@ -290,7 +292,7 @@ Page({
           wx.makePhoneCall({
             phoneNumber: cleanPhone,
             success: function() {
-              console.log('电话拨打成功')
+              log.info('电话拨打成功')
               wx.showToast({
                 title: '正在拨打...',
                 icon: 'success',
@@ -298,7 +300,7 @@ Page({
               })
             },
             fail: function(err) {
-              console.error('拨号失败:', err)
+              log.error('拨号失败:', err)
               wx.showModal({
                 title: '拨打失败',
                 content: '电话拨打失败，请检查：\n1. 电话号码是否正确\n2. 设备是否有通话权限\n3. 是否支持通话功能',
@@ -314,14 +316,14 @@ Page({
   // 导航到医院
   navigateToHospital: function(e) {
     let hospital = e.currentTarget.dataset.hospital
-    console.log('导航到医院:', hospital.name)
+    log.info('导航到医院:', hospital.name)
 
     mapService.openNavigation(hospital)
   },
 
   // 重新定位
   retryLocation: function() {
-    console.log('重新定位')
+    log.info('重新定位')
     this.initEmergencyPage()
   },
 

@@ -1,4 +1,6 @@
 // pages/exampleDetail/index.js
+const logger = require('../../utils/logger.js')
+const log = logger.child('ExampleIndex')
 Page({
   data: {
     type: "",
@@ -230,7 +232,7 @@ Page({
       this.getRecord(); // 刷新列表
     } catch (e) {
       wx.showToast({ title: "插入失败", icon: "none" });
-      console.error(e);
+      log.error(e);
     } finally {
       wx.hideLoading();
     }
@@ -312,7 +314,7 @@ Page({
       })
       .catch((e) => {
         wx.hideLoading();
-        console.error(e);
+        log.error(e);
         const { errCode, errMsg } = e;
         if (errMsg.includes("Environment not found")) {
           this.setData({
@@ -374,7 +376,7 @@ Page({
           showTip: true,
         });
         wx.hideLoading();
-        console.error(e);
+        log.error(e);
       });
   },
 
@@ -403,7 +405,7 @@ Page({
         wx.hideLoading();
       })
       .catch((e) => {
-        console.log(e);
+        log.info(e);
         this.setData({
           showUploadTip: true,
         });
@@ -434,7 +436,7 @@ Page({
             });
           })
           .catch((e) => {
-            console.log("e", e);
+            log.info("e", e);
           });
       },
       complete: () => {
@@ -458,7 +460,7 @@ Page({
   },
   runCallContainer: async function () {
     const app = getApp();
-    console.log("globalData", app.globalData);
+    log.info("globalData", app.globalData);
     const c1 = new wx.cloud.Cloud({
       resourceEnv: app.globalData.env,
     });
@@ -471,7 +473,7 @@ Page({
       // 其余参数同 wx.request
       method: "GET",
     });
-    console.log(r);
+    log.info(r);
     this.setData({
       haveGetCallContainerRes: true,
       callContainerResStr: `${JSON.stringify(r.data.items, null, 2)}`,
@@ -548,7 +550,7 @@ exports.main = async (event, context) => {
   data: {
     type: 'getOpenId'
   }
-}).then((resp) => console.log(resp))`,
+}).then((resp) => log.info(resp))`,
     });
   },
   getMiniProgramCode: function () {
@@ -577,7 +579,7 @@ exports.main = async (event, context) => {
   data: {
     type: 'getMiniProgramCode'
   }
-}).then((resp) => console.log(resp))`,
+}).then((resp) => log.info(resp))`,
     });
   },
   getUploadFileCode: function () {
@@ -594,10 +596,10 @@ success: (chooseResult) => {
       filePath: chooseResult.tempFiles[0].tempFilePath,
     })
     .then((res) => {
-      console.log(res)
+      log.info(res)
     })
     .catch((e) => {
-      console.log('e', e)
+      log.info('e', e)
     });
 }
 });`,

@@ -1,3 +1,6 @@
 {
-  "navigationBarTitleText": "测试"
+  "navigationBarTitleText": "测试",
+  "usingComponents": {
+    "state-view": "/components/state-view/state-view"
+  }
 }

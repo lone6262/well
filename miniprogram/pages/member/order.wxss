@@ -64,6 +64,39 @@ page {
   padding: 24rpx;
 }
 
+/* V1.5: Tab 切换 */
+.tab-bar {
+  display: flex;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 6rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+}
+
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 18rpx 0;
+  border-radius: 12rpx;
+  transition: all 0.2s ease;
+}
+
+.tab-active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4rpx 12rpx rgba(102,126,234,0.3);
+}
+
+.tab-text {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #666;
+}
+
+.tab-active .tab-text {
+  color: #fff;
+}
+
 .section-title {
   font-size: 32rpx;
   font-weight: bold;

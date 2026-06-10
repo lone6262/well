@@ -113,10 +113,72 @@ function handleApiError(error) {
 }
 
 /**
- * 确认对话框
+ * 确认对话框（自定义 UI，支持键盘操作）
+ * @param {string} message - 确认消息
+ * @param {Function} callback - 确认后执行的回调
  */
 function confirmAction(message, callback) {
-  if (confirm(message)) {
-    callback();
+  var overlay = document.getElementById('confirmDialog');
+  var msgEl = document.getElementById('confirmMessage');
+  var okBtn = document.getElementById('confirmOkBtn');
+  var cancelBtn = document.getElementById('confirmCancelBtn');
+
+  if (!overlay || !msgEl || !okBtn || !cancelBtn) {
+    // 降级：如果 DOM 元素不存在，回退到原生 confirm
+    if (confirm(message)) { callback(); }
+    return;
   }
+
+  var previousFocus = document.activeElement;
+  msgEl.textContent = message;
+  overlay.classList.remove('hidden');
+  okBtn.focus();
+
+  // 清理之前的事件监听器（通过克隆节点）
+  var newOk = okBtn.cloneNode(true);
+  var newCancel = cancelBtn.cloneNode(true);
+  okBtn.parentNode.replaceChild(newOk, okBtn);
+  cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+
+  function closeDialog() {
+    overlay.classList.add('hidden');
+    document.removeEventListener('keydown', handleKeydown);
+    if (previousFocus && typeof previousFocus.focus === 'function') {
+      previousFocus.focus();
+    }
+  }
+
+  function handleKeydown(e) {
+    if (e.key === 'Escape') {
+      closeDialog();
+    } else if (e.key === 'Enter') {
+      closeDialog();
+      callback();
+    } else if (e.key === 'Tab') {
+      var focusable = [newCancel, newOk];
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  }
+
+  newOk.addEventListener('click', function() {
+    closeDialog();
+    callback();
+  });
+
+  newCancel.addEventListener('click', closeDialog);
+
+  // 点击遮罩关闭
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) { closeDialog(); }
+  });
+
+  document.addEventListener('keydown', handleKeydown);
 }

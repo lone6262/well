@@ -1,6 +1,8 @@
 // 数据加载模块 - 从云数据库加载首页数据
 const app = getApp()
 const petMapper = require('../../utils/pet-mapper.js')
+const logger = require('../../utils/logger.js')
+const log = logger.child('IndexDataLoader')
 
 function loadUserInfo(pageCtx) {
   let openid = app.getOpenid()
@@ -32,7 +34,7 @@ function loadUserInfo(pageCtx) {
         }
       },
       fail: function(err) {
-        console.log('云端用户信息同步失败，使用本地数据', err)
+        log.info('云端用户信息同步失败，使用本地数据', err)
       }
     })
   }
@@ -42,7 +44,7 @@ function loadPetList(pageCtx) {
   const openid = app.getOpenid()
 
   if (!openid || (typeof openid === 'string' && openid.indexOf('mock_') === 0)) {
-    console.log('用户未登录，引导登录')
+    log.info('用户未登录，引导登录')
     pageCtx.setData({
       petsList: [],
       loadingPets: false
@@ -50,20 +52,20 @@ function loadPetList(pageCtx) {
     return
   }
 
-  console.log('从数据库加载宠物列表...')
+  log.info('从数据库加载宠物列表...')
   pageCtx.setData({ loadingPets: true })
 
   wx.cloud.callFunction({
     name: 'getPetList',
     data: { token: app.globalData.token },
     success: function(res) {
-      console.log('宠物列表云函数调用成功')
+      log.info('宠物列表云函数调用成功')
 
       if (res.result.code === 0) {
         const petList = res.result.data.petList || []
 
         if (petList.length === 0) {
-          console.log('宠物列表为空')
+          log.info('宠物列表为空')
           pageCtx.setData({
             petsList: [],
             loadingPets: false
@@ -71,7 +73,7 @@ function loadPetList(pageCtx) {
           return
         }
 
-        console.log('云端返回宠物数据:', petList.length + '只')
+        log.info('云端返回宠物数据:', petList.length + '只')
 
         // 使用统一的映射工具处理数据，确保与档案页面数据结构一致
         const mappedPets = petMapper.mapPetListFromCloud(petList)
@@ -107,9 +109,9 @@ function loadPetList(pageCtx) {
           loadingPets: false
         })
 
-        console.log('首页宠物数据更新完成:', pets.length + '只')
+        log.info('首页宠物数据更新完成:', pets.length + '只')
       } else {
-        console.error('宠物列表返回错误:', res.result.msg)
+        log.error('宠物列表返回错误:', res.result.msg)
         pageCtx.setData({
           petsList: [],
           loadingPets: false
@@ -122,7 +124,7 @@ function loadPetList(pageCtx) {
       }
     },
     fail: function(err) {
-      console.error('宠物列表云函数调用失败:', err)
+      log.error('宠物列表云函数调用失败:', err)
       pageCtx.setData({
         petsList: [],
         loadingPets: false
@@ -176,11 +178,11 @@ function getFallbackHospitals() {
 
 function loadNearbyHospitals(pageCtx) {
   if (pageCtx.data.isLoadingLocation) {
-    console.log('位置请求正在进行中，跳过重复请求')
+    log.info('位置请求正在进行中，跳过重复请求')
     return
   }
 
-  console.log('开始加载实时附近医院数据...')
+  log.info('开始加载实时附近医院数据...')
 
   pageCtx.setData({
     isLoadingLocation: true,
@@ -193,7 +195,7 @@ function loadNearbyHospitals(pageCtx) {
   var globalTimeout = setTimeout(function() {
     if (loaded) return
     loaded = true
-    console.log('医院加载全局超时，展示 fallback 数据')
+    log.info('医院加载全局超时，展示 fallback 数据')
     pageCtx.setData({
       isLoadingLocation: false,
       isLoadingHospitals: false,
@@ -204,7 +206,7 @@ function loadNearbyHospitals(pageCtx) {
   }, 10000)
 
   app.getUserLocation().then(function(location) {
-    console.log('用户位置获取成功:', location)
+    log.info('用户位置获取成功:', location)
 
     if (app.globalData.cloudDevelopmentAvailable) {
       return new Promise(function(resolve, reject) {
@@ -217,15 +219,15 @@ function loadNearbyHospitals(pageCtx) {
           },
           success: function(res) {
             if (res.result && res.result.code === 0 && res.result.data && res.result.data.hospitals && res.result.data.hospitals.length > 0) {
-              console.log('云函数返回真实医院数据:', res.result.data.hospitals.length)
+              log.info('云函数返回真实医院数据:', res.result.data.hospitals.length)
               resolve(res.result.data.hospitals)
             } else {
-              console.log('云函数无数据，使用 fallback')
+              log.info('云函数无数据，使用 fallback')
               reject('no_data')
             }
           },
           fail: function(err) {
-            console.log('云函数调用失败:', err)
+            log.info('云函数调用失败:', err)
             reject(err)
           }
         })
@@ -255,14 +257,14 @@ function loadNearbyHospitals(pageCtx) {
       lastUpdateTimeTimestamp: Date.now()
     })
 
-    console.log('附近医院数据加载完成:', nearbyHospitals.length, '家')
+    log.info('附近医院数据加载完成:', nearbyHospitals.length, '家')
     wx.showToast({ title: '医院数据已更新', icon: 'success', duration: 1500 })
   }).catch(function(error) {
     if (loaded) return
     loaded = true
     clearTimeout(globalTimeout)
 
-    console.log('附近医院数据加载失败:', error)
+    log.info('附近医院数据加载失败:', error)
     pageCtx.setData({
       isLoadingLocation: false,
       isLoadingHospitals: false,

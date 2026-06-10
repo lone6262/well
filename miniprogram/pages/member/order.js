@@ -1,18 +1,30 @@
-// 会员购买页面
+// 会员购买页面 — V1.5 支持个人/家庭多套餐
 let app = getApp()
+
+// 价格映射表
+var PRICE_MAP = {
+  monthly: '19.90',
+  yearly: '99.00',
+  family_monthly: '29.90',
+  family_yearly: '199.00'
+}
+
+var MEMBER_TYPE_MAP = {
+  monthly: '个人月卡',
+  yearly: '个人年卡',
+  family_monthly: '家庭月卡',
+  family_yearly: '家庭年卡'
+}
 
 Page({
   data: {
+    activeTab: 'personal',
     selectedType: 'yearly',
+    selectedPrice: '99.00',
     purchasing: false,
     upgradeMode: false,
     renewMode: false,
-    monthlyPrice: '29.90',
-    yearlyPrice: '99.00',
-    monthlyRenewPrice: '25.90',
-    yearlyRenewPrice: '89.00',
-    yearlySave: '省38%',
-    monthlySave: '约3折',
+    modeTitle: '开通会员',
     fromReport: false,
     returnAssessmentId: '',
     showPayProcessing: false,
@@ -22,7 +34,6 @@ Page({
   onLoad: function(options) {
     if (!options) options = {}
 
-    // 从 URL 参数接收来源信息
     if (options.fromReport === 'true' && options.assessmentId) {
       this.setData({
         fromReport: true,
@@ -34,51 +45,79 @@ Page({
     if (options.upgrade === 'true') {
       this.setData({
         upgradeMode: true,
-        selectedType: 'yearly'
+        selectedType: 'yearly',
+        selectedPrice: PRICE_MAP.yearly,
+        modeTitle: '升级年度会员'
       })
+      return
     }
 
-    // 续费模式：月度续费
+    // 续费模式
     if (options.renew === 'monthly') {
       this.setData({
         renewMode: true,
         selectedType: 'monthly',
-        monthlyPrice: '25.90'
+        selectedPrice: PRICE_MAP.monthly,
+        modeTitle: '续费会员'
       })
+      return
     }
-
-    // 续费模式：年度续费
     if (options.renew === 'yearly') {
       this.setData({
         renewMode: true,
         selectedType: 'yearly',
-        yearlyPrice: '89.00'
+        selectedPrice: PRICE_MAP.yearly,
+        modeTitle: '续费会员'
+      })
+      return
+    }
+
+    // 从会员中心传入默认类型
+    if (options.defaultType) {
+      var dt = options.defaultType
+      var tab = dt.startsWith('family_') ? 'family' : 'personal'
+      this.setData({
+        activeTab: tab,
+        selectedType: dt,
+        selectedPrice: PRICE_MAP[dt] || '99.00'
       })
     }
   },
 
-  selectPlan: function(e) {
-    let type = e.currentTarget.dataset.type
-    // 升级/续费模式下锁定套餐选择
+  switchTab: function(e) {
     if (this.data.upgradeMode || this.data.renewMode) return
-    if (type === 'monthly' || type === 'yearly') {
-      this.setData({ selectedType: type })
+    var tab = e.currentTarget.dataset.tab
+    // 切换 tab 时自动选中该类型的年卡
+    var defaultType = tab === 'family' ? 'family_yearly' : 'yearly'
+    this.setData({
+      activeTab: tab,
+      selectedType: defaultType,
+      selectedPrice: PRICE_MAP[defaultType]
+    })
+  },
+
+  selectPlan: function(e) {
+    if (this.data.upgradeMode || this.data.renewMode) return
+    var type = e.currentTarget.dataset.type
+    if (PRICE_MAP[type]) {
+      this.setData({
+        selectedType: type,
+        selectedPrice: PRICE_MAP[type]
+      })
     }
   },
 
   confirmPurchase: function() {
-    let self = this
+    var self = this
     if (self.data.purchasing) return
 
-    let isYearly = self.data.selectedType === 'yearly'
-    let priceText = isYearly ? self.data.yearlyPrice : self.data.monthlyPrice
-    let typeName = isYearly ? '年度会员' : '月度会员'
+    var typeName = MEMBER_TYPE_MAP[self.data.selectedType] || '会员'
+    var priceText = self.data.selectedPrice
 
-    // 升级确认
     if (self.data.upgradeMode) {
       wx.showModal({
         title: '升级会员',
-        content: '从月度会员升级到年度会员\n确认以 ¥' + priceText + ' 升级？',
+        content: '确认以 ¥' + priceText + ' 升级为' + typeName + '？',
         confirmText: '确认升级',
         confirmColor: '#667eea',
         success: function(res) {
@@ -88,7 +127,6 @@ Page({
       return
     }
 
-    // 续费确认
     if (self.data.renewMode) {
       wx.showModal({
         title: '续费会员',
@@ -102,7 +140,6 @@ Page({
       return
     }
 
-    // 新开通确认
     wx.showModal({
       title: '确认开通',
       content: '确认以 ¥' + priceText + ' 开通' + typeName + '？',
@@ -115,26 +152,30 @@ Page({
   },
 
   doPurchase: function() {
-    let self = this
+    var self = this
     self.setData({ purchasing: true, showPayProcessing: true })
 
-    // 模拟支付网关延迟 1.5 秒
     setTimeout(function() {
       if (self.data.isDestroyed) return
+
+      // 映射前端类型到云函数 memberTier 参数
+      var memberTier = self.data.selectedType
+
       wx.cloud.callFunction({
         name: 'memberActivate',
-        data: { type: self.data.selectedType, token: app.globalData.token },
+        data: {
+          type: memberTier,
+          token: app.globalData.token
+        },
         success: function(res) {
           self.setData({ showPayProcessing: false })
           if (res.result && res.result.code === 0) {
-            // 更新全局状态
             if (app.globalData.userInfo) {
               app.globalData.userInfo.isMember = true
             }
-            // 清除缓存，下次获取最新数据
             try { wx.removeStorageSync('memberStatus') } catch (e) {}
 
-            let toastTitle = self.data.upgradeMode ? '升级成功！' : (self.data.renewMode ? '续费成功！' : '开通成功！')
+            var toastTitle = self.data.upgradeMode ? '升级成功！' : (self.data.renewMode ? '续费成功！' : '开通成功！')
             wx.showToast({
               title: toastTitle,
               icon: 'success',
@@ -152,7 +193,7 @@ Page({
             }, 1500)
           } else {
             wx.showToast({
-              title: res.result.msg || '操作失败',
+              title: (res.result && res.result.msg) || '操作失败',
               icon: 'none',
               duration: 2000
             })
@@ -174,7 +215,6 @@ Page({
   },
 
   onUnload: function() {
-    // 页面卸载标记，防止 setTimeout 回调在页面销毁后执行
     this.setData({ isDestroyed: true })
   }
 })

@@ -38,8 +38,17 @@
     <text class="member-banner-action">查看权益 ›</text>
   </view>
 
+  <!-- 非会员引导 Banner -->
+  <view class="member-banner member-banner-inactive" wx:if="{{!isMember}}" bindtap="goToMember">
+    <view class="member-banner-content">
+      <text class="member-banner-icon">⭐</text>
+      <text class="member-banner-text">开通会员，AI报告低至¥1/次</text>
+    </view>
+    <text class="member-banner-action">立即开通 ›</text>
+  </view>
+
   <!-- 主要功能网格 -->
-  <view class="main-features">
+  <view class="main-features" role="navigation" aria-label="快捷功能">
     <view class="section-header">
       <text class="section-title">快速服务</text>
       <text class="section-more" bindtap="showMoreFeatures">查看全部 →</text>
@@ -47,7 +56,7 @@
 
     <view class="features-grid">
       <!-- 症状自查 -->
-      <view class="feature-card primary-gradient" bindtap="toSymptom" hover-class="feature-card-pressed">
+      <view class="feature-card primary-gradient" bindtap="toSymptom" hover-class="feature-card-pressed" aria-label="症状自查">
         <view class="feature-icon-large">🩺</view>
         <view class="feature-content">
           <text class="feature-title">症状自查</text>
@@ -57,7 +66,7 @@
       </view>
 
       <!-- 附近医院 -->
-      <view class="feature-card success-gradient" bindtap="toHospital" hover-class="feature-card-pressed">
+      <view class="feature-card success-gradient" bindtap="toHospital" hover-class="feature-card-pressed" aria-label="附近医院">
         <view class="feature-icon-large">🏥</view>
         <view class="feature-content">
           <text class="feature-title">附近医院</text>
@@ -67,7 +76,7 @@
       </view>
 
       <!-- 健康档案 -->
-      <view class="feature-card warning-gradient" bindtap="toPetProfile" hover-class="feature-card-pressed">
+      <view class="feature-card warning-gradient" bindtap="toPetProfile" hover-class="feature-card-pressed" aria-label="健康档案">
         <view class="feature-icon-large">📋</view>
         <view class="feature-content">
           <text class="feature-title">健康档案</text>
@@ -77,7 +86,7 @@
       </view>
 
       <!-- 科普知识 -->
-      <view class="feature-card info-gradient" bindtap="toKnowledge" hover-class="feature-card-pressed">
+      <view class="feature-card info-gradient" bindtap="toKnowledge" hover-class="feature-card-pressed" aria-label="科普知识">
         <view class="feature-icon-large">📚</view>
         <view class="feature-content">
           <text class="feature-title">科普知识</text>
@@ -87,7 +96,7 @@
       </view>
 
       <!-- 会员中心 -->
-      <view class="feature-card member-gradient" bindtap="goToMember" hover-class="feature-card-pressed">
+      <view class="feature-card member-gradient" bindtap="goToMember" hover-class="feature-card-pressed" aria-label="会员中心">
         <view class="feature-icon-large">👑</view>
         <view class="feature-content">
           <text class="feature-title">会员中心</text>
@@ -97,7 +106,7 @@
       </view>
 
       <!-- 邀请好友 -->
-      <view class="feature-card invite-gradient" bindtap="goToInvite" hover-class="feature-card-pressed">
+      <view class="feature-card invite-gradient" bindtap="goToInvite" hover-class="feature-card-pressed" aria-label="邀请好友">
         <view class="feature-icon-large">🎁</view>
         <view class="feature-content">
           <text class="feature-title">邀请好友</text>
@@ -107,7 +116,7 @@
       </view>
 
       <!-- 回访记录 -->
-      <view class="feature-card followup-gradient" bindtap="goToFollowupList" hover-class="feature-card-pressed">
+      <view class="feature-card followup-gradient" bindtap="goToFollowupList" hover-class="feature-card-pressed" aria-label="回访记录">
         <view class="feature-icon-large">📝</view>
         <view class="feature-content">
           <text class="feature-title">回访记录</text>
@@ -169,15 +178,12 @@
     </view>
 
     <view class="hospitals-preview-list">
-      <!-- 加载状态显示 -->
-      <view wx:if="{{isLoadingHospitals && nearbyHospitals.length === 0}}" class="hospitals-loading">
-        <view class="loading-skeleton">
-          <view class="skeleton-line"></view>
-          <view class="skeleton-line short"></view>
-          <view class="skeleton-line"></view>
-        </view>
-        <text class="loading-text">正在定位附近医院...</text>
-      </view>
+      <state-view
+        wx:if="{{isLoadingHospitals && nearbyHospitals.length === 0}}"
+        type="loading"
+        title="正在定位附近医院..."
+        card="{{true}}"
+      />
 
       <!-- 医院列表显示 -->
       <view class="hospital-preview-card" wx:for="{{nearbyHospitals}}" wx:key="id" bindtap="navigateToHospital" data-hospital="{{item}}">
@@ -197,11 +203,14 @@
         </view>
       </view>
 
-      <!-- 空状态显示 -->
-      <view wx:if="{{!isLoadingHospitals && nearbyHospitals.length === 0}}" class="hospitals-empty">
-        <text class="empty-text">暂无附近医院数据</text>
-        <text class="empty-hint">请检查定位权限或稍后重试</text>
-      </view>
+      <state-view
+        wx:if="{{!isLoadingHospitals && nearbyHospitals.length === 0}}"
+        type="empty"
+        icon="🏥"
+        title="暂无附近医院数据"
+        description="请检查定位权限或稍后重试"
+        card="{{true}}"
+      />
     </view>
   </view>
 
