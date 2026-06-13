@@ -1,5 +1,5 @@
 <!--点数包购买页-->
-<view class="container">
+<view class="points-page">
   <view class="page-header">
     <view class="back-btn" bindtap="goBack"><view class="back-arrow"></view><text class="back-text">返回</text></view>
     <view class="page-title">点数包</view>
@@ -24,10 +24,10 @@
         <image class="pack-tag" src="/images/icons/warning.svg" mode="aspectFit" />
       </view>
       <view class="pack-pricing">
-        <text class="pack-price">¥19.90</text>
-        <text class="pack-unit">≈¥6.63/次</text>
+        <text class="pack-price">¥{{pack3Display}}</text>
+        <text class="pack-unit">≈¥{{pack3PerUse}}/次</text>
       </view>
-      <view class="pack-save">比单买省 ¥9.80（省33%）</view>
+      <view class="pack-save">比单买省 ¥{{pack3Save}}（省{{pack3SavePct}}%）</view>
     </view>
 
     <view class="pack-card {{selectedPack === 'PACK_5' ? 'selected' : ''}}" bindtap="selectPack" data-pack="PACK_5">
@@ -37,10 +37,10 @@
         <image class="pack-tag" src="/images/icons/warning.svg" mode="aspectFit" />
       </view>
       <view class="pack-pricing">
-        <text class="pack-price">¥29.90</text>
-        <text class="pack-unit">≈¥5.98/次</text>
+        <text class="pack-price">¥{{pack5Display}}</text>
+        <text class="pack-unit">≈¥{{pack5PerUse}}/次</text>
       </view>
-      <view class="pack-save">比单买省 ¥19.60（省40%）</view>
+      <view class="pack-save">比单买省 ¥{{pack5Save}}（省{{pack5SavePct}}%）</view>
     </view>
 
     <view class="pack-card single-card" bindtap="goBack">
@@ -48,7 +48,7 @@
         <text class="pack-count">单次报告</text>
       </view>
       <view class="pack-pricing">
-        <text class="pack-price">¥9.90</text>
+        <text class="pack-price">¥{{standardReportDisplay}}</text>
         <text class="pack-unit">按次付费</text>
       </view>
     </view>

@@ -31,19 +31,38 @@ function buildFormDataFromPet(pet) {
 }
 
 function validatePetForm(formData) {
-  if (!formData.name || !formData.type || !formData.age) {
-    return { valid: false, message: '请填写必填项' }
+  var errors = []
+
+  if (!formData.name || !formData.name.trim()) {
+    errors.push('name')
   }
 
-  if (isNaN(parseFloat(formData.age))) {
-    return { valid: false, message: '年龄必须是数字' }
+  if (!formData.type) {
+    errors.push('type')
   }
 
-  if (formData.weight && isNaN(parseFloat(formData.weight))) {
-    return { valid: false, message: '体重必须是数字' }
+  if (!formData.age) {
+    errors.push('age')
+  } else if (isNaN(parseFloat(formData.age)) || parseFloat(formData.age) < 0) {
+    errors.push('age')
+  } else if (parseFloat(formData.age) > 360) {
+    errors.push('age')
   }
 
-  return { valid: true, message: '' }
+  if (formData.weight && (isNaN(parseFloat(formData.weight)) || parseFloat(formData.weight) < 0)) {
+    errors.push('weight')
+  }
+
+  if (errors.length === 0) {
+    return { valid: true, message: '', errors: [] }
+  }
+
+  var firstError = '请填写必填项'
+  if (errors.indexOf('name') !== -1) firstError = '请输入宠物昵称'
+  else if (errors.indexOf('age') !== -1) firstError = '请输入有效年龄'
+  else if (errors.indexOf('weight') !== -1) firstError = '请输入有效体重'
+
+  return { valid: false, message: firstError, errors: errors }
 }
 
 function buildSubmitData(formData, options) {

@@ -4,7 +4,7 @@ const cloud = require('wx-server-sdk');
 const {
   COLLECTIONS, RESPONSE_CODE, ORDER_STATUS, ORDER_TYPES,
   MEMBER_STATUS, PRICES, MEMBER_DURATION, MEMBER_CREDITS,
-  warmupConfig
+  warmupConfig, loadPrices
 } = require('./common/constants');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
@@ -29,12 +29,12 @@ const RENEW_DURATION_MAP = {
   family_yearly: MEMBER_DURATION.YEAR,
 };
 
-// 续费后报告额度映射
+// 续费后报告额度映射（字符串 key，运行时从 MEMBER_CREDITS 解析以确保动态加载）
 const RENEW_CREDITS_MAP = {
-  monthly: MEMBER_CREDITS.MONTHLY_REPORTS,
-  yearly: MEMBER_CREDITS.YEARLY_REPORTS,
-  family_monthly: MEMBER_CREDITS.FAMILY_MONTHLY_REPORTS,
-  family_yearly: MEMBER_CREDITS.FAMILY_YEARLY_REPORTS,
+  monthly: 'MONTHLY_REPORTS',
+  yearly: 'YEARLY_REPORTS',
+  family_monthly: 'FAMILY_MONTHLY_REPORTS',
+  family_yearly: 'FAMILY_YEARLY_REPORTS',
 };
 
 // 续费订单类型映射
@@ -62,7 +62,7 @@ async function processRenewal(member, now) {
 
   const renewPrice = PRICES[priceKey];
   const renewDays = RENEW_DURATION_MAP[planType];
-  const renewCredits = RENEW_CREDITS_MAP[planType];
+  const renewCredits = MEMBER_CREDITS[RENEW_CREDITS_MAP[planType]];
   const orderType = RENEW_ORDER_TYPE_MAP[planType];
 
   const outTradeNo = 'RENEW_' + member._id + '_' + now.getTime();
@@ -195,6 +195,10 @@ async function processRenewal(member, now) {
 
 exports.main = async (event, context) => {
   await warmupConfig(db);
+  // V2.0: 价格从 DB 动态加载，覆盖硬编码默认值
+  const priceConfig = await loadPrices(db);
+  Object.assign(PRICES, priceConfig.prices);
+  Object.assign(MEMBER_CREDITS, priceConfig.memberCredits);
 
   const now = new Date();
   // 计算到期窗口：当前时间 < expire_date <= 当前时间 + 3天

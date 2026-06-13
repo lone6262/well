@@ -161,11 +161,11 @@
     </view>
 
     <!-- 弹窗内容 -->
-    <scroll-view class="modal-scroll-content" scroll-y="{{true}}">
+    <scroll-view class="modal-scroll-content" scroll-y="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
       <!-- 基本信息 -->
       <view class="form-section-modern">
         <view class="section-title-modern">
-          <image class="section-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />
+          <view class="section-dot"></view>
           <text class="section-text">基本信息</text>
         </view>
 
@@ -173,141 +173,173 @@
         <view class="form-group-modern">
           <view class="form-label-modern">
             <text class="label-text">宠物头像</text>
+            <text class="label-optional">选填</text>
           </view>
-          <view class="avatar-upload-container">
-            <!-- 头像预览区域 -->
-            <view class="avatar-preview-section">
-              <view class="avatar-preview-box" wx:if="{{avatarPreview}}" bindtap="previewAvatar">
-                <image class="avatar-preview-image" src="{{avatarPreview}}" mode="aspectFill"/>
-                <view class="avatar-preview-overlay">
-                  <text class="preview-overlay-text">点击预览</text>
+          <view class="avatar-upload-area">
+            <view class="avatar-upload-box" bindtap="chooseAvatar">
+              <image wx:if="{{avatarPreview}}" class="avatar-preview-image" src="{{avatarPreview}}" mode="aspectFill"/>
+              <view wx:else class="avatar-empty-state">
+                <text class="avatar-empty-icon">+</text>
+                <text class="avatar-empty-text">上传头像</text>
+              </view>
+              <view class="avatar-upload-badge" wx:if="{{!uploadingImage}}">
+                <text class="badge-icon">📷</text>
+              </view>
+              <view class="avatar-upload-badge uploading" wx:if="{{uploadingImage}}">
+                <view class="upload-spinner"></view>
+              </view>
+            </view>
+            <view class="avatar-side-info">
+              <text class="avatar-hint-title">支持 JPG / PNG 格式</text>
+              <text class="avatar-hint-desc">建议正方形照片，不超过 5MB</text>
+              <view class="avatar-action-row" wx:if="{{avatarPreview}}">
+                <view class="avatar-mini-btn preview" bindtap="previewAvatar">
+                  <text class="mini-btn-text">预览</text>
+                </view>
+                <view class="avatar-mini-btn remove" bindtap="removeAvatar">
+                  <text class="mini-btn-text">删除</text>
                 </view>
               </view>
-              <view class="avatar-placeholder" wx:else>
-                <text class="placeholder-icon">上传</text>
-                <text class="avatar-placeholder-text">暂无头像</text>
-              </view>
             </view>
-
-            <!-- 上传操作区域 -->
-            <view class="avatar-actions-section">
-              <view class="avatar-action-btn upload-btn" bindtap="chooseAvatar">
-                <text class="action-text">{{uploadingImage ? '上传中...' : '选择头像'}}</text>
-              </view>
-              <view class="avatar-action-btn delete-btn" wx:if="{{avatarPreview}}" bindtap="removeAvatar">
-                <text class="action-text">删除</text>
-              </view>
-            </view>
-          </view>
-          <view class="avatar-tips">
-            <text class="tips-text">支持JPG/PNG/WEBP格式，最大5MB，建议尺寸500x500</text>
           </view>
         </view>
 
-        <view class="form-group-modern">
+        <!-- 宠物昵称 -->
+        <view class="form-group-modern {{formErrors.name ? 'form-group-error' : ''}}">
           <view class="form-label-modern">
             <text class="label-text">宠物昵称</text>
             <text class="label-required">*</text>
           </view>
-          <input class="form-input-modern"
-                 placeholder="请输入宠物昵称"
-                 aria-label="宠物昵称"
-                 placeholder-style="color: #999999;"
-                 placeholder-class="placeholder-text"
-                 value="{{formData.name}}"
-                 bindinput="onNameInput"
-                 bindfocus="onInputFocus"
-                 bindblur="onInputBlur"/>
+          <view class="input-wrapper {{focusedField === 'name' ? 'input-focused' : ''}}">
+            <text class="input-prefix-icon">🐾</text>
+            <input class="form-input-enhanced"
+                   placeholder="给宠物起个名字"
+                   aria-label="宠物昵称"
+                   placeholder-style="color: var(--text-disabled);"
+                   value="{{formData.name}}"
+                   bindinput="onNameInput"
+                   bindfocus="onInputFocus"
+                   bindblur="onInputBlur"
+                   data-field="name"
+                   maxlength="20"/>
+            <view class="input-clear-btn" wx:if="{{formData.name}}" catchtap="clearField" data-field="name">
+              <text class="clear-icon">✕</text>
+            </view>
+          </view>
+          <view class="input-footer">
+            <text class="input-error" wx:if="{{formErrors.name}}">{{formErrors.name}}</text>
+            <text class="input-counter" wx:else>{{formData.name.length || 0}}/20</text>
+          </view>
         </view>
 
-        <view class="form-group-modern">
+        <!-- 宠物类型 -->
+        <view class="form-group-modern {{formErrors.type ? 'form-group-error' : ''}}">
           <view class="form-label-modern">
             <text class="label-text">宠物类型</text>
             <text class="label-required">*</text>
           </view>
-          <view class="type-selector-modern">
-            <view class="type-card-modern {{formData.type === 'cat' ? 'type-active' : ''}}"
+          <view class="type-selector-enhanced">
+            <view class="type-card-enhanced {{formData.type === 'cat' ? 'type-cat-active' : ''}}"
                   bindtap="selectType"
                   data-type="cat">
-              <image class="type-icon" src="/images/icons/paw.svg" mode="aspectFit" />
-              <text class="type-name">猫咪</text>
+              <image class="type-card-icon" src="/images/icons/cat.svg" mode="aspectFit" />
+              <text class="type-card-name">猫咪</text>
+              <view class="type-card-check" wx:if="{{formData.type === 'cat'}}">✓</view>
             </view>
-            <view class="type-card-modern {{formData.type === 'dog' ? 'type-active' : ''}}"
+            <view class="type-card-enhanced {{formData.type === 'dog' ? 'type-dog-active' : ''}}"
                   bindtap="selectType"
                   data-type="dog">
-              <image class="type-icon" src="/images/icons/paw.svg" mode="aspectFit" />
-              <text class="type-name">狗狗</text>
+              <image class="type-card-icon" src="/images/icons/dog.svg" mode="aspectFit" />
+              <text class="type-card-name">狗狗</text>
+              <view class="type-card-check" wx:if="{{formData.type === 'dog'}}">✓</view>
             </view>
           </view>
         </view>
 
+        <!-- 品种 + 性别 -->
         <view class="form-row-modern">
-          <view class="form-group-modern form-half">
+          <view class="form-group-modern form-half {{formErrors.breed ? 'form-group-error' : ''}}">
             <view class="form-label-modern">
               <text class="label-text">品种</text>
+              <text class="label-optional">选填</text>
             </view>
-            <input class="form-input-modern"
-                   placeholder="请输入品种"
-                   aria-label="品种"
-                   placeholder-style="color: #999999;"
-                   placeholder-class="placeholder-text"
-                   value="{{formData.breed}}"
-                   bindinput="onBreedInput"
-                   bindfocus="onInputFocus"
-                   bindblur="onInputBlur"/>
+            <view class="input-wrapper {{focusedField === 'breed' ? 'input-focused' : ''}}">
+              <input class="form-input-enhanced"
+                     placeholder="如：英短、金毛"
+                     aria-label="品种"
+                     placeholder-style="color: var(--text-disabled);"
+                     value="{{formData.breed}}"
+                     bindinput="onBreedInput"
+                     bindfocus="onInputFocus"
+                     bindblur="onInputBlur"
+                     data-field="breed"
+                     maxlength="20"/>
+              <view class="input-clear-btn" wx:if="{{formData.breed}}" catchtap="clearField" data-field="breed">
+                <text class="clear-icon">✕</text>
+              </view>
+            </view>
           </view>
           <view class="form-group-modern form-half">
             <view class="form-label-modern">
               <text class="label-text">性别</text>
             </view>
-            <view class="gender-selector-modern">
-              <view class="gender-option {{formData.gender === 'male' ? 'gender-active' : ''}}"
+            <view class="gender-selector-enhanced">
+              <view class="gender-btn {{formData.gender === 'male' ? 'gender-male-active' : ''}}"
                     bindtap="onGenderChange"
                     data-value="male">
-                <text class="gender-icon">♂</text>
-                <text class="gender-text">公</text>
+                <text class="gender-symbol">♂</text>
+                <text class="gender-label">公</text>
               </view>
-              <view class="gender-option {{formData.gender === 'female' ? 'gender-active' : ''}}"
+              <view class="gender-btn {{formData.gender === 'female' ? 'gender-female-active' : ''}}"
                     bindtap="onGenderChange"
                     data-value="female">
-                <text class="gender-icon">♀</text>
-                <text class="gender-text">母</text>
+                <text class="gender-symbol">♀</text>
+                <text class="gender-label">母</text>
               </view>
             </view>
           </view>
         </view>
 
+        <!-- 年龄 + 体重 -->
         <view class="form-row-modern">
-          <view class="form-group-modern form-half">
+          <view class="form-group-modern form-half {{formErrors.age ? 'form-group-error' : ''}}">
             <view class="form-label-modern">
-              <text class="label-text">年龄（月）</text>
+              <text class="label-text">年龄</text>
               <text class="label-required">*</text>
             </view>
-            <input class="form-input-modern"
-                   type="number"
-                   placeholder="请输入月数"
-                   aria-label="年龄（月）"
-                   placeholder-style="color: #999999;"
-                   placeholder-class="placeholder-text"
-                   value="{{formData.age}}"
-                   bindinput="onAgeInput"
-                   bindfocus="onInputFocus"
-                   bindblur="onInputBlur"/>
+            <view class="input-wrapper {{focusedField === 'age' ? 'input-focused' : ''}}">
+              <input class="form-input-enhanced"
+                     type="number"
+                     placeholder="几个月大"
+                     aria-label="年龄（月）"
+                     placeholder-style="color: var(--text-disabled);"
+                     value="{{formData.age}}"
+                     bindinput="onAgeInput"
+                     bindfocus="onInputFocus"
+                     bindblur="onInputBlur"
+                     data-field="age"/>
+              <text class="input-suffix">月</text>
+            </view>
+            <text class="input-error" wx:if="{{formErrors.age}}">{{formErrors.age}}</text>
           </view>
           <view class="form-group-modern form-half">
             <view class="form-label-modern">
-              <text class="label-text">体重（kg）</text>
+              <text class="label-text">体重</text>
+              <text class="label-optional">选填</text>
             </view>
-            <input class="form-input-modern"
-                   type="digit"
-                   placeholder="请输入体重"
-                   aria-label="体重（kg）"
-                   placeholder-style="color: #999999;"
-                   placeholder-class="placeholder-text"
-                   value="{{formData.weight}}"
-                   bindinput="onWeightInput"
-                   bindfocus="onInputFocus"
-                   bindblur="onInputBlur"/>
+            <view class="input-wrapper {{focusedField === 'weight' ? 'input-focused' : ''}}">
+              <input class="form-input-enhanced"
+                     type="digit"
+                     placeholder="有多重"
+                     aria-label="体重（kg）"
+                     placeholder-style="color: var(--text-disabled);"
+                     value="{{formData.weight}}"
+                     bindinput="onWeightInput"
+                     bindfocus="onInputFocus"
+                     bindblur="onInputBlur"
+                     data-field="weight"/>
+              <text class="input-suffix">kg</text>
+            </view>
           </view>
         </view>
       </view>
@@ -315,20 +347,23 @@
       <!-- 健康记录 -->
       <view class="form-section-modern">
         <view class="section-title-modern">
-          <image class="section-icon" src="/images/icons/paw.svg" mode="aspectFit" />
+          <view class="section-dot health"></view>
           <text class="section-text">健康记录</text>
         </view>
 
         <view class="form-group-modern">
           <view class="form-label-modern">
             <text class="label-text">上次疫苗日期</text>
+            <text class="label-optional">选填</text>
           </view>
           <picker mode="date"
                   value="{{formData.vaccineDate}}"
                   bindchange="onVaccineDateChange">
-            <view class="picker-input-modern {{formData.vaccineDate ? 'picker-selected' : ''}}">
-              <text class="picker-text">{{formData.vaccineDate || '请选择疫苗日期'}}</text>
-              <text class="picker-arrow">→</text>
+            <view class="picker-input-enhanced {{formData.vaccineDate ? 'picker-has-value' : ''}}">
+              <text class="picker-label">{{formData.vaccineDate || '选择接种日期'}}</text>
+              <view class="picker-icon-box">
+                <text class="picker-calendar">📅</text>
+              </view>
             </view>
           </picker>
         </view>
@@ -336,28 +371,48 @@
         <view class="form-group-modern">
           <view class="form-label-modern">
             <text class="label-text">上次驱虫日期</text>
+            <text class="label-optional">选填</text>
           </view>
           <picker mode="date"
                   value="{{formData.dewormDate}}"
                   bindchange="onDewormDateChange">
-            <view class="picker-input-modern {{formData.dewormDate ? 'picker-selected' : ''}}">
-              <text class="picker-text">{{formData.dewormDate || '请选择驱虫日期'}}</text>
-              <text class="picker-arrow">→</text>
+            <view class="picker-input-enhanced {{formData.dewormDate ? 'picker-has-value' : ''}}">
+              <text class="picker-label">{{formData.dewormDate || '选择驱虫日期'}}</text>
+              <view class="picker-icon-box">
+                <text class="picker-calendar">📅</text>
+              </view>
             </view>
           </picker>
         </view>
+
+        <!-- 快捷日期选择 -->
+        <view class="quick-date-row">
+          <view class="quick-date-chip" bindtap="setQuickDate" data-field="vaccineDate" data-offset="0">
+            <text class="chip-text">今天</text>
+          </view>
+          <view class="quick-date-chip" bindtap="setQuickDate" data-field="vaccineDate" data-offset="-30">
+            <text class="chip-text">一月前</text>
+          </view>
+          <view class="quick-date-chip" bindtap="setQuickDate" data-field="vaccineDate" data-offset="-90">
+            <text class="chip-text">三月前</text>
+          </view>
+          <view class="quick-date-chip" bindtap="setQuickDate" data-field="vaccineDate" data-offset="-180">
+            <text class="chip-text">半年前</text>
+          </view>
+        </view>
       </view>
+
+      <!-- 底部留白 -->
+      <view class="form-bottom-spacer"></view>
     </scroll-view>
 
     <!-- 弹窗底部操作 -->
     <view class="modal-footer-modern">
-      <view class="modal-btn-group">
-        <view class="modal-btn-modern modal-cancel" bindtap="hideModal">
-          <text class="modal-btn-text">取消</text>
-        </view>
-        <view class="modal-btn-modern modal-confirm" bindtap="savePet">
-          <text class="modal-btn-text">{{isEdit ? '保存修改' : '创建档案'}}</text>
-        </view>
+      <view class="modal-btn-modern modal-cancel" bindtap="hideModal">
+        <text class="modal-btn-text">取消</text>
+      </view>
+      <view class="modal-btn-modern modal-confirm" bindtap="savePet">
+        <text class="modal-btn-text">{{isEdit ? '保存修改' : '创建档案'}}</text>
       </view>
     </view>
   </view>
@@ -379,7 +434,9 @@
     <!-- 记录列表 -->
     <block wx:elif="{{recordList && recordList.length > 0}}">
       <view class="record-list-item" wx:for="{{recordList}}" wx:key="_id" bindtap="viewRecordDetail" data-record-id="{{item._id}}">
-        <view class="record-item-icon" style="background: {{item.bgColor}};">{{item.icon}}</view>
+        <view class="record-item-icon" style="background: {{item.bgColor}};">
+          <image class="record-item-icon-img" src="{{item.icon}}" mode="aspectFit" />
+        </view>
         <view class="record-item-info">
           <text class="record-item-title">{{item.title}}</text>
           <text class="record-item-desc">{{item.desc}}</text>

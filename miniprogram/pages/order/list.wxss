@@ -5,7 +5,7 @@ page {
   overflow-x: hidden;
 }
 
-.container {
+.order-list-page {
   width: 100%;
   max-width: 750rpx;
   margin: 0 auto;

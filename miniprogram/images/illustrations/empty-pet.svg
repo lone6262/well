@@ -1,0 +1,25 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- 空状态：还没有宠物 -->
+  <ellipse cx="100" cy="160" rx="60" ry="8" fill="#F5F0EB"/>
+  <!-- 身体 -->
+  <ellipse cx="100" cy="120" rx="35" ry="30" stroke="#D4A855" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <!-- 头 -->
+  <circle cx="100" cy="80" r="22" stroke="#D4A855" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <!-- 耳朵 -->
+  <path d="M82 68l-8-18 14 8z" stroke="#D4A855" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M118 68l8-18-14 8z" stroke="#D4A855" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- 眼睛 -->
+  <circle cx="92" cy="78" r="2.5" fill="#D4A855"/>
+  <circle cx="108" cy="78" r="2.5" fill="#D4A855"/>
+  <!-- 嘴巴（微笑弧线） -->
+  <path d="M94 88c3 4 9 4 12 0" stroke="#D4A855" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <!-- 尾巴 -->
+  <path d="M135 115c10-5 15 5 10 12" stroke="#D4A855" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <!-- 爪印装饰 -->
+  <circle cx="50" cy="50" r="4" fill="#F5EDE8"/>
+  <circle cx="45" cy="42" r="2.5" fill="#F5EDE8"/>
+  <circle cx="53" cy="40" r="2.5" fill="#F5EDE8"/>
+  <circle cx="55" cy="46" r="2.5" fill="#F5EDE8"/>
+  <!-- 问号 -->
+  <text x="140" y="60" font-size="28" fill="#D4A855" font-family="serif" opacity="0.6">?</text>
+</svg>

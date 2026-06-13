@@ -29,7 +29,7 @@ class MapService {
         return
       }
 
-      log.info(`🔍 开始搜索附近医院，中心点: (${latitude}, ${longitude}), 半径: ${radius}米`)
+      log.info(`[SEARCH] 开始搜索附近医院，中心点: (${latitude}, ${longitude}), 半径: ${radius}米`)
 
       // 多关键词搜索策略，优先搜索24小时医院
       const searchKeywords = [
@@ -46,7 +46,7 @@ class MapService {
       searchKeywords.forEach((keyword, index) => {
         this.searchWithKeyword(latitude, longitude, radius, keyword)
           .then(keywordResults => {
-            log.info(`✅ 关键词"${keyword}"搜索到 ${keywordResults.length} 个结果`)
+            log.info(`[OK] 关键词"${keyword}"搜索到 ${keywordResults.length} 个结果`)
 
             // 标记结果的搜索优先级（越靠前的关键词优先级越高）
             const taggedResults = keywordResults.map(result => ({
@@ -64,7 +64,7 @@ class MapService {
             }
           })
           .catch(error => {
-            log.error(`❌ 关键词"${keyword}"搜索失败:`, error)
+            log.error(`[FAIL] 关键词"${keyword}"搜索失败:`, error)
             hasNetworkError = true
             completedSearches++
 
@@ -78,7 +78,7 @@ class MapService {
       // 设置超时，防止长时间无响应
       setTimeout(() => {
         if (completedSearches < searchKeywords.length) {
-          log.info('⏰ 搜索超时，返回已获取的结果')
+          log.info('[TIMEOUT] 搜索超时，返回已获取的结果')
           this.processSearchResults(results, latitude, longitude, resolve, true)
         }
       }, MAP_CONSTANTS.API_TIMEOUT) // API超时
@@ -102,7 +102,7 @@ class MapService {
         success: (res) => {
           if (res.data.status === 0) {
             const hospitals = res.data.data.map(item => {
-              log.info('🔍 API返回数据:', item)
+              log.info('[DATA] API返回数据:', item)
 
               // 计算距离：优先使用API返回的距离，否则手动计算
               let calculatedDistance = 0
@@ -128,7 +128,7 @@ class MapService {
                 rating: this.extractRating(item)
               }
 
-              log.info('✅ 映射后数据:', mapped)
+              log.info('[OK] 映射后数据:', mapped)
               return mapped
             })
             resolve(hospitals)
@@ -150,7 +150,7 @@ class MapService {
    */
   processSearchResults(rawResults, latitude, longitude, resolve, hasError) {
     if (rawResults.length === 0) {
-      log.info('❌ 没有搜索到结果，使用模拟数据')
+      log.info('[FAIL] 没有搜索到结果，使用模拟数据')
       resolve(this.getMockHospitals(latitude, longitude))
       return
     }
@@ -165,7 +165,7 @@ class MapService {
     })
 
     const uniqueResults = Array.from(uniqueMap.values())
-    log.info(`🔄 去重后剩余 ${uniqueResults.length} 个医院`)
+    log.info(`[DEDUP] 去重后剩余 ${uniqueResults.length} 个医院`)
 
     // 排序：24小时医院优先，然后按距离，最后按搜索优先级
     const sortedResults = uniqueResults.sort((a, b) => {
@@ -187,7 +187,7 @@ class MapService {
     const resultsWith24Hours = this.ensure24HoursHospitals(sortedResults)
 
     const hours24Count = resultsWith24Hours.filter(h => h.is24h).length
-    log.info(`✅ 最终返回 ${resultsWith24Hours.length} 个医院，其中24小时: ${hours24Count}个`)
+    log.info(`[OK] 最终返回 ${resultsWith24Hours.length} 个医院，其中24小时: ${hours24Count}个`)
 
     if (hasError) {
       wx.showToast({
@@ -354,7 +354,7 @@ class MapService {
     // 开启实时位置监控
     this.locationWatchId = wx.startLocationUpdate({
       success: () => {
-        log.info('📍 实时位置监控已启动')
+        log.info('[LOCATION] 实时位置监控已启动')
 
         // 监听位置变化事件
         wx.onLocationChange((res) => {
@@ -372,7 +372,7 @@ class MapService {
             )
 
             if (distance > WATCH_DISTANCE && this.locationWatchCallback) {
-              log.info(`🚶 位置变化超过${WATCH_DISTANCE}米，触发回调`)
+              log.info(`[MOVE] 位置变化超过${WATCH_DISTANCE}米，触发回调`)
               this.locationWatchCallback(currentLocation, distance)
             }
           }
@@ -393,7 +393,7 @@ class MapService {
     if (this.locationWatchId) {
       wx.stopLocationUpdate({
         success: () => {
-          log.info('🛑 实时位置监控已停止')
+          log.info('[STOP] 实时位置监控已停止')
         }
       })
       this.locationWatchId = null

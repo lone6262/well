@@ -6,12 +6,12 @@ const {
   RESPONSE_CODE,
   ORDER_STATUS,
   ORDER_TYPES,
-  PRICES,
   MEMBER_STATUS,
   MEMBER_DURATION,
-  MEMBER_CREDITS,
-  MEMBER_LIMITS
-, warmupConfig} = require('./common/constants');
+  MEMBER_LIMITS,
+  warmupConfig,
+  loadPrices
+} = require('./common/constants');
 const { verifyToken } = require('./common/auth');
 const { checkRateLimit } = require('./common/rate-limiter');
 
@@ -68,24 +68,29 @@ exports.main = async (event, context) => {
   const orderType = MEMBER_TYPE_TO_ORDER[memberType] || ORDER_TYPES.MEMBER_MONTHLY;
   const durationDays = isYearly ? MEMBER_DURATION.YEAR : MEMBER_DURATION.MONTH;
 
-  // 根据会员类型取对应价格
+  // 从数据库加载价格配置（DB 优先，无值回退默认值）
+  const dbPriceConfig = await loadPrices(db);
+  const dbPrices = dbPriceConfig.prices;
+  const dbCredits = dbPriceConfig.memberCredits;
+
+  // 根据会员类型取对应价格（DB-backed）
   const PRICE_MAP = {
-    monthly: PRICES.MEMBER_MONTHLY,
-    yearly: PRICES.MEMBER_YEARLY,
-    family_monthly: PRICES.MEMBER_FAMILY_MONTHLY,
-    family_yearly: PRICES.MEMBER_FAMILY_YEARLY
+    monthly: dbPrices.MEMBER_MONTHLY,
+    yearly: dbPrices.MEMBER_YEARLY,
+    family_monthly: dbPrices.MEMBER_FAMILY_MONTHLY,
+    family_yearly: dbPrices.MEMBER_FAMILY_YEARLY
   };
   const RENEW_PRICE_MAP = {
-    monthly: PRICES.RENEW_MONTHLY,
-    yearly: PRICES.RENEW_YEARLY,
-    family_monthly: PRICES.RENEW_FAMILY_MONTHLY,
-    family_yearly: PRICES.RENEW_FAMILY_YEARLY
+    monthly: dbPrices.RENEW_MONTHLY,
+    yearly: dbPrices.RENEW_YEARLY,
+    family_monthly: dbPrices.RENEW_FAMILY_MONTHLY,
+    family_yearly: dbPrices.RENEW_FAMILY_YEARLY
   };
   const CREDITS_MAP = {
-    monthly: MEMBER_CREDITS.MONTHLY_REPORTS,
-    yearly: MEMBER_CREDITS.YEARLY_REPORTS,
-    family_monthly: MEMBER_CREDITS.FAMILY_MONTHLY_REPORTS,
-    family_yearly: MEMBER_CREDITS.FAMILY_YEARLY_REPORTS
+    monthly: dbCredits.MONTHLY_REPORTS,
+    yearly: dbCredits.YEARLY_REPORTS,
+    family_monthly: dbCredits.FAMILY_MONTHLY_REPORTS,
+    family_yearly: dbCredits.FAMILY_YEARLY_REPORTS
   };
 
   try {
@@ -99,6 +104,32 @@ exports.main = async (event, context) => {
       ? existingResult.data[0]
       : null;
     let isActiveMember = existingMember && existingMember.status === MEMBER_STATUS.ACTIVE;
+
+    // 3.1 校验：年卡用户不允许购买月卡（降级拦截）
+    if (isActiveMember && existingMember.type) {
+      const currentIsYearly = existingMember.type.includes('yearly');
+      const purchaseIsMonthly = memberType && !memberType.includes('yearly');
+      const currentIsFamily = existingMember.type.startsWith('family_');
+      const purchaseIsPersonal = memberType && !memberType.startsWith('family_');
+
+      // 年卡 → 月卡：禁止
+      if (currentIsYearly && purchaseIsMonthly) {
+        return {
+          code: RESPONSE_CODE.ERROR,
+          msg: '您已是年卡会员，无需购买月卡。如需续费请在年卡快到期时操作',
+          data: {}
+        };
+      }
+
+      // 家庭卡 → 个人卡：禁止（降级）
+      if (currentIsFamily && purchaseIsPersonal) {
+        return {
+          code: RESPONSE_CODE.ERROR,
+          msg: '您已是家庭会员，请购买家庭套餐续费',
+          data: {}
+        };
+      }
+    }
 
     // 4. 计算过期时间
     let now = new Date();
@@ -114,7 +145,7 @@ exports.main = async (event, context) => {
     }
 
     // 根据会员类型确定每月报告额度
-    let reportCreditsTotal = isYearly ? MEMBER_CREDITS.YEARLY_REPORTS : MEMBER_CREDITS.MONTHLY_REPORTS;
+    let reportCreditsTotal = isYearly ? dbCredits.YEARLY_REPORTS : dbCredits.MONTHLY_REPORTS;
 
     // 5. 下次额度重置时间（从开通日对齐，如1月5日开通 -> 2月5日重置）
     // 续费时保持原 start_date 的日期对齐，新开通用当天

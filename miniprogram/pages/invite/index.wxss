@@ -197,7 +197,9 @@ page {
 }
 
 .action-icon {
-  font-size: 32rpx;
+  width: 32rpx;
+  height: 32rpx;
+  flex-shrink: 0;
 }
 .action-label {
   font-size: 28rpx;
@@ -219,7 +221,9 @@ page {
   margin-bottom: 24rpx;
 }
 .rules-icon {
-  font-size: 36rpx;
+  width: 36rpx;
+  height: 36rpx;
+  flex-shrink: 0;
 }
 .rules-title {
   font-size: 32rpx;
@@ -302,7 +306,9 @@ page {
   gap: 10rpx;
 }
 .ranking-card-icon {
-  font-size: 36rpx;
+  width: 36rpx;
+  height: 36rpx;
+  flex-shrink: 0;
 }
 .ranking-card-title {
   font-size: 32rpx;

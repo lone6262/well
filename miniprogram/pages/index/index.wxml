@@ -52,7 +52,7 @@
       <view class="member-banner-icon-wrap">
         <image class="member-banner-icon" src="/images/icons/crown.svg" mode="aspectFit" aria-label="开通会员" />
       </view>
-      <text class="member-banner-text">开通会员，AI报告低至¥1/次</text>
+      <text class="member-banner-text">开通会员，AI报告低至¥{{firstReportDisplay}}/次</text>
     </view>
     <text class="member-banner-action">立即开通 ›</text>
   </view>

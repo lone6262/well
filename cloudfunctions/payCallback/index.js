@@ -29,7 +29,8 @@ const {
   MEMBER_STATUS,
   MEMBER_DURATION,
   MEMBER_LIMITS,
-  warmupConfig
+  warmupConfig,
+  loadPrices
 } = require('./common/constants');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
@@ -46,6 +47,10 @@ const MOCK_PAY = true;
 // ============================================
 exports.main = async (event, context) => {
   await warmupConfig(db);
+  // V2.0: 价格从 DB 动态加载，覆盖硬编码默认值
+  const priceConfig = await loadPrices(db);
+  Object.assign(PRICES, priceConfig.prices);
+  Object.assign(MEMBER_CREDITS, priceConfig.memberCredits);
 
   try {
     // ========================================

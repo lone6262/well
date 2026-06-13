@@ -21,9 +21,13 @@ Page({
   async loadCoupons() {
     this.setData({ loading: true });
     try {
+      const token = wx.getStorageSync('token');
       const res = await wx.cloud.callFunction({
         name: 'getUserCoupons',
-        data: { status: this.data.activeTab === 'all' ? undefined : this.data.activeTab },
+        data: {
+          token: token,
+          status: this.data.activeTab === 'all' ? undefined : this.data.activeTab,
+        },
       });
       if (res.result.code === 0) {
         this.setData({ coupons: res.result.data.coupons || [] });
@@ -42,6 +46,10 @@ Page({
     const tab = e.currentTarget.dataset.tab;
     this.setData({ activeTab: tab });
     this.loadCoupons();
+  },
+
+  goToReceive() {
+    wx.navigateTo({ url: '/pages/coupon/receive' });
   },
 
   onCouponTap(e) {

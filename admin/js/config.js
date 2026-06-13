@@ -5,7 +5,7 @@
 
 // 云开发环境配置
 const TCB_CONFIG = {
-  env: 'cloud1-d8gdi44zqfec250b5' // 请替换为您的云开发环境ID
+  env: 'cloud1-d8gdi44zqfec250b5'
 };
 
 // 云函数名称配置

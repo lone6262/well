@@ -94,7 +94,7 @@ function loadPetList(pageCtx) {
             _id: pet._id,   // 保留 _id 用于匹配
             petId: pet.petId,  // 保留 petId 用于匹配
             name: pet.name,
-            avatar: pet.avatar || (pet.type === 'cat' ? '🐱' : '🐶'),
+            avatar: pet.avatar || (pet.type === 'cat' ? '猫咪' : '狗狗'),
             type: pet.type,
             age: pet.age,
             healthStatus: healthStatus,

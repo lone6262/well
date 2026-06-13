@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="/cloud-admin/">
   <title>宠物健康自查 - 管理后台登录</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -42,7 +43,7 @@
 
   <!-- CloudBase Web SDK（本地） -->
   <script src="lib/cloudbase.js"></script>
-  <script src="js/config.js"></script>
+  <script src="js/config.v2.js"></script>
   <script src="js/tcb-utils.js"></script>
   <script>
     clearCloudBaseCache();
@@ -57,8 +58,7 @@
 
     function doLogin(adminSecret, submitBtn) {
       app.auth({ persistence: 'local' })
-        .anonymousAuthProvider()
-        .signIn()
+        .signInAnonymously()
         .then(function() {
           return app.callFunction({
             name: 'adminLogin',

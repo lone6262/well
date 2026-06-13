@@ -25,10 +25,10 @@ const LOG_LEVELS = {
 };
 
 const LEVEL_LABELS = {
-  debug: '🔍 DEBUG',
-  info: '📘 INFO',
-  warn: '⚠️ WARN',
-  error: '❌ ERROR'
+  debug: 'DEBUG',
+  info: 'INFO',
+  warn: 'WARN',
+  error: 'ERROR'
 };
 
 class Logger {

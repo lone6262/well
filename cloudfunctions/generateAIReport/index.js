@@ -13,7 +13,7 @@
  */
 
 const cloud = require('wx-server-sdk');
-const { COLLECTIONS, RESPONSE_CODE, FOLLOWUP_STATUS, PRICES, MEMBER_CREDITS, MEMBER_STATUS, ORDER_TYPES, ORDER_STATUS , warmupConfig} = require('./common/constants');
+const { COLLECTIONS, RESPONSE_CODE, FOLLOWUP_STATUS, MEMBER_STATUS, ORDER_TYPES, ORDER_STATUS , warmupConfig, loadPrices} = require('./common/constants');
 const reportEngine = require('./common/report-engine');
 
 cloud.init({
@@ -153,6 +153,9 @@ async function createFollowupRecord(recordId, openid, petId) {
 
 exports.main = async (event, context) => {
   await warmupConfig(db);
+  const priceConfig = await loadPrices(db);
+  const dbPrices = priceConfig.prices;
+  const dbCredits = priceConfig.memberCredits;
   const { recordId } = event;
   const { OPENID } = cloud.getWXContext();
   const openid = OPENID;
@@ -244,12 +247,12 @@ exports.main = async (event, context) => {
       const userResult = await db.collection(COLLECTIONS.USERS).where({ user_id: openid }).limit(1).get();
       const user = userResult.data && userResult.data[0];
       let quotaSource = 'paid';
-      let quotaPrice = PRICES.STANDARD_REPORT;
+      let quotaPrice = dbPrices.STANDARD_REPORT;
 
       // 首份优惠
       if (!user || !user.first_report_used) {
         quotaSource = 'first_report';
-        quotaPrice = PRICES.FIRST_REPORT;
+        quotaPrice = dbPrices.FIRST_REPORT;
       }
       // 邀请奖励
       else if (user.invite_reward_credits && user.invite_reward_credits > 0) {
@@ -262,7 +265,7 @@ exports.main = async (event, context) => {
           .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE }).limit(1).get();
         if (memberResult.data && memberResult.data.length > 0) {
           const m = memberResult.data[0];
-          const expectedTotal = m.type === 'yearly' ? MEMBER_CREDITS.YEARLY_REPORTS : MEMBER_CREDITS.MONTHLY_REPORTS;
+          const expectedTotal = m.type === 'yearly' ? dbCredits.YEARLY_REPORTS : dbCredits.MONTHLY_REPORTS;
           const total = Math.max(m.report_credits_total || expectedTotal, expectedTotal);
           const used = m.report_credits_used || 0;
           if (used < total) {

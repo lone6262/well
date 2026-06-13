@@ -1,5 +1,33 @@
 .coupon-list-page { padding: 0; background: var(--bg-secondary); min-height: 100vh; }
 
+/* 顶部操作栏 */
+.coupon-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 30rpx 16rpx;
+  background: var(--bg-card);
+}
+.coupon-top-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.coupon-top-link {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  font-size: 26rpx;
+  color: var(--brand-primary);
+  padding: 8rpx 16rpx;
+  border-radius: 24rpx;
+  background: var(--brand-primary-light);
+}
+.coupon-top-arrow {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
 .tabs { display: flex; background: var(--bg-card); border-bottom: 1rpx solid var(--border-color); }
 .tab { flex: 1; text-align: center; padding: 24rpx 0; font-size: 28rpx; color: var(--text-secondary); position: relative; }
 .tab.active { color: var(--brand-primary); font-weight: bold; }
@@ -19,5 +47,6 @@
 .coupon-type { font-size: 24rpx; color: var(--text-tertiary); }
 .coupon-expire { font-size: 22rpx; color: var(--border-color); margin-top: 8rpx; }
 
-.empty { text-align: center; padding: 100rpx 0; color: var(--text-tertiary); font-size: 28rpx; }
+.empty { text-align: center; padding: 100rpx 0; color: var(--text-tertiary); font-size: 28rpx; display: flex; flex-direction: column; align-items: center; }
+.goto-receive-btn { margin-top: 30rpx; background: var(--brand-primary); color: #fff; font-size: 28rpx; padding: 16rpx 60rpx; border-radius: 40rpx; border: none; }
 .loading { text-align: center; padding: 100rpx 0; color: var(--text-tertiary); }

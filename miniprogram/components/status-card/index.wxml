@@ -1,0 +1,17 @@
+<!--
+  status-card — 状态卡片组件
+  用于：风险结果、健康状态等带色彩背景的卡片
+  Props:
+    type: String — 状态类型 'success' | 'warning' | 'danger' | 'info'
+    icon: String — 图标 SVG 路径
+    title: String — 状态标题
+    description: String — 状态描述
+-->
+<view class="status-card status-card--{{type || 'info'}}">
+  <view class="status-card__header" wx:if="{{icon || title}}">
+    <image class="status-card__icon" wx:if="{{icon}}" src="{{icon}}" aria-label="{{title}}" />
+    <text class="status-card__title" wx:if="{{title}}">{{title}}</text>
+  </view>
+  <text class="status-card__desc" wx:if="{{description}}">{{description}}</text>
+  <slot></slot>
+</view>

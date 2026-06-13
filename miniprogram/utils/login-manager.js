@@ -42,7 +42,7 @@ function createLoginManager(app) {
       log.info('=== Preparing to call silentLogin cloud function ===');
 
       if (!app.globalData.cloudDevelopmentAvailable) {
-        log.info('⚠️ Cloud development unavailable, using simulated login');
+        log.info('[WARN] Cloud development unavailable, using simulated login');
         this.simulatedLogin();
         if (resolveCallback) resolveCallback();
         return;
@@ -56,7 +56,7 @@ function createLoginManager(app) {
           const result = res.result;
 
           if (result && result.code === 0) {
-            log.info('✅ Silent login successful');
+            log.info('[OK] Silent login successful');
             log.info('Is new user:', result.data.isNewUser);
             log.info('Guest mode:', !result.data.userInfo.isMember);
 
@@ -82,9 +82,9 @@ function createLoginManager(app) {
           if (resolveCallback) resolveCallback();
         },
         fail: (err) => {
-          log.error('❌ Cloud function call failed:', err);
+          log.error('[FAIL] Cloud function call failed:', err);
           log.error('Error details:', err.errMsg);
-          log.info('⚠️ Cloud function call failed, entering degraded mode, app still usable');
+          log.info('[WARN] Cloud function call failed, entering degraded mode, app still usable');
 
           app.globalData.cloudDevelopmentAvailable = false;
           this.simulatedLogin();

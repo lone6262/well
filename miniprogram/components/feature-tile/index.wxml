@@ -1,0 +1,19 @@
+<!--
+  feature-tile — 功能磁贴组件
+  用于：首页 6 宫格等功能入口
+  Props:
+    color: String — 顶部色条类型 'primary' | 'success' | 'warning' | 'info' | 'emergency' | 'secondary'
+    icon: String — 图标 SVG 路径（如 /images/icons/paw.svg）
+    title: String — 功能名称
+    hover: Boolean — 是否启用按压效果（默认 true）
+-->
+<view class="feature-tile feature-tile--{{color || 'primary'}} {{hover ? 'feature-tile--hover' : ''}}"
+      hover-class="{{hover ? 'feature-tile--active' : ''}}">
+  <view class="feature-tile__icon-wrap" wx:if="{{icon}}">
+    <image class="feature-tile__icon" src="{{icon}}" aria-label="{{title}}" />
+  </view>
+  <view class="feature-tile__content">
+    <text class="feature-tile__title" wx:if="{{title}}">{{title}}</text>
+    <slot></slot>
+  </view>
+</view>

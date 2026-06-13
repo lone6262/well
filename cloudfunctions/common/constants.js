@@ -446,6 +446,29 @@ const SERVER_CONFIG = {
 let _configWarmedUp = false;
 let _warmupPromise = null;
 
+// 是否已从数据库加载过价格配置
+let _pricesLoaded = false;
+let _dbPrices = null;
+
+/** 价格 DB key → PRICES/MEMBER_CREDITS 属性名映射 */
+const PRICE_DB_KEY_MAP = {
+  first_report:             'FIRST_REPORT',
+  standard_report:          'STANDARD_REPORT',
+  member_monthly:           'MEMBER_MONTHLY',
+  member_yearly:            'MEMBER_YEARLY',
+  member_family_monthly:    'MEMBER_FAMILY_MONTHLY',
+  member_family_yearly:     'MEMBER_FAMILY_YEARLY',
+  renew_monthly:            'RENEW_MONTHLY',
+  renew_yearly:             'RENEW_YEARLY',
+  renew_family_monthly:     'RENEW_FAMILY_MONTHLY',
+  renew_family_yearly:      'RENEW_FAMILY_YEARLY',
+  monthly_reports:          'MONTHLY_REPORTS',
+  yearly_reports:           'YEARLY_REPORTS',
+  family_monthly_reports:   'FAMILY_MONTHLY_REPORTS',
+  family_yearly_reports:    'FAMILY_YEARLY_REPORTS',
+  trial_reports:            'TRIAL_REPORTS',
+};
+
 /** warmupConfig 数据库查询超时时间（毫秒） */
 const WARMUP_TIMEOUT_MS = 3000;
 
@@ -519,6 +542,79 @@ function resetConfig() {
   _warmupPromise = null;
 }
 
+/**
+ * 从数据库 system_config 加载价格配置
+ * 以 DB 值为准，未配置的 key 回退到 PRICES/MEMBER_CREDITS 硬编码默认值
+ * 幂等操作 — 多次调用只执行一次数据库查询
+ *
+ * @param {object} db — cloud.database() 实例
+ * @returns {object} { prices: {...}, memberCredits: {...} }
+ */
+async function loadPrices(db, opts) {
+  const forceReload = opts && opts.forceReload;
+  if (!forceReload && _pricesLoaded && _dbPrices) return _dbPrices;
+  if (!db) {
+    _pricesLoaded = true;
+    _dbPrices = { prices: Object.assign({}, PRICES), memberCredits: Object.assign({}, MEMBER_CREDITS) };
+    return _dbPrices;
+  }
+
+  // 复用 warmupConfig 的 promise 机制，避免并发重复查询
+  try {
+    const queryPromise = db.collection('system_config')
+      .where({
+        key: db.command.in(Object.keys(PRICE_DB_KEY_MAP))
+      })
+      .get();
+
+    const timeoutPromise = new Promise(function(_, reject) {
+      setTimeout(function() { reject(new Error('loadPrices 数据库查询超时')); }, WARMUP_TIMEOUT_MS);
+    });
+
+    const { data } = await Promise.race([queryPromise, timeoutPromise]);
+
+    // 以硬编码值为基准
+    const mergedPrices = Object.assign({}, PRICES);
+    const mergedCredits = Object.assign({}, MEMBER_CREDITS);
+
+    if (data && data.length > 0) {
+      for (const item of data) {
+        const propName = PRICE_DB_KEY_MAP[item.key];
+        if (propName && item.value != null) {
+          const numValue = parseInt(item.value, 10);
+          if (!isNaN(numValue) && numValue >= 0) {
+            // 判断属于 PRICES 还是 MEMBER_CREDITS
+            if (propName === 'MONTHLY_REPORTS' || propName === 'YEARLY_REPORTS' ||
+                propName === 'FAMILY_MONTHLY_REPORTS' || propName === 'FAMILY_YEARLY_REPORTS' ||
+                propName === 'TRIAL_REPORTS') {
+              mergedCredits[propName] = numValue;
+            } else {
+              mergedPrices[propName] = numValue;
+            }
+          }
+        }
+      }
+      console.log(`[constants] ✅ 已从数据库加载 ${data.length} 项价格配置`);
+    }
+    _dbPrices = { prices: mergedPrices, memberCredits: mergedCredits };
+    _pricesLoaded = true;
+    return _dbPrices;
+  } catch (e) {
+    console.warn('[constants] 价格配置查询失败，使用硬编码默认值:', e.message);
+    _dbPrices = { prices: Object.assign({}, PRICES), memberCredits: Object.assign({}, MEMBER_CREDITS) };
+    _pricesLoaded = true;
+    return _dbPrices;
+  }
+}
+
+/**
+ * 重置价格加载状态（仅用于测试 / 配置变更后强制刷新）
+ */
+function resetPrices() {
+  _pricesLoaded = false;
+  _dbPrices = null;
+}
+
 module.exports = {
   PET_TYPES,
   PET_TYPE_NAMES,
@@ -562,5 +658,7 @@ module.exports = {
   INVITE_CONFIG,
   // 服务端密钥
   SERVER_CONFIG,
-  warmupConfig
+  warmupConfig,
+  loadPrices,
+  resetPrices
 };

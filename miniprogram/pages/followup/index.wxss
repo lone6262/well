@@ -20,7 +20,7 @@ page {
 }
 
 .header-inner {
-  padding: 0 24rpx 32rpx;
+  padding: 32rpx 24rpx 32rpx;
 }
 
 /* 导航栏 */

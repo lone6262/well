@@ -28,7 +28,7 @@
       <view class="card-top">
         <view class="card-left">
           <view class="pet-info-row">
-            <text class="pet-emoji">{{item.petType === 'cat' ? '🐱' : '🐶'}}</text>
+            <image class="pet-emoji" src="{{item.petType === 'cat' ? '/images/icons/cat.svg' : '/images/icons/dog.svg'}}" aria-label="{{item.petType === 'cat' ? '猫' : '狗'}}" style="width:36rpx;height:36rpx;" />
             <text class="pet-name">{{item.petName}}</text>
           </view>
           <text class="record-date">{{item.dateText}}</text>
@@ -59,7 +59,7 @@
     <state-view
       wx:if="{{records.length === 0}}"
       type="empty"
-      icon="📋"
+      icon="clipboard"
       title="暂无{{pageTitle}}"
       description="进行症状自查后记录将显示在这里"
     />

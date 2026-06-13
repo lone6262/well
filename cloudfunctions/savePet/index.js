@@ -1,6 +1,6 @@
 // 云函数入口文件
 const cloud = require('wx-server-sdk');
-const { PET_TYPES, COLLECTIONS, RESPONSE_CODE , warmupConfig} = require('./common/constants');
+const { PET_TYPES, COLLECTIONS, RESPONSE_CODE, MEMBER_LIMITS, MEMBER_STATUS, warmupConfig } = require('./common/constants');
 const { verifyToken } = require('./common/auth');
 const { checkRateLimit } = require('./common/rate-limiter');
 const { createLogger } = require('./common/logger');
@@ -185,6 +185,40 @@ exports.main = async (event, context) => {
 
     } else {
       // 3. 添加新宠物
+
+      // 3.0 宠物数量上限校验（家庭会员 5 只 / 个人·非会员 3 只）
+      const countResult = await db.collection(COLLECTIONS.PETS)
+        .where({ user_id: openid })
+        .count();
+      const currentPetCount = countResult.total || 0;
+
+      // 查询当前有效会员记录，按会员类型确定上限
+      const memberResult = await db.collection(COLLECTIONS.MEMBERS)
+        .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE })
+        .limit(1)
+        .get();
+      let maxPets = MEMBER_LIMITS.MAX_PETS_PERSONAL; // 默认个人/非会员上限 3
+      let isFamily = false;
+      if (memberResult.data && memberResult.data.length > 0) {
+        const memberRecord = memberResult.data[0];
+        if (memberRecord.type && String(memberRecord.type).indexOf('family') === 0) {
+          maxPets = memberRecord.family_max_pet || MEMBER_LIMITS.MAX_PETS_FAMILY;
+          isFamily = true;
+        }
+      }
+
+      if (currentPetCount >= maxPets) {
+        // 家庭会员已是最高档，不再诱导升级；其他身份可引导开通家庭会员
+        const limitMsg = isFamily
+          ? '已达家庭会员宠物上限（' + maxPets + '只），可删除不常用宠物释放位置'
+          : '已达宠物上限（' + maxPets + '只），开通家庭会员最多可养' + MEMBER_LIMITS.MAX_PETS_FAMILY + '只';
+        return {
+          code: RESPONSE_CODE.ERROR,
+          msg: limitMsg,
+          data: { currentCount: currentPetCount, maxPets: maxPets }
+        };
+      }
+
       // 生成宠物编号：CAT-001-a3f, DOG-002-b1e ...
       // 末尾3位随机hex防止并发创建时的编号碰撞
       const typePrefix = type === 'cat' ? 'CAT' : 'DOG';

@@ -1,4 +1,4 @@
-<view class="container">
+<view class="status-page">
   <view class="page-header">
     <view class="back-btn" bindtap="goBack" hover-class="back-btn-active">
       <view class="back-arrow"></view>
@@ -61,7 +61,7 @@
           <text class="auto-renew-hint">到期前自动续费，可随时取消</text>
           <text class="auto-renew-detail" wx:if="{{renewPriceDisplay}}">续费价 ¥{{renewPriceDisplay}} · 下次 {{expireText}}</text>
         </view>
-        <switch checked="{{autoRenew}}" bindchange="toggleAutoRenew" color="#667eea" />
+        <switch checked="{{autoRenew}}" bindchange="toggleAutoRenew" color="#B35D3A" />
       </view>
     </view>
 

@@ -49,8 +49,11 @@ exports.main = async (event, context) => {
   const path = (event.path || '').replace(/^\//, '');
   const action = body.action || path || 'adminLogin';
 
-  // 验证 adminToken（非登录请求）
-  if (action !== 'adminLogin' && !body.adminToken) {
+  // 无需鉴权的公开接口
+  const PUBLIC_ACTIONS = new Set(['getCoupons']);
+
+  // 验证 adminToken（非登录请求且非公开接口）
+  if (action !== 'adminLogin' && !PUBLIC_ACTIONS.has(action) && !body.adminToken) {
     return { code: RESPONSE_CODE.UNAUTHORIZED, msg: '未登录', data: {} };
   }
 

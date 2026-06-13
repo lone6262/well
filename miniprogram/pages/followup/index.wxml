@@ -2,12 +2,6 @@
   <!-- 顶部头部 -->
   <view class="page-header">
     <view class="header-inner">
-      <view class="nav-bar">
-        <view class="back-btn" bindtap="goBack" hover-class="back-btn-active">
-          <view class="back-arrow"></view>
-          <text class="back-text">返回</text>
-        </view>
-      </view>
       <view class="header-content">
         <image class="header-icon-img" src="/images/icons/clipboard.svg" mode="aspectFit" />
         <text class="header-title">回访记录</text>

@@ -85,11 +85,11 @@ Page({
 
   getOrderTypeIcon: function(type) {
     let iconMap = {
-      'report': '📋',
-      'member_monthly': '📅',
-      'member_yearly': '🗓️'
+      'report': '/images/icons/clipboard.svg',
+      'member_monthly': '/images/icons/crown.svg',
+      'member_yearly': '/images/icons/crown.svg'
     }
-    return iconMap[type] || '📦'
+    return iconMap[type] || '/images/icons/gift.svg'
   },
 
   getStatusColor: function(status) {

@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="/cloud-admin/">
   <title>管理后台 - 宠物健康自查</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -559,6 +560,10 @@
                 <input type="number" id="creditsFamilyMonthlyReports">
               </div>
               <div class="setting-item">
+                <label>家庭年卡每月报告额度</label>
+                <input type="number" id="creditsFamilyYearlyReports">
+              </div>
+              <div class="setting-item">
                 <label>体验会员每月报告额度</label>
                 <input type="number" id="creditsTrialReports">
               </div>
@@ -762,6 +767,6 @@
   <!-- CloudBase Web SDK（外部依赖，不打包） -->
   <script src="lib/cloudbase.js"></script>
   <!-- 管理后台 Vite 构建产物（19 模块合 1） -->
-  <script src="dist/admin-bundle.js"></script>
+  <script src="dist/admin-bundle.v3.js"></script>
 </body>
 </html>

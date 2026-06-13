@@ -264,15 +264,28 @@ async function initSettingsModule() {
     if (result.code === 0) {
       const config = result.data;
 
-      // 填充价格设置
+      // 填充报告价格设置
       document.getElementById('priceFirstReport').value = parseFloat(config.prices.firstReportDisplay);
       document.getElementById('priceStandardReport').value = parseFloat(config.prices.standardReportDisplay);
+
+      // 填充个人会员价格设置
       document.getElementById('priceMemberMonthly').value = parseFloat(config.prices.memberMonthlyDisplay);
       document.getElementById('priceMemberYearly').value = parseFloat(config.prices.memberYearlyDisplay);
+      document.getElementById('priceRenewMonthly').value = parseFloat(config.prices.renewMonthlyDisplay);
+      document.getElementById('priceRenewYearly').value = parseFloat(config.prices.renewYearlyDisplay);
+
+      // 填充家庭会员价格设置
+      document.getElementById('priceFamilyMonthly').value = parseFloat(config.prices.memberFamilyMonthlyDisplay);
+      document.getElementById('priceFamilyYearly').value = parseFloat(config.prices.memberFamilyYearlyDisplay);
+      document.getElementById('priceRenewFamilyMonthly').value = parseFloat(config.prices.renewFamilyMonthlyDisplay);
+      document.getElementById('priceRenewFamilyYearly').value = parseFloat(config.prices.renewFamilyYearlyDisplay);
 
       // 填充额度设置
       document.getElementById('creditsMonthlyReports').value = config.memberCredits.monthlyReports;
       document.getElementById('creditsYearlyReports').value = config.memberCredits.yearlyReports;
+      document.getElementById('creditsFamilyMonthlyReports').value = config.memberCredits.familyMonthlyReports;
+      document.getElementById('creditsFamilyYearlyReports').value = config.memberCredits.familyYearlyReports;
+      document.getElementById('creditsTrialReports').value = config.memberCredits.trialReports;
     } else {
       showToast(result.msg || '加载配置失败', 'error');
     }
@@ -293,8 +306,17 @@ async function saveConfig() {
     priceStandardReport: { number: true, min: 0, message: '标准报告价格不能小于 0' },
     priceMemberMonthly: { number: true, min: 0, message: '个人月卡价格不能小于 0' },
     priceMemberYearly: { number: true, min: 0, message: '个人年卡价格不能小于 0' },
+    priceRenewMonthly: { number: true, min: 0, message: '月卡续费价格不能小于 0' },
+    priceRenewYearly: { number: true, min: 0, message: '年卡续费价格不能小于 0' },
+    priceFamilyMonthly: { number: true, min: 0, message: '家庭月卡价格不能小于 0' },
+    priceFamilyYearly: { number: true, min: 0, message: '家庭年卡价格不能小于 0' },
+    priceRenewFamilyMonthly: { number: true, min: 0, message: '家庭月卡续费价格不能小于 0' },
+    priceRenewFamilyYearly: { number: true, min: 0, message: '家庭年卡续费价格不能小于 0' },
     creditsMonthlyReports: { number: true, min: 0, message: '月卡额度不能小于 0' },
-    creditsYearlyReports: { number: true, min: 0, message: '年卡额度不能小于 0' }
+    creditsYearlyReports: { number: true, min: 0, message: '年卡额度不能小于 0' },
+    creditsFamilyMonthlyReports: { number: true, min: 0, message: '家庭月卡额度不能小于 0' },
+    creditsFamilyYearlyReports: { number: true, min: 0, message: '家庭年卡额度不能小于 0' },
+    creditsTrialReports: { number: true, min: 0, message: '体验会员额度不能小于 0' }
   }, { root: settingsRoot });
 
   if (!validation.valid) {
@@ -307,8 +329,17 @@ async function saveConfig() {
     standardReport: Math.round(parseFloat(document.getElementById('priceStandardReport').value) * 100),
     memberMonthly: Math.round(parseFloat(document.getElementById('priceMemberMonthly').value) * 100),
     memberYearly: Math.round(parseFloat(document.getElementById('priceMemberYearly').value) * 100),
+    renewMonthly: Math.round(parseFloat(document.getElementById('priceRenewMonthly').value) * 100),
+    renewYearly: Math.round(parseFloat(document.getElementById('priceRenewYearly').value) * 100),
+    memberFamilyMonthly: Math.round(parseFloat(document.getElementById('priceFamilyMonthly').value) * 100),
+    memberFamilyYearly: Math.round(parseFloat(document.getElementById('priceFamilyYearly').value) * 100),
+    renewFamilyMonthly: Math.round(parseFloat(document.getElementById('priceRenewFamilyMonthly').value) * 100),
+    renewFamilyYearly: Math.round(parseFloat(document.getElementById('priceRenewFamilyYearly').value) * 100),
     monthlyReports: parseInt(document.getElementById('creditsMonthlyReports').value, 10),
-    yearlyReports: parseInt(document.getElementById('creditsYearlyReports').value, 10)
+    yearlyReports: parseInt(document.getElementById('creditsYearlyReports').value, 10),
+    familyMonthlyReports: parseInt(document.getElementById('creditsFamilyMonthlyReports').value, 10),
+    familyYearlyReports: parseInt(document.getElementById('creditsFamilyYearlyReports').value, 10),
+    trialReports: parseInt(document.getElementById('creditsTrialReports').value, 10)
   };
 
   showLoading('保存中...');

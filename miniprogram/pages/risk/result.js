@@ -8,19 +8,19 @@ function getRiskDisplayInfo(riskLevel) {
   let riskInfo = {
     low: {
       color: '#52c41a',  // 绿色
-      icon: '🟢',
+      icon: '/images/icons/check.svg',
       title: '低风险',
       description: '居家观察，注意宠物状态变化'
     },
     mid: {
       color: '#faad14',  // 黄色
-      icon: '🟡',
+      icon: '/images/icons/warning.svg',
       title: '中风险',
       description: '建议线上问诊或近期就医'
     },
     high: {
       color: '#f5222d',  // 红色
-      icon: '🔴',
+      icon: '/images/icons/alert.svg',
       title: '高风险',
       description: '立即就医，不要拖延'
     }
@@ -40,6 +40,11 @@ Page({
     assessmentDetail: null,
     loading: true,
     quotaInfo: null,
+    // V2.0: 动态价格
+    standardReportDisplay: '9.90',
+    firstReportDisplay: '1.00',
+    riskMonthlyPrice: '19.90',
+    riskMonthlyCredits: 3,
     purchasing: false,
     reportPurchased: false,
     hasExistingReport: false,
@@ -82,6 +87,8 @@ Page({
     this.loadAssessmentDetail()
     // 并行发起配额检查，避免 AI 报告卡片延迟 1 秒
     this.checkReportQuota()
+    // V2.0: 加载动态价格
+    this.loadPrices()
   },
 
   // 从云函数加载评估详情和宠物信息
@@ -96,7 +103,7 @@ Page({
 
     // 检查云开发是否可用
     if (!app.globalData.cloudDevelopmentAvailable) {
-      log.info('⚠️ 云开发不可用，使用本地模拟数据')
+      log.info('[WARN] 云开发不可用，使用本地模拟数据')
       self.loadLocalMockData()
       return
     }
@@ -147,7 +154,7 @@ Page({
         })
 
         // 云函数调用失败，尝试本地模拟数据
-        log.info('⚠️ 云函数调用失败，尝试本地模拟数据')
+        log.info('[WARN] 云函数调用失败，尝试本地模拟数据')
         app.globalData.cloudDevelopmentAvailable = false
         self.loadLocalMockData()
       }
@@ -305,6 +312,27 @@ Page({
   },
 
   // 检查报告配额
+  /** V2.0: 从云端加载价格配置 */
+  loadPrices: function() {
+    var self = this
+    wx.cloud.callFunction({
+      name: 'getPrices',
+      data: {},
+      success: function(res) {
+        if (res.result && res.result.code === 0) {
+          var d = res.result.data
+          self.setData({
+            standardReportDisplay: d.standardReportDisplay,
+            firstReportDisplay: d.firstReportDisplay,
+            riskMonthlyPrice: d.monthly.display,
+            riskMonthlyCredits: d.monthly.credits
+          })
+        }
+      },
+      fail: function() { /* 静默失败 */ }
+    })
+  },
+
   checkReportQuota: function() {
     let self = this
     wx.cloud.callFunction({

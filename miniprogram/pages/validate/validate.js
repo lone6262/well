@@ -12,8 +12,8 @@ Page({
     this.setData({
       envId: '云开发已禁用'
     })
-    this.addLog('🔍 验证页面加载完成')
-    this.addLog('📋 云开发功能已禁用')
+    this.addLog('[INFO] 验证页面加载完成')
+    this.addLog('[INFO] 云开发功能已禁用')
   },
 
   // 开始验证
@@ -24,7 +24,7 @@ Page({
       logs: []
     })
 
-    this.addLog('🚀 云开发已禁用，无需验证')
+    this.addLog('[INFO] 云开发已禁用，无需验证')
     this.showResult(false, '云开发功能已禁用')
   },
 

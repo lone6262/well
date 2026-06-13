@@ -2,10 +2,10 @@
 let app = getApp()
 
 let TYPE_MAP = {
-  report: { text: 'AI报告', icon: '📋' },
-  member: { text: '会员', icon: '👑' },
-  member_monthly: { text: '月度会员', icon: '👑' },
-  member_yearly: { text: '年度会员', icon: '👑' }
+  report: { text: 'AI报告', icon: '/images/icons/clipboard.svg' },
+  member: { text: '会员', icon: '/images/icons/crown.svg' },
+  member_monthly: { text: '月度会员', icon: '/images/icons/crown.svg' },
+  member_yearly: { text: '年度会员', icon: '/images/icons/crown.svg' }
 }
 
 let STATUS_MAP = {
@@ -48,7 +48,7 @@ Page({
       success: function(res) {
         if (res.result && res.result.code === 0 && res.result.data.order) {
           let order = res.result.data.order
-          let typeInfo = TYPE_MAP[order.type] || { text: '订单', icon: '📦' }
+          let typeInfo = TYPE_MAP[order.type] || { text: '订单', icon: '/images/icons/gift.svg' }
           let statusInfo = STATUS_MAP[order.status] || { text: '未知', color: '#999' }
 
           let createdText = self.formatDate(order.created_at)

@@ -14,9 +14,9 @@ Page({
     submitted: false,
     // 状态选项
     statusOptions: [
-      { key: 'improved', label: '好转', icon: '😊', color: '#52c41a' },
-      { key: 'no_change', label: '无变化', icon: '😐', color: '#faad14' },
-      { key: 'worsened', label: '恶化', icon: '😟', color: '#f5222d' }
+      { key: 'improved', label: '好转', icon: '/images/icons/check.svg', color: '#52c41a' },
+      { key: 'no_change', label: '无变化', icon: '/images/icons/warning.svg', color: '#faad14' },
+      { key: 'worsened', label: '恶化', icon: '/images/icons/cross.svg', color: '#f5222d' }
     ]
   },
 

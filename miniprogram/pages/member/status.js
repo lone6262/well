@@ -20,9 +20,12 @@ Page({
     totalReports: 0,
     savedAmount: '0.00',
     renewPriceDisplay: '',
+    // V2.0: 动态价格
+    _standardReportPrice: 9.9,
   },
 
   onLoad: function() {
+    this.loadPrices()
     this.loadMemberStatus()
   },
 
@@ -31,6 +34,24 @@ Page({
     if (!this.data.loading) {
       this.loadMemberStatus()
     }
+  },
+
+  /** V2.0: 加载动态价格 */
+  loadPrices: function() {
+    var self = this
+    wx.cloud.callFunction({
+      name: 'getPrices',
+      data: {},
+      success: function(res) {
+        if (res.result && res.result.code === 0) {
+          var d = res.result.data
+          self.setData({
+            _standardReportPrice: parseFloat(d.standardReportDisplay)
+          })
+        }
+      },
+      fail: function() { /* 静默失败 */ }
+    })
   },
 
   loadMemberStatus: function() {
@@ -57,7 +78,8 @@ Page({
 
           let remaining = data.report_credits_remaining || 0
           let total = data.report_credits_total || 0
-          let benefitValue = total ? (total * 9.9).toFixed(1) : '49.5'
+          let stdPrice = self.data._standardReportPrice || 9.9
+          let benefitValue = total ? (total * stdPrice).toFixed(1) : (total * stdPrice).toFixed(1) || '49.5'
           let daysRemaining = data.days_remaining || 0
           let isFamily = data.type && data.type.startsWith('family_')
 

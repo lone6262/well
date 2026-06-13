@@ -119,7 +119,7 @@ Page({
         title: '会员专享内容',
         content: '该文章为会员专享，开通会员即可阅读全部内容',
         confirmText: '开通会员',
-        confirmColor: '#667eea',
+        confirmColor: '#B35D3A',
         success: function(res) {
           if (res.confirm) {
             wx.navigateTo({ url: '/pages/member/order' })
@@ -197,8 +197,8 @@ Page({
 
   // 宠物类型文字
   getPetTypeText: function(petType) {
-    let map = { cat: '🐱猫咪', dog: '🐶狗狗', all: '🐱🐶全部' }
-    return map[petType] || '🐱🐶全部'
+    let map = { cat: '猫咪', dog: '狗狗', all: '全部' }
+    return map[petType] || '全部'
   },
 
   // 格式化浏览量

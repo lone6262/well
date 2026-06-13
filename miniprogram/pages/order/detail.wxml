@@ -1,4 +1,4 @@
-<view class="container">
+<view class="order-detail-page">
   <view class="page-header">
     <view class="back-btn" bindtap="goBack" hover-class="back-btn-active">
       <view class="back-arrow"></view>

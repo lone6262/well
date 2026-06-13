@@ -97,7 +97,7 @@ Page({
     sections.push({
       key: 'risk_summary',
       title: '风险概述',
-      icon: '⚠️',
+      icon: '/images/icons/warning.svg',
       type: 'text',
       content: reportContent.risk_summary || '暂无风险概述信息',
       expanded: true
@@ -108,7 +108,7 @@ Page({
     sections.push({
       key: 'symptom_analysis',
       title: '症状分析',
-      icon: '🔍',
+      icon: '/images/icons/pin.svg',
       type: 'symptoms',
       content: symptomList,
       expanded: true
@@ -119,7 +119,7 @@ Page({
     sections.push({
       key: 'home_care',
       title: '家庭护理建议',
-      icon: '🏠',
+      icon: '/images/icons/paw.svg',
       type: 'list',
       content: homeCareList,
       expanded: true
@@ -130,7 +130,7 @@ Page({
     sections.push({
       key: 'observation',
       title: '观察指标',
-      icon: '👁',
+      icon: '/images/icons/eye.svg',
       type: 'list',
       content: observationList,
       expanded: false
@@ -141,7 +141,7 @@ Page({
     sections.push({
       key: 'escalation',
       title: '风险升级信号',
-      icon: '🚨',
+      icon: '/images/icons/alert.svg',
       type: 'list',
       content: escalationList,
       expanded: false
@@ -156,10 +156,10 @@ Page({
       } else if (typeof vetRec === 'object') {
         let parts = []
         if (vetRec.needed !== undefined) {
-          parts.push(vetRec.needed ? '✅ 建议就医' : 'ℹ️ 暂不需要就医')
+          parts.push(vetRec.needed ? '建议就医' : '暂不需要就医')
         }
         if (vetRec.urgency) {
-          let urgencyMap = { low: '低紧急', medium: '中等紧急', high: '⚠️ 紧急' }
+          let urgencyMap = { low: '低紧急', medium: '中等紧急', high: '紧急' }
           parts.push('紧急程度：' + (urgencyMap[vetRec.urgency] || vetRec.urgency))
         }
         if (vetRec.what_to_tell_vet) {
@@ -178,7 +178,7 @@ Page({
           parts.push('时间敏感性：' + vetRec.time_sensitivity)
         }
         if (vetRec.home_remedies_to_avoid && vetRec.home_remedies_to_avoid.length > 0) {
-          parts.push('⚠️ 不建议尝试：' + vetRec.home_remedies_to_avoid.join('、'))
+          parts.push('不建议尝试：' + vetRec.home_remedies_to_avoid.join('、'))
         }
         vetText = parts.length > 0 ? parts.join('\n') : '暂无就医建议'
       }
@@ -186,7 +186,7 @@ Page({
     sections.push({
       key: 'vet_recommendation',
       title: '就医建议',
-      icon: '🏥',
+      icon: '/images/icons/hospital.svg',
       type: 'text',
       content: vetText,
       expanded: false
@@ -197,7 +197,7 @@ Page({
     sections.push({
       key: 'misconceptions',
       title: '常见误区',
-      icon: '💡',
+      icon: '/images/icons/warning.svg',
       type: 'misconceptions',
       content: misconceptionsList,
       expanded: false
@@ -207,7 +207,7 @@ Page({
     sections.push({
       key: 'disclaimer',
       title: '免责声明',
-      icon: '📜',
+      icon: '/images/icons/clipboard.svg',
       type: 'text',
       content: reportContent.disclaimer || '本报告由AI生成，仅供参考，不构成专业兽医诊断建议。如有疑问请咨询专业兽医。',
       expanded: false

@@ -1,0 +1,9 @@
+{
+  "name": "getPrices",
+  "version": "1.0.0",
+  "description": "公开获取价格配置（前端动态定价）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

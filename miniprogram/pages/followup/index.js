@@ -147,9 +147,5 @@ Page({
     if (status === 'pending') {
       wx.navigateTo({ url: '/pages/followup/submit?followupId=' + id })
     }
-  },
-
-  goBack: function() {
-    wx.navigateBack()
   }
 })

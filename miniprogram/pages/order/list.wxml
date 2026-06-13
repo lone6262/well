@@ -1,5 +1,5 @@
 <!--订单列表页面-->
-<view class="container">
+<view class="order-list-page">
   <!-- 页面头部 -->
   <view class="page-header">
     <view class="back-btn" bindtap="goBack" hover-class="back-btn-active">

@@ -1,47 +1,69 @@
-// 组合套餐页
+// 组合套餐页 — V2.1: 价格从 getPrices 云端加载
 const app = getApp();
 
 Page({
   data: {
-    bundles: [
-      {
-        key: 'STARTER',
-        name: '新手礼包',
-        desc: '月卡 + 3 次点数包',
-        price: 29.90,
-        originPrice: 39.80,
-        save: 9.90,
-        items: ['个人月卡（3 次/月）', '3 次点数包（90 天有效）'],
-      },
-      {
-        key: 'ESSENTIAL',
-        name: '铲屎官必备',
-        desc: '年卡 + 5 次点数包',
-        price: 119.00,
-        originPrice: 128.90,
-        save: 9.90,
-        items: ['个人年卡（3 次/月）', '5 次点数包（90 天有效）'],
-      },
-      {
-        key: 'FAMILY',
-        name: '家庭尊享',
-        desc: '家庭月卡 + 3 次点数包',
-        price: 39.90,
-        originPrice: 49.80,
-        save: 9.90,
-        items: ['家庭月卡（6 次/月，最多 4 人共享）', '3 次点数包（90 天有效）'],
-      },
-    ],
+    bundles: [],
     purchasing: false,
+  },
+
+  onLoad: function() {
+    this.loadPrices()
+  },
+
+  /** V2.1: 从 getPrices 动态加载套餐 */
+  loadPrices: function() {
+    var self = this
+    wx.cloud.callFunction({
+      name: 'getPrices',
+      data: {},
+      success: function(res) {
+        if (res.result && res.result.code === 0) {
+          var d = res.result.data
+          self.setData({
+            bundles: [
+              {
+                key: 'STARTER',
+                name: d.bundles.starter.name,
+                desc: d.bundles.starter.desc,
+                price: d.bundles.starter.display,
+                originPrice: d.bundles.starter.originDisplay,
+                save: d.bundles.starter.saveDisplay,
+                items: d.bundles.starter.items,
+              },
+              {
+                key: 'ESSENTIAL',
+                name: d.bundles.essential.name,
+                desc: d.bundles.essential.desc,
+                price: d.bundles.essential.display,
+                originPrice: d.bundles.essential.originDisplay,
+                save: d.bundles.essential.saveDisplay,
+                items: d.bundles.essential.items,
+              },
+              {
+                key: 'FAMILY',
+                name: d.bundles.family.name,
+                desc: d.bundles.family.desc,
+                price: d.bundles.family.display,
+                originPrice: d.bundles.family.originDisplay,
+                save: d.bundles.family.saveDisplay,
+                items: d.bundles.family.items,
+              },
+            ],
+          })
+        }
+      }
+    })
   },
 
   async onPurchaseBundle(e) {
     const bundleKey = e.currentTarget.dataset.key;
     if (this.data.purchasing) return;
 
+    var bundles = this.data.bundles
     wx.showModal({
       title: '确认购买',
-      content: `确定购买${this.data.bundles.find(b => b.key === bundleKey).name}？`,
+      content: '确定购买' + bundles.find(function(b) { return b.key === bundleKey }).name + '？',
       success: async (res) => {
         if (!res.confirm) return;
         this.setData({ purchasing: true });

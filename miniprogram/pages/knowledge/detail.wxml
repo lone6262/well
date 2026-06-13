@@ -18,7 +18,7 @@
           <text class="tag-text">{{petTypeText}}</text>
         </view>
         <text class="meta-category">{{categoryName}}</text>
-        <text class="meta-views">👁 {{article.view_count || 0}}次浏览</text>
+        <text class="meta-views"><image src="/images/icons/eye.svg" style="width:24rpx;height:24rpx;vertical-align:middle;margin-right:4rpx;" aria-label="浏览" />{{article.view_count || 0}}次浏览</text>
       </view>
     </view>
 

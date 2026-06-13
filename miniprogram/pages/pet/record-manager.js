@@ -58,7 +58,7 @@ function createRecordList(records, petId, type) {
     })
     .map(function(record) {
       const level = record.riskLevel || record.risk_level || 'low'
-      const iconMap = { low: '✅', mid: '⚠️', high: '❌' }
+      const iconMap = { low: '/images/icons/check.svg', mid: '/images/icons/warning.svg', high: '/images/icons/cross.svg' }
       const bgMap = { low: '#E8F5E9', mid: '#FFF3E0', high: '#FFEBEE' }
       const levelText = { low: '低风险', mid: '中等风险', high: '高风险' }
       const symptomNames = record.symptoms || record.symptom_names || []
@@ -66,7 +66,7 @@ function createRecordList(records, petId, type) {
 
       return {
         _id: record._id,
-        icon: iconMap[level] || '✅',
+        icon: iconMap[level] || '/images/icons/check.svg',
         bgColor: bgMap[level] || '#E8F5E9',
         title: symptomNames.slice(0, 3).join('、') || '自查记录',
         desc: (typeof createdAt === 'string' ? createdAt.substring(0, 10) : '') + ' · ' + (levelText[level] || '低风险'),

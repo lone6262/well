@@ -10,7 +10,7 @@
         </view>
       </view>
       <view class="header-content">
-        <text class="header-icon">🐾</text>
+        <image class="header-icon" src="/images/icons/paw.svg" style="width:44rpx;height:44rpx;" aria-label="爪印" />
         <text class="header-title">宠物回访</text>
         <text class="header-subtitle">告诉我们宝贝的恢复情况</text>
       </view>
@@ -20,7 +20,7 @@
   <!-- 提交成功 -->
   <view class="success-section" wx:if="{{submitted}}">
     <view class="success-card">
-      <text class="success-emoji">🎉</text>
+      <image class="success-emoji" src="/images/icons/gift.svg" style="width:96rpx;height:96rpx;" aria-label="成功" />
       <text class="success-title">感谢您的反馈</text>
       <text class="success-desc">您的回访信息已记录，有助于我们为宝贝提供更好的健康建议</text>
       <button class="btn-primary" bindtap="goHome">返回首页</button>
@@ -32,7 +32,7 @@
     <!-- 宠物信息卡 -->
     <view class="card">
       <view class="card-label">
-        <text class="card-label-icon">🐾</text>
+        <image class="card-label-icon" src="/images/icons/paw.svg" style="width:32rpx;height:32rpx;" aria-label="爪印" />
         <text class="card-label-text">{{petName || '宠物'}}的恢复情况</text>
       </view>
       <view class="symptom-tags" wx:if="{{symptomList.length > 0}}">
@@ -52,7 +52,7 @@
               wx:for="{{statusOptions}}" wx:key="key"
               bindtap="selectStatus" data-status="{{item.key}}"
               style="{{selectedStatus === item.key ? 'border-color:' + item.color + ';background:' + item.color + '0a' : ''}}">
-          <text class="status-emoji">{{item.icon}}</text>
+          <image class="status-emoji" src="{{item.icon}}" mode="aspectFit" />
           <text class="status-label" style="{{selectedStatus === item.key ? 'color:' + item.color : ''}}">{{item.label}}</text>
           <view class="status-check" wx:if="{{selectedStatus === item.key}}">✓</view>
         </view>
@@ -63,20 +63,20 @@
     <view class="card">
       <view class="switch-row">
         <view class="switch-info">
-          <text class="switch-icon">🏥</text>
+          <image class="switch-icon" src="/images/icons/hospital.svg" style="width:36rpx;height:36rpx;" aria-label="医院" />
           <view class="switch-text">
             <text class="switch-label">是否去看了医生</text>
             <text class="switch-hint">帮助我们了解就医情况</text>
           </view>
         </view>
-        <switch checked="{{visitedVet}}" bindchange="toggleVetVisit" color="#667eea" />
+        <switch checked="{{visitedVet}}" bindchange="toggleVetVisit" color="#B35D3A" />
       </view>
     </view>
 
     <!-- 补充说明 -->
     <view class="card">
       <view class="card-label">
-        <text class="card-label-text">📝 补充说明</text>
+        <text class="card-label-text">补充说明</text>
       </view>
       <textarea class="textarea"
                 placeholder="关于宝贝恢复情况的补充说明..."

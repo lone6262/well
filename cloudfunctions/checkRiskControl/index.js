@@ -7,6 +7,7 @@ const {
   ORDER_TYPES,
   PRICES,
   warmupConfig,
+  loadPrices,
 } = require('./common/constants');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
@@ -36,6 +37,10 @@ const RISK_LIMITS = {
  */
 exports.main = async (event, context) => {
   await warmupConfig(db);
+  // V2.0: 价格从 DB 动态加载，覆盖硬编码默认值
+  const priceConfig = await loadPrices(db);
+  Object.assign(PRICES, priceConfig.prices);
+  RISK_LIMITS.MANUAL_REVIEW_THRESHOLD = PRICES.MANUAL_REVIEW_THRESHOLD;
   const { OPENID } = cloud.getWXContext();
   const { userId, orderType, amount } = event;
 

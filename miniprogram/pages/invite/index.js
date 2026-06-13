@@ -216,8 +216,8 @@ Page({
 
       // 背景渐变
       var gradient = ctx.createLinearGradient(0, 0, 0, 800)
-      gradient.addColorStop(0, '#667eea')
-      gradient.addColorStop(1, '#764ba2')
+      gradient.addColorStop(0, '#B35D3A')
+      gradient.addColorStop(1, '#E8A87C')
       ctx.fillStyle = gradient
       ctx.fillRect(0, 0, 600, 800)
 

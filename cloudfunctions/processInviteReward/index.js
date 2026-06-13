@@ -7,10 +7,11 @@ let {
   RESPONSE_CODE,
   INVITE_STATUS,
   INVITE_CONFIG,
-  PRICES,
   MEMBER_STATUS,
   MEMBER_CREDITS,
-  MEMBER_LIMITS
+  MEMBER_LIMITS,
+  warmupConfig,
+  loadPrices
 } = require('./common/constants');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
@@ -26,6 +27,9 @@ let _ = db.command;
  */
 exports.main = async (event, context) => {
   await warmupConfig(db);
+  // V2.0: 价格/额度从 DB 动态加载，覆盖硬编码默认值
+  const priceConfig = await loadPrices(db);
+  Object.assign(MEMBER_CREDITS, priceConfig.memberCredits);
   let OPENID_OBJ = cloud.getWXContext();
   let inviteeOpenid = OPENID_OBJ.OPENID;
   let recordId = event.recordId;

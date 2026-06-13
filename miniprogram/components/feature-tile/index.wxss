@@ -1,0 +1,76 @@
+/* feature-tile — 功能磁贴 */
+/* 白底 + 顶部色条 + 图标在淡色圆容器中 + 无渐变 */
+
+.feature-tile {
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  padding: 24rpx;
+  border: 1rpx solid var(--border-color);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 160rpx;
+  transition: transform var(--duration-base) var(--ease-standard);
+}
+
+/* --- 顶部色条 --- */
+.feature-tile::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4rpx;
+}
+
+.feature-tile--primary::before { background: var(--brand-primary); }
+.feature-tile--success::before { background: var(--color-success); }
+.feature-tile--warning::before { background: var(--color-warning); }
+.feature-tile--info::before { background: var(--color-info); }
+.feature-tile--emergency::before { background: var(--brand-emergency); }
+.feature-tile--secondary::before { background: var(--brand-secondary); }
+
+/* --- 图标容器 --- */
+.feature-tile__icon-wrap {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12rpx;
+}
+
+.feature-tile--primary .feature-tile__icon-wrap { background: var(--brand-primary-light); }
+.feature-tile--success .feature-tile__icon-wrap { background: var(--color-success-light); }
+.feature-tile--warning .feature-tile__icon-wrap { background: var(--color-warning-light); }
+.feature-tile--info .feature-tile__icon-wrap { background: var(--color-info-light); }
+.feature-tile--emergency .feature-tile__icon-wrap { background: var(--color-danger-light); }
+.feature-tile--secondary .feature-tile__icon-wrap { background: var(--brand-secondary-light); }
+
+.feature-tile__icon {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+/* --- 内容区 --- */
+.feature-tile__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.feature-tile__title {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* --- 按压效果 --- */
+.feature-tile--active {
+  transform: scale(0.97);
+}

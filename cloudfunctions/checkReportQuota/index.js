@@ -1,6 +1,6 @@
 // 云函数入口文件
 const cloud = require('wx-server-sdk');
-const { COLLECTIONS, RESPONSE_CODE, PRICES, MEMBER_STATUS, MEMBER_CREDITS , warmupConfig} = require('./common/constants');
+const { COLLECTIONS, RESPONSE_CODE, MEMBER_STATUS , warmupConfig, loadPrices} = require('./common/constants');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
@@ -32,6 +32,9 @@ function calcNextReset(startDate, currentReset) {
  */
 exports.main = async (event, context) => {
   await warmupConfig(db);
+  const priceConfig = await loadPrices(db);
+  const dbPrices = priceConfig.prices;
+  const dbCredits = priceConfig.memberCredits;
   const { OPENID } = cloud.getWXContext();
   const openid = OPENID;
 
@@ -76,7 +79,7 @@ exports.main = async (event, context) => {
           data: {
             has_free_quota: true,
             quota_source: 'first_report',
-            price: PRICES.FIRST_REPORT,
+            price: dbPrices.FIRST_REPORT,
             price_display: '1.00',
             description: '新用户首份AI报告仅需1元'
           }
@@ -126,7 +129,7 @@ exports.main = async (event, context) => {
         console.log('[checkReportQuota] 会员额度已按月重置，下次重置:', newResetAt);
       }
 
-      const expectedTotal = member.type === 'yearly' ? MEMBER_CREDITS.YEARLY_REPORTS : MEMBER_CREDITS.MONTHLY_REPORTS;
+      const expectedTotal = member.type === 'yearly' ? dbCredits.YEARLY_REPORTS : dbCredits.MONTHLY_REPORTS;
       let total = member.report_credits_total || expectedTotal;
       // 旧会员迁移：如果库里的 total 低于当前配置，使用新值
       if (total < expectedTotal) total = expectedTotal;
@@ -153,7 +156,7 @@ exports.main = async (event, context) => {
         data: {
           has_free_quota: false,
           quota_source: 'paid',
-          price: PRICES.STANDARD_REPORT,
+          price: dbPrices.STANDARD_REPORT,
           price_display: '9.90',
           member_quota_exhausted: true,
           member_quota_used: used,
@@ -194,8 +197,8 @@ exports.main = async (event, context) => {
       data: {
         has_free_quota: false,
         quota_source: 'paid',
-        price: PRICES.STANDARD_REPORT,
-        price_display: '9.90',
+        price: dbPrices.STANDARD_REPORT,
+        price_display: (dbPrices.STANDARD_REPORT / 100).toFixed(2),
         description: '标准AI健康报告'
       }
     };

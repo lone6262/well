@@ -1,5 +1,5 @@
 <!--pages/validate/validate.wxml-->
-<view class="container">
+<view class="validate-page">
   <view class="header">
     <text class="title">云开发环境验证</text>
     <text class="subtitle">快速诊断配置问题</text>
@@ -21,7 +21,8 @@
   <view class="result-section" wx:if="{{validationResult}}">
     <view class="result-card {{validationResult.success ? 'success' : 'error'}}">
       <view class="result-icon">
-        <text>{{validationResult.success ? '✅' : '❌'}}</text>
+        <image wx:if="{{validationResult.success}}" class="icon-img" src="/images/icons/check.svg" aria-label="通过" />
+        <image wx:else class="icon-img" src="/images/icons/cross.svg" aria-label="失败" />
       </view>
       <view class="result-content">
         <view class="result-title">
@@ -29,7 +30,8 @@
         </view>
         <view class="result-message">{{validationResult.message}}</view>
         <view class="result-suggestion" wx:if="{{validationResult.suggestion}}">
-          💡 {{validationResult.suggestion}}
+          <image class="icon-img-sm" src="/images/icons/warning.svg" aria-label="提示" style="width:28rpx;height:28rpx;vertical-align:middle;margin-right:8rpx;" />
+          {{validationResult.suggestion}}
         </view>
       </view>
     </view>

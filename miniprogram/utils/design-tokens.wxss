@@ -46,10 +46,7 @@ page {
   --border-light: #F0EBE6;
   --border-dark: #C4BFB8;
 
-  /* --- 兼容变量（deprecated，Phase 6 清理） --- */
-  --compat-blue: #4A90E2;
-  --compat-primary: #4A90E2;
-  --compat-primary-light: #e3f2fd;
+  /* --- 兼容变量（已清理，不再使用旧色值） --- */
 
   /* --- 间距 Spacing（8rpx 基线） --- */
   --spacing-xs: 8rpx;

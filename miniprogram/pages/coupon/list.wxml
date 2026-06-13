@@ -1,4 +1,13 @@
 <view class="coupon-list-page">
+  <!-- 顶部操作栏 -->
+  <view class="coupon-top-bar">
+    <text class="coupon-top-title">我的优惠券</text>
+    <view class="coupon-top-link" bindtap="goToReceive">
+      <text>领券中心</text>
+      <text class="coupon-top-arrow">›</text>
+    </view>
+  </view>
+
   <!-- 顶部 Tab -->
   <view class="tabs">
     <view class="tab {{activeTab === 'unused' ? 'active' : ''}}" data-tab="unused" bindtap="onTabChange">可使用</view>
@@ -30,6 +39,7 @@
 
     <view class="empty" wx:if="{{coupons.length === 0}}">
       <text>暂无优惠券</text>
+      <button class="goto-receive-btn" bindtap="goToReceive">去领券中心看看</button>
     </view>
   </view>
 

@@ -1,4 +1,4 @@
-// 宠物档案页面逻辑 - 数据库版本 + 图片上传
+// 宠物档案页面逻辑 — 数据库版本 + 图片上传
 const logger = require('../../utils/logger.js')
 const log = logger.child('PetProfile')
 const petService = require('./pet-service.js')
@@ -14,6 +14,8 @@ Page({
     isEdit: false,
     currentPetId: '',
     formData: formHandler.createDefaultFormData(),
+    formErrors: {},
+    focusedField: '',
     showRecordModal: false,
     recordModalTitle: '',
     recordList: [],
@@ -96,6 +98,8 @@ Page({
       isEdit: false,
       currentPetId: '',
       formData: formHandler.createDefaultFormData(),
+      formErrors: {},
+      focusedField: '',
       avatarPreview: ''
     })
   },
@@ -125,6 +129,8 @@ Page({
       isEdit: true,
       currentPetId: petId,
       formData: formHandler.buildFormDataFromPet(pet),
+      formErrors: {},
+      focusedField: '',
       avatarPreview: pet.avatar || ''
     })
   },
@@ -136,7 +142,9 @@ Page({
       isEdit: false,
       currentPetId: '',
       avatarPreview: '',
-      formData: formHandler.createDefaultFormData()
+      formData: formHandler.createDefaultFormData(),
+      formErrors: {},
+      focusedField: ''
     })
   },
 
@@ -188,12 +196,19 @@ Page({
     })
   },
 
+  // === 表单输入处理 ===
+
   selectType: function(e) {
-    formHandler.setFormField(this, 'type', e.currentTarget.dataset.type)
+    const newType = e.currentTarget.dataset.type
+    formHandler.setFormField(this, 'type', newType)
+    this._clearFieldError('type')
   },
 
   onNameInput: function(e) {
     formHandler.setFormField(this, 'name', e.detail.value)
+    if (this.data.formErrors.name) {
+      this._clearFieldError('name')
+    }
   },
 
   onTypeChange: function(e) {
@@ -206,6 +221,9 @@ Page({
 
   onAgeInput: function(e) {
     formHandler.setFormField(this, 'age', e.detail.value)
+    if (this.data.formErrors.age) {
+      this._clearFieldError('age')
+    }
   },
 
   onWeightInput: function(e) {
@@ -213,12 +231,21 @@ Page({
   },
 
   onInputFocus: function(e) {
-    log.info('输入框获得焦点，当前值:', e.detail.value)
-    log.info('输入字段:', e.currentTarget.dataset.field || '')
+    const field = e.currentTarget.dataset.field
+    if (field) {
+      this.setData({ focusedField: field })
+    }
   },
 
   onInputBlur: function(e) {
-    log.info('输入框失去焦点，当前值:', e.detail.value)
+    const field = e.currentTarget.dataset.field
+    if (field && this.data.focusedField === field) {
+      this.setData({ focusedField: '' })
+    }
+    // 失焦时实时校验当前字段
+    if (field) {
+      this._validateField(field, e.detail.value)
+    }
   },
 
   onGenderChange: function(e) {
@@ -233,11 +260,107 @@ Page({
     formHandler.setFormField(this, 'dewormDate', e.detail.value)
   },
 
+  /** 清除单个输入框 */
+  clearField: function(e) {
+    const field = e.currentTarget.dataset.field
+    if (!field) return
+
+    const updates = {}
+    updates['formData.' + field] = ''
+    // 如果是名字字段还清除错误
+    if (field === 'name' || field === 'age') {
+      updates['formErrors.' + field] = ''
+    }
+    this.setData(updates)
+  },
+
+  /** 快捷日期选择 */
+  setQuickDate: function(e) {
+    const field = e.currentTarget.dataset.field
+    const offsetDays = parseInt(e.currentTarget.dataset.offset, 10)
+    const date = new Date()
+    date.setDate(date.getDate() + offsetDays)
+
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const dateStr = year + '-' + month + '-' + day
+
+    formHandler.setFormField(this, field, dateStr)
+  },
+
+  // === 字段级校验 ===
+
+  _validateField: function(field, value) {
+    const errors = Object.assign({}, this.data.formErrors)
+    let hasError = false
+
+    if (field === 'name') {
+      if (!value || !value.trim()) {
+        errors.name = '请输入宠物昵称'
+        hasError = true
+      } else if (value.trim().length > 20) {
+        errors.name = '昵称不超过20个字'
+        hasError = true
+      } else {
+        delete errors.name
+      }
+    }
+
+    if (field === 'age') {
+      if (!value) {
+        errors.age = '请输入年龄'
+        hasError = true
+      } else if (isNaN(parseFloat(value)) || parseFloat(value) < 0) {
+        errors.age = '请输入有效数字'
+        hasError = true
+      } else if (parseFloat(value) > 360) {
+        errors.age = '年龄不太合理'
+        hasError = true
+      } else {
+        delete errors.age
+      }
+    }
+
+    if (field === 'weight') {
+      if (value && (isNaN(parseFloat(value)) || parseFloat(value) < 0)) {
+        errors.weight = '请输入有效数字'
+        hasError = true
+      } else {
+        delete errors.weight
+      }
+    }
+
+    this.setData({ formErrors: errors })
+    return !hasError
+  },
+
+  _clearFieldError: function(field) {
+    if (this.data.formErrors[field]) {
+      const errors = Object.assign({}, this.data.formErrors)
+      delete errors[field]
+      this.setData({ formErrors: errors })
+    }
+  },
+
+  // === 保存 ===
+
   savePet: function() {
     const formData = this.data.formData
     const validation = formHandler.validatePetForm(formData)
 
     if (!validation.valid) {
+      // 映射到字段级错误
+      const errors = {}
+      if (!formData.name || !formData.name.trim()) {
+        errors.name = '请输入宠物昵称'
+      }
+      if (!formData.age) {
+        errors.age = '请输入年龄'
+      } else if (isNaN(parseFloat(formData.age))) {
+        errors.age = '请输入有效数字'
+      }
+      this.setData({ formErrors: errors })
       wx.showToast({ title: validation.message, icon: 'none' })
       return
     }
@@ -263,6 +386,8 @@ Page({
       afterSave: this._afterPetChanged.bind(this)
     })
   },
+
+  // === 删除 ===
 
   deletePet: function(e) {
     const petId = e.currentTarget.dataset.petId
@@ -304,6 +429,8 @@ Page({
     })
   },
 
+  // === 头像 ===
+
   chooseAvatar: function() {
     formHandler.chooseAvatar(this, imageUpload)
   },
@@ -315,6 +442,8 @@ Page({
   previewAvatar: function() {
     formHandler.previewAvatar(this)
   },
+
+  // === 自动编辑 ===
 
   autoOpenEditModal: function(petId) {
     log.info('准备自动打开编辑弹窗，宠物ID:', petId)
@@ -332,15 +461,19 @@ Page({
       isEdit: true,
       currentPetId: pet._id || pet.petId,
       formData: formHandler.buildFormDataFromPet(pet),
+      formErrors: {},
+      focusedField: '',
       avatarPreview: pet.avatar || ''
     })
 
     wx.showToast({
-      title: `正在编辑${pet.name}`,
+      title: '正在编辑' + pet.name,
       icon: 'success',
       duration: 1500
     })
   },
+
+  // === 记录 ===
 
   quickCheck: function(e) {
     const petId = e.currentTarget.dataset.petId
@@ -383,6 +516,8 @@ Page({
       e.currentTarget.dataset.recordId
     )
   },
+
+  // === 内部方法 ===
 
   _findPetById: function(petId) {
     return this.data.petList.find(function(pet) {

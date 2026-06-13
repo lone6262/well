@@ -62,14 +62,14 @@
     <text class="report-card-desc">包含症状分析、护理建议、就医指导等8大章节</text>
 
     <view class="report-quota-notice" wx:if="{{quotaInfo.member_quota_exhausted}}">
-      <text>本月免费额度已用完（{{quotaInfo.member_quota_used}}/{{quotaInfo.member_quota_total}}），本次 ¥9.90</text>
+      <text>本月免费额度已用完（{{quotaInfo.member_quota_used}}/{{quotaInfo.member_quota_total}}），本次 ¥{{standardReportDisplay}}</text>
       <text class="report-upgrade-link" bindtap="goToMember">升级年度会员 →</text>
     </view>
 
     <view class="report-price-row">
-      <text class="report-price" wx:if="{{quotaInfo.quota_source === 'first_report'}}">首份 ¥1.00</text>
+      <text class="report-price" wx:if="{{quotaInfo.quota_source === 'first_report'}}">首份 ¥{{firstReportDisplay}}</text>
       <text class="report-price" wx:elif="{{quotaInfo.has_free_quota}}">免费获取</text>
-      <text class="report-price" wx:else>¥9.90</text>
+      <text class="report-price" wx:else>¥{{standardReportDisplay}}</text>
       <text class="report-member-link" wx:if="{{quotaInfo.quota_source === 'paid' && !quotaInfo.member_quota_exhausted}}" bindtap="goToMember">成为会员，免费获取 ›</text>
     </view>
 
@@ -88,9 +88,9 @@
     <button class="report-done-btn" bindtap="viewExistingReport">查看报告详情</button>
   </view>
 
-  <!-- 操作按钮区 -->
+  <!-- 操作按钮区 — 页面流内按钮 -->
   <view class="actions">
-    <!-- 高风险 -->
+    <!-- 高风险：警告框 + 急救按钮 -->
     <block wx:if="{{riskLevel === 'high'}}">
       <view class="high-risk-box">
         <image class="high-risk-icon" src="/images/icons/alert.svg" mode="aspectFit" aria-label="危险" />
@@ -101,24 +101,18 @@
         </view>
         <text class="high-risk-note">AI 报告无法替代紧急救治，请优先就医</text>
       </view>
-      <button class="action-btn action-btn--emergency" bindtap="goToEmergency">
-        <image class="action-btn-icon" src="/images/icons/alert.svg" mode="aspectFit" />前往急救通道
-      </button>
-      <button class="action-btn action-btn--primary" bindtap="viewHospitals">
-        <image class="action-btn-icon" src="/images/icons/hospital.svg" mode="aspectFit" />查看附近医院
-      </button>
+      <view class="home-btn home-btn--emergency" bindtap="goToEmergency">
+        <image class="home-btn-icon" src="/images/icons/alert.svg" mode="aspectFit" />前往急救通道
+      </view>
     </block>
 
-    <!-- 中风险 -->
-    <block wx:if="{{riskLevel === 'mid'}}">
-      <button class="action-btn action-btn--primary" bindtap="viewHospitals">
-        <image class="action-btn-icon" src="/images/icons/hospital.svg" mode="aspectFit" />查看附近医院
-      </button>
-      <button class="action-btn action-btn--secondary" bindtap="goHome">返回首页</button>
-    </block>
-
-    <!-- 低风险 -->
-    <button class="action-btn action-btn--secondary" wx:if="{{riskLevel === 'low'}}" bindtap="goHome">返回首页</button>
+    <!-- 返回首页 + 附近医院 左右并排 -->
+    <view class="actions-row">
+      <view class="home-btn home-btn--secondary" bindtap="goHome">返回首页</view>
+      <view class="home-btn home-btn--hospital" bindtap="viewHospitals">
+        <image class="home-btn-icon" src="/images/icons/hospital.svg" mode="aspectFit" />附近医院
+      </view>
+    </view>
   </view>
 
   <!-- 支付选项面板 -->
@@ -136,7 +130,7 @@
             <text class="pay-option-desc">一次性获取完整AI报告</text>
           </view>
         </view>
-        <text class="pay-option-price">¥9.90</text>
+        <text class="pay-option-price">¥{{standardReportDisplay}}</text>
       </view>
       <view class="pay-option pay-option--recommend" bindtap="chooseMembership" hover-class="pay-option--hover">
         <view class="pay-recommend-badge">推荐</view>
@@ -144,10 +138,10 @@
           <image class="pay-option-icon" src="/images/icons/crown.svg" mode="aspectFit" aria-label="会员" />
           <view class="pay-option-info">
             <text class="pay-option-name">开通会员</text>
-            <text class="pay-option-desc">每月3份免费报告 + 无限自查</text>
+            <text class="pay-option-desc">每月{{riskMonthlyCredits}}份免费报告 + 无限自查</text>
           </view>
         </view>
-        <text class="pay-option-price">¥19.90<small>/月</small></text>
+        <text class="pay-option-price">¥{{riskMonthlyPrice}}<small>/月</small></text>
       </view>
       <view class="pay-cancel" bindtap="closePayOptions">取消</view>
     </view>

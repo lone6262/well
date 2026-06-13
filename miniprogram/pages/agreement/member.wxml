@@ -1,4 +1,4 @@
-<view class="container">
+<view class="article-page">
   <view class="page-header">
     <view class="back-btn" bindtap="goBack" hover-class="back-btn-active">
       <view class="back-arrow"></view>
@@ -13,13 +13,13 @@
       <view class="section">
         <text class="section-title">一、服务内容</text>
         <text class="section-text">Well宠物健康平台（以下简称"本平台"）提供以下会员服务：</text>
-        <text class="section-text">1. 月度会员：¥19.90/月</text>
-        <text class="section-text">2. 年度会员：¥99.00/年</text>
+        <text class="section-text">1. 月度会员：¥{{monthlyDisplay}}/月</text>
+        <text class="section-text">2. 年度会员：¥{{yearlyDisplay}}/年</text>
         <text class="section-text">具体权益以购买时展示的内容为准。本平台保留调整价格和权益的权利，调整前已购买的会员不受影响。</text>
       </view>
       <view class="section">
         <text class="section-title">二、会员权益</text>
-        <text class="section-text">1. 每月3次AI健康报告额度</text>
+        <text class="section-text">1. 每月{{monthlyCredits}}次AI健康报告额度</text>
         <text class="section-text">2. 不限次数症状自查</text>
         <text class="section-text">3. 宠物疫苗/驱虫到期提醒（需授权订阅消息）</text>
         <text class="section-text">4. 历史AI报告永久保存</text>

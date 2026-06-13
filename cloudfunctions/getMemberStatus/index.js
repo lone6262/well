@@ -1,6 +1,6 @@
 // 云函数入口文件
 const cloud = require('wx-server-sdk');
-const { COLLECTIONS, RESPONSE_CODE, MEMBER_STATUS, MEMBER_CREDITS, PRICES, warmupConfig} = require('./common/constants');
+const { COLLECTIONS, RESPONSE_CODE, MEMBER_STATUS, warmupConfig, loadPrices} = require('./common/constants');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
@@ -112,9 +112,21 @@ exports.main = async (event, context) => {
       };
     }
 
-    // 5. 检查报告额度（以配置值为准，兜底迁移旧数据）
+    // 5. 加载价格/额度配置（DB 优先，回退默认值）
+    const dbPriceConfig = await loadPrices(db);
+    const dbCredits = dbPriceConfig.memberCredits;
+    const dbPrices = dbPriceConfig.prices;
+
+    let expectedTotal = dbCredits.MONTHLY_REPORTS;
+    if (member.type === 'yearly') {
+      expectedTotal = dbCredits.YEARLY_REPORTS;
+    } else if (member.type === 'family_monthly') {
+      expectedTotal = dbCredits.FAMILY_MONTHLY_REPORTS;
+    } else if (member.type === 'family_yearly') {
+      expectedTotal = dbCredits.FAMILY_YEARLY_REPORTS;
+    }
+    // 体验会员类型暂不作特殊处理，使用默认值
     let creditsUsed = member.report_credits_used || 0;
-    let expectedTotal = member.type === 'yearly' ? MEMBER_CREDITS.YEARLY_REPORTS : MEMBER_CREDITS.MONTHLY_REPORTS;
     let creditsTotal = expectedTotal; // 始终使用配置值，旧会员自动升级
     let nextResetAt = member.report_credits_reset_at ? new Date(member.report_credits_reset_at) : null;
 
@@ -162,15 +174,15 @@ exports.main = async (event, context) => {
       const totalPaid = (paidOrdersResult.data || []).reduce(function(sum, o) {
         return sum + (o.amount || 0);
       }, 0);
-      savedAmount = Math.max(0, PRICES.STANDARD_REPORT * totalReports - totalPaid);
+      savedAmount = Math.max(0, dbPrices.STANDARD_REPORT * totalReports - totalPaid);
     }
 
     // 续费价格
     const RENEW_PRICE_MAP = {
-      monthly: PRICES.RENEW_MONTHLY,
-      yearly: PRICES.RENEW_YEARLY,
-      family_monthly: PRICES.RENEW_FAMILY_MONTHLY,
-      family_yearly: PRICES.RENEW_FAMILY_YEARLY,
+      monthly: dbPrices.RENEW_MONTHLY,
+      yearly: dbPrices.RENEW_YEARLY,
+      family_monthly: dbPrices.RENEW_FAMILY_MONTHLY,
+      family_yearly: dbPrices.RENEW_FAMILY_YEARLY,
     };
     const renewPrice = RENEW_PRICE_MAP[member.type] || 0;
 

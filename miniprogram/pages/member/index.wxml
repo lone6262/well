@@ -1,14 +1,8 @@
 <!--会员中心页面 — V1.5 商业化增强版-->
 <view class="page-container">
-  <!-- 顶部渐变头部 -->
+  <!-- 顶部品牌头部 -->
   <view class="page-header">
     <view class="header-inner">
-      <view class="nav-bar">
-        <view class="back-btn" bindtap="goBack" hover-class="back-btn-active">
-          <view class="back-arrow"></view>
-          <text class="back-text">返回</text>
-        </view>
-      </view>
       <view class="header-content">
         <image class="header-icon" src="/images/icons/crown.svg" mode="aspectFit" />
         <text class="header-title">会员中心</text>
@@ -57,6 +51,22 @@
       <text class="progress-hint" wx:if="{{memberInfo.report_credits_remaining === 0}}">本月额度已用完，可购买点数包或升级套餐</text>
     </view>
 
+    <!-- V2.0: 点数余额展示 -->
+    <view class="card" wx:if="{{isMember || pointsBalance > 0}}">
+      <view class="points-row">
+        <view class="points-row-left">
+          <image class="points-row-icon" src="/images/icons/gift.svg" mode="aspectFit" />
+          <text class="card-title" style="margin-bottom:0;">我的点数</text>
+        </view>
+        <view class="points-row-right">
+          <text class="points-balance-num">{{pointsBalance}}</text>
+          <text class="points-balance-unit">点</text>
+        </view>
+      </view>
+      <text class="points-expire-hint" wx:if="{{pointsExpireAt && pointsBalance > 0}}">有效期至 {{pointsExpireAt.substring(0,10)}}</text>
+      <text class="points-expire-hint" wx:if="{{pointsBalance === 0}}">无可用点数，可购买点数包随时补充</text>
+    </view>
+
     <!-- ===== V1.5 新增：快捷功能区 ===== -->
     <view class="card shortcut-card">
       <text class="card-title" style="margin-bottom: 24rpx;">增值服务</text>
@@ -67,7 +77,7 @@
             <image class="shortcut-icon" src="/images/icons/gift.svg" mode="aspectFit" />
           </view>
           <text class="shortcut-name">点数包</text>
-          <text class="shortcut-price">¥19.9起</text>
+          <text class="shortcut-price">{{pointsEntryPrice}}</text>
         </view>
         <!-- 优惠券 -->
         <view class="shortcut-item" bindtap="goToCoupons">
@@ -83,7 +93,7 @@
             <image class="shortcut-icon" src="/images/icons/gift.svg" mode="aspectFit" />
           </view>
           <text class="shortcut-name">超值套餐</text>
-          <text class="shortcut-price">省¥9.9</text>
+          <text class="shortcut-price">{{bundleEntrySave}}</text>
         </view>
         <!-- 邀请好友 -->
         <view class="shortcut-item" bindtap="goToInvite">
@@ -104,10 +114,10 @@
         <view class="recommend-item" bindtap="goToPurchaseMonthly">
           <view class="recommend-info">
             <text class="recommend-name">个人月卡</text>
-            <text class="recommend-desc">每月3次AI报告</text>
+            <text class="recommend-desc">每月{{creditsMonthly}}次AI报告，约{{discountMonthly}}折</text>
           </view>
           <view class="recommend-right">
-            <text class="recommend-price">¥19.90</text>
+            <text class="recommend-price">¥{{priceMonthly}}</text>
             <text class="recommend-arrow">›</text>
           </view>
         </view>
@@ -116,10 +126,10 @@
           <view class="recommend-hot-tag">推荐</view>
           <view class="recommend-info">
             <text class="recommend-name">个人年卡</text>
-            <text class="recommend-desc">≈¥8.25/月，省38%</text>
+            <text class="recommend-desc">≈¥{{yearlyPerMonth}}/月，约{{discountYearly}}折</text>
           </view>
           <view class="recommend-right">
-            <text class="recommend-price">¥99.00</text>
+            <text class="recommend-price">¥{{priceYearly}}</text>
             <text class="recommend-arrow">›</text>
           </view>
         </view>
@@ -127,10 +137,10 @@
         <view class="recommend-item" bindtap="goToPurchaseFamilyMonthly">
           <view class="recommend-info">
             <text class="recommend-name">家庭月卡</text>
-            <text class="recommend-desc">每月6次 + 5只宠物</text>
+            <text class="recommend-desc">每月{{creditsFamilyMonthly}}次，约{{discountFamilyMonthly}}折</text>
           </view>
           <view class="recommend-right">
-            <text class="recommend-price">¥29.90</text>
+            <text class="recommend-price">¥{{priceFamilyMonthly}}</text>
             <text class="recommend-arrow">›</text>
           </view>
         </view>
@@ -138,10 +148,10 @@
         <view class="recommend-item" bindtap="goToPurchaseFamilyYearly">
           <view class="recommend-info">
             <text class="recommend-name">家庭年卡</text>
-            <text class="recommend-desc">≈¥16.58/月，最划算</text>
+            <text class="recommend-desc">≈¥{{yearlyFamilyPerMonth}}/月，约{{discountFamilyYearly}}折</text>
           </view>
           <view class="recommend-right">
-            <text class="recommend-price">¥199.00</text>
+            <text class="recommend-price">¥{{priceFamilyYearly}}</text>
             <text class="recommend-arrow">›</text>
           </view>
         </view>
@@ -157,10 +167,10 @@
           <image class="benefit-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />
         </view>
         <view class="benefit-info">
-          <text class="benefit-name">每月{{memberInfo.report_credits_total || 3}}次AI报告</text>
+          <text class="benefit-name">每月{{memberInfo.report_credits_total || creditsMonthly}}次AI报告</text>
           <text class="benefit-desc">深度分析宠物健康状况</text>
         </view>
-        <text class="benefit-value">¥29.9/次 <text class="benefit-discount">约3折</text></text>
+        <text class="benefit-value">¥{{currentPerReport}}/次 <text class="benefit-discount">约{{currentDiscount}}折</text></text>
       </view>
 
       <view class="benefit-item">
@@ -223,12 +233,11 @@
 
     <!-- 底部按钮 -->
     <view class="btn-area">
-      <button class="btn-primary" bindtap="goToPurchase" hover-class="btn-hover">
-        {{isMember ? '续费 / 升级' : '立即开通会员'}}
-      </button>
-      <button class="btn-secondary" bindtap="goToStatus" wx:if="{{isMember}}" hover-class="btn-hover">
-        查看会员详情
-      </button>
+      <view class="btn-row" wx:if="{{isMember}}">
+        <view class="btn-secondary" bindtap="goToStatus" hover-class="btn-hover">会员详情</view>
+        <view class="btn-primary" bindtap="goToPurchase" hover-class="btn-hover">续费 / 升级</view>
+      </view>
+      <view class="btn-primary btn-full" bindtap="goToPurchase" hover-class="btn-hover" wx:if="{{!isMember}}">立即开通会员</view>
     </view>
   </view>
 

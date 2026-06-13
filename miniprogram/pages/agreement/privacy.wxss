@@ -1,5 +1,5 @@
 page { background-color: #f5f6f8; }
-.container { width: 100%; max-width: 750rpx; margin: 0 auto; min-height: 100vh; box-sizing: border-box; }
+.article-page { width: 100%; max-width: 750rpx; margin: 0 auto; min-height: 100vh; box-sizing: border-box; }
 .page-header { display: flex; align-items: center; justify-content: space-between; padding: 20rpx 24rpx; background-color: #ffffff; border-bottom: 1rpx solid #f0f0f0; }
 .back-btn { display: flex; align-items: center; padding: 10rpx 20rpx; border-radius: 28rpx; }
 .back-btn-active { background: rgba(0, 0, 0, 0.05); }

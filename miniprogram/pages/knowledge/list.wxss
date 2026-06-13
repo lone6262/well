@@ -151,6 +151,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: nowrap;
 }
 
 /* === 宠物类型标签 === */
@@ -158,6 +159,8 @@
   padding: 4rpx 16rpx;
   background: #f0f7ff;
   border-radius: 16rpx;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .badge-text {
@@ -170,15 +173,15 @@
   display: flex;
   align-items: center;
   gap: 6rpx;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
+/* image 本身即 .view-icon，直接设宽高（旧 .view-icon image 选择器不匹配，导致用默认 320×240 撑乱 footer） */
 .view-icon {
-  font-size: 22rpx;
-}
-
-.view-icon image {
   width: 22rpx;
   height: 22rpx;
+  flex-shrink: 0;
 }
 
 .view-text {

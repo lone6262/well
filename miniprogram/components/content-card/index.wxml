@@ -1,0 +1,11 @@
+<!--
+  content-card — 内容卡片组件
+  用于：医院、文章、记录等列表项
+  Props:
+    accent: String — 左侧强调线颜色类型 'brand' | 'success' | 'warning' | 'danger'
+    hover: Boolean — 是否启用按压效果（默认 true）
+-->
+<view class="content-card {{accent ? 'content-card--accent-' + accent : ''}} {{hover ? 'content-card--hover' : ''}}"
+      hover-class="{{hover ? 'content-card--active' : ''}}">
+  <slot></slot>
+</view>

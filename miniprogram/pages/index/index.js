@@ -22,7 +22,9 @@ Page({
     pendingFollowup: null,
     dailyKnowledge: null,
     isMember: false,
-    memberDaysRemaining: 0
+    memberDaysRemaining: 0,
+    // V2.0: 动态价格
+    firstReportDisplay: '1.00'
   },
 
   onLoad(options) {
@@ -43,8 +45,14 @@ Page({
       log.info('登录回调触发，准备加载宠物数据')
       self.loadPetList()
       self.loadMemberStatus()
+      self.loadPrices()
       self.lastLoadedOpenid = openid
     })
+
+    // V2.0: 同时尝试加载价格（若已登录则直接加载）
+    if (app.globalData.openid && app.globalData.token) {
+      this.loadPrices()
+    }
 
     log.info('首页加载完成，等待onShow触发医院数据加载')
   },
@@ -119,6 +127,24 @@ Page({
     dataLoader.loadMemberStatus(this)
   },
 
+  /** V2.0: 加载云端价格 */
+  loadPrices: function() {
+    const self = this
+    wx.cloud.callFunction({
+      name: 'getPrices',
+      data: {},
+      success: function(res) {
+        if (res.result && res.result.code === 0) {
+          var d = res.result.data
+          self.setData({
+            firstReportDisplay: d.firstReportDisplay || '1.00'
+          })
+        }
+      },
+      fail: function() { /* 静默失败 */ }
+    })
+  },
+
   checkPendingFollowups: function() {
     dataLoader.checkPendingFollowups(this)
   },
@@ -161,7 +187,7 @@ Page({
       {
         id: 'mock1',
         name: '小白',
-        avatar: '🐱',
+        avatar: '猫咪',
         type: 'cat',
         age: 2,
         healthStatus: 'good',
@@ -170,7 +196,7 @@ Page({
       {
         id: 'mock2',
         name: '大黄',
-        avatar: '🐶',
+        avatar: '狗狗',
         type: 'dog',
         age: 3,
         healthStatus: 'warning',

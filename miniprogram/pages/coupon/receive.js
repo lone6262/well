@@ -21,8 +21,7 @@ Page({
     this.setData({ loading: true });
     try {
       const res = await wx.cloud.callFunction({
-        name: 'adminGateway',
-        data: { action: 'getCoupons', isActive: true },
+        name: 'getCoupons',
       });
       if (res.result.code === 0) {
         const coupons = (res.result.data.coupons || []).map(c => ({

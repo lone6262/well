@@ -21,7 +21,7 @@
     <!-- 章节列表 -->
     <view class="section-card" wx:for="{{sections}}" wx:key="key">
       <view class="section-header" bindtap="toggleSection" data-index="{{index}}">
-        <text class="section-icon">{{item.icon}}</text>
+        <image class="section-icon" src="{{item.icon}}" mode="aspectFit" />
         <text class="section-title">{{item.title}}</text>
         <text class="section-arrow">{{expandedSections[index] ? '▼' : '▶'}}</text>
       </view>

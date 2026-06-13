@@ -40,71 +40,71 @@ let SYMPTOM_ID_MAP = {
 let SYMPTOM_CATEGORIES = [
   {
     name: "消化系统",
-    emoji: "🍽️",
+    emoji: "",
     symptoms: [
-      { name: "呕吐", id: "vomit", emoji: "🤮", selected: false },
-      { name: "腹泻", id: "diarrhea", emoji: "💩", selected: false },
-      { name: "便秘", id: "constipation", emoji: "🚫", selected: false },
-      { name: "食欲不振", id: "loss_appetite", emoji: "🍽️", selected: false }
+      { name: "呕吐", id: "vomit", emoji: "", selected: false },
+      { name: "腹泻", id: "diarrhea", emoji: "", selected: false },
+      { name: "便秘", id: "constipation", emoji: "", selected: false },
+      { name: "食欲不振", id: "loss_appetite", emoji: "", selected: false }
     ]
   },
   {
     name: "呼吸系统",
-    emoji: "🫁",
+    emoji: "",
     symptoms: [
-      { name: "咳嗽", id: "cough", emoji: "😷", selected: false },
-      { name: "打喷嚏", id: "sneeze", emoji: "🤧", selected: false },
-      { name: "呼吸困难", id: "dyspnea", emoji: "😮", selected: false }
+      { name: "咳嗽", id: "cough", emoji: "", selected: false },
+      { name: "打喷嚏", id: "sneeze", emoji: "", selected: false },
+      { name: "呼吸困难", id: "dyspnea", emoji: "", selected: false }
     ]
   },
   {
     name: "泌尿系统",
-    emoji: "💧",
+    emoji: "",
     symptoms: [
-      { name: "尿频", id: "frequent_urination", emoji: "🚽", selected: false },
-      { name: "尿血", id: "hematuria", emoji: "🩸", selected: false },
-      { name: "排尿困难", id: "difficulty_urination", emoji: "😣", selected: false }
+      { name: "尿频", id: "frequent_urination", emoji: "", selected: false },
+      { name: "尿血", id: "hematuria", emoji: "", selected: false },
+      { name: "排尿困难", id: "difficulty_urination", emoji: "", selected: false }
     ]
   },
   {
     name: "皮肤问题",
-    emoji: "🧴",
+    emoji: "",
     symptoms: [
-      { name: "瘙痒", id: "itch", emoji: "🐕", selected: false },
-      { name: "脱毛", id: "hair_loss", emoji: "🪮", selected: false },
-      { name: "皮疹", id: "redness", emoji: "🔴", selected: false }
+      { name: "瘙痒", id: "itch", emoji: "", selected: false },
+      { name: "脱毛", id: "hair_loss", emoji: "", selected: false },
+      { name: "皮疹", id: "redness", emoji: "", selected: false }
     ]
   },
   {
     name: "眼部症状",
-    emoji: "👁️",
+    emoji: "",
     symptoms: [
-      { name: "流泪", id: "tearing", emoji: "😢", selected: false },
-      { name: "眼睛红肿", id: "eye_redness", emoji: "👁️", selected: false }
+      { name: "流泪", id: "tearing", emoji: "", selected: false },
+      { name: "眼睛红肿", id: "eye_redness", emoji: "", selected: false }
     ]
   },
   {
     name: "耳部问题",
-    emoji: "👂",
+    emoji: "",
     symptoms: [
-      { name: "耳垢多", id: "ear_odor", emoji: "👂", selected: false },
-      { name: "甩头抓耳", id: "head_shake", emoji: "👂", selected: false }
+      { name: "耳垢多", id: "ear_odor", emoji: "", selected: false },
+      { name: "甩头抓耳", id: "head_shake", emoji: "", selected: false }
     ]
   },
   {
     name: "神经行为",
-    emoji: "🧠",
+    emoji: "",
     symptoms: [
-      { name: "抽搐", id: "seizure", emoji: "⚡", selected: false },
-      { name: "精神萎靡", id: "lethargy", emoji: "😴", selected: false }
+      { name: "抽搐", id: "seizure", emoji: "", selected: false },
+      { name: "精神萎靡", id: "lethargy", emoji: "", selected: false }
     ]
   },
   {
     name: "口腔问题",
-    emoji: "🦷",
+    emoji: "",
     symptoms: [
-      { name: "流口水", id: "drool", emoji: "💧", selected: false },
-      { name: "牙龈红肿", id: "gum_redness", emoji: "🦷", selected: false }
+      { name: "流口水", id: "drool", emoji: "", selected: false },
+      { name: "牙龈红肿", id: "gum_redness", emoji: "", selected: false }
     ]
   }
 ]
@@ -244,7 +244,7 @@ Page({
             return {
               id: pet.petId,
               name: pet.name,
-              emoji: pet.type === 'cat' ? '🐱' : '🐶',
+              emoji: pet.type === 'cat' ? '猫咪' : '狗狗',
               avatar: pet.avatar || '',
               age: pet.age + '个月',
               gender: pet.gender === 'male' ? '弟弟' : '妹妹'

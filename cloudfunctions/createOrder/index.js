@@ -18,7 +18,7 @@ const {
   MEMBER_STATUS,
   POINTS_PACKS,
   MEMBER_LIMITS
-, warmupConfig} = require('./common/constants');
+, warmupConfig, loadPrices} = require('./common/constants');
 const { verifyToken } = require('./common/auth');
 const { checkRateLimit } = require('./common/rate-limiter');
 
@@ -40,6 +40,13 @@ const MOCK_PAY = true; // 模拟支付模式，商户号到位后改为 false
  */
 exports.main = async (event, context) => {
   await warmupConfig(db);
+  // V2.0: 价格从 DB 动态加载，覆盖硬编码默认值
+  const priceConfig = await loadPrices(db);
+  const dbPrices = priceConfig.prices;
+  const dbCredits = priceConfig.memberCredits;
+  // 覆盖模块级 PRICES/MEMBER_CREDITS，确保子函数引用自动使用 DB 值
+  Object.assign(PRICES, dbPrices);
+  Object.assign(MEMBER_CREDITS, dbCredits);
   const { OPENID } = cloud.getWXContext();
   const openid = OPENID;
   const orderType = event.type || 'report';

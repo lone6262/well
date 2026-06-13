@@ -99,9 +99,9 @@ page { width: 100%; overflow-x: hidden; }
 }
 .report-upgrade-link { display: block; font-weight: 600; margin-top: 6rpx; }
 
-.report-price-row { display: flex; align-items: center; flex-wrap: wrap; gap: 12rpx; margin-bottom: 12rpx; }
-.report-price { font-size: var(--font-size-2xl); font-weight: 700; color: var(--brand-primary); }
-.report-member-link { font-size: var(--font-size-sm); color: var(--brand-primary); font-weight: 500; }
+.report-price-row { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8rpx; margin-bottom: 16rpx; }
+.report-price { font-size: var(--font-size-2xl); font-weight: 700; color: var(--brand-primary); text-align: center; }
+.report-member-link { font-size: var(--font-size-sm); color: var(--brand-primary); font-weight: 500; text-align: center; }
 
 .report-compliance { display: block; font-size: var(--font-size-xs); color: var(--text-tertiary); text-align: center; padding: 12rpx 0; margin-bottom: 8rpx; }
 
@@ -117,20 +117,24 @@ page { width: 100%; overflow-x: hidden; }
 .report-done-text { font-size: var(--font-size-base); font-weight: 600; color: var(--color-success); }
 .report-done-btn { background: var(--brand-primary); color: var(--text-inverse); border-radius: var(--radius-full); border: none; }
 
-/* 操作按钮 */
-.actions { display: flex; flex-direction: column; gap: 12rpx; padding-bottom: 40rpx; }
-.action-btn {
+/* 操作按钮区 */
+.actions { display: flex; flex-direction: column; gap: 16rpx; padding-bottom: 40rpx; }
+.actions-row { display: flex; gap: 16rpx; }
+
+.home-btn {
   display: flex; align-items: center; justify-content: center; gap: 10rpx;
-  width: 100%; padding: 24rpx; border-radius: var(--radius-xl);
-  font-size: var(--font-size-md); font-weight: 600; border: none;
+  flex: 1; height: 88rpx; border-radius: var(--radius-full);
+  font-size: var(--font-size-md); font-weight: 600;
   transition: transform var(--duration-fast) var(--ease-standard);
 }
-.action-btn:active { transform: scale(0.97); }
-.action-btn-icon { width: 28rpx; height: 28rpx; filter: brightness(0) invert(1); }
-.action-btn--emergency { background: var(--brand-emergency); color: var(--text-inverse); }
-.action-btn--primary { background: var(--brand-primary); color: var(--text-inverse); }
-.action-btn--secondary { background: var(--bg-secondary); color: var(--text-primary); }
-.action-btn--secondary .action-btn-icon { filter: none; }
+.home-btn:active { transform: scale(0.97); }
+.home-btn--emergency { background: var(--brand-emergency); color: var(--text-inverse); }
+.home-btn--hospital {
+  background: var(--brand-secondary-light); color: var(--brand-secondary);
+}
+.home-btn--hospital .home-btn-icon { filter: none; }
+.home-btn--secondary { background: var(--brand-primary-light); color: var(--brand-primary); }
+.home-btn-icon { width: 28rpx; height: 28rpx; filter: brightness(0) invert(1); }
 
 /* 高风险警告框 */
 .high-risk-box {

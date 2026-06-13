@@ -375,7 +375,7 @@ Page({
           })
 
           wx.showToast({
-            title: '✅ 已切换到：' + hospital.name,
+            title: '已切换到：' + hospital.name,
             icon: 'success',
             duration: TOAST_DURATION.NORMAL
           })

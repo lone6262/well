@@ -66,16 +66,16 @@ Page({
             'care': '特殊阶段'
           }
           let petTypeMap = {
-            'cat': '🐱猫咪',
-            'dog': '🐶狗狗',
-            'all': '🐱🐶全部'
+            'cat': '猫咪',
+            'dog': '狗狗',
+            'all': '全部'
           }
 
           self.setData({
             article: article,
             nodes: nodes,
             relatedSymptoms: article.related_symptoms || article.relatedSymptoms || [],
-            petTypeText: petTypeMap[article.target_pet] || '🐱🐶全部',
+            petTypeText: petTypeMap[article.target_pet] || '全部',
             categoryName: categoryMap[article.category] || article.category || '',
             loading: false
           })
@@ -165,8 +165,8 @@ Page({
 
   // 宠物类型文字
   getPetTypeText: function(petType) {
-    let map = { cat: '🐱猫咪', dog: '🐶狗狗', all: '🐱🐶全部' }
-    return map[petType] || '🐱🐶全部'
+    let map = { cat: '猫咪', dog: '狗狗', all: '全部' }
+    return map[petType] || '全部'
   },
 
   // 相关症状自查
