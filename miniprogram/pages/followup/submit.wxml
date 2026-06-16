@@ -3,12 +3,6 @@
   <!-- 顶部渐变头部 -->
   <view class="page-header">
     <view class="header-inner">
-      <view class="nav-bar">
-        <view class="back-btn" bindtap="goBack" hover-class="back-btn-active">
-          <view class="back-arrow"></view>
-          <text class="back-text">返回</text>
-        </view>
-      </view>
       <view class="header-content">
         <image class="header-icon" src="/images/icons/paw.svg" style="width:44rpx;height:44rpx;" aria-label="爪印" />
         <text class="header-title">宠物回访</text>

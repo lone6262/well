@@ -102,10 +102,5 @@ Page({
   // 返回首页
   goHome: function() {
     wx.switchTab({ url: '/pages/index/index' })
-  },
-
-  // 返回
-  goBack: function() {
-    wx.navigateBack()
   }
 })
