@@ -695,11 +695,6 @@ Page({
     })
   },
 
-  // 分享应用
-  shareApp: function() {
-    wx.navigateTo({ url: '/pages/invite/index' })
-  },
-
   // 联系我们
   contactUs: function() {
     wx.showModal({
