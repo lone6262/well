@@ -1,4 +1,4 @@
-# 宠脉AI — 反 AI 模板设计规范
+# Mewora 宠物AI助手 — 反 AI 模板设计规范
 
 > 「Warm Professionalism」设计系统规范文档
 > 版本：2.0 · 更新：2026-06-10

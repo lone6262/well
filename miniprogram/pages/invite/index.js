@@ -233,7 +233,7 @@ Page({
       ctx.fillStyle = '#ffffff'
       ctx.font = 'bold 36px sans-serif'
       ctx.textAlign = 'center'
-      ctx.fillText('宠物症状自查', 300, 80)
+      ctx.fillText('Mewora 宠物AI助手', 300, 80)
 
       // Slogan
       ctx.font = '28px sans-serif'

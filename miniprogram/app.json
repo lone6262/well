@@ -33,7 +33,7 @@
     "backgroundColor": "#F5F0EB",
     "backgroundTextStyle": "dark",
     "navigationBarBackgroundColor": "#B35D3A",
-    "navigationBarTitleText": "宠物症状自查",
+    "navigationBarTitleText": "Mewora 宠物AI助手",
     "navigationBarTextStyle": "white"
   },
   "tabBar": {

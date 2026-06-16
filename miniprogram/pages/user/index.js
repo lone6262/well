@@ -708,7 +708,7 @@ Page({
   about: function() {
     wx.showModal({
       title: '关于我们',
-      content: '宠物症状自查小程序\n版本：V1.0\n\n致力于帮助宠物主人快速识别健康问题，提供专业的就医指导。',
+      content: 'Mewora 宠物AI助手\n版本：V1.0\n\n致力于帮助宠物主人快速识别健康问题，提供专业的就医指导。',
       showCancel: false
     })
   },
@@ -717,7 +717,7 @@ Page({
   onShareAppMessage: function() {
     let inviteCode = app.globalData.currentInviteCode || ''
     return {
-      title: '宠物症状自查 - 守护您的宠物健康',
+      title: 'Mewora 宠物AI助手 - 守护您的宠物健康',
       path: '/pages/index/index' + (inviteCode ? '?invite_code=' + inviteCode : ''),
       imageUrl: '/images/share-cover.png'
     }
