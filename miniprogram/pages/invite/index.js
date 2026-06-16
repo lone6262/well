@@ -36,9 +36,8 @@ Page({
 
     // 优先使用全局缓存的邀请码
     if (app.globalData.currentInviteCode) {
-      self.setData({ inviteCode: app.globalData.currentInviteCode })
-      self.loadStats()
-      self.loadTopRankers()
+      self.setData({ inviteCode: app.globalData.currentInviteCode, loading: false })
+      // 统计与排行由 onShow 负责刷新，此处无需重复加载
       return
     }
 
