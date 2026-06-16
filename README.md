@@ -10,19 +10,18 @@ well/
 │   ├── app.js               # 入口文件
 │   ├── app.json             # 全局配置
 │   ├── components/          # 公共组件
-│   ├── config/              # 配置
+│   ├── config/              # 前端配置（敏感词等）
 │   ├── images/              # 图片资源
-│   ├── pages/               # 页面目录（15个功能页面）
+│   ├── pages/               # 页面目录
 │   └── utils/               # 工具函数
-├── cloudfunctions/           # 云函数（36个）
-│   ├── common/              # 公共模块
-│   ├── login/  dbInit/  pet/  symptom/  ...
-│   ├── generateAIReport/  payCallback/  member/
-│   └── invite/  followup/  knowledge/  ...
-├── scripts/                 # 部署脚本
-├── docs/                    # 文档合集
+├── cloudfunctions/           # 云函数（77 个可部署）
+│   ├── common/              # 公共模块（唯一源码，见 CLAUDE.md）
+│   └── <func>/             # 各云函数 index.js + package.json + common/ 副本
+├── admin/                    # Web 管理后台（HTML/CSS/JS）
+├── scripts/                 # 部署与同步脚本
+├── docs/                    # 开发文档合集（权威：开发文档V1.5-FINAL.md）
+├── archive/                 # 历史归档（旧报告 + V1.0/V1.1 文档，仅供查阅）
 ├── __tests__/               # 自动化测试
-├── test_archive/            # 历史测试存档
 ├── project.config.json
 └── project.private.config.json
 ```

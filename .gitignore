@@ -51,23 +51,23 @@ build/
 # 敏感信息（微信 AppID 等不要提交）
 project.config.json   # 可选，但建议保留通用配置，去掉敏感字段
 
+# API 密钥文件（含真实 API 密钥，绝不提交）
+.deploy-keys.txt
+
 # 数据库初始化/查询脚本（含明文 admin_secret、token_secret，绝不提交）
 tcb_query.json
+
+# Claude AI 工作目录（含本地工具配置）
+.claude/
 
 # 微信小程序特有的临时文件
 .spec-workflow/
 *.backup
 guide-ios.wxss
 
-# ������Կ���������ã�������ʵAPI��Կ�����ύ��
-.deploy-keys.txt
-
-# Claude AI ���ܣ����ع��ߣ�����Ŀ���룩
-.claude/
-
-# ���Դ浵����ʱ�ļ�
+# 测试存档临时文件
 test_archive/temp_*
 test_archive/*.zip
 
-# �Զ����ɵ������ļ�
+# 自动生成的备份文件
 miniprogram/app_new.js
