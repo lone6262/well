@@ -20,13 +20,26 @@ Page({
     ]
   },
 
+  // 安全解码 URL 参数：兼容已 encodeURIComponent 编码（来自首页弹窗）和未编码（来自列表页）两种入口
+  decodeParam: function(value) {
+    if (!value) return ''
+    try {
+      // 含 % 开头的转义序列才尝试解码，避免对普通文本误操作
+      if (value.indexOf('%') === -1) return value
+      return decodeURIComponent(value)
+    } catch (e) {
+      return value
+    }
+  },
+
   onLoad: function(options) {
     if (options.followupId) {
-      let symptomArr = options.symptoms ? options.symptoms.split('、') : []
+      let decodedSymptoms = this.decodeParam(options.symptoms)
+      let symptomArr = decodedSymptoms ? decodedSymptoms.split('、') : []
       this.setData({
         followupId: options.followupId,
-        petName: options.petName || '',
-        symptoms: options.symptoms || '',
+        petName: this.decodeParam(options.petName),
+        symptoms: decodedSymptoms,
         symptomList: symptomArr
       })
     }
