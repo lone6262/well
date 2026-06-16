@@ -103,7 +103,9 @@ page {
   border-radius: 48rpx;
   font-size: 32rpx;
   font-weight: bold;
-  line-height: 96rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: var(--brand-primary) !important;
   color: #fff !important;
   border: none;
