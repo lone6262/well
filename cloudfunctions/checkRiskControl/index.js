@@ -37,10 +37,11 @@ const RISK_LIMITS = {
  */
 exports.main = async (event, context) => {
   await warmupConfig(db);
-  // V2.0: 价格从 DB 动态加载，覆盖硬编码默认值
+  // V2.0: 价格从 DB 动态加载（仅更新风控阈值，不污染模块级 PRICES 常量）
   const priceConfig = await loadPrices(db);
-  Object.assign(PRICES, priceConfig.prices);
-  RISK_LIMITS.MANUAL_REVIEW_THRESHOLD = PRICES.MANUAL_REVIEW_THRESHOLD;
+  if (priceConfig.prices.MANUAL_REVIEW_THRESHOLD != null) {
+    RISK_LIMITS.MANUAL_REVIEW_THRESHOLD = priceConfig.prices.MANUAL_REVIEW_THRESHOLD;
+  }
   const { OPENID } = cloud.getWXContext();
   const { userId, orderType, amount } = event;
 
@@ -110,7 +111,7 @@ exports.main = async (event, context) => {
     return {
       code: RESPONSE_CODE.ERROR,
       msg: '风控服务暂时不可用，请稍后重试',
-      data: { passed: false, reason: 'risk_control_error', error: error.message },
+      data: { passed: false, reason: 'risk_control_error' },
     };
   }
 };

@@ -1,7 +1,7 @@
 // 云函数入口文件 - 严格按规则引擎文档实现
 const cloud = require('wx-server-sdk');
 const { COLLECTIONS, RESPONSE_CODE, VALID_SYMPTOM_SET , warmupConfig} = require('./common/constants');
-const { verifyToken } = require('./common/auth');
+const { authenticate } = require('./common/auth');
 const { checkRateLimit } = require('./common/rate-limiter');
 const { createLogger } = require('./common/logger');
 
@@ -217,8 +217,9 @@ exports.main = async (event, context) => {
     };
   }
 
-  // Token 验证（写入操作需验证身份）
-  if (!verifyToken(token)) {
+  // Token 验证 + openid 交叉校验（token 中的 openid 必须与 WXContext 一致）
+  const authResult = authenticate({ token }, context);
+  if (!authResult.valid) {
     return {
       code: RESPONSE_CODE.UNAUTHORIZED,
       msg: '身份验证失败，请重新登录',

@@ -9,7 +9,7 @@ const db = cloud.database();
 
 // 订阅消息模板ID（需在小程序后台配置后替换）
 const TEMPLATES = {
-  PAY_SUCCESS: '',       // TODO: 填入支付成功模板ID
+  PAY_SUCCESS: 'snFRWFVo-gkNsC76giW-V8KlqwZejuyyO6TSrMnCH34',       // 支付成功模板ID
   MEMBER_ACTIVATED: '',  // TODO: 填入会员开通模板ID
   REFUND_SUCCESS: '',    // TODO: 填入退款成功模板ID
   ORDER_TIMEOUT: '',     // TODO: 填入订单超时模板ID
@@ -99,6 +99,6 @@ exports.main = async (event, context) => {
   } catch (error) {
     console.error('[sendPaymentNotification] 发送失败:', templateType, error.message);
     // 订阅消息失败不影响主流程，静默返回
-    return { code: -1, msg: '发送失败: ' + error.message, data: {} };
+    return { code: -1, msg: '发送失败，请稍后重试', data: {} };
   }
 };

@@ -84,7 +84,7 @@ exports.main = async (event, context) => {
 
   } catch (error) {
     console.error('[closeExpiredOrders] 扫描失败:', error.message);
-    return { code: -1, msg: '执行失败: ' + error.message, data: {} };
+    return { code: -1, msg: '执行失败，请稍后重试', data: {} };
   }
 };
 

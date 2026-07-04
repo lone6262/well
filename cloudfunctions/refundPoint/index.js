@@ -8,7 +8,9 @@ const _ = db.command;
 
 exports.main = async (event, context) => {
   await warmupConfig(db);
-  const { openid, orderId } = event;
+  const { OPENID } = cloud.getWXContext();
+  const openid = OPENID;
+  const { orderId } = event;
   if (!openid) return { success: false, msg: '用户未登录' };
 
   try {

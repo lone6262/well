@@ -34,6 +34,6 @@ exports.main = async (event, context) => {
     return { code: 0, msg: '执行完成', data: { expiredCount: count } };
   } catch (error) {
     console.error('[expireCoupons] 失败:', error.message);
-    return { code: -1, msg: error.message, data: {} };
+    return { code: -1, msg: '执行失败，请稍后重试', data: {} };
   }
 };

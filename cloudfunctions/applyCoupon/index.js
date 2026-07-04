@@ -8,7 +8,9 @@ const db = cloud.database();
 
 exports.main = async (event, context) => {
   await warmupConfig(db);
-  const { openid, userCouponId, orderAmount, orderType } = event;
+  const { OPENID } = cloud.getWXContext();
+  const openid = OPENID;
+  const { userCouponId, orderAmount, orderType } = event;
 
   if (!openid || !userCouponId || !orderAmount) {
     return { success: false, msg: '参数不完整' };

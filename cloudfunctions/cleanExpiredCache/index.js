@@ -63,6 +63,6 @@ exports.main = async (event, context) => {
 
   } catch (error) {
     console.error('[cleanExpiredCache] 清理失败:', error.message);
-    return { code: -1, msg: '清理失败: ' + error.message, data: {} };
+    return { code: -1, msg: '清理失败，请稍后重试', data: {} };
   }
 };

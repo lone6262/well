@@ -1,7 +1,9 @@
 // 管理员审核退款并执行微信退款
 // 审批通过后调用微信退款 API，回滚用户资源
 const cloud = require('wx-server-sdk');
-const { COLLECTIONS, RESPONSE_CODE, ORDER_STATUS , warmupConfig} = require('./common/constants');
+const crypto = require('crypto');
+const { COLLECTIONS, RESPONSE_CODE, ORDER_STATUS, warmupConfig, SERVER_CONFIG } = require('./common/constants');
+const { validateAdminRequest } = require('./common/admin-auth');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
@@ -11,9 +13,18 @@ exports.main = async (event, context) => {
   await warmupConfig(db);
   const { refundId, approved, adminSecret, token } = event;
 
-  // 管理员鉴权（使用 adminSecret 或 admin token）
-  if (!adminSecret) {
-    return { code: RESPONSE_CODE.UNAUTHORIZED, msg: '管理员鉴权失败', data: {} };
+  // 管理员鉴权：优先验证 adminToken，兼容 adminSecret 恒定时间比较
+  const authResult = validateAdminRequest(event);
+  if (!authResult.valid) {
+    const expectedSecret = SERVER_CONFIG.ADMIN_SECRET;
+    if (!adminSecret || !expectedSecret) {
+      return { code: RESPONSE_CODE.UNAUTHORIZED, msg: '管理员鉴权失败', data: {} };
+    }
+    const providedBuf = Buffer.from(adminSecret);
+    const expectedBuf = Buffer.from(expectedSecret);
+    if (providedBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(providedBuf, expectedBuf)) {
+      return { code: RESPONSE_CODE.UNAUTHORIZED, msg: '管理员鉴权失败', data: {} };
+    }
   }
 
   if (!refundId) {
@@ -110,7 +121,7 @@ exports.main = async (event, context) => {
 
   } catch (error) {
     console.error('[processRefund] 失败:', error.message);
-    return { code: RESPONSE_CODE.SERVER_ERROR, msg: '退款操作失败: ' + error.message, data: {} };
+    return { code: RESPONSE_CODE.SERVER_ERROR, msg: '退款操作失败，请稍后重试', data: {} };
   }
 };
 

@@ -11,7 +11,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const _ = db.command;
 
-const MOCK_PAY = true; // 模拟支付模式，商户号到位后改为 false
+const MOCK_PAY = process.env.MOCK_PAY === 'true'; // 从环境变量读取，部署时设为 false
 
 // 续费价格映射：根据 member.plan_type 确定续费价格 key
 const RENEW_PRICE_MAP = {

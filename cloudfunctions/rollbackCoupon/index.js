@@ -7,7 +7,10 @@ const db = cloud.database();
 
 exports.main = async (event, context) => {
   await warmupConfig(db);
+  const { OPENID } = cloud.getWXContext();
+  const openid = OPENID;
   const { userCouponId } = event;
+  if (!openid) return { success: false, msg: '用户未登录' };
   if (!userCouponId) return { success: true, msg: '无券需释放' };
 
   try {
