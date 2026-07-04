@@ -48,14 +48,26 @@ Page({
       },
       success: function(res) {
         if (res.result && res.result.code === 0) {
-          let article = res.result.data || {}
+          // 云函数返回 data.article，需要正确提取
+          let article = res.result.data.article || res.result.data || {}
 
           // 降级链: content → summary → 默认提示
           let contentBody = article.content || article.summary || ''
           if (!contentBody) {
             contentBody = '## 暂无详细内容\n\n本文正在编辑中，请稍后再试。\n\n如需了解更多宠物健康知识，请浏览其他文章或使用症状自查功能。'
           }
+
+          // 调试日志
+          console.log('[知识库] 文章标题:', article.title)
+          console.log('[知识库] 原始内容长度:', contentBody.length)
+          console.log('[知识库] 内容预览:', contentBody.substring(0, 100))
+
           let nodes = self.parseContent(contentBody)
+
+          // 调试日志
+          console.log('[知识库] 解析后节点类型:', typeof nodes)
+          console.log('[知识库] 解析后内容长度:', String(nodes).length)
+          console.log('[知识库] 解析后内容预览:', String(nodes).substring(0, 200))
 
           // 字段名映射（数据库 snake_case → 前端 camelCase）
           let categoryMap = {
@@ -100,67 +112,29 @@ Page({
   },
 
   // 将文章内容转换为rich-text组件可用的节点数组
-  // 安全说明: 使用 type:'text' 构建，不会解析 HTML 标签，天然防 XSS
-  // 如需支持 HTML 内容，必须添加标签/属性白名单过滤
+  // 使用 rich-text 支持的 HTML 标签: h1 h2 h3 p div
   parseContent: function(content) {
     if (!content) return []
 
-    let lines = content.split('\n')
-    let nodes = []
-
-    for (let i = 0; i < lines.length; i++) {
-      let line = lines[i]
-      let trimmed = line.trim()
-
-      if (!trimmed) continue
-
+    // 简单处理：将 Markdown 转换为 HTML，然后使用 rich-text 渲染
+    let html = content
+      // 一级标题
+      .replace(/^# (.+)$/gm, '<h1 style="font-size:24px;font-weight:bold;margin:16px 0 8px;color:#2D2A26;">$1</h1>')
       // 二级标题
-      if (trimmed.indexOf('## ') === 0) {
-        nodes.push({
-          name: 'h2',
-          attrs: { class: 'content-h2' },
-          children: [{
-            type: 'text',
-            text: trimmed.substring(3)
-          }]
-        })
-      }
+      .replace(/^## (.+)$/gm, '<h2 style="font-size:20px;font-weight:bold;margin:14px 0 6px;color:#2D2A26;">$1</h2>')
       // 三级标题
-      else if (trimmed.indexOf('### ') === 0) {
-        nodes.push({
-          name: 'h3',
-          attrs: { class: 'content-h3' },
-          children: [{
-            type: 'text',
-            text: trimmed.substring(4)
-          }]
-        })
-      }
+      .replace(/^### (.+)$/gm, '<h3 style="font-size:18px;font-weight:bold;margin:12px 0 6px;color:#2D2A26;">$1</h3>')
+      // 引用块
+      .replace(/^> (.+)$/gm, '<div style="background:#FEF7E0;padding:12px;border-left:4px solid #F5D547;margin:12px 0;border-radius:4px;color:#666;">$1</div>')
       // 列表项
-      else if (trimmed.indexOf('- ') === 0) {
-        nodes.push({
-          name: 'div',
-          attrs: { class: 'content-li' },
-          children: [{
-            type: 'text',
-            text: trimmed.substring(2)
-          }]
-        })
-      }
-      // 普通段落
-      else {
-        nodes.push({
-          name: 'p',
-          attrs: { class: 'content-p' },
-          children: [{
-            type: 'text',
-            text: trimmed
-          }]
-        })
-      }
-    }
+      .replace(/^[-*] (.+)$/gm, '<p style="margin:6px 0;padding-left:16px;">• $1</p>')
+      // 粗体
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      // 普通段落（非空行）
+      .replace(/^(?!<[hH]|[pP]|$)(.+)$/gm, '<p style="line-height:1.6;margin:12px 0;color:#4A4743;">$1</p>')
 
-    return nodes
+    // 返回 HTML 字符串格式（rich-text 支持直接使用 HTML）
+    return html
   },
 
   // 宠物类型文字

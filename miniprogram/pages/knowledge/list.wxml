@@ -1,6 +1,27 @@
 <!--宠物知识库列表页面-->
 <view class="knowledge-page">
 
+  <!-- 搜索框 -->
+  <view class="search-section">
+    <view class="search-box">
+      <image class="search-icon" src="/images/icons/search.svg" mode="aspectFit" />
+      <input class="search-input"
+             type="text"
+             placeholder="搜索知识库..."
+             placeholder-class="search-placeholder"
+             value="{{searchKeyword}}"
+             bindinput="onSearchInput"
+             bindconfirm="onSearchConfirm" />
+      <image class="clear-icon {{searchKeyword ? 'show' : ''}}"
+             src="/images/icons/close.svg"
+             mode="aspectFit"
+             bindtap="onClearSearch" />
+    </view>
+    <view class="search-result-hint" wx:if="{{showSearchResult}}">
+      <text class="hint-text">找到 {{totalResults}} 篇相关文章</text>
+    </view>
+  </view>
+
   <!-- 分类标签栏 -->
   <scroll-view class="category-bar" scroll-x="true" enable-flex="true">
     <view class="category-tabs">

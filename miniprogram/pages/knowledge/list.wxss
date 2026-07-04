@@ -4,6 +4,63 @@
   background: var(--bg-secondary);
 }
 
+/* === 搜索区域 === */
+.search-section {
+  background: var(--bg-card);
+  padding: 16rpx 24rpx;
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background: var(--bg-secondary);
+  border-radius: 32rpx;
+  padding: 0 24rpx;
+  height: 64rpx;
+}
+
+.search-icon {
+  width: 28rpx;
+  height: 28rpx;
+  margin-right: 12rpx;
+  flex-shrink: 0;
+}
+
+.search-input {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--text-primary);
+}
+
+.search-placeholder {
+  color: var(--text-tertiary);
+}
+
+.clear-icon {
+  width: 28rpx;
+  height: 28rpx;
+  margin-left: 12rpx;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  flex-shrink: 0;
+}
+
+.clear-icon.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.search-result-hint {
+  padding: 8rpx 0 0;
+}
+
+.search-result-hint .hint-text {
+  font-size: 22rpx;
+  color: var(--text-tertiary);
+}
+
 /* === 分类标签栏 === */
 .category-bar {
   background: var(--bg-card);

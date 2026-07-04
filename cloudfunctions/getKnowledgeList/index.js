@@ -79,11 +79,11 @@ exports.main = async (event, context) => {
 
   } catch (error) {
     console.error('获取知识文章列表失败:', error);
+    console.error('[getKnowledgeList] 查询失败:', error.message);
     return {
       code: RESPONSE_CODE.SERVER_ERROR,
       msg: '服务器错误，请稍后重试',
       data: {
-        error: error.message
       }
     };
   }
