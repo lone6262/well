@@ -1,0 +1,64 @@
+<view class="agreement-page">
+  <view class="agreement-content">
+    <view class="agreement-section">
+      <text class="section-title">1. 保护承诺</text>
+      <text class="section-text">我们深知保护儿童个人信息的重要性，并致力于为未成年人（特别是14周岁以下的儿童）提供安全的服务环境。本规则专门说明我们如何收集、使用和保护儿童的个人信息。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">2. 适用范围</text>
+      <text class="section-text">2.1 本规则适用于14周岁以下的儿童用户。</text>
+      <text class="section-text">2.2 如我们发现已收集了未成年人的个人信息，我们将按照本规则采取特别保护措施。</text>
+      <text class="section-text">2.3 对于已满14周岁但未成年的用户，我们参照本规则执行相应的保护措施。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">3. 监护人同意</text>
+      <text class="section-text">3.1 儿童使用我们的服务前，必须由其父母或其他法定监护人（以下简称"监护人"）仔细阅读并同意本规则和我们的隐私政策。</text>
+      <text class="section-text">3.2 监护人应承担起监督和教育儿童的责任，引导儿童正确使用网络服务。</text>
+      <text class="section-text">3.3 监护人有权随时要求访问、更正或删除儿童的个人信息。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">4. 信息收集</text>
+      <text class="section-text">4.1 我们仅在监护人的明确同意下收集儿童的个人信息。</text>
+      <text class="section-text">4.2 我们收集的儿童信息仅限于提供服务所必需的范围，不会收集与服务无关的额外信息。</text>
+      <text class="section-text">4.3 我们不会通过诱导、欺骗等方式获取儿童的个人信息。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">5. 信息使用</text>
+      <text class="section-text">5.1 我们严格遵守"最小化原则"，仅在必要范围内使用儿童信息。</text>
+      <text class="section-text">5.2 我们不会将儿童信息用于营销推广目的。</text>
+      <text class="section-text">5.3 我们不会向第三方共享、出售或转让儿童信息，除非获得监护人的明确同意或法律法规要求。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">6. 安全保护措施</text>
+      <text class="section-text">6.1 我们采取加密、访问控制等安全措施保护儿童信息。</text>
+      <text class="section-text">6.2 内部接触儿童信息的人员均需经过严格授权和背景审查。</text>
+      <text class="section-text">6.3 我们定期进行安全审计，确保儿童信息安全。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">7. 监护人的权利</text>
+      <text class="section-text">7.1 访问权：监护人可以查阅我们收集的儿童信息。</text>
+      <text class="section-text">7.2 更正权：发现信息不准确时，监护人可以要求更正。</text>
+      <text class="section-text">7.3 删除权：监护人可以要求删除儿童信息。</text>
+      <text class="section-text">7.4 撤回同意：监护人可以随时撤回对信息使用的同意。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">8. 争议处理</text>
+      <text class="section-text">如您对儿童信息保护有任何疑问或争议，请通过小程序内的联系方式与我们联系。我们将优先处理涉及儿童的隐私问题和投诉。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">9. 规则更新</text>
+      <text class="section-text">我们可能适时更新本规则。更新后的规则将在小程序内公示，如涉及重大变更，我们会以更显著的方式通知监护人和儿童用户。</text>
+    </view>
+  </view>
+  <view class="update-time">
+    <text>最后更新：{{updateTime}}</text>
+  </view>
+</view>

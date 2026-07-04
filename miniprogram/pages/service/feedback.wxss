@@ -1,0 +1,257 @@
+/* 意见反馈页面样式 */
+@import "../../utils/design-tokens.wxss";
+
+/* === 页面容器 === */
+.feedback-page {
+  min-height: 100vh;
+  background: var(--bg-secondary);
+  padding-bottom: 32rpx;
+}
+
+/* === 页面标题 === */
+.page-header {
+  background: var(--bg-card);
+  padding: 32rpx 24rpx;
+  margin-bottom: 16rpx;
+}
+
+.page-title {
+  display: block;
+  font-size: var(--font-size-xl, 40rpx);
+  font-weight: var(--font-bold, 700);
+  color: var(--text-primary);
+  margin-bottom: 8rpx;
+}
+
+.page-desc {
+  display: block;
+  font-size: var(--font-size-sm, 24rpx);
+  color: var(--text-secondary);
+}
+
+/* === 表单区域 === */
+.form-section {
+  background: var(--bg-card);
+  margin: 0 16rpx 16rpx;
+  border-radius: var(--radius-xl, 16rpx);
+  padding: 24rpx;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.title-text {
+  font-size: var(--font-size-base, 28rpx);
+  font-weight: var(--font-semibold, 600);
+  color: var(--text-primary);
+}
+
+.required {
+  font-size: var(--font-size-base, 28rpx);
+  color: var(--color-danger);
+  margin-left: 4rpx;
+}
+
+.optional {
+  font-size: var(--font-size-sm, 24rpx);
+  color: var(--text-tertiary);
+  margin-left: 8rpx;
+  font-weight: var(--font-normal, 400);
+}
+
+/* === 反馈类型选择 === */
+.type-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.type-item {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 16rpx 24rpx;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg, 12rpx);
+  border: 2rpx solid transparent;
+  transition: all 200ms;
+}
+
+.type-item.selected {
+  background: var(--brand-primary-light);
+  border-color: var(--brand-primary);
+}
+
+.type-radio {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  border: 2rpx solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radio-dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  background: var(--bg-card);
+  transition: all 200ms;
+}
+
+.radio-dot.checked {
+  background: var(--brand-primary);
+}
+
+.type-label {
+  font-size: var(--font-size-base, 28rpx);
+  color: var(--text-primary);
+}
+
+/* === 问题描述输入框 === */
+.textarea-wrapper {
+  position: relative;
+}
+
+.feedback-textarea {
+  width: 100%;
+  min-height: 200rpx;
+  padding: 16rpx;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg, 12rpx);
+  font-size: var(--font-size-base, 28rpx);
+  color: var(--text-primary);
+  line-height: 1.75;
+}
+
+.char-count {
+  position: absolute;
+  bottom: 12rpx;
+  right: 16rpx;
+  font-size: var(--font-size-xs, 20rpx);
+  color: var(--text-tertiary);
+}
+
+/* === 图片上传 === */
+.image-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.image-item {
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: var(--radius-lg, 12rpx);
+  overflow: hidden;
+  position: relative;
+}
+
+.uploaded-image {
+  width: 100%;
+  height: 100%;
+}
+
+.delete-btn {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  width: 48rpx;
+  height: 48rpx;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-btn-text {
+  font-size: 36rpx;
+  color: #FFFFFF;
+  line-height: 1;
+}
+
+.add-image {
+  background: var(--bg-secondary);
+  border: 2rpx dashed var(--border-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+}
+
+.add-icon {
+  font-size: 48rpx;
+  color: var(--text-tertiary);
+}
+
+.add-text {
+  font-size: var(--font-size-sm, 24rpx);
+  color: var(--text-tertiary);
+}
+
+/* === 联系方式输入 === */
+.input-row {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.input-row:last-child {
+  border-bottom: none;
+}
+
+.input-label {
+  width: 140rpx;
+  font-size: var(--font-size-base, 28rpx);
+  color: var(--text-primary);
+}
+
+.input-field {
+  flex: 1;
+  font-size: var(--font-size-base, 28rpx);
+  color: var(--text-primary);
+}
+
+/* === 提交按钮 === */
+.submit-section {
+  padding: 0 16rpx;
+  margin-top: 24rpx;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 24rpx;
+  background: var(--brand-primary);
+  border-radius: var(--radius-lg, 12rpx);
+  text-align: center;
+  transition: opacity 200ms;
+}
+
+.submit-btn.disabled {
+  opacity: 0.6;
+}
+
+.submit-btn-text {
+  font-size: var(--font-size-lg, 36rpx);
+  color: #FFFFFF;
+  font-weight: var(--font-semibold, 600);
+}
+
+/* === 底部提示 === */
+.footer-tip {
+  text-align: center;
+  padding: 32rpx 16rpx 16rpx;
+}
+
+.footer-tip-text {
+  font-size: var(--font-size-sm, 24rpx);
+  color: var(--text-tertiary);
+  line-height: 1.75;
+}

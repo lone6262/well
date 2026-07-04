@@ -1,0 +1,61 @@
+<view class="agreement-page">
+  <view class="agreement-content">
+    <view class="agreement-section">
+      <text class="section-title">1. 协议说明</text>
+      <text class="section-text">欢迎使用本小程序会员服务！本会员服务协议（以下简称"本协议"）是您与我们之间就会员服务所订立的协议。在您购买或使用会员服务前，请仔细阅读本协议的全部内容。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">2. 会员服务内容</text>
+      <text class="section-text">2.1 本小程序提供多种会员套餐，包括但不限于月度会员、季度会员、年度会员等。</text>
+      <text class="section-text">2.2 会员权益包括但不限于：</text>
+      <text class="section-text">（1）解锁高级功能和工具；</text>
+      <text class="section-text">（2）享受更高额度的使用配额；</text>
+      <text class="section-text">（3）去除广告干扰；</text>
+      <text class="section-text">（4）专属客服支持；</text>
+      <text class="section-text">（5）优先体验新功能。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">3. 会员费用</text>
+      <text class="section-text">3.1 会员服务的具体价格以小程序内公示为准。我们保留调整价格的权利，已开通的会员不受价格调整影响。</text>
+      <text class="section-text">3.2 会员费用不支持分期付款，须在购买时一次性支付全部费用。</text>
+      <text class="section-text">3.3 部分会员套餐可能享受优惠活动，具体活动规则以小程序内说明为准。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">4. 会员有效期</text>
+      <text class="section-text">4.1 会员有效期自购买成功之日起计算，具体期限以您选择的套餐为准。</text>
+      <text class="section-text">4.2 会员到期后，您将自动转为普通用户，会员权益相应终止。</text>
+      <text class="section-text">4.3 您可以在到期前续费以延续会员服务。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">5. 退款政策</text>
+      <text class="section-text">5.1 会员服务一经开通，不支持无理由退款。</text>
+      <text class="section-text">5.2 如因系统故障等原因导致您无法正常使用会员服务，您可以申请退款，我们将根据实际情况处理。</text>
+      <text class="section-text">5.3 如您违反本协议或小程序用户协议导致会员资格被终止，不予退款。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">6. 会员权利与义务</text>
+      <text class="section-text">6.1 您应合理使用会员服务，不得以任何形式转让、出售或共享您的会员账户。</text>
+      <text class="section-text">6.2 不得利用技术手段或漏洞获取不当利益。</text>
+      <text class="section-text">6.3 我们有权对违反会员协议的用户暂停或终止会员服务。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">7. 服务变更与终止</text>
+      <text class="section-text">7.1 我们有权根据业务需要调整会员服务内容，如发生重大变更，我们将提前通知您。</text>
+      <text class="section-text">7.2 如会员服务整体终止，我们将按照剩余会员时间比例退还费用。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">8. 争议解决</text>
+      <text class="section-text">本协议引起的任何争议，双方应友好协商解决；协商不成的，可向我们所在地人民法院提起诉讼。</text>
+    </view>
+  </view>
+  <view class="update-time">
+    <text>最后更新：{{updateTime}}</text>
+  </view>
+</view>

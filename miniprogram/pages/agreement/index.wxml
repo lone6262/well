@@ -1,0 +1,40 @@
+<!-- 协议中心页面 -->
+<view class="agreement-center-page">
+
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <text class="page-title">协议中心</text>
+    <text class="page-desc">了解我们的服务条款和隐私政策</text>
+  </view>
+
+  <!-- 协议列表 -->
+  <view class="agreement-list">
+    <view
+      class="agreement-item"
+      wx:for="{{agreementList}}"
+      wx:key="id"
+      bindtap="viewAgreement"
+      data-id="{{item.id}}"
+    >
+      <view class="agreement-icon-wrapper">
+        <image class="agreement-icon" src="/images/icons/{{item.icon}}" mode="aspectFit" />
+      </view>
+      <view class="agreement-info">
+        <text class="agreement-title">{{item.title}}</text>
+        <text class="agreement-desc">{{item.desc}}</text>
+      </view>
+      <text class="agreement-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 底部提示 -->
+  <view class="footer-tip">
+    <text class="footer-tip-text">使用我们的服务即表示您已阅读并同意相关协议</text>
+  </view>
+
+  <!-- 版本信息 -->
+  <view class="version-info">
+    <text class="version-text">Version 1.5.0</text>
+  </view>
+
+</view>

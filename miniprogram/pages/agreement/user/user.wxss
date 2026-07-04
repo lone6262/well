@@ -1,0 +1,8 @@
+@import "../../utils/design-tokens.wxss";
+.agreement-page { min-height: 100vh; background: var(--bg-secondary); padding: 24rpx; }
+.agreement-content { background: var(--bg-card); border-radius: 16rpx; padding: 32rpx; }
+.agreement-section { margin-bottom: 32rpx; }
+.section-title { display: block; font-size: 32rpx; font-weight: 600; color: var(--text-primary); margin-bottom: 16rpx; }
+.section-text { display: block; font-size: 28rpx; color: var(--text-secondary); line-height: 1.75; margin-bottom: 12rpx; }
+.update-time { text-align: center; padding: 32rpx; }
+.update-time text { font-size: 24rpx; color: var(--text-tertiary); }

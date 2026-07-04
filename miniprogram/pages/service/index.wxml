@@ -1,0 +1,134 @@
+<!-- 客服中心页面 -->
+<view class="service-center-page">
+
+  <!-- 在线客服区域 -->
+  <view class="service-card">
+    <view class="service-header">
+      <image class="service-icon" src="/images/icons/customer-service.svg" mode="aspectFit" />
+      <text class="service-title">在线客服</text>
+    </view>
+    <text class="service-desc">有问题？AI不会的，真人帮您。</text>
+
+    <view class="qrcode-wrapper">
+      <image class="qrcode-image" src="/images/qrcode/service-qrcode.png" mode="aspectFit" />
+    </view>
+
+    <view class="wechat-id-row">
+      <text class="wechat-id-label">微信号：</text>
+      <text class="wechat-id-text">MeworaAI</text>
+      <view class="copy-btn" bindtap="copyWechatId">
+        <text class="copy-btn-text">复制微信号</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 养宠资料领取区域 -->
+  <view class="service-card">
+    <view class="material-header">
+      <image class="material-icon" src="/images/icons/gift.svg" mode="aspectFit" />
+      <text class="material-title">免费领取养宠资料</text>
+    </view>
+
+    <view class="material-list">
+      <view class="material-item" wx:for="{{materialList}}" wx:key="index">
+        <text class="material-check">✓</text>
+        <text class="material-text">{{item.title}}</text>
+      </view>
+    </view>
+
+    <view class="claim-btn" bindtap="showMaterialModal">
+      <text class="claim-btn-text">立即领取</text>
+    </view>
+  </view>
+
+  <!-- 意见反馈区域 -->
+  <view class="service-card">
+    <view class="feedback-header">
+      <image class="feedback-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />
+      <text class="feedback-title">意见反馈</text>
+    </view>
+    <text class="feedback-desc">Bug反馈 / 功能建议 / 体验评价</text>
+    <view class="feedback-btn" bindtap="goToFeedback">
+      <text class="feedback-btn-text">提交反馈</text>
+    </view>
+  </view>
+
+  <!-- FAQ常见问题区域 -->
+  <view class="service-card">
+    <view class="faq-header">
+      <image class="faq-icon" src="/images/icons/question.svg" mode="aspectFit" />
+      <text class="faq-title">常见问题 FAQ</text>
+    </view>
+
+    <view class="faq-list">
+      <view class="faq-item" wx:for="{{faqList}}" wx:key="index" bindtap="toggleFaq" data-index="{{index}}">
+        <view class="faq-question-row">
+          <text class="faq-question">{{item.question}}</text>
+          <text class="faq-arrow {{item.expanded ? 'expanded' : ''}}">›</text>
+        </view>
+        <view class="faq-answer {{item.expanded ? 'show' : ''}}">
+          <text class="faq-answer-text">{{item.answer}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 好评引导区域 -->
+  <view class="service-card rate-card">
+    <view class="rate-header">
+      <image class="rate-icon" src="/images/icons/star.svg" mode="aspectFit" />
+      <text class="rate-title">给我们一个好评</text>
+    </view>
+    <text class="rate-desc">如果觉得 Mewora 对你有帮助，欢迎给我们五星好评</text>
+    <view class="rate-stars">★★★★★</view>
+    <view class="rate-btn" bindtap="goToRate">
+      <text class="rate-btn-text">去评分</text>
+    </view>
+  </view>
+
+  <!-- 协议中心入口 -->
+  <view class="service-card agreement-card">
+    <view class="agreement-header" bindtap="goToAgreement">
+      <view class="agreement-left">
+        <image class="agreement-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />
+        <text class="agreement-title">协议中心</text>
+      </view>
+      <text class="agreement-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 版本信息 -->
+  <view class="version-info">
+    <text class="version-text">Version {{appVersion}}</text>
+  </view>
+
+</view>
+
+<!-- 养宠资料领取弹窗 -->
+<view class="material-modal {{showMaterialModal ? 'show' : ''}}" bindtap="hideMaterialModal">
+  <view class="modal-content" catchtap="preventBubble">
+    <view class="modal-header">
+      <image class="modal-icon" src="/images/icons/gift.svg" mode="aspectFit" />
+      <text class="modal-title">扫码添加客服领取资料</text>
+    </view>
+
+    <view class="modal-qrcode-wrapper">
+      <image class="modal-qrcode" src="/images/qrcode/service-qrcode.png" mode="aspectFit" />
+    </view>
+
+    <view class="modal-tip">
+      <text class="modal-tip-text">添加客服后，回复【资料】即可领取全部养宠资料：</text>
+    </view>
+
+    <view class="modal-material-list">
+      <view class="modal-material-item" wx:for="{{materialList}}" wx:key="title">
+        <text class="modal-material-check">✓</text>
+        <text class="modal-material-text">{{item.title}}</text>
+      </view>
+    </view>
+
+    <view class="modal-close-btn" bindtap="hideMaterialModal">
+      <text class="modal-close-btn-text">我知道了</text>
+    </view>
+  </view>
+</view>

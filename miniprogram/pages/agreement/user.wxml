@@ -1,0 +1,59 @@
+<view class="agreement-page">
+  <view class="agreement-content">
+    <view class="agreement-section">
+      <text class="section-title">1. 协议的接受</text>
+      <text class="section-text">欢迎使用本小程序！在使用本小程序服务之前，请您仔细阅读并理解本用户协议。通过注册、登录或使用本小程序服务，即表示您已阅读、理解并同意接受本协议的全部内容。</text>
+      <text class="section-text">如果您不同意本协议的任何条款，请立即停止使用本小程序服务。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">2. 账户注册与使用</text>
+      <text class="section-text">2.1 您承诺以真实身份注册成为本小程序用户，不得冒用他人身份或使用虚假信息。</text>
+      <text class="section-text">2.2 您应当妥善保管您的账户密码和登录信息，对使用该账户所进行的一切活动承担全部责任。</text>
+      <text class="section-text">2.3 您不得将账户出租、出借、转让或授权他人使用，如发现上述情况，我们有权暂停或终止您的账户。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">3. 用户行为规范</text>
+      <text class="section-text">3.1 您在使用本小程序服务时，必须遵守中华人民共和国相关法律法规。</text>
+      <text class="section-text">3.2 禁止利用本小程序从事以下活动：</text>
+      <text class="section-text">（1）发布、传播违法违规信息；</text>
+      <text class="section-text">（2）侵犯他人知识产权、商业秘密等合法权益；</text>
+      <text class="section-text">（3）恶意攻击、破坏小程序的正常运行；</text>
+      <text class="section-text">（4）利用技术手段破解、篡改小程序数据；</text>
+      <text class="section-text">（5）其他违反法律法规或本协议的行为。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">4. 知识产权</text>
+      <text class="section-text">4.1 本小程序中的所有内容，包括但不限于文字、图片、音频、视频、软件、程序、版面设计等，均受知识产权法律保护。</text>
+      <text class="section-text">4.2 未经我们书面许可，任何人不得擅自使用、复制、修改、传播上述内容。</text>
+      <text class="section-text">4.3 用户发布的内容，其知识产权归用户所有，但用户授予我们在小程序范围内使用、展示的权利。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">5. 服务的变更、中断或终止</text>
+      <text class="section-text">5.1 我们保留随时修改、中断或终止部分或全部服务的权利，无需对用户或第三方承担责任。</text>
+      <text class="section-text">5.2 若您违反本协议约定，我们有权暂停或终止向您提供服务，并追究相关法律责任。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">6. 免责条款</text>
+      <text class="section-text">6.1 本小程序按"现状"提供服务，不提供任何形式的明示或暗示保证。</text>
+      <text class="section-text">6.2 因不可抗力、网络故障、系统维护等原因导致服务中断或延迟，我们不承担相关责任。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">7. 协议修改</text>
+      <text class="section-text">我们有权根据需要修改本协议条款，修改后的协议将在小程序内公布。如您继续使用服务，即视为同意修改后的协议。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">8. 法律适用</text>
+      <text class="section-text">本协议的订立、执行和解释均适用中华人民共和国法律。如发生争议，双方应友好协商解决；协商不成的，任何一方均可向我们所在地人民法院提起诉讼。</text>
+    </view>
+  </view>
+  <view class="update-time">
+    <text>最后更新：{{updateTime}}</text>
+  </view>
+</view>

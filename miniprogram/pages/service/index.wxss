@@ -1,0 +1,457 @@
+/* 客服中心页面样式 */
+@import "../../utils/design-tokens.wxss";
+
+/* === 页面容器 === */
+.service-center-page {
+  min-height: 100vh;
+  background: var(--bg-secondary);
+  padding-bottom: 32rpx;
+}
+
+/* === 通用服务卡片样式 === */
+.service-card {
+  background: var(--bg-card);
+  margin: var(--spacing-md, 16rpx);
+  border-radius: var(--radius-xl, 16rpx);
+  padding: var(--spacing-lg, 24rpx);
+  box-shadow: var(--shadow-sm, 0 1rpx 3rpx 0 rgba(0, 0, 0, 0.06));
+}
+
+/* === 在线客服区域 === */
+.service-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 12rpx;
+}
+
+.service-icon {
+  width: 36rpx;
+  height: 36rpx;
+}
+
+.service-title {
+  font-size: var(--font-size-lg, 36rpx);
+  font-weight: var(--font-bold, 700);
+  color: var(--text-primary);
+}
+
+.service-desc {
+  display: block;
+  font-size: var(--font-size-sm, 24rpx);
+  color: var(--text-secondary);
+  margin-bottom: 24rpx;
+}
+
+.qrcode-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 24rpx 0;
+}
+
+.qrcode-image {
+  width: 320rpx;
+  height: 320rpx;
+  border-radius: var(--radius-lg, 12rpx);
+  border: 1rpx solid var(--border-color, #E5E5E5);
+}
+
+.wechat-id-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  margin-top: 16rpx;
+}
+
+.wechat-id-label {
+  font-size: var(--font-size-sm, 24rpx);
+  color: var(--text-secondary);
+}
+
+.wechat-id-text {
+  font-size: var(--font-size-base, 28rpx);
+  color: var(--brand-primary);
+  font-weight: var(--font-semibold, 600);
+}
+
+.copy-btn {
+  padding: 8rpx 20rpx;
+  background: var(--brand-primary);
+  border-radius: var(--radius-lg, 12rpx);
+  margin-left: 8rpx;
+}
+
+.copy-btn-text {
+  font-size: var(--font-size-sm, 24rpx);
+  color: #FFFFFF;
+}
+
+/* === 养宠资料领取区域 === */
+.material-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.material-icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.material-title {
+  font-size: var(--font-size-lg, 36rpx);
+  font-weight: var(--font-bold, 700);
+  color: var(--text-primary);
+}
+
+.material-list {
+  margin: 16rpx 0;
+}
+
+.material-item {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 8rpx 0;
+}
+
+.material-check {
+  font-size: var(--font-size-base, 28rpx);
+  color: var(--brand-secondary);
+}
+
+.material-text {
+  font-size: var(--font-size-base, 28rpx);
+  color: var(--text-primary);
+}
+
+.claim-btn {
+  margin-top: 16rpx;
+  padding: 20rpx;
+  background: var(--brand-primary);
+  border-radius: var(--radius-lg, 12rpx);
+  text-align: center;
+}
+
+.claim-btn-text {
+  font-size: var(--font-size-base, 28rpx);
+  color: #FFFFFF;
+  font-weight: var(--font-semibold, 600);
+}
+
+/* === 意见反馈区域 === */
+.feedback-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 12rpx;
+}
+
+.feedback-icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.feedback-title {
+  font-size: var(--font-size-lg, 36rpx);
+  font-weight: var(--font-bold, 700);
+  color: var(--text-primary);
+}
+
+.feedback-desc {
+  display: block;
+  font-size: var(--font-size-sm, 24rpx);
+  color: var(--text-secondary);
+  margin-bottom: 16rpx;
+}
+
+.feedback-btn {
+  padding: 20rpx;
+  background: var(--brand-primary);
+  border-radius: var(--radius-lg, 12rpx);
+  text-align: center;
+}
+
+.feedback-btn-text {
+  font-size: var(--font-size-base, 28rpx);
+  color: #FFFFFF;
+  font-weight: var(--font-semibold, 600);
+}
+
+/* === FAQ常见问题区域 === */
+.faq-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.faq-icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.faq-title {
+  font-size: var(--font-size-lg, 36rpx);
+  font-weight: var(--font-bold, 700);
+  color: var(--text-primary);
+}
+
+.faq-list {
+  margin-top: 16rpx;
+}
+
+.faq-item {
+  border-bottom: 1rpx solid var(--border-color, #E5E5E5);
+  padding: 16rpx 0;
+}
+
+.faq-item:last-child {
+  border-bottom: none;
+}
+
+.faq-question-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.faq-question {
+  font-size: var(--font-size-base, 28rpx);
+  color: var(--text-primary);
+  font-weight: var(--font-medium, 500);
+  flex: 1;
+}
+
+.faq-arrow {
+  font-size: 32rpx;
+  color: var(--text-tertiary);
+  transition: transform 200ms;
+}
+
+.faq-arrow.expanded {
+  transform: rotate(90deg);
+}
+
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 300ms ease;
+}
+
+.faq-answer.show {
+  max-height: 500rpx;
+  margin-top: 12rpx;
+}
+
+.faq-answer-text {
+  font-size: var(--font-size-sm, 24rpx);
+  color: var(--text-secondary);
+  line-height: 1.75;
+}
+
+/* === 好评引导区域 === */
+.rate-card {
+  background: linear-gradient(135deg, #FFF8E6 0%, #FFF 100%);
+}
+
+.rate-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 12rpx;
+}
+
+.rate-icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.rate-title {
+  font-size: var(--font-size-lg, 36rpx);
+  font-weight: var(--font-bold, 700);
+  color: var(--text-primary);
+}
+
+.rate-desc {
+  display: block;
+  font-size: var(--font-size-sm, 24rpx);
+  color: var(--text-secondary);
+  margin-bottom: 12rpx;
+}
+
+.rate-stars {
+  font-size: 48rpx;
+  color: #F59E0B;
+  text-align: center;
+  letter-spacing: 8rpx;
+  margin: 16rpx 0;
+}
+
+.rate-btn {
+  padding: 16rpx;
+  background: var(--brand-primary);
+  border-radius: var(--radius-lg, 12rpx);
+  text-align: center;
+}
+
+.rate-btn-text {
+  font-size: var(--font-size-base, 28rpx);
+  color: #FFFFFF;
+  font-weight: var(--font-semibold, 600);
+}
+
+/* === 协议中心入口 === */
+.agreement-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.agreement-left {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.agreement-icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.agreement-title {
+  font-size: var(--font-size-base, 28rpx);
+  color: var(--text-primary);
+}
+
+.agreement-arrow {
+  font-size: 32rpx;
+  color: var(--text-tertiary);
+}
+
+/* === 版本信息 === */
+.version-info {
+  text-align: center;
+  padding: 32rpx 16rpx 16rpx;
+}
+
+.version-text {
+  font-size: var(--font-size-xs, 20rpx);
+  color: var(--text-tertiary);
+}
+
+/* === 养宠资料领取弹窗 === */
+.material-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 300ms;
+}
+
+.material-modal.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  width: 560rpx;
+  background: #FFFFFF;
+  border-radius: var(--radius-xl, 16rpx);
+  padding: 32rpx;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  margin-bottom: 24rpx;
+}
+
+.modal-icon {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.modal-title {
+  font-size: var(--font-size-lg, 36rpx);
+  font-weight: var(--font-bold, 700);
+  color: var(--text-primary);
+}
+
+.modal-qrcode-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 24rpx 0;
+}
+
+.modal-qrcode {
+  width: 320rpx;
+  height: 320rpx;
+  border-radius: var(--radius-lg, 12rpx);
+  border: 1rpx solid var(--border-color, #E5E5E5);
+}
+
+.modal-tip {
+  text-align: center;
+  margin: 24rpx 0;
+}
+
+.modal-tip-text {
+  font-size: var(--font-size-sm, 24rpx);
+  color: var(--text-secondary);
+  line-height: 1.75;
+}
+
+.modal-material-list {
+  margin: 24rpx 0;
+}
+
+.modal-material-item {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 12rpx 0;
+  border-bottom: 1rpx solid var(--border-color, #E5E5E5);
+}
+
+.modal-material-item:last-child {
+  border-bottom: none;
+}
+
+.modal-material-check {
+  font-size: var(--font-size-base, 28rpx);
+  color: var(--brand-secondary);
+}
+
+.modal-material-text {
+  font-size: var(--font-size-base, 28rpx);
+  color: var(--text-primary);
+}
+
+.modal-close-btn {
+  margin-top: 24rpx;
+  padding: 20rpx;
+  background: var(--brand-primary);
+  border-radius: var(--radius-lg, 12rpx);
+  text-align: center;
+}
+
+.modal-close-btn-text {
+  font-size: var(--font-size-base, 28rpx);
+  color: #FFFFFF;
+  font-weight: var(--font-semibold, 600);
+}

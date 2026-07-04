@@ -1,0 +1,116 @@
+/* 协议中心页面样式 */
+@import "../../utils/design-tokens.wxss";
+
+/* === 页面容器 === */
+.agreement-center-page {
+  min-height: 100vh;
+  background: var(--bg-secondary);
+  padding-bottom: 32rpx;
+}
+
+/* === 页面标题 === */
+.page-header {
+  background: var(--bg-card);
+  padding: 32rpx 24rpx;
+  margin-bottom: 16rpx;
+}
+
+.page-title {
+  display: block;
+  font-size: var(--font-size-xl, 40rpx);
+  font-weight: var(--font-bold, 700);
+  color: var(--text-primary);
+  margin-bottom: 8rpx;
+}
+
+.page-desc {
+  display: block;
+  font-size: var(--font-size-sm, 24rpx);
+  color: var(--text-secondary);
+}
+
+/* === 协议列表 === */
+.agreement-list {
+  padding: 0 16rpx;
+}
+
+.agreement-item {
+  display: flex;
+  align-items: center;
+  background: var(--bg-card);
+  border-radius: var(--radius-xl, 16rpx);
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  transition: all 200ms;
+}
+
+.agreement-item:active {
+  transform: scale(0.98);
+  background: var(--bg-secondary);
+}
+
+.agreement-icon-wrapper {
+  width: 80rpx;
+  height: 80rpx;
+  background: var(--brand-primary-light);
+  border-radius: var(--radius-lg, 12rpx);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16rpx;
+  flex-shrink: 0;
+}
+
+.agreement-icon {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.agreement-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.agreement-title {
+  font-size: var(--font-size-lg, 32rpx);
+  font-weight: var(--font-semibold, 600);
+  color: var(--text-primary);
+}
+
+.agreement-desc {
+  font-size: var(--font-size-sm, 24rpx);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.agreement-arrow {
+  font-size: 32rpx;
+  color: var(--text-tertiary);
+  margin-left: 16rpx;
+  flex-shrink: 0;
+}
+
+/* === 底部提示 === */
+.footer-tip {
+  text-align: center;
+  padding: 32rpx 16rpx 16rpx;
+}
+
+.footer-tip-text {
+  font-size: var(--font-size-sm, 24rpx);
+  color: var(--text-tertiary);
+  line-height: 1.75;
+}
+
+/* === 版本信息 === */
+.version-info {
+  text-align: center;
+  padding: 16rpx;
+}
+
+.version-text {
+  font-size: var(--font-size-xs, 20rpx);
+  color: var(--text-tertiary);
+}

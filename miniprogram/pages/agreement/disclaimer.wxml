@@ -1,0 +1,66 @@
+<view class="agreement-page">
+  <view class="agreement-content">
+    <view class="agreement-section">
+      <text class="section-title">1. 免责声明概述</text>
+      <text class="section-text">欢迎使用本小程序。在使用本小程序服务之前，请您仔细阅读本免责声明。您的使用行为将被视为对本声明内容的认可。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">2. 服务性质</text>
+      <text class="section-text">2.1 本小程序提供的服务仅供参考和学习目的，不构成任何形式的专业建议（包括但不限于法律、财务、医疗、投资等）。</text>
+      <text class="section-text">2.2 小程序内的内容可能存在时效性限制，部分信息可能未能及时更新，请您自行判断信息的适用性。</text>
+      <text class="section-text">2.3 我们不保证服务的连续性、及时性、安全性或无错误性。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">3. 信息准确性</text>
+      <text class="section-text">3.1 我们努力确保小程序内信息的准确性和完整性，但不对其准确性、完整性或适用性作出任何保证。</text>
+      <text class="section-text">3.2 小程序内的AI生成内容可能存在事实错误或不准确信息，用户应独立核实重要信息。</text>
+      <text class="section-text">3.3 对于因使用不准确信息导致的任何损失，我们不承担责任。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">4. 第三方链接</text>
+      <text class="section-text">4.1 本小程序可能包含指向第三方网站或资源的链接。这些链接仅为方便用户而提供。</text>
+      <text class="section-text">4.2 我们不对第三方网站的内容、隐私政策或实践进行控制或承担责任。</text>
+      <text class="section-text">4.3 您访问第三方网站的风险由您自行承担。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">5. 用户行为</text>
+      <text class="section-text">5.1 用户对其在小程序内发布的内容承担全部责任。</text>
+      <text class="section-text">5.2 我们不对用户发布的内容进行实质性审查，不对用户内容造成的后果承担责任。</text>
+      <text class="section-text">5.3 如用户发布违法违规内容，责任由用户自行承担。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">6. 服务中断</text>
+      <text class="section-text">6.1 因以下原因导致服务中断或延迟，我们不承担责任：</text>
+      <text class="section-text">（1）系统维护、升级；</text>
+      <text class="section-text">（2）网络故障、服务器故障；</text>
+      <text class="section-text">（3）不可抗力事件；</text>
+      <text class="section-text">（4）第三方服务中断。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">7. 责任限制</text>
+      <text class="section-text">7.1 在法律允许的最大范围内，我们不因使用或无法使用本服务而承担任何直接、间接、附带、特殊或后果性损害。</text>
+      <text class="section-text">7.2 我们不对因病毒或其他有害组件侵入您的系统而导致的任何损害承担责任。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">8. 使用建议</text>
+      <text class="section-text">8.1 请定期备份重要数据，不要将小程序作为唯一的数据存储方式。</text>
+      <text class="section-text">8.2 对于重要决策，请咨询相关专业人士的意见。</text>
+      <text class="section-text">8.3 请妥善保管您的账户信息，定期更改密码。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">9. 声明变更</text>
+      <text class="section-text">我们保留随时修改本免责声明的权利。修改后的声明将在小程序内公布，继续使用服务即表示您接受修改后的声明。</text>
+    </view>
+  </view>
+  <view class="update-time">
+    <text>最后更新：{{updateTime}}</text>
+  </view>
+</view>

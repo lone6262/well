@@ -1,0 +1,69 @@
+<view class="agreement-page">
+  <view class="agreement-content">
+    <view class="agreement-section">
+      <text class="section-title">1. AI服务说明</text>
+      <text class="section-text">本小程序内置了人工智能（AI）功能，旨在为用户提供智能辅助服务。在使用本AI功能前，请仔细阅读以下使用说明。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">2. AI服务性质</text>
+      <text class="section-text">2.1 本AI服务基于机器学习模型生成内容，具有一定的创造性和智能性，但并非完美无缺。</text>
+      <text class="section-text">2.2 AI生成的内容仅供参考，不构成专业建议（包括但不限于医疗、法律、财务等）。</text>
+      <text class="section-text">2.3 AI可能产生不准确、不完整或有时效性限制的信息。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">3. 使用限制</text>
+      <text class="section-text">3.1 请勿将AI用于以下用途：</text>
+      <text class="section-text">（1）生成违法违规内容；</text>
+      <text class="section-text">（2）侵犯他人知识产权或隐私权；</text>
+      <text class="section-text">（3）传播虚假信息或谣言；</text>
+      <text class="section-text">（4）用于商业欺诈或误导性宣传。</text>
+      <text class="section-text">3.2 用户对AI生成内容的使用承担全部责任。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">4. 内容准确性</text>
+      <text class="section-text">4.1 AI生成的内容可能存在事实错误或偏见，请自行核实重要信息。</text>
+      <text class="section-text">4.2 对于涉及健康、安全、财务等重要决策，请咨询相关专业人士。</text>
+      <text class="section-text">4.3 我们不对AI生成内容的准确性或适用性承担责任。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">5. 数据处理</text>
+      <text class="section-text">5.1 为提供AI服务，您的输入内容将被发送至AI处理系统进行处理。</text>
+      <text class="section-text">5.2 我们会采取合理措施保护您的输入数据，但无法保证绝对安全。</text>
+      <text class="section-text">5.3 请勿在AI输入中提供敏感个人信息（如身份证号、银行卡号等）。</text>
+      <text class="section-text">5.4 我们不会将您的输入数据用于训练AI模型（除非另有说明）。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">6. 服务配额</text>
+      <text class="section-text">6.1 AI服务可能设有使用配额限制，超出后需要等待或升级会员。</text>
+      <text class="section-text">6.2 我们保留根据服务负载调整配额的权利。</text>
+      <text class="section-text">6.3 恶意使用或滥用AI功能可能导致账户被限制。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">7. 意见反馈</text>
+      <text class="section-text">如果您发现AI生成的内容存在问题或有改进建议，欢迎通过小程序内的反馈功能告知我们。您的反馈将帮助我们改进服务质量。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">8. 免责声明</text>
+      <text class="section-text">8.1 AI服务按"现状"提供，不提供任何形式的保证。</text>
+      <text class="section-text">8.2 因使用或无法使用AI服务导致的任何损失，我们不承担责任。</text>
+      <text class="section-text">8.3 我们保留随时修改或终止AI服务的权利。</text>
+    </view>
+
+    <view class="agreement-section">
+      <text class="section-title">9. 使用建议</text>
+      <text class="section-text">9.1 清晰、具体地描述您的需求可以获得更好的AI输出。</text>
+      <text class="section-text">9.2 对AI生成内容进行人工审查和修改，确保符合您的实际需求。</text>
+      <text class="section-text">9.3 妥善保管AI生成的敏感内容，避免泄露给无关人员。</text>
+    </view>
+  </view>
+  <view class="update-time">
+    <text>最后更新：{{updateTime}}</text>
+  </view>
+</view>
