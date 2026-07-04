@@ -354,7 +354,6 @@ Page({
         wx.hideLoading()
         if (res.result && res.result.code === 0) {
           let data = res.result.data
-          console.log('[测试支付] 订单创建成功:', data)
 
           // 真实模式：createOrder 返回 payParams，直接调起微信支付
           if (data.payParams) {
@@ -371,7 +370,6 @@ Page({
                 })
               })
               .catch(function(err) {
-                console.error('[测试支付] 支付失败:', err)
                 wx.showToast({
                   title: '支付未完成: ' + (err.errMsg || '未知错误'),
                   icon: 'none',
@@ -402,7 +400,6 @@ Page({
       },
       fail: function(err) {
         wx.hideLoading()
-        console.error('[测试支付] 云函数调用失败:', err)
         wx.showModal({
           title: '调用失败',
           content: '云函数调用失败: ' + (err.errMsg || '未知错误'),

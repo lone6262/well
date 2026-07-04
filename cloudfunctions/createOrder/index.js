@@ -1,16 +1,10 @@
-// 创建订单云函数 - 支持数据库配置和模拟支付模式
-// ⚠️ TODO: 上线前必须完成以下安全措施：
-//   1. 在数据库 system_config 集合中添加 wechat_pay_config 文档配置支付参数
-//   2. 配置微信支付商户号、密钥到数据库或环境变量
-//   3. payCallback 中的微信支付签名验证已实现（验证 notify 参数签名）
-//   4. payCallback 中已校验订单金额与实际支付金额一致
-//   5. payCallback 中已实现幂等性检查（避免重复处理）
+// 创建订单云函数 — 支持 report / member / points / bundle 多类型
+// 模拟支付直接标记已支付，真实支付返回调起参数
 // 参考文档: https://pay.weixin.qq.com/wiki/doc/apiv3/wxpay/pages/index.shtml
 //
 // 配置方式（优先级从高到低）：
-//   1. 数据库配置：system_config 集合的 wechat_pay_config 文档
-//      { _id: "wechat_pay_config", mch_key: "你的32位密钥", mch_id: "商户号", mock_pay: false }
-//   2. 环境变量：WECHAT_PAY_MCH_KEY, WECHAT_PAY_MCH_ID, MOCK_PAY
+//   1. 数据库 system_config.wechat_pay_config 文档
+//   2. 环境变量 MOCK_PAY
 const cloud = require('wx-server-sdk');
 const https = require('https');
 const {
