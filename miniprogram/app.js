@@ -100,7 +100,11 @@ App({
 
     // 2. 重置全局数据（保留 loginCallbacks 和已恢复的登录状态）
     this.globalData.userInfo = this.globalData.userInfo || null;
-    this.globalData.token = null;
+    // 修复：保留从缓存恢复的 token，不要强制清空
+    // 静默登录是异步的，在等待期间页面仍需使用缓存的 token
+    if (!this.globalData.token) {
+      this.globalData.token = null;
+    }
     this.globalData.cloudInitialized = false;
     if (!this.globalData.loginCallbacks) {
       this.globalData.loginCallbacks = [];
@@ -128,11 +132,6 @@ App({
         await self._silentLoginAsync();
       } else if (!self.globalData.openid) {
         self.enterOfflineMode();
-      }
-
-      // 步骤2.5: 云初始化完成后，通知等待中的页面
-      if (self.globalData.openid) {
-        self._notifyLoginComplete(self.globalData.openid);
       }
 
       // 步骤3: 首次启动免责声明
@@ -229,6 +228,9 @@ App({
 
         if (result && result.code === 0) {
           log.info('静默登录成功')
+
+          // 调试：打印从服务器返回的完整用户信息
+          log.info('静默登录 - 服务器返回的用户信息:', result.data.userInfo)
 
           self.globalData.token = result.data.token;
           self.globalData.openid = result.data.openid;
@@ -470,8 +472,9 @@ App({
   },
 
   // === 统一的登录状态检查方法 ===
+  // 需要同时检查 openid 和 token，避免有 openid 但 token 无效的情况
   isLoggedIn: function() {
-    return !!this.globalData.openid;
+    return !!(this.globalData.openid && this.globalData.token);
   },
 
   // === 统一的获取openid方法 ===

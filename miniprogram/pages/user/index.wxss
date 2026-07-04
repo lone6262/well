@@ -70,24 +70,25 @@
 }
 
 .edit-name-btn {
-  width: 40rpx;
-  height: 40rpx;
+  width: 48rpx;
+  height: 48rpx;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-secondary);
+  background: var(--brand-primary, #B35D3A);
   transition: var(--transition, all 200ms ease);
+  margin-left: 8rpx;
+  box-shadow: 0 2rpx 8rpx rgba(179, 93, 58, 0.3);
 }
 
 .edit-name-btn:active {
   transform: scale(0.95);
-  background: var(--border-color);
+  background: var(--brand-primary-dark, #9A4E31);
 }
 
 .edit-icon {
-  font-size: 20rpx;
-  color: var(--text-secondary);
+  font-size: 24rpx;
 }
 
 .user-status-badge {
@@ -380,7 +381,6 @@
 
 .accent-icon {
   background: var(--brand-emergency);
-  opacity: 0.1;
 }
 
 .info-icon {
@@ -389,12 +389,10 @@
 
 .success-icon {
   background: var(--color-success);
-  opacity: 0.1;
 }
 
 .warning-icon {
   background: var(--color-warning);
-  opacity: 0.1;
 }
 
 .secondary-icon {
@@ -423,8 +421,7 @@
 
 .menu-item-count {
   background: var(--brand-emergency);
-  opacity: 0.1;
-  color: var(--brand-emergency);
+  color: var(--brand-primary-light);
   padding: 4rpx 8rpx;
   border-radius: var(--rounded-full, 9999rpx);
   font-size: var(--text-xs, 20rpx);
@@ -456,7 +453,6 @@
 
 .purple-icon {
   background: var(--brand-primary);
-  opacity: 0.1;
 }
 
 .menu-arrow {
@@ -469,11 +465,11 @@
 
 .disclaimer-card {
   margin: 16rpx;
-  background: var(--color-warning);
-  opacity: 0.1;
+  background: #FFF8E6;
+  opacity: 1;
   border-radius: 16rpx;
   padding: 16rpx;
-  border-left: 4rpx solid var(--color-warning);
+  border-left: 4rpx solid #F59E0B;
   box-shadow: var(--shadow-sm, 0 1rpx 3rpx 0 rgba(0, 0, 0, 0.1));
 }
 
@@ -493,12 +489,12 @@
 .disclaimer-title {
   font-size: var(--text-base, 28rpx);
   font-weight: var(--font-bold, 700);
-  color: var(--color-warning);
+  color: #F59E0B;
 }
 
 .disclaimer-text {
   font-size: var(--text-sm, 24rpx);
-  color: var(--color-warning);
+  color: #78350F;
   line-height: var(--leading-relaxed, 1.75);
 }
 

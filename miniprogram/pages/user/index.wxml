@@ -14,7 +14,7 @@
           <view class="user-name-row">
             <view class="user-name-text">{{userInfo.nickname || '宠物爱好者'}}</view>
             <view class="edit-name-btn" bindtap="editNickname" wx:if="{{userInfo.isLoggedIn}}">
-              <image class="edit-icon" src="/images/icons/clipboard.svg" mode="aspectFit" aria-label="编辑昵称" />
+              <text class="edit-icon">✏️</text>
             </view>
           </view>
           <view class="user-status-badge">
@@ -202,12 +202,12 @@
       </view>
 
       <view class="menu-list">
-        <view class="menu-item" bindtap="contactUs" aria-label="联系我们">
+        <view class="menu-item" bindtap="contactUs" aria-label="客服中心">
           <view class="menu-item-left">
             <view class="menu-icon warning-icon">
-              <image class="menu-icon-img" src="/images/icons/phone.svg" mode="aspectFit" />
+              <image class="menu-icon-img" src="/images/icons/customer-service.svg" mode="aspectFit" />
             </view>
-            <text class="menu-item-text">联系我们</text>
+            <text class="menu-item-text">客服中心</text>
           </view>
           <view class="menu-item-right">
             <text class="menu-arrow">›</text>

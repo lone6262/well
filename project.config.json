@@ -47,7 +47,7 @@
   },
   "appid": "wxee33a0c47421db2c",
   "projectname": "pet-symptom-check",
-  "libVersion": "3.0.2",
+  "libVersion": "3.15.2",
   "cloudfunctionTemplateRoot": "cloudfunctionTemplate/",
   "condition": {
     "search": {

@@ -29,7 +29,29 @@ Page({
   },
 
   onLoad: function() {
+    // 检查登录状态
+    if (!this.checkLogin()) {
+      return
+    }
     this.loadList()
+  },
+
+  // 检查登录状态
+  checkLogin: function() {
+    let openid = app.getOpenid()
+    if (!openid) {
+      wx.showToast({
+        title: '请先登录',
+        icon: 'none'
+      })
+      setTimeout(() => {
+        wx.switchTab({
+          url: '/pages/user/index'
+        })
+      }, 1500)
+      return false
+    }
+    return true
   },
 
   onPullDownRefresh: function() {

@@ -27,7 +27,14 @@
     "pages/coupon/list",
     "pages/coupon/receive",
     "pages/bundle/index",
-    "pages/member/family"
+    "pages/member/family",
+    "pages/service/index",
+    "pages/service/feedback",
+    "pages/agreement/index",
+    "pages/agreement/user",
+    "pages/agreement/disclaimer",
+    "pages/agreement/child",
+    "pages/agreement/ai-usage"
   ],
   "window": {
     "backgroundColor": "#F5F0EB",

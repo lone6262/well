@@ -33,6 +33,10 @@ Page({
   },
 
   onLoad: function(options) {
+    // 检查登录状态
+    if (!this.checkLogin()) {
+      return
+    }
     if (options.followupId) {
       let decodedSymptoms = this.decodeParam(options.symptoms)
       let symptomArr = decodedSymptoms ? decodedSymptoms.split('、') : []
@@ -97,6 +101,22 @@ Page({
         self.setData({ submitting: false })
       }
     })
+  },
+
+  // 检查登录状态
+  checkLogin: function() {
+    let openid = app.getOpenid()
+    if (!openid) {
+      wx.showToast({
+        title: '请先登录',
+        icon: 'none'
+      })
+      setTimeout(() => {
+        wx.navigateBack()
+      }, 1500)
+      return false
+    }
+    return true
   },
 
   // 返回首页

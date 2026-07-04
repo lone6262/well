@@ -150,7 +150,9 @@ Page({
 
   _ensureLoggedIn: function() {
     const openid = app.getOpenid()
-    if (!openid || (typeof openid === 'string' && openid.indexOf('mock_') === 0)) {
+    const token = app.globalData.token || wx.getStorageSync('token')
+    // 需要 openid 和 token 都存在，且不是 mock openid
+    if (!openid || !token || (typeof openid === 'string' && openid.indexOf('mock_') === 0)) {
       this._requireLogin()
       return false
     }

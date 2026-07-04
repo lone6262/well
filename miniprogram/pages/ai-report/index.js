@@ -13,6 +13,11 @@ Page({
   },
 
   onLoad: function(options) {
+    // 检查登录状态
+    if (!this.checkLogin()) {
+      return
+    }
+
     let recordId = options.recordId || ''
 
     if (!recordId) {
@@ -23,6 +28,24 @@ Page({
 
     this.setData({ recordId: recordId })
     this.loadReport()
+  },
+
+  // 检查登录状态
+  checkLogin: function() {
+    let openid = app.getOpenid()
+    if (!openid) {
+      wx.showToast({
+        title: '请先登录',
+        icon: 'none'
+      })
+      setTimeout(() => {
+        wx.switchTab({
+          url: '/pages/user/index'
+        })
+      }, 1500)
+      return false
+    }
+    return true
   },
 
   // 加载AI报告

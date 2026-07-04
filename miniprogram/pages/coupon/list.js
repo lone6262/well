@@ -11,6 +11,10 @@ Page({
   },
 
   onLoad() {
+    // 检查登录状态
+    if (!this.checkLogin()) {
+      return
+    }
     this.loadCoupons();
   },
 
@@ -50,6 +54,24 @@ Page({
 
   goToReceive() {
     wx.navigateTo({ url: '/pages/coupon/receive' });
+  },
+
+  // 检查登录状态
+  checkLogin() {
+    let openid = app.getOpenid()
+    if (!openid) {
+      wx.showToast({
+        title: '请先登录',
+        icon: 'none'
+      })
+      setTimeout(() => {
+        wx.switchTab({
+          url: '/pages/user/index'
+        })
+      }, 1500)
+      return false
+    }
+    return true
   },
 
   onCouponTap(e) {

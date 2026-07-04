@@ -233,6 +233,12 @@
 
     <!-- 底部按钮 -->
     <view class="btn-area">
+      <!-- 测试按钮（测试完成后移除） -->
+      <view class="btn-test btn-full" bindtap="testPayment" hover-class="btn-hover">
+        <text class="btn-test-icon">🧪</text>
+        <text>测试支付 ¥0.01</text>
+      </view>
+
       <view class="btn-row" wx:if="{{isMember}}">
         <view class="btn-secondary" bindtap="goToStatus" hover-class="btn-hover">会员详情</view>
         <view class="btn-primary" bindtap="goToPurchase" hover-class="btn-hover">续费 / 升级</view>

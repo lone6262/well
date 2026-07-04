@@ -351,34 +351,36 @@ class MapService {
     this.locationWatchCallback = callback
     this.lastLocation = null
 
+    // 保存位置变化回调引用，便于 stopLocationMonitoring 时精确注销
+    this._onLocationChange = (res) => {
+      const currentLocation = {
+        latitude: res.latitude,
+        longitude: res.longitude
+      }
+
+      if (this.lastLocation) {
+        const distance = this.calculateDistance(
+          this.lastLocation.latitude,
+          this.lastLocation.longitude,
+          currentLocation.latitude,
+          currentLocation.longitude
+        )
+
+        if (distance > WATCH_DISTANCE && this.locationWatchCallback) {
+          log.info(`[MOVE] 位置变化超过${WATCH_DISTANCE}米，触发回调`)
+          this.locationWatchCallback(currentLocation, distance)
+        }
+      }
+
+      this.lastLocation = currentLocation
+    }
+
     // 开启实时位置监控
     this.locationWatchId = wx.startLocationUpdate({
       success: () => {
         log.info('[LOCATION] 实时位置监控已启动')
-
-        // 监听位置变化事件
-        wx.onLocationChange((res) => {
-          const currentLocation = {
-            latitude: res.latitude,
-            longitude: res.longitude
-          }
-
-          if (this.lastLocation) {
-            const distance = this.calculateDistance(
-              this.lastLocation.latitude,
-              this.lastLocation.longitude,
-              currentLocation.latitude,
-              currentLocation.longitude
-            )
-
-            if (distance > WATCH_DISTANCE && this.locationWatchCallback) {
-              log.info(`[MOVE] 位置变化超过${WATCH_DISTANCE}米，触发回调`)
-              this.locationWatchCallback(currentLocation, distance)
-            }
-          }
-
-          this.lastLocation = currentLocation
-        })
+        // 监听位置变化事件（使用保存的引用，便于注销）
+        wx.onLocationChange(this._onLocationChange)
       },
       fail: (error) => {
         log.error('实时位置监控启动失败:', error)
@@ -391,6 +393,15 @@ class MapService {
    */
   stopLocationMonitoring() {
     if (this.locationWatchId) {
+      // 注销位置变化监听，防止事件泄漏
+      if (this._onLocationChange) {
+        try {
+          wx.offLocationChange(this._onLocationChange)
+        } catch (e) {
+          log.warn('[STOP] offLocationChange 失败:', e)
+        }
+        this._onLocationChange = null
+      }
       wx.stopLocationUpdate({
         success: () => {
           log.info('[STOP] 实时位置监控已停止')

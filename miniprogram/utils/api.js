@@ -38,8 +38,9 @@ function call(name, data, options) {
   let showError = options.showError || false;
 
   return new Promise(function(resolve) {
-    // 如果需要登录但没有openid，等待登录完成
-    if (requireLogin && !app.globalData.openid) {
+    // 如果需要登录但没有 openid 或 token，等待登录完成
+    // 避免：有 openid 但 token 无效时，云函数鉴权失败
+    if (requireLogin && (!app.globalData.openid || !app.globalData.token)) {
       app.onLoginComplete(function() {
         _doCall(name, data, showError, resolve);
       });
@@ -124,6 +125,7 @@ function _doCall(name, data, showError, resolve) {
 
 /**
  * 批量调用云函数（并行执行）
+ * 使用 Promise.allSettled — 任一请求失败不影响其他请求的结果返回
  * @param {Array<{name: string, data: Object}>} requests
  * @returns {Promise<Array<ApiResult>>}
  */
@@ -131,7 +133,15 @@ function batchCall(requests) {
   let promises = requests.map(function(req) {
     return call(req.name, req.data, req.options);
   });
-  return Promise.all(promises);
+  return Promise.allSettled(promises).then(function(results) {
+    return results.map(function(r) {
+      // rejected 的请求包装成失败结果，保持返回结构一致
+      if (r.status === 'fulfilled') {
+        return r.value;
+      }
+      return { success: false, code: -1, msg: (r.reason && r.reason.msg) || '请求失败', data: null };
+    });
+  });
 }
 
 module.exports = {

@@ -4,6 +4,7 @@ const dataLoader = require('./data-loader.js')
 const navHandler = require('./nav-handler.js')
 const logger = require('../../utils/logger.js')
 const log = logger.child('Index')
+const priceService = require('../../utils/price-service')
 
 Page({
   data: {
@@ -127,21 +128,13 @@ Page({
     dataLoader.loadMemberStatus(this)
   },
 
-  /** V2.0: 加载云端价格 */
+  /** 加载云端价格（通过公共服务） */
   loadPrices: function() {
-    const self = this
-    wx.cloud.callFunction({
-      name: 'getPrices',
-      data: {},
-      success: function(res) {
-        if (res.result && res.result.code === 0) {
-          var d = res.result.data
-          self.setData({
-            firstReportDisplay: d.firstReportDisplay || '1.00'
-          })
-        }
-      },
-      fail: function() { /* 静默失败 */ }
+    var self = this
+    priceService.fetchPricesWithCallback(function(d) {
+      if (d && d.firstReportDisplay) {
+        self.setData({ firstReportDisplay: d.firstReportDisplay })
+      }
     })
   },
 
@@ -180,29 +173,6 @@ Page({
 
   getHealthStatusText(status) {
     return status === 'good' ? '状态良好' : '需要关注'
-  },
-
-  getMockPets() {
-    return [
-      {
-        id: 'mock1',
-        name: '小白',
-        avatar: '猫咪',
-        type: 'cat',
-        age: 2,
-        healthStatus: 'good',
-        healthStatusText: '状态良好'
-      },
-      {
-        id: 'mock2',
-        name: '大黄',
-        avatar: '狗狗',
-        type: 'dog',
-        age: 3,
-        healthStatus: 'warning',
-        healthStatusText: '需要关注'
-      }
-    ]
   },
 
   loadDailyTip() {

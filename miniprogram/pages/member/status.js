@@ -1,5 +1,6 @@
 // 会员状态与权益页面
 let app = getApp()
+const priceService = require('../../utils/price-service')
 
 Page({
   data: {
@@ -36,21 +37,13 @@ Page({
     }
   },
 
-  /** V2.0: 加载动态价格 */
+  /** 通过公共服务加载动态价格 */
   loadPrices: function() {
     var self = this
-    wx.cloud.callFunction({
-      name: 'getPrices',
-      data: {},
-      success: function(res) {
-        if (res.result && res.result.code === 0) {
-          var d = res.result.data
-          self.setData({
-            _standardReportPrice: parseFloat(d.standardReportDisplay)
-          })
-        }
-      },
-      fail: function() { /* 静默失败 */ }
+    priceService.fetchPricesWithCallback(function(d) {
+      if (d && d.standardReportDisplay) {
+        self.setData({ _standardReportPrice: parseFloat(d.standardReportDisplay) })
+      }
     })
   },
 

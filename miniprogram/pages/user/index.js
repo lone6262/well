@@ -31,17 +31,26 @@ Page({
 
   // 加载用户信息 - 统一使用app.js的登录状态
   loadUserInfo: function() {
-    // 检查登录状态（使用统一的登录检查方法）
+    // 检查登录状态（需要同时有 openid 和 token）
     let openid = app.getOpenid()
+    let token = app.globalData.token || wx.getStorageSync('token')
     let userInfo = app.globalData.userInfo || wx.getStorageSync('userInfo') || {}
 
-    // 修复：只要openid存在就认为是已登录，不依赖nickName
-    let isLoggedIn = !!openid
+    // 需要 openid 和 token 都存在才认为是已登录
+    let isLoggedIn = !!(openid && token)
 
     log.info('用户中心 - 登录状态检查:', {
       isLoggedIn: isLoggedIn,
       isGuest: app.globalData.isGuest,
       cloudDevelopmentAvailable: app.globalData.cloudDevelopmentAvailable
+    })
+
+    // 调试：打印会员状态数据来源
+    log.info('用户中心 - 会员状态调试:', {
+      'app.globalData.userInfo': app.globalData.userInfo,
+      'wx.getStorageSync(userInfo)': wx.getStorageSync('userInfo'),
+      '最终isMember': !!userInfo.isMember,
+      'userInfo对象': userInfo
     })
 
     this.setData({
@@ -286,10 +295,15 @@ Page({
   login: function() {
     let self = this
 
-    // 检查是否已经登录（有openid）
-    if (app.getOpenid()) {
-      log.info('用户已经通过静默登录，直接获取用户资料')
-      // 已有openid，直接获取用户资料
+    // 检查是否已经登录（需要同时有 openid 和 token）
+    // 避免：缓存恢复了 openid 但 token 为 null 时，导致云函数鉴权失败
+    let hasValidLogin = app.globalData.openid && app.globalData.token
+    let cachedOpenid = app.getOpenid()
+    let cachedToken = app.globalData.token || wx.getStorageSync('token')
+
+    if (cachedOpenid && cachedToken) {
+      log.info('用户已经通过静默登录（openid+token都存在），直接获取用户资料')
+      // 已有openid和token，直接获取用户资料
       app.requestUserAuthorization(function(result) {
         if (result.success) {
           log.info('用户资料获取成功:', result.userInfo)
@@ -300,8 +314,8 @@ Page({
         }
       })
     } else {
-      // 还没有openid，等待静默登录完成
-      log.info('等待静默登录完成...')
+      // 还没有openid和token，需要主动触发静默登录
+      log.info('用户未登录，主动触发静默登录...')
 
       // 显示登录中提示
       wx.showLoading({
@@ -330,38 +344,14 @@ Page({
         })
       })
 
+      // 主动触发静默登录
+      app.silentLogin()
+
       // 如果3秒后还没有登录完成，隐藏loading
       setTimeout(function() {
         wx.hideLoading()
       }, 3000)
     }
-  },
-
-  // 记录用户登录到本地存储（云开发已禁用）
-  recordUserLogin: function(userInfo) {
-    // 使用本地存储记录用户登录，替代云函数
-    let loginRecord = {
-      nickname: userInfo.nickName,
-      avatar: userInfo.avatarUrl,
-      loginTime: new Date().toISOString(),
-      loginTimeStr: new Date().toLocaleString()
-    }
-
-    // 获取历史登录记录
-    let loginHistory = wx.getStorageSync('loginHistory') || []
-
-    // 添加新的登录记录
-    loginHistory.push(loginRecord)
-
-    // 保存到本地存储
-    wx.setStorageSync('loginHistory', loginHistory)
-
-    // 只保留最近10条记录
-    if (loginHistory.length > 10) {
-      wx.setStorageSync('loginHistory', loginHistory.slice(-10))
-    }
-
-    log.info('用户登录记录已保存到本地', loginRecord)
   },
 
   // 用户退出登录 - 统一清理登录状态
@@ -695,13 +685,12 @@ Page({
     })
   },
 
-  // 联系我们
+  // 客服中心
   contactUs: function() {
-    wx.showModal({
-      title: '联系我们',
-      content: '客服微信：pet-care-support\n工作时间：9:00-18:00',
-      showCancel: false
+    wx.navigateTo({
+      url: '/pages/service/index'
     })
+    log.info('跳转到客服中心')
   },
 
   // 关于我们

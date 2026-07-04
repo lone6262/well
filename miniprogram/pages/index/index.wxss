@@ -790,13 +790,15 @@
 .followup-btn-later {
   flex: 1;
   height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: var(--bg-secondary);
   color: var(--text-secondary);
   border-radius: var(--radius-xl);
   font-size: var(--font-size-base);
   font-weight: 500;
   border: none;
-  line-height: 80rpx;
 }
 
 .followup-btn-later::after { border: none; }
