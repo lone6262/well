@@ -485,7 +485,6 @@ async function warmupConfig(db) {
 
   if (!db) {
     console.warn('[constants] db 未传入，无法加载配置，服务可能不可用');
-    _configWarmedUp = true;
     return;
   }
 
@@ -515,20 +514,21 @@ async function warmupConfig(db) {
       } else {
         console.warn('[constants] system_config 无配置数据，服务可能不可用');
       }
+
+      // 验证必需字段是否加载成功
+      const requiredFields = ['TOKEN_SECRET'];
+      const missingFields = requiredFields.filter(function(field) {
+        return !SERVER_CONFIG[field];
+      });
+      if (missingFields.length > 0) {
+        console.error('[constants] 必需配置缺失:', missingFields.join(', '), '— 部分功能可能不可用');
+      }
+
+      _configWarmedUp = true;
     } catch (e) {
       console.error('[constants] system_config 查询失败，服务可能不可用:', e.message);
+      // 失败时不标记 _configWarmedUp，允许下次调用重试
     }
-
-    // 验证必需字段是否加载成功
-    const requiredFields = ['TOKEN_SECRET'];
-    const missingFields = requiredFields.filter(function(field) {
-      return !SERVER_CONFIG[field];
-    });
-    if (missingFields.length > 0) {
-      console.error('[constants] 必需配置缺失:', missingFields.join(', '), '— 部分功能可能不可用');
-    }
-
-    _configWarmedUp = true;
   })();
 
   return _warmupPromise;
@@ -602,7 +602,7 @@ async function loadPrices(db, opts) {
   } catch (e) {
     console.warn('[constants] 价格配置查询失败，使用硬编码默认值:', e.message);
     _dbPrices = { prices: Object.assign({}, PRICES), memberCredits: Object.assign({}, MEMBER_CREDITS) };
-    _pricesLoaded = true;
+    // 失败时不标记 _pricesLoaded，允许数据库恢复后重新加载
     return _dbPrices;
   }
 }

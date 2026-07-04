@@ -225,6 +225,7 @@
         <div id="tab-articles" class="tab-content">
           <div class="table-controls">
             <button id="createArticleBtn" class="btn btn-primary">+ 新建文章</button>
+            <button id="importArticlesBtn" class="btn btn-secondary">📥 批量导入</button>
             <div class="filter-box">
               <select id="articleCategoryFilter">
                 <option value="all">全部分类</option>
@@ -586,6 +587,58 @@
 
   <!-- 消息提示 -->
   <div id="toast" class="toast hidden"></div>
+
+  <!-- 批量导入弹窗 -->
+  <div id="importArticlesModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="importArticlesModalTitle">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 id="importArticlesModalTitle">📥 批量导入知识文章</h3>
+        <button class="modal-close" id="importArticlesModalClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="import-guide" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px;">
+          <h4 style="margin-top: 0;">📖 使用说明</h4>
+          <ol style="margin-bottom: 0; padding-left: 20px;">
+            <li>运行 <code>python scripts/sync_knowledge_to_well.py</code> 导出文章</li>
+            <li>运行 <code>python scripts/import_to_well.py --file knowledge_import_*.json</code> 生成参数</li>
+            <li>复制生成的 JSON 参数，粘贴到下方文本框</li>
+            <li>点击「开始导入」</li>
+          </ol>
+        </div>
+
+        <div class="form-group">
+          <label>导入参数 (JSON)</label>
+          <textarea id="importParamsInput" rows="10" placeholder='粘贴 import_to_well.py 生成的 JSON 参数，例如:
+{
+  "action": "import",
+  "articles": [...],
+  "force": false
+}'></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="importForceCheck">
+            强制覆盖已存在的文章
+          </label>
+        </div>
+
+        <div id="importProgress" class="hidden" style="margin-top: 15px;">
+          <div class="progress-bar">
+            <div id="importProgressBar" class="progress-fill" style="width: 0%"></div>
+          </div>
+          <div id="importStatusText" style="margin-top: 8px; font-size: 14px;">准备导入...</div>
+        </div>
+
+        <div id="importResults" class="hidden" style="margin-top: 15px; padding: 12px; background: #f0f0f0; border-radius: 6px; font-size: 13px; max-height: 200px; overflow-y: auto;">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="importArticlesModalCancel">取消</button>
+        <button type="button" class="btn btn-primary" id="startImportBtn">开始导入</button>
+      </div>
+    </div>
+  </div>
 
   <!-- 文章编辑弹窗 -->
   <div id="articleModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="articleModalTitle">

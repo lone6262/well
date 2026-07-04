@@ -58,6 +58,8 @@ function verifyAdminToken(token) {
       return false;
     }
 
+    // 检查时间戳是否来自未来（防止未来时间戳攻击）
+    if (payload.timestamp > Date.now()) return false;
     // 检查是否过期
     if (Date.now() - payload.timestamp > payload.expiresIn) return false;
 
@@ -74,8 +76,19 @@ exports.main = async (event, context) => {
 
   console.log('[adminLogin] 管理员登录请求');
 
-  // 验证管理员密钥
-  if (!adminSecret || adminSecret !== SERVER_CONFIG.ADMIN_SECRET) {
+  // 验证管理员密钥（使用恒定时间比较防止时序攻击）
+  const expectedSecret = SERVER_CONFIG.ADMIN_SECRET;
+  if (!adminSecret || !expectedSecret) {
+    console.warn('[adminLogin] 管理员密钥错误');
+    return {
+      code: RESPONSE_CODE.UNAUTHORIZED,
+      msg: '管理员密钥错误',
+      data: {}
+    };
+  }
+  const providedBuf = Buffer.from(adminSecret);
+  const expectedBuf = Buffer.from(expectedSecret);
+  if (providedBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(providedBuf, expectedBuf)) {
     console.warn('[adminLogin] 管理员密钥错误');
     return {
       code: RESPONSE_CODE.UNAUTHORIZED,

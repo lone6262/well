@@ -12,6 +12,7 @@
  */
 
 const cloud = require('wx-server-sdk');
+const crypto = require('crypto');
 const { RESPONSE_CODE } = require('./common/constants');
 const { initCollectionWithData, printIndexGuide } = require('./schemas');
 const {
@@ -290,8 +291,11 @@ exports.main = async function(event, context) {
     };
   }
 
-  // 2. 校验请求参数
-  if (providedSecret !== ADMIN_SECRET) {
+  // 2. 恒定时间比较鉴权
+  const providedBuf = Buffer.from(providedSecret || '');
+  const expectedBuf = Buffer.from(ADMIN_SECRET || '');
+  const valid = providedBuf.length === expectedBuf.length && crypto.timingSafeEqual(providedBuf, expectedBuf);
+  if (!valid) {
     console.error('[dbInit] adminSecret 验证失败');
     return {
       code: RESPONSE_CODE.ERROR,
@@ -300,14 +304,24 @@ exports.main = async function(event, context) {
     };
   }
 
-  // 3. 构建密钥种子数据（仅首次需要，后续 system_config 已有数据会跳过）
+  // 3. 重置模式需要二次确认（防止误操作清空全库）
+  if (event && event.mode === 'reset' && event.confirm !== true) {
+    console.error('[dbInit] 重置模式需要二次确认');
+    return {
+      code: RESPONSE_CODE.ERROR,
+      msg: '重置模式需要设置 confirm: true 以二次确认',
+      data: {}
+    };
+  }
+
+  // 4. 构建密钥种子数据（仅首次需要，后续 system_config 已有数据会跳过）
   const configSeed = buildSystemConfigSeed(event);
 
-  // 4. 重置模式：清空所有数据后重新初始化
+  // 5. 重置模式：清空所有数据后重新初始化
   if (event && event.mode === 'reset') {
     return await resetAllData(db, configSeed);
   }
 
-  // 5. 正常模式：执行初始化
+  // 6. 正常模式：执行初始化
   return await main(configSeed);
 };

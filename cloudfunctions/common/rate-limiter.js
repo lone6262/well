@@ -25,17 +25,24 @@ async function checkRateLimit(db, openid, action, maxRequests, windowMs, failOpe
   const cutoff = new Date(Date.now() - windowMs);
 
   try {
+    // 先写入记录，再计数 — 减少并发窗口（但仍非原子，微信云开发基础版无事务）
+    const addResult = await db.collection(COLLECTIONS.RATE_LIMITS || 'rate_limits').add({
+      data: { openid: openid, action: action, created_at: new Date() }
+    });
+
     const countResult = await db.collection(COLLECTIONS.RATE_LIMITS || 'rate_limits')
       .where({ openid: openid, action: action, created_at: db.command.gte(cutoff) })
       .count();
 
-    if (countResult.total >= maxRequests) {
+    if (countResult.total > maxRequests) {
+      // 超限：回滚刚写入的记录
+      try {
+        await db.collection(COLLECTIONS.RATE_LIMITS || 'rate_limits').doc(addResult._id).remove();
+      } catch (rollbackErr) {
+        console.warn('[rate-limiter] 回滚限流记录失败:', rollbackErr.message);
+      }
       return false;
     }
-
-    await db.collection(COLLECTIONS.RATE_LIMITS || 'rate_limits').add({
-      data: { openid: openid, action: action, created_at: new Date() }
-    });
 
     // 概率性清理过期记录（约 1% 概率，避免每次调用都清理）
     if (Math.random() < 0.01) {

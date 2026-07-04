@@ -381,7 +381,132 @@ document.addEventListener('DOMContentLoaded', () => {
     saveConfigBtn.addEventListener('click', saveConfig);
   }
 
+  // 批量导入按钮
+  const importArticlesBtn = document.getElementById('importArticlesBtn');
+  if (importArticlesBtn) {
+    importArticlesBtn.addEventListener('click', openImportModal);
+  }
+
+  // 批量导入弹窗关闭
+  const importArticlesModalClose = document.getElementById('importArticlesModalClose');
+  const importArticlesModalCancel = document.getElementById('importArticlesModalCancel');
+  if (importArticlesModalClose) {
+    importArticlesModalClose.addEventListener('click', () => closeModal('importArticlesModal'));
+  }
+  if (importArticlesModalCancel) {
+    importArticlesModalCancel.addEventListener('click', () => closeModal('importArticlesModal'));
+  }
+
+  // 开始导入按钮
+  const startImportBtn = document.getElementById('startImportBtn');
+  if (startImportBtn) {
+    startImportBtn.addEventListener('click', executeImport);
+  }
+
   // 根据当前 URL 或默认加载统计数据
   const hash = window.location.hash.substring(1) || 'dashboard';
   switchTab(hash);
 });
+
+/**
+ * 打开批量导入弹窗
+ */
+function openImportModal() {
+  // 重置弹窗状态
+  document.getElementById('importParamsInput').value = '';
+  document.getElementById('importForceCheck').checked = false;
+  document.getElementById('importProgress').classList.add('hidden');
+  document.getElementById('importResults').classList.add('hidden');
+
+  openModal('importArticlesModal');
+}
+
+/**
+ * 执行批量导入
+ */
+async function executeImport() {
+  const paramsInput = document.getElementById('importParamsInput').value.trim();
+  const forceCheck = document.getElementById('importForceCheck').checked;
+
+  if (!paramsInput) {
+    showToast('请粘贴导入参数', 'error');
+    return;
+  }
+
+  // 解析 JSON 参数
+  let params;
+  try {
+    params = JSON.parse(paramsInput);
+  } catch (error) {
+    showToast('JSON 格式错误：' + error.message, 'error');
+    return;
+  }
+
+  // 验证必需字段
+  if (!params.action || !params.articles || !Array.isArray(params.articles)) {
+    showToast('参数格式错误：缺少 action 或 articles 字段', 'error');
+    return;
+  }
+
+  // 更新 force 参数
+  params.force = forceCheck;
+
+  // 显示进度
+  document.getElementById('importProgress').classList.remove('hidden');
+  document.getElementById('importResults').classList.add('hidden');
+  updateImportProgress(0, '准备导入...');
+
+  try {
+    // 调用云函数
+    const result = await callCloudFunction('adminImportKnowledge', params);
+
+    if (result.code === 0) {
+      const data = result.data;
+
+      // 显示结果
+      showImportResults(data);
+
+      // 刷新文章列表
+      if (typeof loadArticles === 'function') {
+        loadArticles(1);
+      }
+
+      showToast('导入完成！', 'success');
+    } else {
+      showToast('导入失败：' + (result.msg || '未知错误'), 'error');
+      document.getElementById('importStatusText').textContent = '导入失败';
+    }
+  } catch (error) {
+    handleApiError(error);
+    document.getElementById('importStatusText').textContent = '导入失败：' + error.message;
+  }
+}
+
+/**
+ * 更新导入进度
+ */
+function updateImportProgress(percent, text) {
+  document.getElementById('importProgressBar').style.width = percent + '%';
+  document.getElementById('importStatusText').textContent = text;
+}
+
+/**
+ * 显示导入结果
+ */
+function showImportResults(data) {
+  const resultsDiv = document.getElementById('importResults');
+  resultsDiv.classList.remove('hidden');
+
+  const html = `
+    <div><strong>导入完成：</strong></div>
+    <div>总计：${data.total} 篇</div>
+    <div>成功：${data.success} 篇 ✅</div>
+    <div>跳过：${data.skipped} 篇 ⏭️</div>
+    <div>失败：${data.failed} 篇 ❌</div>
+  `;
+
+  resultsDiv.innerHTML = html;
+
+  // 更新进度条到 100%
+  updateImportProgress(100, '导入完成！');
+}

@@ -57,6 +57,8 @@ function verifyAdminToken(token) {
     // 检查 Token 类型
     if (payload.type !== 'admin') return false;
 
+    // 检查时间戳是否来自未来（防止未来时间戳攻击）
+    if (payload.timestamp > Date.now()) return false;
     // 检查是否过期
     if (Date.now() - payload.timestamp > (payload.expiresIn || 86400000)) return false;
 

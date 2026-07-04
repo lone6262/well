@@ -8,6 +8,7 @@ const {
   RESPONSE_CODE,
   warmupConfig,
 } = require('./common/constants');
+const { verifyAdminToken } = require('./common/admin-auth');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
@@ -53,8 +54,10 @@ exports.main = async (event, context) => {
   const PUBLIC_ACTIONS = new Set(['getCoupons']);
 
   // 验证 adminToken（非登录请求且非公开接口）
-  if (action !== 'adminLogin' && !PUBLIC_ACTIONS.has(action) && !body.adminToken) {
-    return { code: RESPONSE_CODE.UNAUTHORIZED, msg: '未登录', data: {} };
+  if (action !== 'adminLogin' && !PUBLIC_ACTIONS.has(action)) {
+    if (!body.adminToken || !verifyAdminToken(body.adminToken)) {
+      return { code: RESPONSE_CODE.UNAUTHORIZED, msg: '未登录或 Token 无效', data: {} };
+    }
   }
 
   // 转发到独立云函数
