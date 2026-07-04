@@ -1,6 +1,8 @@
 // 会员中心页面 — V1.5 商业化增强版
 // V2.0: 价格/额度从云端动态加载
 let app = getApp()
+const priceService = require('../../utils/price-service')
+const { invokePayment } = require('../../utils/pay')
 
 Page({
   data: {
@@ -52,6 +54,10 @@ Page({
   },
 
   onLoad: function() {
+    // 检查登录状态
+    if (!this.checkLogin()) {
+      return
+    }
     try { wx.removeStorageSync('memberStatus') } catch (e) {}
     this.loadPrices()
     this.loadMemberStatus()
@@ -60,11 +66,46 @@ Page({
   },
 
   onShow: function() {
+    // 每次显示时检查登录状态
+    if (!this.checkLogin()) {
+      return
+    }
     try { wx.removeStorageSync('memberStatus') } catch (e) {}
     this.loadPrices()
     this.loadMemberStatus()
     this.loadCouponCount()
     this.loadPointsBalance()
+  },
+
+  // 检查登录状态
+  checkLogin: function() {
+    let openid = app.getOpenid()
+    let token = app.globalData.token || wx.getStorageSync('token')
+    // 需要 openid 和 token 都存在才认为是已登录
+    if (!openid || !token) {
+      // 未登录，跳转到首页或显示登录提示
+      wx.showModal({
+        title: '需要登录',
+        content: '请先登录后再访问会员中心',
+        confirmText: '去登录',
+        cancelText: '返回首页',
+        success: function(res) {
+          if (res.confirm) {
+            // 跳转到用户中心页面（可以触发登录）
+            wx.switchTab({
+              url: '/pages/user/index'
+            })
+          } else {
+            // 返回首页
+            wx.switchTab({
+              url: '/pages/index/index'
+            })
+          }
+        }
+      })
+      return false
+    }
+    return true
   },
 
   onPullDownRefresh: function() {
@@ -74,61 +115,53 @@ Page({
     this.loadPointsBalance()
   },
 
-  /** V2.0: 从云端加载价格配置用于展示（价格 + 额度 + 标准价） */
+  /** 通过公共服务加载价格配置 */
   loadPrices: function() {
     var self = this
-    wx.cloud.callFunction({
-      name: 'getPrices',
-      data: {},
-      success: function(res) {
-        if (res.result && res.result.code === 0) {
-          var d = res.result.data
-          var stdPrice = parseFloat(d.standardReportDisplay)
+    priceService.fetchPricesWithCallback(function(d) {
+      if (!d || !d.monthly) return
+      var stdPrice = parseFloat(d.standardReportDisplay)
+      var monthlyPrice = parseFloat(d.monthly.display)
+      var yearlyPrice = parseFloat(d.yearly.display)
+      var familyMonthlyPrice = parseFloat(d.familyMonthly.display)
+      var familyYearlyPrice = parseFloat(d.familyYearly.display)
 
-          var monthlyPrice = parseFloat(d.monthly.display)
-          var yearlyPrice = parseFloat(d.yearly.display)
-          var familyMonthlyPrice = parseFloat(d.familyMonthly.display)
-          var familyYearlyPrice = parseFloat(d.familyYearly.display)
+      // 折扣 = (卡价 ÷ (月额度 × 月数)) ÷ 标准价 × 10
+      var discountMonthly = (monthlyPrice / d.monthly.credits / stdPrice * 10).toFixed(1)
+      var discountYearly = (yearlyPrice / (d.yearly.credits * 12) / stdPrice * 10).toFixed(1)
+      var discountFamilyMonthly = (familyMonthlyPrice / d.familyMonthly.credits / stdPrice * 10).toFixed(1)
+      var discountFamilyYearly = (familyYearlyPrice / (d.familyYearly.credits * 12) / stdPrice * 10).toFixed(1)
 
-          // 折扣 = (卡价 ÷ (月额度 × 月数)) ÷ 标准价 × 10
-          var discountMonthly = (monthlyPrice / d.monthly.credits / stdPrice * 10).toFixed(1)
-          var discountYearly = (yearlyPrice / (d.yearly.credits * 12) / stdPrice * 10).toFixed(1)
-          var discountFamilyMonthly = (familyMonthlyPrice / d.familyMonthly.credits / stdPrice * 10).toFixed(1)
-          var discountFamilyYearly = (familyYearlyPrice / (d.familyYearly.credits * 12) / stdPrice * 10).toFixed(1)
+      // 各卡型每份报告的实际成本（折扣价）
+      var perReportMonthly = (monthlyPrice / d.monthly.credits).toFixed(1)
+      var perReportYearly = (yearlyPrice / (d.yearly.credits * 12)).toFixed(1)
+      var perReportFamilyMonthly = (familyMonthlyPrice / d.familyMonthly.credits).toFixed(1)
+      var perReportFamilyYearly = (familyYearlyPrice / (d.familyYearly.credits * 12)).toFixed(1)
 
-          // 各卡型每份报告的实际成本（折扣价）
-          var perReportMonthly = (monthlyPrice / d.monthly.credits).toFixed(1)
-          var perReportYearly = (yearlyPrice / (d.yearly.credits * 12)).toFixed(1)
-          var perReportFamilyMonthly = (familyMonthlyPrice / d.familyMonthly.credits).toFixed(1)
-          var perReportFamilyYearly = (familyYearlyPrice / (d.familyYearly.credits * 12)).toFixed(1)
-
-          self.setData({
-            priceMonthly: d.monthly.display,
-            priceYearly: d.yearly.display,
-            priceFamilyMonthly: d.familyMonthly.display,
-            priceFamilyYearly: d.familyYearly.display,
-            creditsMonthly: d.monthly.credits,
-            creditsYearly: d.yearly.credits,
-            creditsFamilyMonthly: d.familyMonthly.credits,
-            creditsFamilyYearly: d.familyYearly.credits,
-            standardReportDisplay: d.standardReportDisplay,
-            perReportMonthly: perReportMonthly,
-            perReportYearly: perReportYearly,
-            perReportFamilyMonthly: perReportFamilyMonthly,
-            perReportFamilyYearly: perReportFamilyYearly,
-            discountMonthly: discountMonthly,
-            discountYearly: discountYearly,
-            discountFamilyMonthly: discountFamilyMonthly,
-            discountFamilyYearly: discountFamilyYearly,
-            yearlyPerMonth: (yearlyPrice / 12).toFixed(2),
-            yearlySavings: Math.round((1 - yearlyPrice / (monthlyPrice * 12)) * 100),
-            yearlyFamilyPerMonth: (familyYearlyPrice / 12).toFixed(2),
-            pointsEntryPrice: d.points.pack3.display + '起',
-            bundleEntrySave: '省¥' + d.bundles.starter.saveDisplay
-          })
-        }
-      },
-      fail: function() { /* 静默失败，使用兜底数据 */ }
+      self.setData({
+        priceMonthly: d.monthly.display,
+        priceYearly: d.yearly.display,
+        priceFamilyMonthly: d.familyMonthly.display,
+        priceFamilyYearly: d.familyYearly.display,
+        creditsMonthly: d.monthly.credits,
+        creditsYearly: d.yearly.credits,
+        creditsFamilyMonthly: d.familyMonthly.credits,
+        creditsFamilyYearly: d.familyYearly.credits,
+        standardReportDisplay: d.standardReportDisplay,
+        perReportMonthly: perReportMonthly,
+        perReportYearly: perReportYearly,
+        perReportFamilyMonthly: perReportFamilyMonthly,
+        perReportFamilyYearly: perReportFamilyYearly,
+        discountMonthly: discountMonthly,
+        discountYearly: discountYearly,
+        discountFamilyMonthly: discountFamilyMonthly,
+        discountFamilyYearly: discountFamilyYearly,
+        yearlyPerMonth: (yearlyPrice / 12).toFixed(2),
+        yearlySavings: Math.round((1 - yearlyPrice / (monthlyPrice * 12)) * 100),
+        yearlyFamilyPerMonth: (familyYearlyPrice / 12).toFixed(2),
+        pointsEntryPrice: d.points.pack3.display + '起',
+        bundleEntrySave: '省¥' + d.bundles.starter.saveDisplay
+      })
     })
   },
 
@@ -285,6 +318,98 @@ Page({
 
   goBack: function() {
     wx.navigateBack()
+  },
+
+  // ===== 测试支付功能（测试完成后移除） =====
+  testPayment: function() {
+    let self = this
+    wx.showModal({
+      title: '测试支付确认',
+      content: '创建一个0.01元的测试订单来验证微信支付配置是否正确',
+      confirmText: '开始测试',
+      cancelText: '取消',
+      success: function(res) {
+        if (res.confirm) {
+          self.createTestOrder()
+        }
+      }
+    })
+  },
+
+  createTestOrder: function() {
+    let self = this
+    wx.showLoading({ title: '创建测试订单...' })
+
+    // 模拟创建月卡订单，金额为0.01元
+    wx.cloud.callFunction({
+      name: 'createOrder',
+      data: {
+        type: 'member_monthly',
+        memberTier: 'monthly',
+        token: app.globalData.token,
+        _testMode: true,  // 标记为测试模式
+        _testAmount: 1    // 测试金额（1分钱）
+      },
+      success: function(res) {
+        wx.hideLoading()
+        if (res.result && res.result.code === 0) {
+          let data = res.result.data
+          console.log('[测试支付] 订单创建成功:', data)
+
+          // 真实模式：createOrder 返回 payParams，直接调起微信支付
+          if (data.payParams) {
+            invokePayment(data.payParams)
+              .then(function() {
+                wx.showModal({
+                  title: '支付成功',
+                  content: '测试支付已完成！\\n\\n订单号: ' + data.orderId + '\\n金额: ¥0.01',
+                  showCancel: false,
+                  success: function() {
+                    // 刷新会员状态
+                    self.loadMemberStatus()
+                  }
+                })
+              })
+              .catch(function(err) {
+                console.error('[测试支付] 支付失败:', err)
+                wx.showToast({
+                  title: '支付未完成: ' + (err.errMsg || '未知错误'),
+                  icon: 'none',
+                  duration: 3000
+                })
+              })
+          } else if (data.status === 'paid') {
+            // mock 模式：订单已直接标记为已支付
+            wx.showModal({
+              title: '模拟支付成功',
+              content: '订单已创建并标记为已支付（MOCK模式）。\\n\\n订单号: ' + data.orderId + '\\n金额: ¥0.01',
+              showCancel: false
+            })
+          } else {
+            wx.showModal({
+              title: '订单创建成功',
+              content: '订单已创建，但未返回支付参数。\\n\\n订单号: ' + data.orderId + '\\n状态: ' + data.status,
+              showCancel: false
+            })
+          }
+        } else {
+          wx.showModal({
+            title: '订单创建失败',
+            content: res.result.msg || '未知错误',
+            showCancel: false
+          })
+        }
+      },
+      fail: function(err) {
+        wx.hideLoading()
+        console.error('[测试支付] 云函数调用失败:', err)
+        wx.showModal({
+          title: '调用失败',
+          content: '云函数调用失败: ' + (err.errMsg || '未知错误'),
+          showCancel: false
+        })
+      }
+    })
   },
 
   getTypeText: function(type) {

@@ -1,6 +1,8 @@
 // 风险结果页面逻辑 - 数据库版本
 const logger = require('../../utils/logger.js')
 const log = logger.child('RiskResult')
+const priceService = require('../../utils/price-service')
+const { invokePayment } = require('../../utils/pay')
 let app = getApp()
 
 // 本地风险显示信息函数
@@ -311,25 +313,17 @@ Page({
     wx.navigateBack()
   },
 
-  // 检查报告配额
-  /** V2.0: 从云端加载价格配置 */
+  // 通过公共服务加载价格配置
   loadPrices: function() {
     var self = this
-    wx.cloud.callFunction({
-      name: 'getPrices',
-      data: {},
-      success: function(res) {
-        if (res.result && res.result.code === 0) {
-          var d = res.result.data
-          self.setData({
-            standardReportDisplay: d.standardReportDisplay,
-            firstReportDisplay: d.firstReportDisplay,
-            riskMonthlyPrice: d.monthly.display,
-            riskMonthlyCredits: d.monthly.credits
-          })
-        }
-      },
-      fail: function() { /* 静默失败 */ }
+    priceService.fetchPricesWithCallback(function(d) {
+      if (!d) return
+      self.setData({
+        standardReportDisplay: d.standardReportDisplay,
+        firstReportDisplay: d.firstReportDisplay,
+        riskMonthlyPrice: d.monthly.display,
+        riskMonthlyCredits: d.monthly.credits
+      })
     })
   },
 
@@ -469,12 +463,64 @@ Page({
     this.setData({ showPayOptions: false })
   },
 
-  // 生成AI报告（generateAIReport 已内置额度扣减 + 订单创建，报告失败不扣额度）
+  // 生成AI报告：先 createOrder（解析额度/下单）→ 需支付则 requestPayment → generateAIReport
   generateReport: function(recordId) {
     let self = this
     self.setData({ purchasing: true })
-    wx.showLoading({ title: '正在生成AI报告...' })
+    wx.showLoading({ title: '正在下单...' })
 
+    wx.cloud.callFunction({
+      name: 'createOrder',
+      data: { type: 'report', recordId: recordId, token: app.globalData.token },
+      success: function(res) {
+        wx.hideLoading()
+        if (!res.result || res.result.code !== 0) {
+          self.setData({ purchasing: false })
+          wx.showToast({ title: (res.result && res.result.msg) || '下单失败', icon: 'none' })
+          return
+        }
+        var data = res.result.data || {}
+        // 该记录已有报告，直接查看
+        if (data.existingReportId) {
+          self.setData({ purchasing: false, reportPurchased: true })
+          wx.navigateTo({ url: '/pages/ai-report/index?recordId=' + recordId })
+          return
+        }
+        // 付费订单：先调起支付，成功后生成
+        if (data.payParams) {
+          self._payAndGenerate(recordId, data.payParams)
+        } else {
+          // 免费/mock/0 元：订单已就绪，直接生成
+          self._invokeGenerate(recordId)
+        }
+      },
+      fail: function() {
+        wx.hideLoading()
+        self.setData({ purchasing: false })
+        wx.showToast({ title: '下单失败，请重试', icon: 'none' })
+      }
+    })
+  },
+
+  // 调起支付，成功后生成报告
+  _payAndGenerate: function(recordId, payParams) {
+    let self = this
+    invokePayment(payParams)
+      .then(function() {
+        self._invokeGenerate(recordId)
+      })
+      .catch(function(err) {
+        self.setData({ purchasing: false })
+        // 用户取消或支付失败：订单保留 PENDING，可稍后继续或被自动关闭
+        wx.showToast({ title: '支付未完成', icon: 'none' })
+        log.warn('report payment unfinished', err)
+      })
+  },
+
+  // 实际生成报告（订单已就绪/已支付）
+  _invokeGenerate: function(recordId) {
+    let self = this
+    wx.showLoading({ title: '正在生成AI报告...' })
     wx.cloud.callFunction({
       name: 'generateAIReport',
       data: { recordId: recordId, token: app.globalData.token },
@@ -483,14 +529,14 @@ Page({
         self.setData({ purchasing: false })
         if (res.result && res.result.code === 0) {
           self.setData({ reportPurchased: true })
-          wx.navigateTo({
-            url: '/pages/ai-report/index?recordId=' + recordId
-          })
+          wx.navigateTo({ url: '/pages/ai-report/index?recordId=' + recordId })
+        } else if (res.result && res.result.data && res.result.data.needPayment) {
+          wx.showToast({ title: '请先完成支付', icon: 'none' })
         } else {
-          wx.showToast({ title: res.result.msg || '生成报告失败', icon: 'none' })
+          wx.showToast({ title: (res.result && res.result.msg) || '生成报告失败', icon: 'none' })
         }
       },
-      fail: function(err) {
+      fail: function() {
         wx.hideLoading()
         self.setData({ purchasing: false })
         wx.showToast({ title: '生成报告失败', icon: 'none' })

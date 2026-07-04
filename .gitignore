@@ -57,6 +57,11 @@ project.config.json   # 可选，但建议保留通用配置，去掉敏感字�
 # 数据库初始化/查询脚本（含明文 admin_secret、token_secret，绝不提交）
 tcb_query.json
 
+# CloudBase CLI 部署配置（含 envId、商户私钥/APIv3密钥等，本地部署用，绝不提交）
+cloudbaserc.json
+cloudbaserc-pay-integration.json
+cloudbaserc.json.bak
+
 # Claude AI 工作目录（含本地工具配置）
 .claude/
 

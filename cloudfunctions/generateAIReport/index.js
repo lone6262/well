@@ -15,6 +15,7 @@
 const cloud = require('wx-server-sdk');
 const { COLLECTIONS, RESPONSE_CODE, FOLLOWUP_STATUS, MEMBER_STATUS, ORDER_TYPES, ORDER_STATUS , warmupConfig, loadPrices} = require('./common/constants');
 const reportEngine = require('./common/report-engine');
+const { verifyToken } = require('./common/auth');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -149,6 +150,201 @@ async function createFollowupRecord(recordId, openid, petId) {
   return result._id;
 }
 
+/**
+ * 解析报告订单与额度（在生成报告之前调用）
+ *
+ * 统一支付改造后的策略：
+ *   - 优先复用 createOrder 已为该 recordId 创建的订单（避免双重扣额度）；
+ *   - 已有 PAID 单 → 直接复用；
+ *   - 已有 PENDING 单且金额 0（免费） → 标记 PAID 后复用；
+ *   - 已有 PENDING 单且金额 >0（未支付） → 拒绝，提示前端先支付；
+ *   - 无既有订单：仅允许免费来源（首份/邀请/会员额度）直接建 PAID 单并扣额度；
+ *     付费来源一律拒绝，要求前端先 createOrder 下单支付（堵住「付费报告白送」）。
+ *
+ * @param {object} db - 数据库实例
+ * @param {string} openid
+ * @param {string} recordId - 症状记录ID
+ * @param {object} dbPrices - 价格配置
+ * @param {object} dbCredits - 额度配置
+ * @returns {Promise<{ok:boolean, orderId:string|null, msg:string, data:object}>}
+ */
+async function resolveReportOrder(db, openid, recordId, dbPrices, dbCredits) {
+  const now = new Date();
+
+  // 1. 查找该记录已有的报告订单（createOrder 建单时写入 metadata.record_id）
+  let existingOrder = null;
+  try {
+    const ordRes = await db.collection(COLLECTIONS.ORDERS)
+      .where({ type: ORDER_TYPES.REPORT, 'metadata.record_id': recordId })
+      .limit(10)
+      .get();
+    const candidates = (ordRes.data || []).filter(o =>
+      [ORDER_STATUS.PENDING, ORDER_STATUS.PAID].includes(o.status));
+    if (candidates.length > 0) {
+      existingOrder = candidates[0];
+    }
+  } catch (e) {
+    console.warn('[resolveReportOrder] 查询既有订单失败，降级额度解析:', e.message);
+  }
+
+  if (existingOrder) {
+    if (existingOrder.status === ORDER_STATUS.PAID) {
+      return { ok: true, orderId: existingOrder._id, msg: '', data: {} };
+    }
+    // PENDING
+    const amt = existingOrder.amount || 0;
+    if (amt === 0) {
+      await db.collection(COLLECTIONS.ORDERS).doc(existingOrder._id).update({
+        data: { status: ORDER_STATUS.PAID, paid_at: now, updated_at: now }
+      });
+      return { ok: true, orderId: existingOrder._id, msg: '', data: {} };
+    }
+    return {
+      ok: false,
+      orderId: existingOrder._id,
+      msg: '请先完成支付后再生成报告',
+      data: { needPayment: true, orderId: existingOrder._id, outTradeNo: existingOrder.out_trade_no }
+    };
+  }
+
+  // 2. 无既有订单：解析免费额度。付费来源拒绝（必须先走 createOrder）
+  const userResult = await db.collection(COLLECTIONS.USERS).where({ user_id: openid }).limit(1).get();
+  const user = userResult.data && userResult.data[0];
+  let quotaSource = 'paid';
+  let quotaPrice = dbPrices.STANDARD_REPORT;
+
+  if (!user || !user.first_report_used) {
+    quotaSource = 'first_report';
+    quotaPrice = dbPrices.FIRST_REPORT;
+  } else if (user.invite_reward_credits && user.invite_reward_credits > 0) {
+    quotaSource = 'invite';
+    quotaPrice = 0;
+  } else {
+    const memberResult = await db.collection(COLLECTIONS.MEMBERS)
+      .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE }).limit(1).get();
+    if (memberResult.data && memberResult.data.length > 0) {
+      const m = memberResult.data[0];
+      const expectedTotal = m.type === 'yearly' ? dbCredits.YEARLY_REPORTS : dbCredits.MONTHLY_REPORTS;
+      const total = Math.max(m.report_credits_total || expectedTotal, expectedTotal);
+      const used = m.report_credits_used || 0;
+      if (used < total) {
+        quotaSource = 'member';
+        quotaPrice = 0;
+      }
+    }
+  }
+
+  // 付费且无订单：拒绝生成
+  if (quotaPrice > 0) {
+    return {
+      ok: false,
+      orderId: null,
+      msg: '该报告需要购买，请先下单支付',
+      data: { needCreateOrder: true, recordId }
+    };
+  }
+
+  // 3. 免费来源：扣减额度（条件更新；并发失败则回退为拒绝，不再白送）
+  let deductOk = true;
+  try {
+    if (quotaSource === 'first_report') {
+      if (user && user._id) {
+        const updateRes = await db.collection(COLLECTIONS.USERS).doc(user._id).update({
+          data: { first_report_used: true, updated_at: now }
+        });
+        if (!updateRes.stats || updateRes.stats.updated === 0) deductOk = false;
+      } else {
+        try {
+          await db.collection(COLLECTIONS.USERS).add({
+            data: { user_id: openid, first_report_used: true, invite_reward_credits: 0, isMember: false, created_at: now, updated_at: now }
+          });
+        } catch (addErr) {
+          // 并发创建可能因唯一索引失败，尝试更新
+          const updateRes = await db.collection(COLLECTIONS.USERS).where({ user_id: openid }).update({
+            data: { first_report_used: true, updated_at: now }
+          });
+          if (!updateRes.stats || updateRes.stats.updated === 0) deductOk = false;
+        }
+      }
+    } else if (quotaSource === 'invite') {
+      const inviteRes = await db.collection(COLLECTIONS.USERS)
+        .where({ user_id: openid, invite_reward_credits: db.command.gt(0) })
+        .update({ data: { invite_reward_credits: db.command.inc(-1), updated_at: now } });
+      if (!inviteRes.stats || inviteRes.stats.updated === 0) deductOk = false;
+    } else if (quotaSource === 'member') {
+      const memberResult = await db.collection(COLLECTIONS.MEMBERS)
+        .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE }).limit(1).get();
+      const m = memberResult.data && memberResult.data[0];
+      if (m) {
+        const expectedTotal = m.type === 'yearly' ? dbCredits.YEARLY_REPORTS : dbCredits.MONTHLY_REPORTS;
+        const total = Math.max(m.report_credits_total || expectedTotal, expectedTotal);
+        const memberRes = await db.collection(COLLECTIONS.MEMBERS).doc(m._id).update({
+          data: {
+            report_credits_used: db.command.inc(1),
+            report_credits_total: total,
+            updated_at: now
+          }
+        });
+        if (!memberRes.stats || memberRes.stats.updated === 0) deductOk = false;
+      } else {
+        deductOk = false;
+      }
+    }
+  } catch (quotaError) {
+    console.error('[resolveReportOrder] 额度扣减异常:', quotaError.message);
+    deductOk = false;
+  }
+
+  if (!deductOk) {
+    // 并发导致额度失效：记录补偿日志，拒绝生成（用户可重试或购买）
+    try {
+      await db.collection(COLLECTIONS.ORDERS).add({
+        data: {
+          user_id: openid,
+          type: ORDER_TYPES.REPORT,
+          record_id: recordId,
+          status: 'quota_pending',
+          description: '额度扣减失败，待补偿',
+          metadata: { quota_source: 'compensation_needed', record_id: recordId },
+          created_at: now,
+          updated_at: now
+        }
+      });
+    } catch (logErr) {
+      console.error('[resolveReportOrder] 补偿日志写入失败:', logErr.message);
+    }
+    return {
+      ok: false,
+      orderId: null,
+      msg: '免费额度扣减失败，请稍后重试或购买报告',
+      data: { needCreateOrder: true, recordId }
+    };
+  }
+
+  // 4. 创建免费 PAID 订单
+  const outTradeNo = 'RPT_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  const orderData = {
+    user_id: openid,
+    type: ORDER_TYPES.REPORT,
+    record_id: recordId,
+    out_trade_no: outTradeNo,
+    transaction_id: 'MOCK_' + outTradeNo,
+    amount: 0,
+    status: ORDER_STATUS.PAID,
+    description: quotaSource === 'first_report' ? '首份AI报告' : '免费AI报告',
+    metadata: {
+      quota_source: quotaSource,
+      is_first_report: quotaSource === 'first_report',
+      record_id: recordId
+    },
+    mock_pay: true,
+    created_at: now,
+    updated_at: now
+  };
+  const orderResult = await db.collection(COLLECTIONS.ORDERS).add({ data: orderData });
+  return { ok: true, orderId: orderResult._id, msg: '', data: {} };
+}
+
 // ========== 云函数入口 ==========
 
 exports.main = async (event, context) => {
@@ -165,6 +361,15 @@ exports.main = async (event, context) => {
     return {
       code: RESPONSE_CODE.UNAUTHORIZED,
       msg: '用户未登录',
+      data: {}
+    };
+  }
+
+  // 1.5 Token 校验
+  if (!verifyToken(event.token)) {
+    return {
+      code: RESPONSE_CODE.UNAUTHORIZED,
+      msg: '登录已过期，请重新登录',
       data: {}
     };
   }
@@ -202,6 +407,20 @@ exports.main = async (event, context) => {
     // 4. 查询并验证宠物信息
     const pet = await getVerifiedPet(record.pet_id, openid);
 
+    // 4.5 解析订单与额度（必须在生成报告之前）
+    //     付费报告必须已有 PAID 订单（由 createOrder + 支付回调产生）；
+    //     免费来源在此扣额度并建 PAID 单；无单的付费来源直接拒绝，堵住白送。
+    let orderId = null;
+    const orderCtx = await resolveReportOrder(db, openid, recordId, dbPrices, dbCredits);
+    if (!orderCtx.ok) {
+      return {
+        code: RESPONSE_CODE.ERROR,
+        msg: orderCtx.msg,
+        data: orderCtx.data || {}
+      };
+    }
+    orderId = orderCtx.orderId;
+
     // 5. 构造 report-engine 所需参数
     const symptomRecord = {
       symptoms: record.symptoms || [],
@@ -234,109 +453,8 @@ exports.main = async (event, context) => {
       console.warn('[generateAIReport] 埋点记录跳过:', trackErr.message);
     }
 
-    // 7b. 报告生成成功后，扣减额度 + 创建订单
-    //     策略：先扣额度，再返回报告。扣减失败时记录补偿日志，不阻塞用户。
-    //     后续可通过补偿任务补扣。
-    const now = new Date();
-    const outTradeNo = 'RPT_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    let orderId = null;
-    let quotaDeducted = false;
-
-    try {
-      // 解析用户额度
-      const userResult = await db.collection(COLLECTIONS.USERS).where({ user_id: openid }).limit(1).get();
-      const user = userResult.data && userResult.data[0];
-      let quotaSource = 'paid';
-      let quotaPrice = dbPrices.STANDARD_REPORT;
-
-      // 首份优惠
-      if (!user || !user.first_report_used) {
-        quotaSource = 'first_report';
-        quotaPrice = dbPrices.FIRST_REPORT;
-      }
-      // 邀请奖励
-      else if (user.invite_reward_credits && user.invite_reward_credits > 0) {
-        quotaSource = 'invite';
-        quotaPrice = 0;
-      }
-      // 会员额度
-      else {
-        const memberResult = await db.collection(COLLECTIONS.MEMBERS)
-          .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE }).limit(1).get();
-        if (memberResult.data && memberResult.data.length > 0) {
-          const m = memberResult.data[0];
-          const expectedTotal = m.type === 'yearly' ? dbCredits.YEARLY_REPORTS : dbCredits.MONTHLY_REPORTS;
-          const total = Math.max(m.report_credits_total || expectedTotal, expectedTotal);
-          const used = m.report_credits_used || 0;
-          if (used < total) {
-            quotaSource = 'member';
-            quotaPrice = 0;
-          }
-        }
-      }
-
-      // 扣减额度（原子操作）
-      if (quotaSource === 'first_report') {
-        if (user && user._id) {
-          await db.collection(COLLECTIONS.USERS).doc(user._id).update({
-            data: { first_report_used: true, updated_at: now }
-          });
-        } else {
-          await db.collection(COLLECTIONS.USERS).add({
-            data: { user_id: openid, first_report_used: true, invite_reward_credits: 0, isMember: false, created_at: now, updated_at: now }
-          });
-        }
-      } else if (quotaSource === 'invite') {
-        await db.collection(COLLECTIONS.USERS).where({ user_id: openid, invite_reward_credits: db.command.gt(0) })
-          .update({ data: { invite_reward_credits: db.command.inc(-1), updated_at: now } });
-      } else if (quotaSource === 'member') {
-        const memberCond = await db.collection(COLLECTIONS.MEMBERS)
-          .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE }).limit(1).get();
-        if (memberCond.data && memberCond.data.length > 0) {
-          await db.collection(COLLECTIONS.MEMBERS).doc(memberCond.data[0]._id).update({
-            data: { report_credits_used: db.command.inc(1), updated_at: now }
-          });
-        }
-      }
-
-      // 创建订单
-      const orderData = {
-        user_id: openid,
-        type: ORDER_TYPES.REPORT,
-        record_id: recordId,
-        out_trade_no: outTradeNo,
-        transaction_id: 'MOCK_' + outTradeNo,
-        amount: quotaPrice,
-        status: ORDER_STATUS.PAID,
-        description: quotaSource === 'first_report' ? '首份AI报告' : (quotaPrice === 0 ? '免费AI报告' : '标准AI报告'),
-        metadata: { quota_source: quotaSource, is_first_report: quotaSource === 'first_report' },
-        mock_pay: true,
-        created_at: now,
-        updated_at: now
-      };
-      const orderResult = await db.collection(COLLECTIONS.ORDERS).add({ data: orderData });
-      orderId = orderResult._id;
-      quotaDeducted = true;
-    } catch (quotaError) {
-      // 额度扣减失败 → 记录补偿日志，后续可通过定时任务补扣
-      console.error('[generateAIReport] 额度扣减失败，已记录补偿日志:', quotaError.message);
-      try {
-        await db.collection(COLLECTIONS.ORDERS).add({
-          data: {
-            user_id: openid,
-            type: ORDER_TYPES.REPORT,
-            record_id: recordId,
-            status: 'quota_pending',
-            description: '额度扣减失败，待补偿',
-            metadata: { quota_source: 'compensation_needed', record_id: recordId },
-            created_at: now,
-            updated_at: now
-          }
-        });
-      } catch (logErr) {
-        console.error('[generateAIReport] 补偿日志写入也失败:', logErr.message);
-      }
-    }
+    // 7b. 订单与额度已在 4.5 由 resolveReportOrder 处理（orderId 已就绪）。
+    //     报告生成失败时，catch 中会按 orderId 触发自动退款。
 
     // 8. 创建回访记录（24h后提醒）
     let followupId = null;
@@ -414,11 +532,11 @@ exports.main = async (event, context) => {
     }
 
     // 通用服务器错误
+    console.error('[generateAIReport] 生成失败:', error.message);
     return {
       code: RESPONSE_CODE.SERVER_ERROR,
       msg: '报告生成失败，请稍后重试',
       data: {
-        error: error.message
       }
     };
   }

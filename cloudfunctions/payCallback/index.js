@@ -3,10 +3,9 @@
 // 本云函数作为微信支付统一回调入口，处理所有支付结果的后续业务。
 //
 // 功能：
-//   1. 微信支付签名验证（防伪造回调）
-//   2. 幂等校验（同一订单多次回调只处理一次）
-//   3. 金额一致性校验
-//   4. 按订单类型分发后续处理：
+//   1. 幂等校验（同一订单多次回调只处理一次）
+//   2. 金额一致性校验
+//   3. 按订单类型分发后续处理：
 //      - report → 更新订单状态
 //      - member / member_* → 激活会员
 //      - points → 点数到账
@@ -18,7 +17,6 @@
 // ==========================================
 
 const cloud = require('wx-server-sdk');
-const crypto = require('crypto');
 const {
   COLLECTIONS,
   ORDER_STATUS,
@@ -37,48 +35,60 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const _ = db.command;
 
+// 模块级局部副本 — 由 loadPrices 在入口填充，避免直接污染模块级 MEMBER_CREDITS 常量
+let dbCredits = MEMBER_CREDITS;
+
 // ============================================
 // 环境配置（商户号到位后改为 false）
 // ============================================
-const MOCK_PAY = true;
+const MOCK_PAY = process.env.MOCK_PAY === 'true'; // 从环境变量读取，部署时设为 false
 
 // ============================================
 // 云函数入口
 // ============================================
 exports.main = async (event, context) => {
   await warmupConfig(db);
-  // V2.0: 价格从 DB 动态加载，覆盖硬编码默认值
+  // V2.0: 价格从 DB 动态加载（使用局部副本，不污染模块级全局常量，避免实例复用累积）
   const priceConfig = await loadPrices(db);
-  Object.assign(PRICES, priceConfig.prices);
-  Object.assign(MEMBER_CREDITS, priceConfig.memberCredits);
+  dbCredits = priceConfig.memberCredits;
+
+  // 原始回调事件日志：用于核对集成网关转发后的字段名（首个真实回调务必查看）
+  console.log('[payCallback] raw event:', JSON.stringify(event));
 
   try {
     // ========================================
-    // 1. 签名验证（防伪造回调）
+    // 1. 签名/解密由集成中心网关完成（signMode: gateway）
+    // 本函数收到的已是验签+AES-GCM 解密后的明文，无需再重复验签。
     // ========================================
-    if (!MOCK_PAY) {
-      const signValid = verifyWechatPaySign(event);
-      if (!signValid) {
-        console.error('[payCallback] 签名验证失败，疑似伪造回调');
-        return wechatResponse('FAIL', '签名验证失败');
-      }
-    }
 
     // ========================================
     // 2. 提取回调数据
-    // 微信支付云函数回调为 JSON 格式：
-    //   { out_trade_no, transaction_id, total_fee, result_code, ... }
+    // 集成中心网关转发的明文兼容两种形态：
+    //   V2: { out_trade_no, transaction_id, total_fee, result_code }
+    //   V3: { out_trade_no, transaction_id, amount:{total}, trade_state }
+    // 首个真实回调务必看 raw event 日志核对实际字段。
     // ========================================
     const {
       out_trade_no,
       transaction_id,
       total_fee,
-      result_code
+      result_code,
+      trade_state,
+      amount: wxAmount
     } = event;
 
+    // 统一金额字段：优先 V2 total_fee，回退 V3 amount.total
+    const paidAmount = (total_fee !== undefined)
+      ? Number(total_fee)
+      : (wxAmount && wxAmount.total !== undefined ? Number(wxAmount.total) : undefined);
+
+    // 统一支付结果：V3 SUCCESS 或网关仅转发成功回调时均视为成功
+    const payFailed = (result_code && result_code !== 'SUCCESS') ||
+      (trade_state && !['SUCCESS', 'REFUND'].includes(trade_state));
+
     // 支付失败回调（用户取消或支付错误）
-    if (result_code && result_code !== 'SUCCESS') {
-      console.warn('[payCallback] 支付未成功:', out_trade_no, result_code);
+    if (payFailed) {
+      console.warn('[payCallback] 支付未成功:', out_trade_no, result_code || trade_state);
       await handlePaymentFailed(out_trade_no);
       return wechatResponse('OK');
     }
@@ -129,18 +139,18 @@ exports.main = async (event, context) => {
     }
 
     // ========================================
-    // 5. 金额一致性校验
+    // 5. 金额一致性校验（兼容 V2 total_fee / V3 amount.total）
     // ========================================
-    if (!MOCK_PAY && total_fee !== undefined) {
+    if (!MOCK_PAY && paidAmount !== undefined) {
       const orderAmount = order.amount || order.pay_amount || 0;
-      if (Number(total_fee) !== orderAmount) {
+      if (paidAmount !== orderAmount) {
         console.error('[payCallback] 金额不一致:',
-          'wx_amount:', total_fee,
+          'wx_amount:', paidAmount,
           'order_amount:', orderAmount,
           'out_trade_no:', out_trade_no);
         await recordBillDifference(order, {
           wx_transaction_id: transaction_id,
-          wx_amount: Number(total_fee),
+          wx_amount: paidAmount,
           local_amount: orderAmount,
           diff_type: 'amount_mismatch'
         });
@@ -234,70 +244,6 @@ exports.main = async (event, context) => {
 };
 
 // ============================================
-// 微信支付签名验证
-// ============================================
-
-/**
- * 验证微信支付回调签名
- * 微信支付 V2 使用 MD5 签名，V3 使用 RSA 签名
- * 云函数回调场景下使用 V2 验签方式
- *
- * @param {object} event - 回调参数
- * @returns {boolean} 签名是否有效
- */
-function verifyWechatPaySign(event) {
-  try {
-    const sign = event.sign;
-    if (!sign) {
-      console.error('[payCallback] 回调缺少 sign 字段');
-      return false;
-    }
-
-    // 微信支付 V2 签名算法：
-    // 1. 将所有非 sign 参数按字典序排序
-    // 2. 拼接为 key=value&key=value 格式
-    // 3. 末尾追加 &key=<商户密钥>
-    // 4. MD5 后转大写与 sign 比较
-    const signParams = {};
-    for (const key of Object.keys(event)) {
-      if (key !== 'sign' && event[key] !== undefined && event[key] !== '') {
-        signParams[key] = String(event[key]);
-      }
-    }
-
-    const sortedKeys = Object.keys(signParams).sort();
-    const stringA = sortedKeys
-      .map(k => `${k}=${signParams[k]}`)
-      .join('&');
-
-    // 商户密钥从环境变量读取（上线前配置）
-    const mchKey = process.env.WECHAT_PAY_MCH_KEY || '';
-    if (!mchKey) {
-      console.error('[payCallback] WECHAT_PAY_MCH_KEY 未配置，拒绝回调（签名验证无法执行）');
-      return false;
-    }
-
-    const stringSignTemp = stringA + '&key=' + mchKey;
-    const computedSign = crypto
-      .createHash('md5')
-      .update(stringSignTemp)
-      .digest('hex')
-      .toUpperCase();
-
-    const isValid = computedSign === sign;
-    if (!isValid) {
-      console.error('[payCallback] 签名不匹配:',
-        'computed:', computedSign, 'received:', sign);
-    }
-    return isValid;
-
-  } catch (e) {
-    console.error('[payCallback] 签名验证异常:', e.message);
-    return false;
-  }
-}
-
-// ============================================
 // 支付后业务分发
 // ============================================
 
@@ -387,8 +333,8 @@ async function activateMember(openid, params) {
   const isYearly = memberType === 'yearly';
   const durationDays = isYearly ? MEMBER_DURATION.YEAR : MEMBER_DURATION.MONTH;
   const reportCredits = isYearly
-    ? MEMBER_CREDITS.YEARLY_REPORTS
-    : MEMBER_CREDITS.MONTHLY_REPORTS;
+    ? dbCredits.YEARLY_REPORTS
+    : dbCredits.MONTHLY_REPORTS;
   const now = new Date();
 
   // 查询现有会员记录
@@ -468,7 +414,7 @@ async function activateMember(openid, params) {
 async function activateFamilyMember(openid, params) {
   const isYearly = params.memberType === 'family_yearly';
   const durationDays = isYearly ? MEMBER_DURATION.YEAR : MEMBER_DURATION.MONTH;
-  const reportCredits = MEMBER_CREDITS.FAMILY_YEARLY_REPORTS; // 家庭会员固定 6 次
+  const reportCredits = isYearly ? dbCredits.FAMILY_YEARLY_REPORTS : dbCredits.FAMILY_MONTHLY_REPORTS;
   const now = new Date();
 
   const existingResult = await db.collection(COLLECTIONS.MEMBERS)

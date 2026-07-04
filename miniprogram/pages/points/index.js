@@ -1,5 +1,7 @@
 // 点数包购买页 — V2.1: 价格从 getPrices 云端加载
 var app = getApp()
+const priceService = require('../../utils/price-service')
+const { invokePayment } = require('../../utils/pay')
 
 Page({
   data: {
@@ -24,38 +26,54 @@ Page({
   },
 
   onLoad: function() {
+    // 检查登录状态
+    if (!this.checkLogin()) {
+      return
+    }
     this.loadPrices()
     this.loadBalance()
   },
 
-  /** V2.1: 从 getPrices 加载点数包价格 */
+  // 检查登录状态
+  checkLogin: function() {
+    let openid = app.getOpenid()
+    if (!openid) {
+      wx.showToast({
+        title: '请先登录',
+        icon: 'none'
+      })
+      setTimeout(() => {
+        wx.switchTab({
+          url: '/pages/user/index'
+        })
+      }, 1500)
+      return false
+    }
+    return true
+  },
+
+  /** 通过公共服务加载点数包价格 */
   loadPrices: function() {
     var self = this
-    wx.cloud.callFunction({
-      name: 'getPrices',
-      data: {},
-      success: function(res) {
-        if (res.result && res.result.code === 0) {
-          var d = res.result.data
-          var stdPrice = parseFloat(d.standardReportDisplay)
-          var p3 = parseFloat(d.points.pack3.display)
-          var p5 = parseFloat(d.points.pack5.display)
-          self.setData({
-            pack3Display: d.points.pack3.display,
-            pack5Display: d.points.pack5.display,
-            standardReportDisplay: d.standardReportDisplay,
-            pack3PerUse: (p3 / 3).toFixed(2),
-            pack5PerUse: (p5 / 5).toFixed(2),
-            pack3Save: (stdPrice * 3 - p3).toFixed(2),
-            pack5Save: (stdPrice * 5 - p5).toFixed(2),
-            pack3SavePct: ((1 - p3 / (stdPrice * 3)) * 100).toFixed(0),
-            pack5SavePct: ((1 - p5 / (stdPrice * 5)) * 100).toFixed(0),
-            pack3Original: (stdPrice * 3).toFixed(2),
-            pack5Original: (stdPrice * 5).toFixed(2),
-          })
-        }
-      }
-    })
+    priceService.fetchPricesWithCallback(function(d) {
+      if (!d || !d.points) return
+      var stdPrice = parseFloat(d.standardReportDisplay)
+      var p3 = parseFloat(d.points.pack3.display)
+      var p5 = parseFloat(d.points.pack5.display)
+      self.setData({
+        pack3Display: d.points.pack3.display,
+        pack5Display: d.points.pack5.display,
+        standardReportDisplay: d.standardReportDisplay,
+        pack3PerUse: (p3 / 3).toFixed(2),
+        pack5PerUse: (p5 / 5).toFixed(2),
+        pack3Save: (stdPrice * 3 - p3).toFixed(2),
+        pack5Save: (stdPrice * 5 - p5).toFixed(2),
+        pack3SavePct: ((1 - p3 / (stdPrice * 3)) * 100).toFixed(0),
+        pack5SavePct: ((1 - p5 / (stdPrice * 5)) * 100).toFixed(0),
+        pack3Original: (stdPrice * 3).toFixed(2),
+        pack5Original: (stdPrice * 5).toFixed(2),
+        })
+      })
   },
 
   loadBalance: function() {
@@ -95,15 +113,32 @@ Page({
         if (res.confirm) {
           self.setData({ purchasing: true })
           wx.cloud.callFunction({
-            name: 'purchasePoints',
-            data: { packType: packType, token: app.globalData.token },
+            name: 'createOrder',
+            data: { type: 'points', packType: packType, token: app.globalData.token },
             success: function(res2) {
-              self.setData({ purchasing: false })
-              if (res2.result && res2.result.code === 0) {
+              if (!res2.result || res2.result.code !== 0) {
+                self.setData({ purchasing: false })
+                wx.showToast({ title: (res2.result && res2.result.msg) || '购买失败', icon: 'none' })
+                return
+              }
+              var data = res2.result.data || {}
+              if (data.payParams) {
+                // 真实支付：调起微信支付，成功后点数由 payCallback 异步到账
+                invokePayment(data.payParams)
+                  .then(function() {
+                    self.setData({ purchasing: false })
+                    wx.showToast({ title: '购买成功！', icon: 'success' })
+                    setTimeout(function() { self.loadBalance() }, 1500)
+                  })
+                  .catch(function() {
+                    self.setData({ purchasing: false })
+                    wx.showToast({ title: '支付未完成', icon: 'none' })
+                  })
+              } else {
+                // mock/0 元：点数已即时到账
+                self.setData({ purchasing: false })
                 wx.showToast({ title: '购买成功！', icon: 'success' })
                 setTimeout(function() { self.loadBalance() }, 1500)
-              } else {
-                wx.showToast({ title: res2.result.msg || '购买失败', icon: 'none' })
               }
             },
             fail: function() {

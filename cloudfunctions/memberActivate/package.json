@@ -1,9 +1,0 @@
-{
-  "name": "memberActivate",
-  "version": "1.0.0",
-  "description": "会员激活/续费（模拟支付模式）",
-  "main": "index.js",
-  "dependencies": {
-    "wx-server-sdk": "~2.6.3"
-  }
-}
