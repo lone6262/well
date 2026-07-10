@@ -25,7 +25,9 @@ async function checkRateLimit(db, openid, action, maxRequests, windowMs, failOpe
   const cutoff = new Date(Date.now() - windowMs);
 
   try {
-    // 先写入记录，再计数 — 减少并发窗口（但仍非原子，微信云开发基础版无事务）
+    // 已知限制：先写入再计数为非原子操作，高并发下可能略超 maxRequests。
+    // 微信云开发基础版无多文档事务，真原子限流需事务改造（已记为 P2）。
+    // 当前对支付等写操作保持 failOpen=false，放行策略偏收紧。
     const addResult = await db.collection(COLLECTIONS.RATE_LIMITS || 'rate_limits').add({
       data: { openid: openid, action: action, created_at: new Date() }
     });
