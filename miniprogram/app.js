@@ -164,12 +164,20 @@ App({
       sys = {};
     }
 
+    // 脱敏：移除手机号 / openid / token 等敏感信息，避免错误上报泄露 PII
+    const sanitizeErr = function(s) {
+      return String(s)
+        .replace(/1[3-9]\d{9}/g, '1**********')
+        .replace(/(openid|token|phoneNumber)\s*[:=]?\s*[\w._-]+/gi, '$1=***')
+        .substring(0, 500);
+    };
+
     var properties = {
       function: 'miniprogram',
       operation: type,
-      error_message: String(message).substring(0, 500),
+      error_message: sanitizeErr(message),
       error_type: type,
-      stack: stack ? String(stack).substring(0, 500) : '',
+      stack: stack ? sanitizeErr(stack) : '',
       page: currentPage,
       brand: sys.brand,
       model: sys.model,
