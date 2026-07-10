@@ -1,0 +1,42 @@
+<!--巧克力毒性计算-->
+<view class="page-container">
+  <view class="page-header">
+    <text class="page-title">巧克力毒性计算</text>
+    <text class="page-subtitle">误食后快速评估紧急程度</text>
+  </view>
+  <view class="form-group">
+    <text class="form-label">宠物体重 (kg)</text>
+    <input class="form-input" type="digit" placeholder="如：5" value="{{weight}}" bindinput="onWeightInput" />
+  </view>
+  <view class="form-group">
+    <text class="form-label">巧克力类型</text>
+    <picker mode="selector" range="{{chocTypes}}" range-key="name" value="{{chocIndex}}" bindchange="onChocChange">
+      <view class="picker-value">{{chocTypes[chocIndex].name}}</view>
+    </picker>
+  </view>
+  <view class="form-group">
+    <text class="form-label">食用量 (克)</text>
+    <input class="form-input" type="digit" placeholder="如：50" value="{{amount}}" bindinput="onAmountInput" />
+  </view>
+  <button class="calc-btn" bindtap="calculate">评估风险</button>
+  <view class="result-card {{result.level}}" wx:if="{{result}}">
+    <view class="result-title">{{result.desc}}</view>
+    <view class="result-row">可可碱摄入量: {{result.totalMg}}mg ({{result.dose}}mg/kg)</view>
+    <view class="result-row">巧克力类型: {{result.chocName}}</view>
+    <view class="result-action">{{result.action}}</view>
+  </view>
+  <view class="emergency-note" wx:if="{{result && result.level === 'danger'}}">
+    <text>紧急情况请立即拨打宠物医院电话或前往最近的24小时急诊</text>
+  </view>
+
+  <!-- AI报告引导 -->
+  <view class="ai-cta" bindtap="goToReport" wx:if="{{result}}">
+    <view class="ai-cta-body">
+      <text class="ai-cta-title">以上是通用参考</text>
+      <text class="ai-cta-desc">你家宠物的具体情况，AI 可以做更精准的分析</text>
+    </view>
+    <view class="ai-cta-btn">
+      <text>查看 AI 报告</text>
+    </view>
+  </view>
+</view>

@@ -28,6 +28,20 @@ page {
   --color-info: #7B9EB8;
   --color-info-light: #EEF3F7;
 
+  /* --- 数据可视化 Data Viz（便便 Bristol 分级色阶）--- */
+  --poop-1: #8B6F47;   /* Type 1 干硬球状 */
+  --poop-2: #A0825A;   /* Type 2 块状 */
+  --poop-3: #C19A6B;   /* Type 3 香肠有裂纹（理想）*/
+  --poop-4: #D4A76A;   /* Type 4 光滑柔软（理想）*/
+  --poop-5: #D4A76A;   /* Type 5 软块 */
+  --poop-6: #D4A76A;   /* Type 6 糊状 */
+  --poop-7: #D4A76A;   /* Type 7 水样 */
+
+  /* --- 品牌底色上的叠加层（固定白，品牌色在明暗模式下均为陶土色，白字可读）--- */
+  --text-on-brand: #FFFFFF;
+  --text-on-brand-muted: rgba(255, 255, 255, 0.75);
+  --bg-on-brand-subtle: rgba(255, 255, 255, 0.2);
+
   /* --- 背景色 Background Colors --- */
   --bg-color: #FDFAF7;
   --bg-secondary: #F5F0EB;

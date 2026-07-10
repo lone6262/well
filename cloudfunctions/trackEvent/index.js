@@ -96,6 +96,26 @@ const VALID_EVENTS = {
     description: '生成 AI 报告',
     requiredFields: ['source'], // source: template | llm | cache
   },
+
+  // === 工具中心（Phase 1 埋点，支撑 Phase X 工具打开率/使用率/到报告 CTR 指标）===
+  tool_view: {
+    description: '工具页打开',
+    requiredFields: ['tool_name'],
+  },
+  tool_use: {
+    description: '工具核心功能使用',
+    requiredFields: ['tool_name'],
+  },
+  tool_to_report_click: {
+    description: '工具结果页点击「查看 AI 报告」',
+    requiredFields: ['tool_name'],
+  },
+
+  // Phase 1.5: 错误日志（前端未捕获异常自动上报）
+  app_error: {
+    description: '前端未捕获异常',
+    requiredFields: ['error_message'],
+  },
 };
 
 /**
@@ -138,9 +158,42 @@ exports.main = async (event, context) => {
 
   try {
     const now = new Date();
+    const userId = OPENID || properties.user_id || '';
+
+    // app_error 路由到独立的 error_logs 集合（便于后台查看与排错），其余仍写 analytics_events
+    if (eventName === 'app_error') {
+      const errorRecord = {
+        event_name: eventName,
+        user_id: userId,
+        function: properties.function || 'miniprogram',
+        operation: properties.operation || properties.error_type || '',
+        error: properties.error_message || '',
+        error_type: properties.error_type || '',
+        stack: properties.stack || '',
+        page: properties.page || '',
+        brand: properties.brand || '',
+        model: properties.model || '',
+        system: properties.system || '',
+        platform: properties.platform || '',
+        client_timestamp: properties.client_timestamp || null,
+        server_timestamp: now,
+        created_at: now,
+      };
+
+      const errResult = await db.collection(COLLECTIONS.ERROR_LOGS).add({
+        data: errorRecord,
+      });
+
+      return {
+        code: RESPONSE_CODE.SUCCESS,
+        msg: '事件已记录',
+        data: { eventId: errResult._id, eventName },
+      };
+    }
+
     const eventRecord = {
       event_name: eventName,
-      user_id: OPENID || properties.user_id || '',
+      user_id: userId,
       properties: {
         ...properties,
       },

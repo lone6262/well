@@ -40,6 +40,21 @@ exports.main = async (event, context) => {
   try {
     // 每次调用强制从数据库重新加载（不命中内存缓存）
     const dbPriceConfig = await loadPrices(db, { forceReload: true });
+
+    // 读取 Feature Flags 配置
+    let featureFlags = {};
+    try {
+      const flagResult = await db.collection(COLLECTIONS.SYSTEM_CONFIG)
+        .where({ key: 'feature_flags' })
+        .limit(1)
+        .get();
+      if (flagResult.data && flagResult.data.length > 0) {
+        const raw = flagResult.data[0].value;
+        featureFlags = (typeof raw === 'string') ? JSON.parse(raw) : (raw || {});
+      }
+    } catch (e) {
+      console.warn('[adminGetConfig] feature_flags 读取失败:', e.message);
+    }
     const dbPrices = dbPriceConfig.prices;
     const dbCredits = dbPriceConfig.memberCredits;
 
@@ -91,6 +106,7 @@ exports.main = async (event, context) => {
       payment: {
         timeout: PAYMENT_TIMEOUT
       },
+      featureFlags: featureFlags,
       metadata: {
         version: '2.0.0',
         lastUpdate: new Date().toISOString()

@@ -103,6 +103,16 @@ page { width: 100%; overflow-x: hidden; }
 .report-price { font-size: var(--font-size-2xl); font-weight: 700; color: var(--brand-primary); text-align: center; }
 .report-member-link { font-size: var(--font-size-sm); color: var(--brand-primary); font-weight: 500; text-align: center; }
 
+/* 点数包推荐条（付费时单份更划算） */
+.report-points-promo {
+  display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4rpx;
+  margin-bottom: 16rpx; padding: 16rpx;
+  background: var(--brand-primary-light); border-radius: var(--radius-md);
+  border: 1rpx dashed var(--brand-primary);
+}
+.promo-label { font-size: var(--font-size-sm); font-weight: 700; color: var(--brand-primary); }
+.promo-detail { font-size: var(--font-size-xs); color: var(--text-secondary); }
+
 .report-compliance { display: block; font-size: var(--font-size-xs); color: var(--text-tertiary); text-align: center; padding: 12rpx 0; margin-bottom: 8rpx; }
 
 .report-btn {

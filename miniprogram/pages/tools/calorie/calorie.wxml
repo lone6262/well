@@ -1,0 +1,47 @@
+<!--每日热量计算-->
+<view class="page-container">
+  <view class="page-header">
+    <text class="page-title">每日热量计算</text>
+    <text class="page-subtitle">RER公式估算每日所需卡路里</text>
+  </view>
+  <view class="pet-switcher">
+    <view class="switch-btn {{petType === 'cat' ? 'active' : ''}}" bindtap="switchToCat">猫</view>
+    <view class="switch-btn {{petType === 'dog' ? 'active' : ''}}" bindtap="switchToDog">狗</view>
+  </view>
+  <view class="form-group">
+    <text class="form-label">体重 (kg)</text>
+    <input class="form-input" type="digit" placeholder="如：4.5" value="{{weight}}" bindinput="onWeightInput" />
+  </view>
+  <view class="form-group">
+    <text class="form-label">状态</text>
+    <radio-group bindchange="onActivityChange">
+      <label class="radio-item" wx:if="{{petType === 'cat'}}"><radio value="kitten" />幼猫</label>
+      <label class="radio-item" wx:if="{{petType === 'cat'}}"><radio value="adult" checked />成年</label>
+      <label class="radio-item" wx:if="{{petType === 'cat'}}"><radio value="neutered" />已绝育</label>
+      <label class="radio-item" wx:if="{{petType === 'cat'}}"><radio value="senior" />老年</label>
+      <label class="radio-item" wx:if="{{petType === 'dog'}}"><radio value="puppy" />幼犬</label>
+      <label class="radio-item" wx:if="{{petType === 'dog'}}"><radio value="adult" checked />成年</label>
+      <label class="radio-item" wx:if="{{petType === 'dog'}}"><radio value="neutered" />已绝育</label>
+      <label class="radio-item" wx:if="{{petType === 'dog'}}"><radio value="senior" />老年</label>
+    </radio-group>
+  </view>
+  <button class="calc-btn" bindtap="calculate">计算热量</button>
+  <view class="result-card" wx:if="{{result}}">
+    <view class="result-big">{{result.der}} <text class="unit">kcal/天</text></view>
+    <view class="result-row">基础代谢 RER: {{result.rer}} kcal</view>
+    <view class="result-row">参考喂食量（干粮）: {{result.dryFood}}g/天</view>
+    <view class="result-row">参考喂食量（湿粮）: {{result.wetFood}}g/天</view>
+  </view>
+  <view class="disclaimer"><text>估算值仅供参考，实际喂食量请参考粮食包装建议或咨询兽医。</text></view>
+
+  <!-- AI报告引导 -->
+  <view class="ai-cta" bindtap="goToReport" wx:if="{{result}}">
+    <view class="ai-cta-body">
+      <text class="ai-cta-title">以上是通用参考</text>
+      <text class="ai-cta-desc">你家宠物的具体情况，AI 可以做更精准的分析</text>
+    </view>
+    <view class="ai-cta-btn">
+      <text>查看 AI 报告</text>
+    </view>
+  </view>
+</view>

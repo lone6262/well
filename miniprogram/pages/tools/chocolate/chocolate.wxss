@@ -1,0 +1,45 @@
+/* 巧克力毒性计算 */
+.page-container { padding: var(--spacing-xl); min-height: 100vh; background: var(--bg-color); }
+.page-header { margin-bottom: var(--spacing-xl); }
+.page-title { display: block; font-size: var(--font-size-xl); font-weight: 700; color: var(--text-primary); }
+.page-subtitle { display: block; font-size: var(--font-size-sm); color: var(--text-secondary); margin-top: var(--spacing-xs); }
+.form-group { margin-bottom: var(--spacing-lg); }
+.form-label { display: block; font-size: var(--font-size-base); color: var(--text-secondary); margin-bottom: var(--spacing-sm); }
+.form-input {
+  width: 100%;
+  height: 88rpx;
+  box-sizing: border-box;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 0 var(--spacing-lg);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  border: 2rpx solid var(--border-color);
+  transition: border-color var(--duration-base) var(--ease-standard);
+}
+.form-input:focus { border-color: var(--brand-primary); }
+.picker-value {
+  width: 100%;
+  height: 88rpx;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 0 var(--spacing-lg);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  border: 2rpx solid var(--border-color);
+}
+.calc-btn { background: var(--brand-primary); color: var(--text-inverse); border-radius: var(--radius-xl); font-size: var(--font-size-base); font-weight: 600; margin-top: var(--spacing-md); }
+.result-card { background: var(--bg-card); border-radius: var(--radius-2xl); padding: var(--spacing-lg); margin-top: var(--spacing-lg); box-shadow: var(--shadow-sm); border-left: 4rpx solid var(--brand-primary); }
+.result-card.safe { border-left-color: var(--color-success); }
+.result-card.warning { border-left-color: var(--color-warning); }
+.result-card.danger { border-left-color: var(--color-danger); }
+.result-title { font-size: var(--font-size-lg); font-weight: 700; color: var(--text-primary); margin-bottom: var(--spacing-md); }
+.result-row { font-size: var(--font-size-sm); color: var(--text-secondary); margin-bottom: var(--spacing-xs); }
+.result-action { font-size: var(--font-size-sm); color: var(--text-primary); margin-top: var(--spacing-md); line-height: var(--line-height-normal); }
+.emergency-note { margin-top: var(--spacing-lg); padding: var(--spacing-lg); background: var(--color-danger-light); border-radius: var(--radius-lg); border-left: 4rpx solid var(--color-danger); }
+.emergency-note text { font-size: var(--font-size-sm); color: var(--color-danger); line-height: var(--line-height-normal); font-weight: 600; }
+
+/* AI引导卡片复用 ui-components.wxss 的 .ai-cta */

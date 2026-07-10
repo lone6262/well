@@ -25,7 +25,15 @@ Page({
     isMember: false,
     memberDaysRemaining: 0,
     // V2.0: 动态价格
-    firstReportDisplay: '1.00'
+    firstReportDisplay: '1.00',
+    // Phase 1.5: Feature Flags（控制功能入口显隐，默认开启避免首屏闪烁）
+    flags: { enableTools: true }
+  },
+
+  // 同步 feature flags 到 data（供 wxml wx:if 显隐入口）
+  _syncFlags() {
+    const ff = app.globalData.featureFlags || {}
+    this.setData({ flags: { enableTools: ff.enable_tools !== false } })
   },
 
   onLoad(options) {
@@ -33,6 +41,7 @@ Page({
     this.loadUserInfo()
     this.loadDailyTip()
     this.loadDailyKnowledge()
+    this._syncFlags()
 
     // Phase 4: 捕获邀请码
     if (options && options.invite_code) {
@@ -47,6 +56,7 @@ Page({
       self.loadPetList()
       self.loadMemberStatus()
       self.loadPrices()
+      self._syncFlags()
       self.lastLoadedOpenid = openid
     })
 
@@ -191,6 +201,11 @@ Page({
   },
 
   // 导航方法 - 使用navHandler模块
+  toToolsHub: navHandler.toToolsHub,
+  toPetAge: navHandler.toPetAge,
+  toFoodSafety: navHandler.toFoodSafety,
+  toPoopScore: navHandler.toPoopScore,
+  toFeedback: navHandler.toFeedback,
   toEmergency: navHandler.toEmergency,
   toSymptom: navHandler.toSymptom,
   toHospital: navHandler.toHospital,

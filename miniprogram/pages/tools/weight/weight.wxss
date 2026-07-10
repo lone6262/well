@@ -1,0 +1,20 @@
+/* 体态评分 */
+.page-container { padding: var(--spacing-xl); min-height: 100vh; background: var(--bg-color); }
+.page-header { margin-bottom: var(--spacing-xl); }
+.page-title { display: block; font-size: var(--font-size-xl); font-weight: 700; color: var(--text-primary); }
+.page-subtitle { display: block; font-size: var(--font-size-sm); color: var(--text-secondary); margin-top: var(--spacing-xs); }
+.score-display { display: flex; align-items: baseline; gap: var(--spacing-md); margin-bottom: var(--spacing-xl); }
+.score-number { font-size: var(--font-size-4xl); font-weight: 700; color: var(--brand-primary); line-height: 1; }
+.score-label { font-size: var(--font-size-lg); font-weight: 600; color: var(--text-primary); }
+slider { margin: var(--spacing-lg) 0 var(--spacing-xs); }
+.score-scale { display: flex; justify-content: space-between; font-size: var(--font-size-sm); color: var(--text-tertiary); padding: 0 var(--spacing-xs); margin-bottom: var(--spacing-xl); }
+.result-card { background: var(--bg-card); border-radius: var(--radius-2xl); padding: var(--spacing-lg); margin-top: var(--spacing-lg); box-shadow: var(--shadow-sm); border-left: 4rpx solid var(--brand-primary); }
+.result-card.success { border-left-color: var(--color-success); }
+.result-card.warning { border-left-color: var(--color-warning); }
+.result-card.danger { border-left-color: var(--color-danger); }
+.result-desc { font-size: var(--font-size-base); color: var(--text-primary); line-height: var(--line-height-normal); }
+.result-tip { font-size: var(--font-size-sm); color: var(--text-secondary); margin-top: var(--spacing-md); line-height: var(--line-height-normal); }
+.disclaimer { margin-top: var(--spacing-xl); padding: var(--spacing-lg); background: var(--color-warning-light); border-radius: var(--radius-lg); border-left: 4rpx solid var(--color-warning); }
+.disclaimer text { font-size: var(--font-size-sm); color: var(--text-secondary); line-height: var(--line-height-normal); }
+
+/* AI引导卡片复用 ui-components.wxss 的 .ai-cta */

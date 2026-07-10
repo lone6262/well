@@ -52,7 +52,7 @@ Page({
     }
 
     wx.cloud.callFunction({
-      name: 'getRecordList',
+      name: self.data.type === 'reports' ? 'getReportHistory' : 'getRecordList',
       data: {
         token: getApp().globalData.token,
         page: 1,
@@ -114,7 +114,7 @@ Page({
     let nextPage = self.data.page + 1
 
     wx.cloud.callFunction({
-      name: 'getRecordList',
+      name: self.data.type === 'reports' ? 'getReportHistory' : 'getRecordList',
       data: {
         token: getApp().globalData.token,
         page: nextPage,

@@ -1,0 +1,9 @@
+{
+  "name": "decryptPhone",
+  "version": "1.0.0",
+  "description": "解密用户手机号",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

@@ -148,22 +148,7 @@ exports.main = async (event, context) => {
           }
         };
       }
-
-      // 会员额度已用完
-      return {
-        code: RESPONSE_CODE.SUCCESS,
-        msg: '会员额度已用完',
-        data: {
-          has_free_quota: false,
-          quota_source: 'paid',
-          price: dbPrices.STANDARD_REPORT,
-          price_display: '9.90',
-          member_quota_exhausted: true,
-          member_quota_used: used,
-          member_quota_total: total,
-          description: '本月免费额度已用完（' + used + '/' + total + '），可按标准价获取'
-        }
-      };
+      // 会员额度已用完 → 继续检查点数包余额（不直接返回 paid）
     }
 
     // 4.5 检查点数包余额

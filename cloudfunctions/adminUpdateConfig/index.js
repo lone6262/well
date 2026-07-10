@@ -63,13 +63,17 @@ exports.main = async (event, context) => {
         .where({ key: dbKey })
         .get();
 
+      // feature_flags 特殊处理：存储 JSON 对象而非字符串
+      const isFeatureFlags = (dbKey === 'feature_flags');
+      const storedValue = isFeatureFlags ? value : String(value);
+
       if (existing.data && existing.data.length > 0) {
         // 更新现有配置
         await db.collection(COLLECTIONS.SYSTEM_CONFIG)
           .doc(existing.data[0]._id)
           .update({
             data: {
-              value: String(value),
+              value: storedValue,
               updated_at: new Date()
             }
           });
@@ -78,7 +82,7 @@ exports.main = async (event, context) => {
           key: dbKey,
           action: 'updated',
           oldValue: existing.data[0].value,
-          newValue: String(value)
+          newValue: isFeatureFlags ? '[JSON]' : String(value)
         });
 
         console.log(`[adminUpdateConfig] 更新配置: ${dbKey} = ${value}`);
@@ -89,7 +93,7 @@ exports.main = async (event, context) => {
           .add({
             data: {
               key: dbKey,
-              value: String(value),
+              value: storedValue,
               created_at: new Date(),
               updated_at: new Date()
             }
@@ -98,7 +102,7 @@ exports.main = async (event, context) => {
         updateResults.push({
           key: dbKey,
           action: 'created',
-          newValue: String(value)
+          newValue: isFeatureFlags ? '[JSON]' : String(value)
         });
 
         console.log(`[adminUpdateConfig] 创建配置: ${dbKey} = ${value}`);

@@ -23,6 +23,15 @@ var MEMBER_TYPE_MAP = {
   family_yearly: '家庭年卡'
 }
 
+// 会员等级排序（按价值）：用于判断升级/降级，数字越大等级越高
+// 个人月卡 < 家庭月卡 < 个人年卡 < 家庭年卡
+var TIER_RANK = {
+  monthly: 1,
+  family_monthly: 2,
+  yearly: 3,
+  family_yearly: 4
+}
+
 Page({
   data: {
     activeTab: 'personal',
@@ -54,7 +63,13 @@ Page({
     fromReport: false,
     returnAssessmentId: '',
     showPayProcessing: false,
-    isDestroyed: false
+    isDestroyed: false,
+    // 降级拦截：当前会员等级下的不可选（降级）类型
+    currentMemberType: '',
+    downgradeMonthly: false,
+    downgradeYearly: false,
+    downgradeFamilyMonthly: false,
+    downgradeFamilyYearly: false
   },
 
   // 运行时价格缓存
@@ -63,6 +78,9 @@ Page({
 
   onLoad: function(options) {
     if (!options) options = {}
+
+    // 加载当前会员状态（用于降级拦截）
+    this.loadCurrentMember()
 
     // 先加载价格，再处理参数
     this.loadPrices(function() {
@@ -165,6 +183,43 @@ Page({
     });
   },
 
+  // 加载当前会员状态：已开通更高级会员时，标记降级类型为不可选
+  loadCurrentMember: function() {
+    var self = this
+    if (!app.globalData.cloudDevelopmentAvailable) return
+    wx.cloud.callFunction({
+      name: 'getMemberStatus',
+      data: { token: app.globalData.token },
+      success: function(res) {
+        var d = res.result && res.result.data
+        if (!d || !d.is_member || !d.type) return
+        // 仅生效中（未过期）的会员才限制降级
+        if (d.expire_date && new Date(d.expire_date) < new Date()) return
+        var cur = TIER_RANK[d.type] || 0
+        if (!cur) return
+        var flags = {
+          currentMemberType: d.type,
+          downgradeMonthly: TIER_RANK.monthly < cur,
+          downgradeYearly: TIER_RANK.yearly < cur,
+          downgradeFamilyMonthly: TIER_RANK.family_monthly < cur,
+          downgradeFamilyYearly: TIER_RANK.family_yearly < cur
+        }
+        // 若默认选中的是降级类型，自动切回当前会员类型（便于续费）
+        var selKey = {
+          monthly: 'downgradeMonthly', yearly: 'downgradeYearly',
+          family_monthly: 'downgradeFamilyMonthly', family_yearly: 'downgradeFamilyYearly'
+        }[self.data.selectedType]
+        if (selKey && flags[selKey]) {
+          var priceMap = self._priceMap || DEFAULT_PRICE_MAP
+          flags.activeTab = d.type.indexOf('family') === 0 ? 'family' : 'personal'
+          flags.selectedType = d.type
+          flags.selectedPrice = priceMap[d.type] || self.data.selectedPrice
+        }
+        self.setData(flags)
+      }
+    })
+  },
+
   switchTab: function(e) {
     if (this.data.upgradeMode || this.data.renewMode) return
     var tab = e.currentTarget.dataset.tab
@@ -180,6 +235,17 @@ Page({
   selectPlan: function(e) {
     if (this.data.upgradeMode || this.data.renewMode) return
     var type = e.currentTarget.dataset.type
+    // 降级拦截：已开通更高级会员时禁止选择降级方案
+    var downgradeKey = {
+      monthly: 'downgradeMonthly',
+      yearly: 'downgradeYearly',
+      family_monthly: 'downgradeFamilyMonthly',
+      family_yearly: 'downgradeFamilyYearly'
+    }[type]
+    if (downgradeKey && this.data[downgradeKey]) {
+      wx.showToast({ title: '您已是更高级会员，暂不支持降级', icon: 'none' })
+      return
+    }
     var priceMap = this._priceMap || DEFAULT_PRICE_MAP
     if (priceMap[type]) {
       this.setData({
@@ -192,6 +258,18 @@ Page({
   confirmPurchase: function() {
     var self = this
     if (self.data.purchasing) return
+
+    // 降级拦截（防御：defaultType 可能传入降级类型）
+    var dgKey = {
+      monthly: 'downgradeMonthly',
+      yearly: 'downgradeYearly',
+      family_monthly: 'downgradeFamilyMonthly',
+      family_yearly: 'downgradeFamilyYearly'
+    }[self.data.selectedType]
+    if (dgKey && self.data[dgKey]) {
+      wx.showToast({ title: '您已是更高级会员，暂不支持降级', icon: 'none' })
+      return
+    }
 
     var typeName = MEMBER_TYPE_MAP[self.data.selectedType] || '会员'
     var priceText = self.data.selectedPrice

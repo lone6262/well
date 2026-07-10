@@ -45,7 +45,7 @@ function displayUsers(users) {
   const tbody = document.getElementById('usersTableBody');
 
   if (!users || users.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="loading">暂无数据</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="loading">暂无数据</td></tr>';
     return;
   }
 
@@ -53,6 +53,7 @@ function displayUsers(users) {
     <tr>
       <td><code>${escapeHtml(user.user_id || '').substring(0, 16)}...</code></td>
       <td>${escapeHtml(user.nickName || '未设置')}</td>
+      <td>${user.phoneNumber ? escapeHtml(user.phoneNumber) : '<span class="text-gray">未绑定</span>'}</td>
       <td>${user.isMember ? '<span class="badge badge-success">会员</span>' : '<span class="badge badge-gray">普通</span>'}</td>
       <td>${user.petsCount || 0}</td>
       <td>${user.ordersCount || 0}</td>

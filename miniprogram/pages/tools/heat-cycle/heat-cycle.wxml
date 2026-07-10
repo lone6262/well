@@ -1,0 +1,38 @@
+<!--发情周期-->
+<view class="page-container">
+  <view class="page-header">
+    <text class="page-title">发情周期</text>
+    <text class="page-subtitle">预估下次发情时间</text>
+  </view>
+  <view class="pet-switcher">
+    <view class="switch-btn {{petType === 'cat' ? 'active' : ''}}" bindtap="switchToCat">猫</view>
+    <view class="switch-btn {{petType === 'dog' ? 'active' : ''}}" bindtap="switchToDog">狗</view>
+  </view>
+  <view class="form-group">
+    <text class="form-label">上次发情开始日期</text>
+    <picker mode="date" value="{{lastDate}}" bindchange="onDateChange">
+      <view class="picker-value">{{lastDate || "点击选择日期"}}</view>
+    </picker>
+  </view>
+  <button class="calc-btn" bindtap="calculate">预估下次发情</button>
+  <view class="result-card" wx:if="{{result}}">
+    <view class="result-label">预估下次发情</view>
+    <view class="result-date">{{result.nextDate}}</view>
+    <view class="result-info">
+      <view>周期: {{result.info.cycle}}</view>
+      <view>持续: {{result.info.duration}}</view>
+    </view>
+    <view class="result-note">{{result.info.note}}</view>
+  </view>
+
+  <!-- AI报告引导 -->
+  <view class="ai-cta" bindtap="goToReport" wx:if="{{result}}">
+    <view class="ai-cta-body">
+      <text class="ai-cta-title">以上是通用参考</text>
+      <text class="ai-cta-desc">你家宠物的具体情况，AI 可以做更精准的分析</text>
+    </view>
+    <view class="ai-cta-btn">
+      <text>查看 AI 报告</text>
+    </view>
+  </view>
+</view>

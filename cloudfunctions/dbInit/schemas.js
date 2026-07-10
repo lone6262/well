@@ -54,6 +54,14 @@ const INDEX_SPEC = [
   ]},
   { collection: 'rate_limits', indexes: [
     { name: 'openid_action_created_at', fields: 'openid (ASC), action (ASC), created_at (DESC)' }
+  ]},
+  { collection: 'error_logs', indexes: [
+    { name: 'user_id_created_at', fields: 'user_id (ASC), created_at (DESC)' },
+    { name: 'function_created_at', fields: 'function (ASC), created_at (DESC)' }
+  ]},
+  { collection: 'food_safety', indexes: [
+    { name: 'category_status', fields: 'category (ASC), status (ASC)' },
+    { name: 'severity', fields: 'severity (DESC)' }
   ]}
 ];
 

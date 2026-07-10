@@ -1,0 +1,33 @@
+<!--体态评分-->
+<view class="page-container">
+  <view class="page-header">
+    <text class="page-title">体态评分 BCS</text>
+    <text class="page-subtitle">1=极瘦  5=理想  9=严重肥胖</text>
+  </view>
+  <view class="score-display">
+    <text class="score-number">{{score}}</text>
+    <text class="score-label">{{result.label}}</text>
+  </view>
+  <slider min="1" max="9" step="1" value="{{score}}" bindchange="onScoreChange" block-size="28" activeColor="#B35D3A" />
+  <view class="score-scale">
+    <text>1</text><text>5</text><text>9</text>
+  </view>
+  <view class="result-card {{result.level}}" wx:if="{{result}}">
+    <view class="result-desc">{{result.desc}}</view>
+    <view class="result-tip">{{result.tip}}</view>
+  </view>
+  <view class="disclaimer">
+    <text>BCS (Body Condition Score) 是国际通用的体态评估标准。拖动滑块选择最接近你宠物体态的分数。</text>
+  </view>
+
+  <!-- AI报告引导 -->
+  <view class="ai-cta" bindtap="goToReport" wx:if="{{result}}">
+    <view class="ai-cta-body">
+      <text class="ai-cta-title">以上是通用参考</text>
+      <text class="ai-cta-desc">你家宠物的具体情况，AI 可以做更精准的分析</text>
+    </view>
+    <view class="ai-cta-btn">
+      <text>查看 AI 报告</text>
+    </view>
+  </view>
+</view>

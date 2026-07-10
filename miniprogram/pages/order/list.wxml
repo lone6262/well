@@ -18,7 +18,7 @@
 
   <!-- 订单列表 -->
   <view class="order-list" wx:if="{{orders.length > 0}}">
-    <view class="order-card" wx:for="{{orders}}" wx:key="_id">
+    <view class="order-card" wx:for="{{orders}}" wx:key="_id" bindtap="onOrderTap" data-order="{{item}}">
       <view class="order-header">
         <view class="order-type">
           <image class="type-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />
@@ -34,6 +34,11 @@
       </view>
       <view class="order-footer">
         <view class="order-amount">¥{{item.amountDisplay}}</view>
+      </view>
+      <!-- 待支付订单操作按钮 -->
+      <view class="order-actions" wx:if="{{item.status === 'pending'}}" catchtap="onActionTap">
+        <view class="action-btn action-cancel" catchtap="cancelOrder" data-id="{{item._id}}" data-index="{{index}}">取消订单</view>
+        <view class="action-btn action-pay" catchtap="payOrder" data-order="{{item}}" data-index="{{index}}">立即支付</view>
       </view>
     </view>
   </view>

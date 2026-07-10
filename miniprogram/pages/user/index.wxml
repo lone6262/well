@@ -20,6 +20,16 @@
           <view class="user-status-badge">
             <text class="status-text">{{userInfo.isMember ? '会员用户' : '普通用户'}}</text>
           </view>
+          <view class="user-phone-row" wx:if="{{userInfo.isLoggedIn}}">
+            <text class="phone-text" wx:if="{{userInfo.phoneNumber}}">{{userInfo.phoneNumber}}</text>
+            <button
+              class="btn-bind-phone"
+              open-type="getPhoneNumber"
+              bind:getphonenumber="onGetPhoneNumber"
+              wx:if="{{!userInfo.phoneNumber}}"
+            >绑定手机号</button>
+            <text class="phone-bound" wx:if="{{userInfo.phoneNumber}}">已绑定</text>
+          </view>
         </view>
 
         <!-- 用户操作按钮 -->

@@ -1,0 +1,34 @@
+<!--宠物起名-->
+<view class="page-container">
+  <view class="page-header">
+    <text class="page-title">宠物起名</text>
+    <text class="page-subtitle">随机生成可爱名字</text>
+  </view>
+  <view class="name-display">
+    <text class="name-text">{{name}}</text>
+  </view>
+  <view class="btn-row">
+    <button class="gen-btn primary" bindtap="generate">随机一个</button>
+  </view>
+  <view class="btn-row">
+    <button class="gen-btn" bindtap="generateFemale">女宝名</button>
+    <button class="gen-btn" bindtap="generateMale">男宝名</button>
+  </view>
+  <view class="history" wx:if="{{history.length > 0}}">
+    <text class="history-title">最近生成</text>
+    <view class="history-list">
+      <view class="history-tag" wx:for="{{history}}" wx:key="*this">{{item}}</view>
+    </view>
+  </view>
+
+  <!-- AI报告引导 -->
+  <view class="ai-cta" bindtap="goToReport" wx:if="{{history.length > 0}}">
+    <view class="ai-cta-body">
+      <text class="ai-cta-title">以上是通用参考</text>
+      <text class="ai-cta-desc">你家宠物的具体情况，AI 可以做更精准的分析</text>
+    </view>
+    <view class="ai-cta-btn">
+      <text>查看 AI 报告</text>
+    </view>
+  </view>
+</view>

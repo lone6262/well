@@ -1,0 +1,37 @@
+<!--常用药速查-->
+<view class="page-container">
+  <view class="page-header">
+    <text class="page-title">常用药速查</text>
+    <text class="page-subtitle">宠物用药安全参考（非处方建议）</text>
+  </view>
+  <view class="search-bar">
+    <input class="search-input" placeholder="搜索药品名称" value="{{keyword}}" bindinput="onSearch" />
+  </view>
+  <view class="med-list">
+    <view class="med-card {{item.catSafe}}" wx:for="{{filtered}}" wx:key="name">
+      <view class="med-header">
+        <text class="med-name">{{item.name}}</text>
+        <view class="med-badges">
+          <text class="med-badge {{item.catSafe}}">猫</text>
+          <text class="med-badge {{item.dogSafe}}">狗</text>
+        </view>
+      </view>
+      <view class="med-dose">参考剂量: {{item.dose}}</view>
+      <view class="med-note">{{item.note}}</view>
+    </view>
+  </view>
+  <view class="disclaimer">
+    <text>本工具仅供参考，不可替代兽医处方。任何药物使用前请务必咨询兽医。红色标记表示禁用或高风险。</text>
+  </view>
+
+  <!-- AI报告引导 -->
+  <view class="ai-cta" bindtap="goToReport" wx:if="{{filtered.length > 0}}">
+    <view class="ai-cta-body">
+      <text class="ai-cta-title">以上是通用参考</text>
+      <text class="ai-cta-desc">你家宠物的具体情况，AI 可以做更精准的分析</text>
+    </view>
+    <view class="ai-cta-btn">
+      <text>查看 AI 报告</text>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,212 @@
+/* 年龄换算工具 */
+.tool-page {
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  padding: var(--spacing-lg);
+}
+
+/* 类型切换 */
+.type-switcher {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.type-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-lg) 0;
+  border-radius: var(--radius-xl);
+  background-color: var(--bg-card);
+  font-size: var(--font-size-md);
+  font-weight: 500;
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-xs);
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.type-btn-active {
+  background-color: var(--brand-primary);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-md);
+}
+
+.type-btn-icon {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+/* 体型选择 */
+.size-selector {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+}
+
+.size-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md) 0;
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-card);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-xs);
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.size-btn-active {
+  background-color: var(--brand-secondary);
+  color: var(--text-inverse);
+}
+
+.size-btn-desc {
+  font-size: var(--font-size-xs);
+  opacity: 0.7;
+}
+
+/* 输入区 */
+.input-section {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  padding: var(--spacing-xl);
+  margin-bottom: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.input-label {
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-md);
+  display: block;
+}
+
+.input-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+}
+
+.age-input {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  color: var(--brand-primary);
+  border-bottom: 4rpx solid var(--brand-primary);
+  padding: var(--spacing-xs) 0;
+  width: 200rpx;
+  text-align: center;
+  transition: border-bottom-width var(--duration-base) var(--ease-standard);
+}
+.age-input:focus {
+  border-bottom-width: 6rpx;
+}
+
+.input-unit {
+  font-size: var(--font-size-lg);
+  color: var(--text-tertiary);
+}
+
+.quick-age {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.quick-btn {
+  flex: 1;
+  text-align: center;
+  padding: var(--spacing-sm) 0;
+  border-radius: var(--radius-full);
+  background-color: var(--bg-secondary);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+/* 结果展示 */
+.result-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.result-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  padding: var(--spacing-2xl) var(--spacing-xl);
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--spacing-lg);
+}
+
+.result-label {
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-md);
+  display: block;
+}
+
+.result-age-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--spacing-xs);
+}
+
+.result-age {
+  font-size: var(--font-size-4xl);
+  font-weight: 700;
+  color: var(--brand-primary);
+  line-height: 1;
+}
+
+.result-unit {
+  font-size: var(--font-size-xl);
+  color: var(--brand-primary);
+}
+
+.result-stage {
+  display: inline-block;
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-xl);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+}
+
+.stage-young { background-color: var(--color-success-light); color: var(--color-success); }
+.stage-adult { background-color: var(--color-info-light); color: var(--color-info); }
+.stage-mature { background-color: var(--color-warning-light); color: var(--color-warning); }
+.stage-senior { background-color: var(--color-danger-light); color: var(--color-danger); }
+
+/* 提示 */
+.result-tips {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+.tip-row {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.tip-dot {
+  color: var(--brand-primary);
+  font-weight: bold;
+}
+
+.tip-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: var(--line-height-normal);
+  flex: 1;
+}
+
+/* AI引导卡片复用 ui-components.wxss 的 .ai-cta */

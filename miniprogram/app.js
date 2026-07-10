@@ -36,7 +36,18 @@ App({
     locationUpdateTime: 0,
     // Phase 4: 邀请系统
     pendingInviteCode: null,
-    currentInviteCode: null
+    currentInviteCode: null,
+    // Phase 1.5: Feature Flags（从 system_config 加载，失败用默认值）
+    // 命名与开发计划 V5 对齐：enable_tools / enable_food_search / enable_share_card / enable_group / enable_promotion
+    featureFlags: {
+      enable_tools: true,
+      enable_food_search: true,
+      enable_share_card: false,
+      enable_group: false,
+      enable_promotion: false
+    },
+    // Phase 1.5: 用户来源标记（默认 direct=直接打开无参数；search/gzh/share/xhs 由 scene 与 query 识别）
+    userSource: 'direct'
   },
 
   // 注册登录完成回调
@@ -95,6 +106,9 @@ App({
   onLaunch: function () {
     log.info('小程序启动 - 开始静默登录')
 
+    // Phase 1.5: 解析启动参数获取用户来源
+    this._captureUserSource();
+
     // 1. 从本地存储恢复登录状态（同步操作，优先级最高）
     this.restoreLoginState();
 
@@ -112,6 +126,66 @@ App({
 
     // 3. 启动链：云开发初始化 → 静默登录 → 首次启动检查
     this._startupSequence();
+  },
+
+  // Phase 1.5: 错误日志 — 未捕获异常自动上报
+  onError: function(msg) {
+    log.error('onError:', msg);
+    this._reportError('onError', msg, '');
+  },
+
+  // Phase 1.5: 错误日志 — 未处理的 Promise 拒绝
+  onUnhandledRejection: function(res) {
+    log.error('onUnhandledRejection:', res);
+    var msg = (res && res.reason) ? String(res.reason) : 'Unknown rejection';
+    var stack = (res && res.reason && res.reason.stack) ? res.reason.stack : '';
+    this._reportError('onUnhandledRejection', msg, stack);
+  },
+
+  /**
+   * Phase 1.5: 静默上报错误到 error_logs（经 trackEvent 路由）
+   */
+  _reportError: function(type, message, stack) {
+    // 获取当前页面路径
+    var pages = getCurrentPages();
+    var currentPage = pages.length > 0 ? pages[pages.length - 1].route : 'unknown';
+
+    // 采集设备信息（getSystemInfoSync 同步且安全，try/catch 兜底）
+    var sys = {};
+    try {
+      var s = wx.getSystemInfoSync();
+      sys = {
+        brand: s.brand || '',
+        model: s.model || '',
+        system: s.system || '',
+        platform: s.platform || ''
+      };
+    } catch (e) {
+      sys = {};
+    }
+
+    var properties = {
+      function: 'miniprogram',
+      operation: type,
+      error_message: String(message).substring(0, 500),
+      error_type: type,
+      stack: stack ? String(stack).substring(0, 500) : '',
+      page: currentPage,
+      brand: sys.brand,
+      model: sys.model,
+      system: sys.system,
+      platform: sys.platform,
+      client_timestamp: new Date().toISOString()
+    };
+
+    // 静默上报，失败也忽略
+    if (this.globalData.cloudDevelopmentAvailable) {
+      wx.cloud.callFunction({
+        name: 'trackEvent',
+        data: { eventName: 'app_error', properties: properties },
+        fail: function() { /* 静默忽略 */ }
+      });
+    }
   },
 
   /**
@@ -145,6 +219,9 @@ App({
         }
       }, 30000)
 
+    // 步骤5: Phase 1.5 — 加载 Feature Flags（不阻塞启动）
+    self._loadFeatureFlags();
+
     } catch (error) {
       log.error('启动序列异常:', error);
       // 最终降级：进入离线模式
@@ -152,6 +229,71 @@ App({
         self.enterOfflineMode();
       }
     }
+  },
+
+  /**
+   * Phase 1.5: 解析启动参数，获取用户来源
+   */
+  _captureUserSource: function() {
+    try {
+      var options = wx.getLaunchOptionsSync();
+      var scene = options.scene;
+      var query = options.query || {};
+
+      if (query.source) {
+        // 统一小写，兼容 source=XHS / source=Xhs 等大小写差异（小红书引流等带参场景）
+        this.globalData.userSource = String(query.source).toLowerCase();
+      } else if (query.invite_code) {
+        this.globalData.userSource = 'invite';
+      } else if (scene === 1001 || scene === 1011) {
+        this.globalData.userSource = 'search';
+      } else if (scene === 1007 || scene === 1008 || scene === 1014 || scene === 1044) {
+        this.globalData.userSource = 'share';
+      } else if (scene === 1058 || scene === 1035) {
+        this.globalData.userSource = 'gzh';
+      } else {
+        // 无参数直接打开（非搜索/分享/公众号入口），区别于真正的微信搜索
+        this.globalData.userSource = 'direct';
+      }
+
+      log.info('用户来源:', this.globalData.userSource, 'scene:', scene);
+    } catch (e) {
+      log.warn('获取启动参数失败:', e);
+    }
+  },
+
+  /**
+   * Phase 1.5: 直接从数据库读取 feature_flags
+   */
+  _loadFeatureFlags: function() {
+    var self = this;
+    if (!this.globalData.cloudDevelopmentAvailable) return;
+
+    try {
+      var db = wx.cloud.database();
+      db.collection('system_config').where({ key: 'feature_flags' }).limit(1).get({
+        success: function(res) {
+          if (res.data && res.data.length > 0) {
+            var raw = res.data[0].value;
+            var flags = (typeof raw === 'string') ? JSON.parse(raw) : (raw || {});
+            self.globalData.featureFlags = Object.assign({}, self.globalData.featureFlags, flags);
+            log.info('Feature Flags 加载成功:', self.globalData.featureFlags);
+          }
+        },
+        fail: function(err) {
+          log.warn('Feature Flags 加载失败，使用默认值:', err);
+        }
+      });
+    } catch (e) {
+      log.warn('Feature Flags 加载异常:', e);
+    }
+  },
+
+  /**
+   * Phase 1.5: 获取 Feature Flag 值
+   */
+  getFeatureFlag: function(key) {
+    return !!this.globalData.featureFlags[key];
   },
 
   /**
@@ -222,7 +364,7 @@ App({
 
     wx.cloud.callFunction({
       name: 'silentLogin',
-      data: { code: code },
+      data: { code: code, source: self.globalData.userSource },
       success: function(res) {
         let result = res.result;
 

@@ -104,6 +104,42 @@
   font-weight: var(--font-medium, 500);
 }
 
+.user-phone-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12rpx;
+  gap: 8rpx;
+}
+
+.phone-text {
+  font-size: var(--text-sm, 24rpx);
+  color: var(--text-secondary);
+}
+
+.btn-bind-phone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rpx 16rpx;
+  font-size: var(--text-sm, 24rpx);
+  color: var(--brand-primary);
+  background: var(--brand-primary-light);
+  border-radius: var(--rounded-full, 9999rpx);
+  border: none;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.btn-bind-phone::after {
+  border: none;
+}
+
+.phone-bound {
+  font-size: var(--text-sm, 24rpx);
+  color: var(--text-muted);
+}
+
 /* === 头像编辑提示 === */
 .avatar-edit-hint {
   position: absolute;

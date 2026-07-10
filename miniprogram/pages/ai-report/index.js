@@ -100,6 +100,12 @@ Page({
             loading: false
           })
         } else {
+          // 需要支付：可能是支付回调延迟，先主动查询订单状态
+          const errData = res.result.data || {}
+          if (errData.needPayment) {
+            self.checkOrderThenRetry(errData.orderId)
+            return
+          }
           self.setData({ loading: false })
           wx.showToast({ title: res.result.msg || '报告生成失败', icon: 'none' })
         }
@@ -108,6 +114,70 @@ Page({
         log.error('加载AI报告失败:', err)
         self.setData({ loading: false })
         wx.showToast({ title: '加载失败', icon: 'none' })
+      }
+    })
+  },
+
+  // 检查订单支付状态，若已支付则自动重试生成报告（应对支付回调延迟）
+  checkOrderThenRetry: function(orderId) {
+    const self = this
+    if (!orderId) {
+      self.setData({ loading: false })
+      wx.showModal({
+        title: '请先完成支付',
+        content: '该报告需要购买后才能查看。请前往"我的订单"完成支付。',
+        showCancel: true,
+        cancelText: '我知道了',
+        confirmText: '去支付',
+        success: function(res) {
+          if (res.confirm) {
+            wx.navigateTo({ url: '/pages/order/list' })
+          }
+        }
+      })
+      return
+    }
+
+    wx.cloud.callFunction({
+      name: 'orderDetail',
+      data: { orderId: orderId },
+      success: function(res2) {
+        if (res2.result && res2.result.code === 0) {
+          const order = res2.result.data.order
+          if (order && order.status === 'paid') {
+            log.info('[AiReport] 订单实际已支付，回调延迟，自动重试生成报告')
+            self.loadReport()
+            return
+          }
+        }
+        self.setData({ loading: false })
+        wx.showModal({
+          title: '请先完成支付',
+          content: '该报告需要购买后才能查看。请前往"我的订单"完成支付。',
+          showCancel: true,
+          cancelText: '我知道了',
+          confirmText: '去支付',
+          success: function(res) {
+            if (res.confirm) {
+              wx.navigateTo({ url: '/pages/order/list' })
+            }
+          }
+        })
+      },
+      fail: function() {
+        self.setData({ loading: false })
+        wx.showModal({
+          title: '请先完成支付',
+          content: '该报告需要购买后才能查看。请前往"我的订单"完成支付。',
+          showCancel: true,
+          cancelText: '我知道了',
+          confirmText: '去支付',
+          success: function(res) {
+            if (res.confirm) {
+              wx.navigateTo({ url: '/pages/order/list' })
+            }
+          }
+        })
       }
     })
   },

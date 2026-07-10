@@ -1,0 +1,210 @@
+/* 食物安全查询工具 */
+.tool-page {
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  padding: var(--spacing-lg);
+}
+
+/* 搜索栏 */
+.search-bar {
+  margin-bottom: var(--spacing-md);
+}
+
+.search-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  background-color: var(--bg-card);
+  border-radius: var(--radius-full);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+.search-icon {
+  width: 32rpx;
+  height: 32rpx;
+  opacity: 0.5;
+}
+
+.search-input {
+  flex: 1;
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+}
+
+.search-clear {
+  width: 40rpx;
+  height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-clear-icon {
+  width: 28rpx;
+  height: 28rpx;
+  opacity: 0.6;
+}
+
+/* 分类标签 */
+.category-bar {
+  white-space: nowrap;
+  margin-bottom: var(--spacing-lg);
+}
+
+.cat-btn {
+  display: inline-block;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  margin-right: var(--spacing-sm);
+  border-radius: var(--radius-full);
+  background-color: var(--bg-card);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-xs);
+}
+
+.cat-btn-active {
+  background-color: var(--brand-primary);
+  color: var(--text-inverse);
+}
+
+/* 热门搜索 */
+.hot-section {
+  margin-top: var(--spacing-lg);
+}
+
+.section-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+  margin-bottom: var(--spacing-md);
+  display: block;
+}
+
+.hot-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.hot-tag {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-card);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-xs);
+}
+
+/* 食物卡片 */
+.result-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.food-card {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.food-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-md);
+}
+
+.food-name {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.food-cat-tag {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  background-color: var(--bg-secondary);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-full);
+}
+
+/* 安全标签 */
+.food-safety-row {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.safety-badge {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) 0;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.safety-safe { background-color: var(--color-success-light); color: var(--color-success); }
+.safety-caution { background-color: var(--color-warning-light); color: var(--color-warning); }
+.safety-danger { background-color: var(--color-danger-light); color: var(--color-danger); }
+
+/* 说明 */
+.food-effect, .food-alt {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.effect-label, .alt-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  width: 64rpx;
+  flex-shrink: 0;
+  line-height: var(--line-height-normal);
+  padding-top: 2rpx;
+}
+
+.effect-text, .alt-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: var(--line-height-normal);
+  flex: 1;
+}
+
+/* 空状态 */
+.empty-state, .loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2xl) 0;
+  gap: var(--spacing-sm);
+}
+
+.empty-icon {
+  width: 80rpx;
+  height: 80rpx;
+  opacity: 0.3;
+}
+
+.empty-title {
+  font-size: var(--font-size-md);
+  color: var(--text-secondary);
+}
+
+.empty-desc {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+}
+
+.loading-text {
+  font-size: var(--font-size-base);
+  color: var(--text-tertiary);
+}
+
+/* AI引导卡片复用 ui-components.wxss 的 .ai-cta */

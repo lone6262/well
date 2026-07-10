@@ -117,6 +117,43 @@ module.exports = {
     })
   },
 
+  toToolsHub: function() {
+    // 功能开关防御：工具中心被关闭时不跳转
+    const ff = app.globalData.featureFlags || {}
+    if (ff.enable_tools === false) {
+      log.warn('工具中心已被功能开关关闭')
+      return
+    }
+    wx.navigateTo({
+      url: '/pages/tools/index/index'
+    })
+  },
+
+  toPetAge: function() {
+    wx.navigateTo({
+      url: '/pages/tools/pet-age/pet-age'
+    })
+  },
+
+  toFoodSafety: function() {
+    wx.navigateTo({
+      url: '/pages/tools/food-safety/food-safety'
+    })
+  },
+
+  toPoopScore: function() {
+    wx.navigateTo({
+      url: '/pages/tools/poop-score/poop-score'
+    })
+  },
+
+  // Phase 1.5: 反馈入口
+  toFeedback: function() {
+    wx.navigateTo({
+      url: '/pages/service/feedback'
+    })
+  },
+
   onShareAppMessage: function() {
     let inviteCode = app.globalData.currentInviteCode || ''
     return {

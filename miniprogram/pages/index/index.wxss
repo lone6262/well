@@ -826,3 +826,80 @@
   height: 24rpx;
   filter: brightness(0) invert(1);
 }
+
+/* === 养宠工具入口 === */
+.tools-entry-section {
+  margin: 0 var(--spacing-lg) var(--spacing-lg);
+  background-color: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+.tools-entry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-lg);
+}
+
+.tools-entry-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tools-entry-more {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+}
+
+.tools-entry-grid {
+  display: flex;
+  justify-content: space-around;
+}
+
+.tools-entry-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.tools-entry-emoji {
+  font-size: 48rpx;
+  line-height: 1;
+}
+
+.tools-entry-name {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+
+/* Phase 1.5: 右上角操作区容器 */
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+/* Phase 1.5: 反馈入口 */
+.feedback-entry {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.feedback-entry-icon {
+  width: 36rpx;
+  height: 36rpx;
+  opacity: 0.8;
+}

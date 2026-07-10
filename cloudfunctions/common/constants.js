@@ -62,7 +62,8 @@ const COLLECTIONS = {
   ORDERS: 'orders',
   HOSPITALS: 'hospitals',
   MEMBERS: 'members',
-  KNOWLEDGE_ARTICLES: 'knowledge_articles',
+  FOOD_SAFETY: 'food_safety',         // V2.0 food safety DB
+    KNOWLEDGE_ARTICLES: 'knowledge_articles',
   INVITE_RECORDS: 'invite_records',
   FOLLOWUP_RECORDS: 'followup_records',
   REPORT_TEMPLATES: 'report_templates',
@@ -335,6 +336,13 @@ const KNOWLEDGE_CATEGORIES = {
   BEHAVIOR: 'behavior',
   PREVENTION: 'prevention',
   CARE: 'care'
+};
+
+// 食物安全等级（V2.0）
+const SAFETY_LEVELS = {
+  SAFE: 'safe',
+  CAUTION: 'caution',
+  DANGER: 'danger'
 };
 
 // 年龄段
@@ -642,6 +650,7 @@ module.exports = {
   MEMBER_LIMITS,
   PAYMENT_TIMEOUT,
   KNOWLEDGE_CATEGORIES,
+  SAFETY_LEVELS,
   AGE_RANGES,
   // 时间常量
   TIME,

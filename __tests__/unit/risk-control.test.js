@@ -420,7 +420,7 @@ async function runTests() {
     created_at: now
   }));
   db = createMockDb({ orders: lowPriceOrders });
-  result = await checkPaymentFraud(db, 'user9', new Date());
+  result = await checkPaymentFraud(db, 'user9', new Date(now.getTime() - 1000));
   assert(result.passed === true, '低价订单 4 笔 < 5 → 通过');
 
   const lowPriceOrdersExceed = Array(5).fill(null).map((_, i) => ({
@@ -430,7 +430,7 @@ async function runTests() {
     created_at: now
   }));
   db = createMockDb({ orders: lowPriceOrdersExceed });
-  result = await checkPaymentFraud(db, 'user10', new Date());
+  result = await checkPaymentFraud(db, 'user10', new Date(now.getTime() - 1000));
   assert(result.passed === false, '低价订单 5 笔 >= 5 → 拒绝');
   assert(result.reason === 'payment_fraud_low_price', '拒绝原因为 payment_fraud_low_price');
 
@@ -443,7 +443,7 @@ async function runTests() {
     created_at: recentTime
   }));
   db = createMockDb({ orders: burstOrders });
-  result = await checkPaymentFraud(db, 'user11', new Date());
+  result = await checkPaymentFraud(db, 'user11', new Date(recentTime.getTime() - 1000));
   assert(result.passed === false, '5分钟内 10 笔 >= 10 → 拒绝');
   assert(result.reason === 'payment_fraud_burst', '拒绝原因为 payment_fraud_burst');
 
@@ -454,7 +454,7 @@ async function runTests() {
     created_at: recentTime
   }));
   db = createMockDb({ orders: normalOrders });
-  result = await checkPaymentFraud(db, 'user12', new Date());
+  result = await checkPaymentFraud(db, 'user12', new Date(recentTime.getTime() - 1000));
   assert(result.passed === true, '5分钟内 9 笔 < 10 → 通过');
 
   console.log('\n--- 4. checkInviteFraud 逻辑测试 ---');

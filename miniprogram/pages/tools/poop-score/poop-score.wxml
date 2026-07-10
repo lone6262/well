@@ -1,0 +1,61 @@
+<!--便便评分工具-->
+<view class="tool-page">
+  <view class="tool-header">
+    <text class="tool-title">便便健康评分</text>
+    <text class="tool-subtitle">选择最接近的便便类型，快速评估消化道健康</text>
+  </view>
+
+  <!-- 便便类型选择 -->
+  <view class="poop-list">
+    <view class="poop-item {{selectedType === item.id ? 'poop-item-selected' : ''}}" wx:for="{{poopTypes}}" wx:key="id" bindtap="selectType" data-id="{{item.id}}">
+      <view class="poop-visual poop-visual-{{item.id}}">
+        <view class="poop-shape {{item.shapeClass}}"></view>
+      </view>
+      <view class="poop-info">
+        <text class="poop-name">{{item.name}}</text>
+        <text class="poop-desc">{{item.desc}}</text>
+      </view>
+      <view class="poop-score-badge poop-badge-{{item.level}}">
+        <text>{{item.score}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 结果展示 -->
+  <view class="result-section" wx:if="{{result}}">
+    <view class="result-card result-card-{{result.level}}">
+      <text class="result-level-text">{{result.levelText}}</text>
+      <view class="result-score-row">
+        <text class="result-score">{{result.score}}</text>
+        <text class="result-score-max">/ 7</text>
+      </view>
+      <text class="result-summary">{{result.summary}}</text>
+    </view>
+
+    <view class="result-detail">
+      <text class="detail-title">详细说明</text>
+      <text class="detail-text">{{result.detail}}</text>
+    </view>
+
+    <view class="result-actions">
+      <text class="action-title">建议措施</text>
+      <view class="action-list">
+        <view class="action-row" wx:for="{{result.actions}}" wx:key="*this">
+          <text class="action-dot">·</text>
+          <text class="action-text">{{item}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- AI报告引导 -->
+  <view class="ai-cta" bindtap="goToReport" wx:if="{{result}}">
+    <view class="ai-cta-body">
+      <text class="ai-cta-title">以上是通用参考</text>
+      <text class="ai-cta-desc">你家宠物的具体情况，AI 可以做更精准的分析</text>
+    </view>
+    <view class="ai-cta-btn">
+      <text>查看 AI 报告</text>
+    </view>
+  </view>
+</view>

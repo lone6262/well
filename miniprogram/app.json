@@ -34,7 +34,18 @@
     "pages/agreement/user",
     "pages/agreement/disclaimer",
     "pages/agreement/child",
-    "pages/agreement/ai-usage"
+    "pages/agreement/ai-usage",
+    "pages/tools/index/index",
+    "pages/tools/pet-age/pet-age",
+    "pages/tools/food-safety/food-safety",
+    "pages/tools/poop-score/poop-score",
+    "pages/tools/vaccine/vaccine",
+    "pages/tools/weight/weight",
+    "pages/tools/chocolate/chocolate",
+    "pages/tools/heat-cycle/heat-cycle",
+    "pages/tools/calorie/calorie",
+    "pages/tools/name-gen/name-gen",
+    "pages/tools/medication/medication"
   ],
   "window": {
     "backgroundColor": "#F5F0EB",
@@ -90,6 +101,7 @@
     "getLocation",
     "chooseLocation"
   ],
+  "__usePrivacyCheck__": true,
   "sitemapLocation": "sitemap.json",
   "style": "v2"
 }

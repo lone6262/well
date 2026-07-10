@@ -1,0 +1,35 @@
+<!--疫苗时间表-->
+<view class="page-container">
+  <view class="page-header">
+    <text class="page-title">疫苗时间表</text>
+    <text class="page-subtitle">核心疫苗免疫程序参考</text>
+  </view>
+  <view class="pet-switcher">
+    <view class="switch-btn {{petType === 'cat' ? 'active' : ''}}" bindtap="switchToCat">猫</view>
+    <view class="switch-btn {{petType === 'dog' ? 'active' : ''}}" bindtap="switchToDog">狗</view>
+  </view>
+  <view class="timeline">
+    <view class="timeline-item" wx:for="{{schedule}}" wx:key="age">
+      <view class="timeline-dot"></view>
+      <view class="timeline-content">
+        <view class="timeline-age">{{item.age}}</view>
+        <view class="timeline-vaccine">{{item.vaccine}}</view>
+        <view class="timeline-desc">{{item.desc}}</view>
+      </view>
+    </view>
+  </view>
+  <view class="disclaimer">
+    <text>以上为核心疫苗参考方案，具体请遵兽医建议。不同品牌和地区可能略有差异。</text>
+  </view>
+
+  <!-- AI报告引导 -->
+  <view class="ai-cta" bindtap="goToReport" wx:if="{{schedule.length > 0}}">
+    <view class="ai-cta-body">
+      <text class="ai-cta-title">以上是通用参考</text>
+      <text class="ai-cta-desc">你家宠物的具体情况，AI 可以做更精准的分析</text>
+    </view>
+    <view class="ai-cta-btn">
+      <text>查看 AI 报告</text>
+    </view>
+  </view>
+</view>

@@ -27,7 +27,8 @@ exports.main = async (event, context) => {
     let countResult = await db.collection(COLLECTIONS.SYMPTOM_RECORDS)
       .where({
         user_id: openid,
-        has_ai_report: true
+        has_ai_report: true,
+        risk_level: _.neq('high')
       })
       .count();
 
@@ -37,7 +38,8 @@ exports.main = async (event, context) => {
     let recordsResult = await db.collection(COLLECTIONS.SYMPTOM_RECORDS)
       .where({
         user_id: openid,
-        has_ai_report: true
+        has_ai_report: true,
+        risk_level: _.neq('high')
       })
       .orderBy('created_at', 'desc')
       .skip(skip)
@@ -47,6 +49,7 @@ exports.main = async (event, context) => {
     let records = recordsResult.data || [];
 
     // 批量关联宠物信息
+    let petsMap = {};
     if (records.length > 0) {
       let petIds = [];
       records.forEach(function(r) {
@@ -60,28 +63,31 @@ exports.main = async (event, context) => {
           .where({ _id: _.in(petIds) })
           .get();
 
-        let petsMap = {};
         (petsResult.data || []).forEach(function(p) {
           petsMap[p._id] = p;
         });
-
-        records = records.map(function(r) {
-          let pet = petsMap[r.pet_id] || {};
-          return {
-            _id: r._id,
-            pet_id: r.pet_id,
-            pet_name: pet.name || '未知宠物',
-            pet_type: pet.type || '',
-            symptoms: r.symptoms || [],
-            symptom_names: r.symptom_names || [],
-            risk_level: r.risk_level,
-            description: r.description || '',
-            ai_report_id: r.ai_report_id || '',
-            created_at: r.created_at
-          };
-        });
       }
     }
+
+    // 统一返回 camelCase 字段（与 getRecordList 一致）
+    records = records.map(function(r) {
+      let pet = petsMap[r.pet_id] || {};
+      return {
+        _id: r._id,
+        petId: r.pet_id,
+        petName: pet.name || '未知宠物',
+        petType: pet.type || '',
+        petAvatar: pet.avatar || '',
+        symptoms: r.symptom_names || r.symptoms || [],
+        riskLevel: r.risk_level || 'low',
+        description: r.description || '',
+        matchedRule: r.matched_rule || '',
+        hasAiReport: true,
+        aiReportId: r.ai_report_id || '',
+        createdAt: r.created_at,
+        action: r.action || ''
+      };
+    });
 
     return {
       code: RESPONSE_CODE.SUCCESS,

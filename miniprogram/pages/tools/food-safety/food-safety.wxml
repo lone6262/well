@@ -1,0 +1,76 @@
+<!--食物安全查询工具-->
+<view class="tool-page">
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <view class="search-input-wrap">
+      <image class="search-icon" src="/images/icons/search.svg" mode="aspectFit" />
+      <input class="search-input" placeholder="搜索食物，如：巧克力、西瓜" value="{{keyword}}" bindinput="onSearchInput" confirm-type="search" bindconfirm="onSearchConfirm" />
+      <view class="search-clear" wx:if="{{keyword}}" bindtap="clearSearch">
+        <image class="search-clear-icon" src="/images/icons/close.svg" mode="aspectFit" />
+      </view>
+    </view>
+  </view>
+
+  <!-- 分类标签 -->
+  <scroll-view class="category-bar" scroll-x>
+    <view class="cat-btn {{activeCategory === '' ? 'cat-btn-active' : ''}}" bindtap="selectCategory" data-cat="">全部</view>
+    <view class="cat-btn {{activeCategory === item ? 'cat-btn-active' : ''}}" wx:for="{{categories}}" wx:key="*this" bindtap="selectCategory" data-cat="{{item}}">{{item}}</view>
+  </scroll-view>
+
+  <!-- 热门搜索 -->
+  <view class="hot-section" wx:if="{{!results.length && !keyword}}">
+    <text class="section-label">热门搜索</text>
+    <view class="hot-tags">
+      <view class="hot-tag" wx:for="{{hotFoods}}" wx:key="*this" bindtap="searchHot" data-name="{{item}}">{{item}}</view>
+    </view>
+  </view>
+
+  <!-- 搜索结果 -->
+  <view class="result-list" wx:if="{{results.length}}">
+    <view class="food-card" wx:for="{{results}}" wx:key="_id">
+      <view class="food-card-header">
+        <text class="food-name">{{item.name}}</text>
+        <text class="food-cat-tag">{{item.category}}</text>
+      </view>
+      <view class="food-safety-row">
+        <view class="safety-badge safety-{{item.cat_safety}}">
+          <text class="safety-label">猫 {{item.cat_safety === 'safe' ? '安全' : item.cat_safety === 'caution' ? '谨慎' : '危险'}}</text>
+        </view>
+        <view class="safety-badge safety-{{item.dog_safety}}">
+          <text class="safety-label">狗 {{item.dog_safety === 'safe' ? '安全' : item.dog_safety === 'caution' ? '谨慎' : '危险'}}</text>
+        </view>
+      </view>
+      <view class="food-effect">
+        <text class="effect-label">说明</text>
+        <text class="effect-text">{{item.effect}}</text>
+      </view>
+      <view class="food-alt" wx:if="{{item.alternative}}">
+        <text class="alt-label">替代</text>
+        <text class="alt-text">{{item.alternative}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 无结果 -->
+  <view class="empty-state" wx:if="{{keyword && !results.length && !loading}}">
+    <image class="empty-icon" src="/images/icons/search.svg" mode="aspectFit" />
+    <text class="empty-title">未找到「{{keyword}}」</text>
+    <text class="empty-desc">该食物暂未收录，可尝试搜索其他名称</text>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="loading-state" wx:if="{{loading}}">
+    <text class="loading-text">查询中...</text>
+  </view>
+
+  <!-- AI报告引导 -->
+  <view class="ai-cta" bindtap="goToReport" wx:if="{{results.length}}">
+    <view class="ai-cta-body">
+      <text class="ai-cta-title">以上是通用参考</text>
+      <text class="ai-cta-desc">你家宠物的具体情况，AI 可以做更精准的分析</text>
+    </view>
+    <view class="ai-cta-btn">
+      <text>查看 AI 报告</text>
+    </view>
+  </view>
+</view>

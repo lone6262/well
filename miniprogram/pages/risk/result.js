@@ -47,6 +47,10 @@ Page({
     firstReportDisplay: '1.00',
     riskMonthlyPrice: '19.90',
     riskMonthlyCredits: 3,
+    // 点数包推荐文案（付费时点数包单份更划算）
+    pointsPackDisplay: '19.90',
+    pointsPackCount: 3,
+    pointsPerReport: '6.6',
     purchasing: false,
     reportPurchased: false,
     hasExistingReport: false,
@@ -293,6 +297,13 @@ Page({
     })
   },
 
+  // 跳转点数包页面（额度不足时，点数包单份更划算）
+  goToPoints: function() {
+    wx.navigateTo({
+      url: '/pages/points/index'
+    })
+  },
+
   // 跳转会员页面（带返回报告生成参数）
   goToMemberWithReport: function() {
     wx.navigateTo({
@@ -318,11 +329,18 @@ Page({
     var self = this
     priceService.fetchPricesWithCallback(function(d) {
       if (!d) return
+      var pack = d.points && d.points.pack3
+      var packDisplay = pack && pack.display ? pack.display : '19.90'
+      var packCount = pack && pack.count ? pack.count : 3
+      var perReport = (parseFloat(packDisplay) / packCount).toFixed(1)
       self.setData({
         standardReportDisplay: d.standardReportDisplay,
         firstReportDisplay: d.firstReportDisplay,
         riskMonthlyPrice: d.monthly.display,
-        riskMonthlyCredits: d.monthly.credits
+        riskMonthlyCredits: d.monthly.credits,
+        pointsPackDisplay: packDisplay,
+        pointsPackCount: packCount,
+        pointsPerReport: perReport
       })
     })
   },

@@ -13,12 +13,19 @@
       </view>
     </view>
 
-    <!-- 用户头像 -->
-    <view class="user-avatar-section" bindtap="toUser">
+    <!-- 右上角操作区 -->
+    <view class="top-actions">
+      <!-- Phase 1.5: 反馈入口 -->
+      <view class="feedback-entry" bindtap="toFeedback" aria-label="反馈">
+        <image class="feedback-entry-icon" src="/images/icons/customer-service.svg" mode="aspectFit" />
+      </view>
+      <!-- 用户头像 -->
+      <view class="user-avatar-section" bindtap="toUser">
       <image class="user-avatar" src="{{userInfo.avatarUrl || '/images/avatar.png'}}" />
       <view class="avatar-badge">
         <image class="avatar-badge-icon" src="/images/icons/paw.svg" mode="aspectFit" aria-label="宠物标识" />
       </view>
+    </view>
     </view>
   </view>
 
@@ -64,6 +71,18 @@
     </view>
 
     <view class="features-grid">
+      <!-- 养宠工具（受 enable_tools 开关控制） -->
+      <view class="tile tile-accent-info" bindtap="toToolsHub" hover-class="tile-pressed" aria-label="养宠工具" wx:if="{{flags.enableTools}}">
+        <view class="tile-icon-wrap">
+          <image class="tile-icon" src="/images/icons/paw.svg" mode="aspectFit" aria-label="养宠工具" />
+        </view>
+        <view class="tile-content">
+          <text class="tile-title">养宠工具</text>
+          <text class="tile-desc">年龄换算/食物安全</text>
+        </view>
+      </view>
+
+
       <!-- 症状自查 -->
       <view class="tile tile-accent-primary" bindtap="toSymptom" hover-class="tile-pressed" aria-label="症状自查">
         <view class="tile-icon-wrap">

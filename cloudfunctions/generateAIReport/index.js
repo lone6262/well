@@ -220,6 +220,7 @@ async function resolveReportOrder(db, openid, recordId, dbPrices, dbCredits) {
     quotaSource = 'invite';
     quotaPrice = 0;
   } else {
+    let matched = false;
     const memberResult = await db.collection(COLLECTIONS.MEMBERS)
       .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE }).limit(1).get();
     if (memberResult.data && memberResult.data.length > 0) {
@@ -229,6 +230,17 @@ async function resolveReportOrder(db, openid, recordId, dbPrices, dbCredits) {
       const used = m.report_credits_used || 0;
       if (used < total) {
         quotaSource = 'member';
+        quotaPrice = 0;
+        matched = true;
+      }
+    }
+    // 会员额度未命中 → 回退到点数包余额
+    if (!matched) {
+      const pointsResult = await db.collection(COLLECTIONS.USER_POINTS)
+        .where({ user_id: openid }).limit(1).get();
+      const pts = pointsResult.data && pointsResult.data[0];
+      if (pts && pts.balance > 0 && pts.expire_at && new Date(pts.expire_at) > now) {
+        quotaSource = 'points';
         quotaPrice = 0;
       }
     }
@@ -289,6 +301,12 @@ async function resolveReportOrder(db, openid, recordId, dbPrices, dbCredits) {
       } else {
         deductOk = false;
       }
+    } else if (quotaSource === 'points') {
+      // 点数包扣减（条件更新，并发安全）
+      const ptsRes = await db.collection(COLLECTIONS.USER_POINTS)
+        .where({ user_id: openid, balance: db.command.gt(0) })
+        .update({ data: { balance: db.command.inc(-1), updated_at: now } });
+      if (!ptsRes.stats || ptsRes.stats.updated === 0) deductOk = false;
     }
   } catch (quotaError) {
     console.error('[resolveReportOrder] 额度扣减异常:', quotaError.message);
@@ -383,6 +401,7 @@ exports.main = async (event, context) => {
     };
   }
 
+  let orderId = null;
   try {
     // 3. 查询并验证症状记录
     const record = await getVerifiedRecord(recordId, openid);
@@ -410,7 +429,6 @@ exports.main = async (event, context) => {
     // 4.5 解析订单与额度（必须在生成报告之前）
     //     付费报告必须已有 PAID 订单（由 createOrder + 支付回调产生）；
     //     免费来源在此扣额度并建 PAID 单；无单的付费来源直接拒绝，堵住白送。
-    let orderId = null;
     const orderCtx = await resolveReportOrder(db, openid, recordId, dbPrices, dbCredits);
     if (!orderCtx.ok) {
       return {

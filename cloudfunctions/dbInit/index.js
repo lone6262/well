@@ -22,6 +22,7 @@ const {
   getInitialReportTemplates,
   getInitialCouponTemplates
 } = require('./seed-data');
+const FOOD_SAFETY_SEED = require('./food-safety-seed');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
@@ -96,8 +97,19 @@ function buildSystemConfigSeed(event) {
     { key: 'tencent_map_key',   value: event.tencentMapKey || '' },
     { key: 'deepseek_api_key',  value: event.deepseekApiKey || '' },
     { key: 'deepseek_base_url', value: event.deepseekBaseUrl || 'https://api.deepseek.com' },
-    { key: 'deepseek_model',    value: event.deepseekModel || 'deepseek-chat' }
-  ];
+    { key: 'deepseek_model',    value: event.deepseekModel || 'deepseek-chat' },
+      // Phase 1.5: Feature Flags（命名与开发计划 V5 对齐）
+      {
+        key: 'feature_flags',
+        value: {
+          enable_tools: true,
+          enable_food_search: true,
+          enable_share_card: false,
+          enable_group: false,
+          enable_promotion: false
+        }
+      }
+    ];
 }
 
 async function main(configSeed) {
@@ -130,7 +142,9 @@ async function main(configSeed) {
       ['member_renew_log', [], 'V1.5 续费日志'],
       ['bill_check_logs', [], 'V1.5 对账差异记录'],
       ['analytics_events', [], 'V1.5 埋点事件'],
-      ['error_logs', [], 'V1.5 错误日志']
+      ['error_logs', [], 'V1.5 错误日志'],
+      // V2.0 冷启动工具集合
+      ['food_safety', FOOD_SAFETY_SEED, '25条食物安全种子数据']
     ];
 
     for (const [name, data, label] of collections) {

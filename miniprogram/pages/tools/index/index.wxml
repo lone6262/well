@@ -1,0 +1,131 @@
+<!--养宠工具中心-->
+<view class="tools-page">
+  <view class="tools-header">
+    <text class="tools-title">养宠工具</text>
+    <text class="tools-subtitle">免费好用的养宠小工具</text>
+  </view>
+
+  <view class="tools-grid">
+    <!-- 猫狗年龄换算 -->
+    <view class="tool-card" bindtap="goToTool" data-url="/pages/tools/pet-age/pet-age" hover-class="tool-card-hover">
+      <view class="tool-card-icon-wrap">
+        <image class="tool-card-icon" src="/images/icons/cat.svg" mode="aspectFit" />
+      </view>
+      <view class="tool-card-body">
+        <text class="tool-card-name">年龄换算</text>
+        <text class="tool-card-desc">猫狗年龄换算人类年龄</text>
+      </view>
+    </view>
+
+    <!-- 食物安全查询（受 enable_food_search 开关控制） -->
+    <view class="tool-card" bindtap="goToTool" data-url="/pages/tools/food-safety/food-safety" hover-class="tool-card-hover" wx:if="{{flags.enableFoodSearch}}">
+      <view class="tool-card-icon-wrap">
+        <image class="tool-card-icon" src="/images/icons/food.svg" mode="aspectFit" />
+      </view>
+      <view class="tool-card-body">
+        <text class="tool-card-name">食物安全</text>
+        <text class="tool-card-desc">查一查能不能吃</text>
+      </view>
+    </view>
+
+    <!-- 便便评分 -->
+    <view class="tool-card" bindtap="goToTool" data-url="/pages/tools/poop-score/poop-score" hover-class="tool-card-hover">
+      <view class="tool-card-icon-wrap">
+        <image class="tool-card-icon" src="/images/icons/poop.svg" mode="aspectFit" />
+      </view>
+      <view class="tool-card-body">
+        <text class="tool-card-name">便便评分</text>
+        <text class="tool-card-desc">便便健康一键评估</text>
+      </view>
+    </view>
+
+    <!-- 疫苗提醒 -->
+    <view class="tool-card" bindtap="goToTool" data-url="/pages/tools/vaccine/vaccine" hover-class="tool-card-hover">
+      <view class="tool-card-icon-wrap">
+        <image class="tool-card-icon" src="/images/icons/syringe.svg" mode="aspectFit" />
+      </view>
+      <view class="tool-card-body">
+        <text class="tool-card-name">疫苗时间表</text>
+        <text class="tool-card-desc">核心疫苗免疫程序</text>
+      </view>
+    </view>
+
+    <!-- 体态评分 -->
+    <view class="tool-card" bindtap="goToTool" data-url="/pages/tools/weight/weight" hover-class="tool-card-hover">
+      <view class="tool-card-icon-wrap">
+        <image class="tool-card-icon" src="/images/icons/scale.svg" mode="aspectFit" />
+      </view>
+      <view class="tool-card-body">
+        <text class="tool-card-name">体态评分</text>
+        <text class="tool-card-desc">BCS 1-9分评估</text>
+      </view>
+    </view>
+
+    <!-- 巧克力毒性 -->
+    <view class="tool-card" bindtap="goToTool" data-url="/pages/tools/chocolate/chocolate" hover-class="tool-card-hover">
+      <view class="tool-card-icon-wrap">
+        <image class="tool-card-icon" src="/images/icons/chocolate.svg" mode="aspectFit" />
+      </view>
+      <view class="tool-card-body">
+        <text class="tool-card-name">巧克力毒性</text>
+        <text class="tool-card-desc">误食后紧急评估</text>
+      </view>
+    </view>
+
+    <!-- 发情周期 -->
+    <view class="tool-card" bindtap="goToTool" data-url="/pages/tools/heat-cycle/heat-cycle" hover-class="tool-card-hover">
+      <view class="tool-card-icon-wrap">
+        <image class="tool-card-icon" src="/images/icons/calendar.svg" mode="aspectFit" />
+      </view>
+      <view class="tool-card-body">
+        <text class="tool-card-name">发情周期</text>
+        <text class="tool-card-desc">预估下次发情时间</text>
+      </view>
+    </view>
+
+    <!-- 热量计算 -->
+    <view class="tool-card" bindtap="goToTool" data-url="/pages/tools/calorie/calorie" hover-class="tool-card-hover">
+      <view class="tool-card-icon-wrap">
+        <image class="tool-card-icon" src="/images/icons/fire.svg" mode="aspectFit" />
+      </view>
+      <view class="tool-card-body">
+        <text class="tool-card-name">热量计算</text>
+        <text class="tool-card-desc">每日所需卡路里</text>
+      </view>
+    </view>
+
+    <!-- 常用药速查 -->
+    <view class="tool-card" bindtap="goToTool" data-url="/pages/tools/medication/medication" hover-class="tool-card-hover">
+      <view class="tool-card-icon-wrap">
+        <image class="tool-card-icon" src="/images/icons/pill.svg" mode="aspectFit" />
+      </view>
+      <view class="tool-card-body">
+        <text class="tool-card-name">常用药速查</text>
+        <text class="tool-card-desc">宠物用药安全参考</text>
+      </view>
+    </view>
+
+    <!-- 宠物起名 -->
+    <view class="tool-card" bindtap="goToTool" data-url="/pages/tools/name-gen/name-gen" hover-class="tool-card-hover">
+      <view class="tool-card-icon-wrap">
+        <image class="tool-card-icon" src="/images/icons/sparkle.svg" mode="aspectFit" />
+      </view>
+      <view class="tool-card-body">
+        <text class="tool-card-name">宠物起名</text>
+        <text class="tool-card-desc">随机生成可爱名字</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部引导 -->
+  <view class="tools-cta" bindtap="goToSymptom">
+    <view class="tools-cta-content">
+      <text class="tools-cta-title">想了解宠物具体健康状况？</text>
+      <text class="tools-cta-desc">AI 健康报告 · 个性化分析 · 风险评分</text>
+    </view>
+    <view class="tools-cta-btn">
+      <text>查看 AI 报告</text>
+      <text class="tools-cta-arrow">›</text>
+    </view>
+  </view>
+</view>

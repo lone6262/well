@@ -52,6 +52,14 @@
           <span class="icon">🛡️</span>
           <span class="text">风控面板</span>
         </a>
+        <a href="#foods" class="nav-item" data-tab="foods">
+          <span class="icon">🍎</span>
+          <span class="text">食物管理</span>
+        </a>
+        <a href="#errorlogs" class="nav-item" data-tab="errorlogs">
+          <span class="icon">🐞</span>
+          <span class="text">错误日志</span>
+        </a>
         <a href="#settings" class="nav-item" data-tab="settings">
           <span class="icon">⚙️</span>
           <span class="text">系统设置</span>
@@ -153,6 +161,7 @@
                 <tr>
                   <th scope="col">用户ID</th>
                   <th scope="col">昵称</th>
+                  <th scope="col">手机号</th>
                   <th scope="col">会员状态</th>
                   <th scope="col">宠物数</th>
                   <th scope="col">订单数</th>
@@ -202,6 +211,7 @@
               <thead>
                 <tr>
                   <th scope="col">订单号</th>
+                  <th scope="col">微信支付订单号</th>
                   <th scope="col">用户</th>
                   <th scope="col">类型</th>
                   <th scope="col">金额</th>
@@ -212,7 +222,7 @@
               </thead>
               <tbody id="ordersTableBody">
                 <tr>
-                  <td colspan="7" class="loading">加载中...</td>
+                  <td colspan="8" class="loading">加载中...</td>
                 </tr>
               </tbody>
             </table>
@@ -268,6 +278,95 @@
           </div>
 
           <div class="pagination" id="articlesPagination"></div>
+        </div>
+
+        <!-- 食物管理 Tab -->
+        <div id="tab-foods" class="tab-content">
+          <div class="table-controls">
+            <button id="createFoodBtn" class="btn btn-primary">+ 新建食物</button>
+            <div class="filter-box">
+              <select id="foodCategoryFilter">
+                <option value="all">全部分类</option>
+                <option value="水果">水果</option>
+                <option value="蔬菜">蔬菜</option>
+                <option value="肉类">肉类</option>
+                <option value="零食">零食</option>
+                <option value="饮料">饮料</option>
+                <option value="添加剂">添加剂</option>
+                <option value="植物">植物</option>
+                <option value="坚果">坚果</option>
+                <option value="其他">其他</option>
+              </select>
+            </div>
+            <div class="filter-box">
+              <select id="foodStatusFilter">
+                <option value="all">全部状态</option>
+                <option value="published">已发布</option>
+                <option value="draft">草稿</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <caption class="sr-only">食物安全列表</caption>
+              <thead>
+                <tr>
+                  <th scope="col">名称</th>
+                  <th scope="col">分类</th>
+                  <th scope="col">猫</th>
+                  <th scope="col">狗</th>
+                  <th scope="col">严重度</th>
+                  <th scope="col">状态</th>
+                  <th scope="col">操作</th>
+                </tr>
+              </thead>
+              <tbody id="foodsTableBody">
+                <tr><td colspan="7" class="loading">加载中...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="pagination" id="foodsPagination"></div>
+        </div>
+
+        <!-- 错误日志 Tab -->
+        <div id="tab-errorlogs" class="tab-content">
+          <div class="table-controls">
+            <div class="filter-box">
+              <select id="errorLogFuncFilter">
+                <option value="all">全部来源</option>
+                <option value="miniprogram">小程序前端</option>
+                <option value="generateAIReport">AI报告生成</option>
+                <option value="payCallback">支付回调</option>
+              </select>
+            </div>
+            <div class="filter-box">
+              <input type="text" id="errorLogKeywordFilter" placeholder="搜索错误信息..." />
+              <button id="errorLogSearchBtn" class="btn btn-secondary">搜索</button>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <caption class="sr-only">错误日志列表</caption>
+              <thead>
+                <tr>
+                  <th scope="col">时间</th>
+                  <th scope="col">来源</th>
+                  <th scope="col">页面</th>
+                  <th scope="col">错误信息</th>
+                  <th scope="col">用户</th>
+                  <th scope="col">操作</th>
+                </tr>
+              </thead>
+              <tbody id="errorLogsTableBody">
+                <tr><td colspan="6" class="loading">加载中...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="pagination" id="errorLogsPagination"></div>
         </div>
 
         <!-- 退款管理 Tab -->
@@ -571,6 +670,27 @@
             </div>
           </div>
 
+          <div class="settings-section">
+            <h3>功能开关（Feature Flags）</h3>
+            <div class="settings-grid">
+              <div class="setting-item">
+                <label><input type="checkbox" id="flagEnableTools"> 工具中心（enable_tools）</label>
+              </div>
+              <div class="setting-item">
+                <label><input type="checkbox" id="flagEnableFoodSearch"> 食物安全查询（enable_food_search）</label>
+              </div>
+              <div class="setting-item">
+                <label><input type="checkbox" id="flagEnableShareCard"> AI卡片分享（enable_share_card）</label>
+              </div>
+              <div class="setting-item">
+                <label><input type="checkbox" id="flagEnableGroup"> 微信群入口（enable_group）</label>
+              </div>
+              <div class="setting-item">
+                <label><input type="checkbox" id="flagEnablePromotion"> 限时活动（enable_promotion）</label>
+              </div>
+            </div>
+          </div>
+
           <div class="settings-actions">
             <button id="saveConfigBtn" class="btn btn-primary">保存配置</button>
           </div>
@@ -801,6 +921,103 @@
     </div>
   </div>
 
+  <!-- 食物编辑弹窗 -->
+  <div id="foodModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="foodModalTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="foodModalTitle">新建食物</h3>
+        <button class="modal-close" onclick="closeModal('foodModal')">&times;</button>
+      </div>
+      <form id="foodForm" class="modal-body">
+        <input type="hidden" id="foodId">
+
+        <div class="form-group">
+          <label>食物名称</label>
+          <input type="text" id="foodName" placeholder="如：巧克力" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>分类</label>
+            <select id="foodCategory">
+              <option value="水果">水果</option>
+              <option value="蔬菜">蔬菜</option>
+              <option value="肉类">肉类</option>
+              <option value="零食">零食</option>
+              <option value="饮料">饮料</option>
+              <option value="添加剂">添加剂</option>
+              <option value="植物">植物</option>
+              <option value="坚果">坚果</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>严重度（1-5）</label>
+            <input type="number" id="foodSeverity" min="1" max="5" value="1">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>别名（逗号分隔）</label>
+          <input type="text" id="foodAliases" placeholder="如：chocolate, 可可">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>猫安全等级</label>
+            <select id="foodCatSafety">
+              <option value="safe">安全</option>
+              <option value="caution" selected>谨慎</option>
+              <option value="danger">危险</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>狗安全等级</label>
+            <select id="foodDogSafety">
+              <option value="safe">安全</option>
+              <option value="caution" selected>谨慎</option>
+              <option value="danger">危险</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>影响说明</label>
+          <textarea id="foodEffect" rows="3" placeholder="食用后的影响"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>安全替代</label>
+          <input type="text" id="foodAlternative" placeholder="如：宠物专用零食">
+        </div>
+
+        <div class="form-group">
+          <label>状态</label>
+          <select id="foodStatus">
+            <option value="published">已发布</option>
+            <option value="draft">草稿</option>
+          </select>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('foodModal')">取消</button>
+          <button type="button" class="btn btn-primary" onclick="saveFood()">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 错误日志详情弹窗 -->
+  <div id="errorLogDetailModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="errorLogDetailTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="errorLogDetailTitle">错误详情</h3>
+        <button class="modal-close" onclick="closeModal('errorLogDetailModal')">&times;</button>
+      </div>
+      <div class="modal-body" id="errorLogDetailBody"></div>
+    </div>
+  </div>
+
   <!-- 自定义确认对话框 -->
   <div id="confirmDialog" class="confirm-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="confirmDialogTitle">
     <div class="confirm-box">
@@ -819,7 +1036,9 @@
 
   <!-- CloudBase Web SDK（外部依赖，不打包） -->
   <script src="lib/cloudbase.js"></script>
-  <!-- 管理后台 Vite 构建产物（19 模块合 1） -->
-  <script src="dist/admin-bundle.v3.js"></script>
+  <!-- 管理后台构建产物（源码按依赖顺序拼接，新增 食物管理/错误日志 模块） -->
+  <script src="dist/admin-bundle.v6.js"></script>
+  <!-- 认证模块（登录态检查，bundle 未包含） -->
+  <script src="js/auth.js"></script>
 </body>
 </html>

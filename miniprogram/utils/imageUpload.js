@@ -219,6 +219,39 @@ class ImageUploadService {
    * @returns {Promise<string>} 云存储URL
    */
   async selectAndUpload(petId) {
+    // 先检查隐私授权状态（微信要求调用敏感接口前必须确认用户已同意隐私协议）
+    const privacySetting = await new Promise((resolve) => {
+      wx.getPrivacySetting({
+        success: (res) => resolve({ needAuthorization: res.needAuthorization, privacyContractName: res.privacyContractName }),
+        fail: () => resolve({ needAuthorization: false })
+      })
+    })
+
+    log.info('[Privacy] 隐私授权状态:', privacySetting)
+
+    if (privacySetting.needAuthorization) {
+      // 需要用户同意隐私协议
+      const authorized = await new Promise((resolve) => {
+        wx.requirePrivacyAuthorize({
+          success: () => {
+            log.info('[Privacy] 用户同意隐私协议')
+            resolve(true)
+          },
+          fail: (err) => {
+            log.warn('[Privacy] 用户拒绝或取消隐私协议:', err)
+            resolve(false)
+          }
+        })
+      })
+
+      if (!authorized) {
+        return Promise.reject({
+          code: 'PRIVACY_DENIED',
+          message: '需要同意隐私保护指引才能选择图片'
+        })
+      }
+    }
+
     return new Promise((resolve, reject) => {
       wx.chooseImage({
         count: 1,

@@ -58,7 +58,8 @@ Page({
         nickname: userInfo.nickName || '宠物爱好者',
         avatar: userInfo.avatarUrl || '/images/avatar.png',
         isMember: !!userInfo.isMember,
-        isLoggedIn: isLoggedIn
+        isLoggedIn: isLoggedIn,
+        phoneNumber: userInfo.phoneNumber || ''
       }
     })
 
@@ -354,6 +355,56 @@ Page({
     }
   },
 
+  // 绑定手机号
+  onGetPhoneNumber: function(e) {
+    let self = this
+
+    if (e.detail.errMsg !== 'getPhoneNumber:ok') {
+      wx.showToast({ title: '您取消了授权', icon: 'none' })
+      return
+    }
+
+    wx.showLoading({ title: '绑定中...' })
+
+    wx.cloud.callFunction({
+      name: 'decryptPhone',
+      data: {
+        cloudID: e.detail.cloudID,
+        token: app.globalData.token || wx.getStorageSync('token')
+      },
+      success: function(res) {
+        wx.hideLoading()
+        if (res.result && res.result.code === 0) {
+          const phone = res.result.data.phoneNumber
+          let userInfo = app.globalData.userInfo || wx.getStorageSync('userInfo') || {}
+          userInfo.phoneNumber = phone
+          app.globalData.userInfo = userInfo
+          wx.setStorageSync('userInfo', userInfo)
+
+          wx.showToast({ title: '绑定成功', icon: 'success' })
+
+          // 同步手机号到云端用户资料
+          if (app.globalData.cloudDevelopmentAvailable) {
+            self.syncUserInfoToCloud({
+              ...userInfo,
+              phoneNumber: phone
+            })
+          }
+
+          // 刷新页面状态
+          self.loadUserInfo()
+        } else {
+          wx.showToast({ title: res.result.msg || '绑定失败', icon: 'none' })
+        }
+      },
+      fail: function(err) {
+        wx.hideLoading()
+        log.error('绑定手机号云函数调用失败:', err)
+        wx.showToast({ title: '绑定失败，请重试', icon: 'none' })
+      }
+    })
+  },
+
   // 用户退出登录 - 统一清理登录状态
   logout: function() {
     let self = this
@@ -380,7 +431,8 @@ Page({
               nickname: '宠物爱好者',
               avatar: '/images/avatar.png',
               isMember: false,
-              isLoggedIn: false
+              isLoggedIn: false,
+              phoneNumber: ''
             },
             userPets: []
           })

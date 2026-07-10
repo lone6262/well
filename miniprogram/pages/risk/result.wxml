@@ -73,6 +73,12 @@
       <text class="report-member-link" wx:if="{{quotaInfo.quota_source === 'paid' && !quotaInfo.member_quota_exhausted}}" bindtap="goToMember">成为会员，免费获取 ›</text>
     </view>
 
+    <!-- 点数包推荐：需付费时，点数包单份更划算 -->
+    <view class="report-points-promo" wx:if="{{quotaInfo.quota_source === 'paid'}}" bindtap="goToPoints">
+      <text class="promo-label">点数包更划算</text>
+      <text class="promo-detail">{{pointsPackCount}}份 ¥{{pointsPackDisplay}} · 约¥{{pointsPerReport}}/份 ›</text>
+    </view>
+
     <text class="report-compliance">本报告仅为健康参考，不构成医疗诊断，如有紧急症状请立即就医</text>
     <button class="report-btn" bindtap="getAIReport" loading="{{purchasing}}">
       {{quotaInfo.has_free_quota && quotaInfo.price === 0 ? '免费获取报告' : '获取AI报告'}}

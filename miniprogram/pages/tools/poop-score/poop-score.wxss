@@ -1,0 +1,220 @@
+/* 便便评分工具 */
+.tool-page {
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  padding: var(--spacing-lg);
+}
+
+.tool-header {
+  margin-bottom: var(--spacing-xl);
+}
+
+.tool-title {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  display: block;
+}
+
+.tool-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+  margin-top: var(--spacing-xs);
+  display: block;
+}
+
+/* 便便列表 */
+.poop-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.poop-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  background-color: var(--bg-card);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-xs);
+  transition: all var(--duration-fast) var(--ease-standard);
+  border: 4rpx solid transparent;
+}
+
+.poop-item-selected {
+  border-color: var(--brand-primary);
+  box-shadow: var(--shadow-md);
+}
+
+/* 便便可视化（纯CSS形状） */
+.poop-visual {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.poop-visual-1 { background-color: var(--poop-1); }
+.poop-visual-2 { background-color: var(--poop-2); }
+.poop-visual-3 { background-color: var(--poop-3); }
+.poop-visual-4 { background-color: var(--poop-4); }
+.poop-visual-5 { background-color: var(--poop-5); opacity: 0.8; }
+.poop-visual-6 { background-color: var(--poop-6); opacity: 0.6; border-radius: 40%; }
+.poop-visual-7 { background-color: var(--poop-7); opacity: 0.4; border-radius: 30%; }
+
+.poop-shape {
+  width: 48rpx;
+  height: 48rpx;
+}
+
+.poop-shape-shape-1 { border-radius: 50%; background-color: rgba(255,255,255,0.3); }
+.poop-shape-shape-2 { border-radius: 45% 55% 50% 50%; background-color: rgba(255,255,255,0.25); }
+.poop-shape-shape-3 { border-radius: 50%; background-color: rgba(255,255,255,0.2); }
+.poop-shape-shape-4 { border-radius: 50%; background-color: rgba(255,255,255,0.15); }
+.poop-shape-shape-5 { border-radius: 40%; background-color: rgba(255,255,255,0.15); }
+.poop-shape-shape-6 { border-radius: 30%; background-color: rgba(255,255,255,0.1); }
+.poop-shape-shape-7 { border-radius: 20%; background-color: rgba(255,255,255,0.1); }
+
+/* 便便信息 */
+.poop-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.poop-name {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.poop-desc {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+}
+
+/* 评分徽章 */
+.poop-score-badge {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.poop-badge-danger { background-color: var(--color-danger-light); color: var(--color-danger); }
+.poop-badge-warning { background-color: var(--color-warning-light); color: var(--color-warning); }
+.poop-badge-success { background-color: var(--color-success-light); color: var(--color-success); }
+
+/* 结果展示 */
+.result-section {
+  margin-top: var(--spacing-xl);
+}
+
+.result-card {
+  border-radius: var(--radius-2xl);
+  padding: var(--spacing-2xl) var(--spacing-xl);
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.result-card-danger { background-color: var(--color-danger-light); }
+.result-card-warning { background-color: var(--color-warning-light); }
+.result-card-success { background-color: var(--color-success-light); }
+
+.result-level-icon {
+  font-size: var(--font-size-3xl);
+  display: block;
+  margin-bottom: var(--spacing-sm);
+}
+
+.result-level-text {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  display: block;
+  margin-bottom: var(--spacing-md);
+}
+
+.result-score-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+}
+
+.result-score {
+  font-size: var(--font-size-4xl);
+  font-weight: 700;
+  color: var(--brand-primary);
+  line-height: 1;
+}
+
+.result-score-max {
+  font-size: var(--font-size-md);
+  color: var(--text-tertiary);
+}
+
+.result-summary {
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  line-height: var(--line-height-normal);
+}
+
+/* 详细说明 */
+.result-detail, .result-actions {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+  box-shadow: var(--shadow-xs);
+}
+
+.detail-title, .action-title {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--text-primary);
+  display: block;
+  margin-bottom: var(--spacing-sm);
+}
+
+.detail-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: var(--line-height-normal);
+}
+
+.action-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.action-row {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.action-dot {
+  color: var(--brand-primary);
+  font-weight: bold;
+}
+
+.action-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: var(--line-height-normal);
+  flex: 1;
+}
+
+/* AI引导卡片复用 ui-components.wxss 的 .ai-cta */

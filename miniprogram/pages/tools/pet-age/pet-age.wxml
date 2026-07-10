@@ -1,0 +1,77 @@
+<!--猫狗年龄换算工具-->
+<view class="tool-page">
+  <!-- 宠物类型切换 -->
+  <view class="type-switcher">
+    <view class="type-btn {{currentType === 'cat' ? 'type-btn-active' : ''}}" bindtap="switchType" data-type="cat">
+      <image class="type-btn-icon" src="/images/icons/cat.svg" mode="aspectFit" />
+      <text>猫</text>
+    </view>
+    <view class="type-btn {{currentType === 'dog' ? 'type-btn-active' : ''}}" bindtap="switchType" data-type="dog">
+      <image class="type-btn-icon" src="/images/icons/dog.svg" mode="aspectFit" />
+      <text>狗</text>
+    </view>
+  </view>
+
+  <!-- 狗体型选择（仅狗显示） -->
+  <view class="size-selector" wx:if="{{currentType === 'dog'}}">
+    <view class="size-btn {{currentSize === 'small' ? 'size-btn-active' : ''}}" bindtap="selectSize" data-size="small">
+      <text>小型犬</text>
+      <text class="size-btn-desc">10kg以下</text>
+    </view>
+    <view class="size-btn {{currentSize === 'medium' ? 'size-btn-active' : ''}}" bindtap="selectSize" data-size="medium">
+      <text>中型犬</text>
+      <text class="size-btn-desc">10-25kg</text>
+    </view>
+    <view class="size-btn {{currentSize === 'large' ? 'size-btn-active' : ''}}" bindtap="selectSize" data-size="large">
+      <text>大型犬</text>
+      <text class="size-btn-desc">25kg以上</text>
+    </view>
+  </view>
+
+  <!-- 年龄输入 -->
+  <view class="input-section">
+    <text class="input-label">输入宠物年龄（岁）</text>
+    <view class="input-row">
+      <input class="age-input" type="digit" placeholder="如：2" value="{{ageInput}}" bindinput="onAgeInput" maxlength="3" />
+      <text class="input-unit">岁</text>
+    </view>
+    <view class="quick-age">
+      <view class="quick-btn" bindtap="setQuickAge" data-age="1">1岁</view>
+      <view class="quick-btn" bindtap="setQuickAge" data-age="3">3岁</view>
+      <view class="quick-btn" bindtap="setQuickAge" data-age="5">5岁</view>
+      <view class="quick-btn" bindtap="setQuickAge" data-age="10">10岁</view>
+    </view>
+  </view>
+
+  <!-- 结果展示 -->
+  <view class="result-section" wx:if="{{result}}">
+    <view class="result-card">
+      <text class="result-label">相当于人类年龄</text>
+      <view class="result-age-row">
+        <text class="result-age">{{result.humanAge}}</text>
+        <text class="result-unit">岁</text>
+      </view>
+      <view class="result-stage {{result.stageClass}}">
+        <text>{{result.stage}}</text>
+      </view>
+    </view>
+
+    <view class="result-tips">
+      <view class="tip-row" wx:for="{{result.tips}}" wx:key="*this">
+        <text class="tip-dot">·</text>
+        <text class="tip-text">{{item}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- AI报告引导 -->
+  <view class="ai-cta" bindtap="goToReport" wx:if="{{result}}">
+    <view class="ai-cta-body">
+      <text class="ai-cta-title">以上是通用参考</text>
+      <text class="ai-cta-desc">你家宠物的具体情况，AI 可以做更精准的分析</text>
+    </view>
+    <view class="ai-cta-btn">
+      <text>查看 AI 报告</text>
+    </view>
+  </view>
+</view>

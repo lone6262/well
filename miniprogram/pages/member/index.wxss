@@ -382,7 +382,6 @@ page {
 .recommend-hot {
   background: var(--brand-primary-light);
   border: 1rpx solid var(--brand-primary);
-  opacity: 0.15;
 }
 
 .recommend-hot-tag {
@@ -473,29 +472,6 @@ page {
 }
 
 .btn-hover { opacity: 0.9; transform: scale(0.98); }
-
-/* ===== 测试按钮样式（测试完成后移除） ===== */
-.btn-test {
-  height: 88rpx;
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-md);
-  font-weight: 600;
-  line-height: 88rpx;
-  text-align: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: var(--text-inverse);
-  margin-bottom: 16rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8rpx;
-  border: 2rpx solid #a78bfa;
-  box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.3);
-}
-
-.btn-test-icon {
-  font-size: var(--font-size-lg);
-}
 
 /* 底部安全区 */
 .safe-bottom { height: calc(env(safe-area-inset-bottom) + 20rpx); }

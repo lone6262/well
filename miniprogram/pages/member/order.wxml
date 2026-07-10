@@ -28,7 +28,7 @@
     <!-- 个人会员方案 -->
     <view class="plans" wx:if="{{activeTab === 'personal'}}">
       <!-- 月卡 -->
-      <view class="plan-card {{selectedType === 'monthly' ? 'plan-selected' : ''}} {{renewMode ? 'plan-selected' : ''}}" bindtap="selectPlan" data-type="monthly">
+      <view class="plan-card {{selectedType === 'monthly' ? 'plan-selected' : ''}} {{renewMode ? 'plan-selected' : ''}} {{downgradeMonthly ? 'plan-disabled' : ''}}" bindtap="selectPlan" data-type="monthly">
         <view class="plan-check" wx:if="{{selectedType === 'monthly' || renewMode}}">✓</view>
         <view class="plan-name">个人月卡</view>
         <view class="plan-price-row">
@@ -46,7 +46,7 @@
       </view>
 
       <!-- 年卡（推荐） -->
-      <view class="plan-card plan-recommend {{selectedType === 'yearly' ? 'plan-selected' : ''}} {{upgradeMode ? 'plan-selected' : ''}}" bindtap="selectPlan" data-type="yearly">
+      <view class="plan-card plan-recommend {{selectedType === 'yearly' ? 'plan-selected' : ''}} {{upgradeMode ? 'plan-selected' : ''}} {{downgradeYearly ? 'plan-disabled' : ''}}" bindtap="selectPlan" data-type="yearly">
         <view class="plan-badge">{{upgradeMode ? '升级推荐' : '推荐'}}</view>
         <view class="plan-check" wx:if="{{selectedType === 'yearly' || upgradeMode}}">✓</view>
         <view class="plan-name">个人年卡</view>
@@ -69,7 +69,7 @@
     <!-- 家庭会员方案 -->
     <view class="plans" wx:if="{{activeTab === 'family'}}">
       <!-- 家庭月卡 -->
-      <view class="plan-card {{selectedType === 'family_monthly' ? 'plan-selected' : ''}}" bindtap="selectPlan" data-type="family_monthly">
+      <view class="plan-card {{selectedType === 'family_monthly' ? 'plan-selected' : ''}} {{downgradeFamilyMonthly ? 'plan-disabled' : ''}}" bindtap="selectPlan" data-type="family_monthly">
         <view class="plan-check" wx:if="{{selectedType === 'family_monthly'}}">✓</view>
         <view class="plan-name">家庭月卡</view>
         <view class="plan-price-row">
@@ -87,7 +87,7 @@
       </view>
 
       <!-- 家庭年卡（推荐） -->
-      <view class="plan-card plan-recommend {{selectedType === 'family_yearly' ? 'plan-selected' : ''}}" bindtap="selectPlan" data-type="family_yearly">
+      <view class="plan-card plan-recommend {{selectedType === 'family_yearly' ? 'plan-selected' : ''}} {{downgradeFamilyYearly ? 'plan-disabled' : ''}}" bindtap="selectPlan" data-type="family_yearly">
         <view class="plan-badge">最划算</view>
         <view class="plan-check" wx:if="{{selectedType === 'family_yearly'}}">✓</view>
         <view class="plan-name">家庭年卡</view>

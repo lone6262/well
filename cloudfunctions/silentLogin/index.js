@@ -20,6 +20,7 @@ exports.main = async (event) => {
 
     // 直接从context获取openid（云开发内置）
     const { OPENID } = cloud.getWXContext();
+    const { source = '' } = event;
 
 
     // 查找或创建用户（使用user_id字段与其他云函数保持一致）
@@ -36,6 +37,7 @@ exports.main = async (event) => {
         user_id: OPENID,
         nickName: '宠物主人',
         avatarUrl: '',
+        source: source || 'direct',  // Phase 1.5: 用户来源标记（默认 direct=直接打开）
         createTime: new Date(),
         updateTime: new Date(),
         isMember: false,

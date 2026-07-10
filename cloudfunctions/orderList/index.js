@@ -74,8 +74,12 @@ function mapOrder(order) {
     type: order.type,
     status: order.status,
     amount: order.amount,
+    origin_amount: order.origin_amount,
+    coupon_discount: order.coupon_discount,
     amountDisplay: ((order.amount || 0) / 100).toFixed(2),
     description: order.description,
+    out_trade_no: order.out_trade_no,
+    metadata: order.metadata || {},
     created_at: order.created_at
   };
 }

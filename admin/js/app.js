@@ -213,6 +213,8 @@ function switchTab(tabName) {
     members: '会员管理',
     bills: '对账记录',
     risk: '风控面板',
+    foods: '食物管理',
+    errorlogs: '错误日志',
     settings: '系统设置'
   };
   document.getElementById('pageTitle').textContent = titles[tabName] || '管理后台';
@@ -246,10 +248,34 @@ function switchTab(tabName) {
     case 'risk':
       initRiskModule();
       break;
+    case 'foods':
+      initFoodsModule();
+      break;
+    case 'errorlogs':
+      initErrorLogsModule();
+      break;
     case 'settings':
       initSettingsModule();
       break;
   }
+}
+
+/**
+ * 设置功能开关复选框（元素不存在时静默跳过）
+ */
+function setFlagCheckbox(elementId, value, defaultValue) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  el.checked = value === undefined || value === null ? defaultValue : !!value;
+}
+
+/**
+ * 读取功能开关复选框值
+ */
+function getFlagCheckbox(elementId, defaultValue) {
+  const el = document.getElementById(elementId);
+  if (!el) return defaultValue;
+  return !!el.checked;
 }
 
 /**
@@ -286,6 +312,14 @@ async function initSettingsModule() {
       document.getElementById('creditsFamilyMonthlyReports').value = config.memberCredits.familyMonthlyReports;
       document.getElementById('creditsFamilyYearlyReports').value = config.memberCredits.familyYearlyReports;
       document.getElementById('creditsTrialReports').value = config.memberCredits.trialReports;
+
+      // 填充功能开关（Feature Flags）
+      const flags = config.featureFlags || {};
+      setFlagCheckbox('flagEnableTools', flags.enable_tools, true);
+      setFlagCheckbox('flagEnableFoodSearch', flags.enable_food_search, true);
+      setFlagCheckbox('flagEnableShareCard', flags.enable_share_card, false);
+      setFlagCheckbox('flagEnableGroup', flags.enable_group, false);
+      setFlagCheckbox('flagEnablePromotion', flags.enable_promotion, false);
     } else {
       showToast(result.msg || '加载配置失败', 'error');
     }
@@ -340,6 +374,15 @@ async function saveConfig() {
     familyMonthlyReports: parseInt(document.getElementById('creditsFamilyMonthlyReports').value, 10),
     familyYearlyReports: parseInt(document.getElementById('creditsFamilyYearlyReports').value, 10),
     trialReports: parseInt(document.getElementById('creditsTrialReports').value, 10)
+  };
+
+  // 功能开关（Feature Flags）— 作为独立配置项写入 system_config
+  updates.featureFlags = {
+    enable_tools: getFlagCheckbox('flagEnableTools', true),
+    enable_food_search: getFlagCheckbox('flagEnableFoodSearch', true),
+    enable_share_card: getFlagCheckbox('flagEnableShareCard', false),
+    enable_group: getFlagCheckbox('flagEnableGroup', false),
+    enable_promotion: getFlagCheckbox('flagEnablePromotion', false),
   };
 
   showLoading('保存中...');

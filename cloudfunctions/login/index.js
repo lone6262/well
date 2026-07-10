@@ -20,7 +20,7 @@ const db = cloud.database();
  */
 exports.main = async (event, context) => {
   await warmupConfig(db);
-  const { code, nickname = '', avatar = '' } = event;
+  const { code, nickname = '', avatar = '', source = '' } = event;
 
   try {
     // 1. 参数校验
@@ -63,6 +63,7 @@ exports.main = async (event, context) => {
         unionid: unionid,
         nickname: nickname,
         avatar: avatar,
+        source: source || 'direct',  // Phase 1.5: 用户来源标记（默认 direct=直接打开）
         member_expire: null,        // 非会员
         created_at: new Date(),
         updated_at: new Date()

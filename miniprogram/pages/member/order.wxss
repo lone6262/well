@@ -144,6 +144,11 @@ page {
   background: var(--brand-primary-light);
 }
 
+/* 降级方案：已开通更高级会员时置灰，点击会提示不可降级 */
+.plan-disabled {
+  opacity: 0.4;
+}
+
 /* 推荐角标 */
 .plan-badge {
   position: absolute;
@@ -157,11 +162,11 @@ page {
   border-radius: 0 0 var(--radius-md) var(--radius-md);
 }
 
-/* 勾选 */
+/* 勾选（凸出左上角，避免遮挡标题文字） */
 .plan-check {
   position: absolute;
-  top: 16rpx;
-  left: 16rpx;
+  top: -14rpx;
+  left: -14rpx;
   width: 36rpx;
   height: 36rpx;
   background: var(--brand-primary);
@@ -172,6 +177,8 @@ page {
   justify-content: center;
   font-size: var(--font-size-xs);
   font-weight: 700;
+  box-shadow: var(--shadow-sm);
+  z-index: 2;
 }
 
 .plan-name {

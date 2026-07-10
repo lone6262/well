@@ -166,6 +166,40 @@ async function handleReportOrder(event, openid, mockPay) {
 
     if (existingOrder.data && existingOrder.data.length > 0) {
       const dup = existingOrder.data[0];
+      // 重新支付模式：已有 pending 订单时重新生成 out_trade_no 并统一下单
+      // （避免复用旧订单号导致微信支付缓存/冲突问题）
+      if (event.repay && dup.status === ORDER_STATUS.PENDING && !mockPay && dup.amount > 0) {
+        try {
+          const newOutTradeNo = 'WELL_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+          // 更新订单号（旧订单的资源如优惠券、额度仍保留）
+          await db.collection(COLLECTIONS.ORDERS).doc(dup._id).update({
+            data: {
+              out_trade_no: newOutTradeNo,
+              updated_at: new Date()
+            }
+          });
+          const payParams = await createWechatPayment(newOutTradeNo, dup.amount, openid, dup.description);
+          return {
+            code: RESPONSE_CODE.SUCCESS,
+            msg: '订单已更新，请完成支付',
+            data: {
+              orderId: dup._id,
+              outTradeNo: newOutTradeNo,
+              status: ORDER_STATUS.PENDING,
+              amount: dup.amount,
+              originAmount: dup.origin_amount || dup.amount,
+              couponDiscount: dup.coupon_discount || 0,
+              amountDisplay: (dup.amount / 100).toFixed(2),
+              quotaSource: dup.metadata && dup.metadata.quota_source,
+              payParams: payParams,
+              isRepay: true
+            }
+          };
+        } catch (payErr) {
+          console.error('[createOrder] 重新支付统一下单失败:', payErr.message);
+          return { code: RESPONSE_CODE.SERVER_ERROR, msg: '支付通道暂不可用，请稍后重试', data: {} };
+        }
+      }
       return {
         code: RESPONSE_CODE.ERROR,
         msg: '该记录已有进行中的订单',
@@ -406,6 +440,39 @@ async function handleMemberOrder(event, openid, mockPay) {
   const outTradeNo = 'WELL_MEMBER_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
 
   try {
+    // 降级拦截：已有生效中会员时，仅允许续费（同级）或升级，禁止降级
+    // 等级排序（按价值）：个人月卡 < 家庭月卡 < 个人年卡 < 家庭年卡
+    if (!isTestMode) {
+      const TIER_RANK = { monthly: 1, family_monthly: 2, yearly: 3, family_yearly: 4 };
+      const TIER_TEXT = {
+        monthly: '个人月卡', family_monthly: '家庭月卡',
+        yearly: '个人年卡', family_yearly: '家庭年卡'
+      };
+      const activeRes = await db.collection(COLLECTIONS.MEMBERS)
+        .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE })
+        .limit(1)
+        .get();
+      const active = activeRes.data && activeRes.data[0];
+      const notExpired = active && active.expire_date && new Date(active.expire_date) > now;
+      if (active && notExpired) {
+        const currentRank = TIER_RANK[active.type] || 0;
+        const targetRank = TIER_RANK[memberTier] || 0;
+        if (targetRank < currentRank) {
+          return {
+            code: RESPONSE_CODE.ERROR,
+            msg: '您已是' + (TIER_TEXT[active.type] || '会员')
+              + '，暂不支持降级开通' + (TIER_TEXT[memberTier] || '该会员')
+              + '，可续费当前会员或联系客服',
+            data: {
+              downgrade_blocked: true,
+              current_type: active.type,
+              target_type: memberTier
+            }
+          };
+        }
+      }
+    }
+
     // 检查重复 pending 订单（测试模式跳过此检查）
     if (!isTestMode) {
       const pendingResult = await db.collection(COLLECTIONS.ORDERS)
@@ -419,7 +486,38 @@ async function handleMemberOrder(event, openid, mockPay) {
         .get();
 
       if (pendingResult.data && pendingResult.data.length > 0) {
-        return { code: RESPONSE_CODE.ERROR, msg: '已有进行中的会员订单', data: { orderId: pendingResult.data[0]._id } };
+        const dup = pendingResult.data[0];
+        // 重新支付模式：生成新订单号并重新统一下单
+        if (event.repay && !mockPay && dup.amount > 0) {
+          try {
+            const newOutTradeNo = 'WELL_MEMBER_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+            await db.collection(COLLECTIONS.ORDERS).doc(dup._id).update({
+              data: {
+                out_trade_no: newOutTradeNo,
+                updated_at: new Date()
+              }
+            });
+            const payParams = await createWechatPayment(newOutTradeNo, dup.amount, openid, dup.description);
+            return {
+              code: RESPONSE_CODE.SUCCESS,
+              msg: '订单已更新，请完成支付',
+              data: {
+                orderId: dup._id,
+                outTradeNo: newOutTradeNo,
+                status: ORDER_STATUS.PENDING,
+                amount: dup.amount,
+                amountDisplay: (dup.amount / 100).toFixed(2),
+                memberTier: dup.metadata && dup.metadata.member_tier,
+                payParams: payParams,
+                isRepay: true
+              }
+            };
+          } catch (payErr) {
+            console.error('[createOrder] 会员重新支付统一下单失败:', payErr.message);
+            return { code: RESPONSE_CODE.SERVER_ERROR, msg: '支付通道暂不可用，请稍后重试', data: {} };
+          }
+        }
+        return { code: RESPONSE_CODE.ERROR, msg: '已有进行中的会员订单', data: { orderId: dup._id } };
       }
     }
 
