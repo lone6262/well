@@ -261,9 +261,10 @@ async function resolveReportOrder(db, openid, recordId, dbPrices, dbCredits) {
   try {
     if (quotaSource === 'first_report') {
       if (user && user._id) {
-        const updateRes = await db.collection(COLLECTIONS.USERS).doc(user._id).update({
-          data: { first_report_used: true, updated_at: now }
-        });
+        // 条件守卫：仅当 first_report_used 未置 true 时扣减，防止并发请求重复薅免费额度
+        const updateRes = await db.collection(COLLECTIONS.USERS)
+          .where({ _id: user._id, first_report_used: db.command.neq(true) })
+          .update({ data: { first_report_used: true, updated_at: now } });
         if (!updateRes.stats || updateRes.stats.updated === 0) deductOk = false;
       } else {
         try {
@@ -271,10 +272,10 @@ async function resolveReportOrder(db, openid, recordId, dbPrices, dbCredits) {
             data: { user_id: openid, first_report_used: true, invite_reward_credits: 0, isMember: false, created_at: now, updated_at: now }
           });
         } catch (addErr) {
-          // 并发创建可能因唯一索引失败，尝试更新
-          const updateRes = await db.collection(COLLECTIONS.USERS).where({ user_id: openid }).update({
-            data: { first_report_used: true, updated_at: now }
-          });
+          // 并发创建可能因唯一索引失败，尝试条件更新（守卫同上）
+          const updateRes = await db.collection(COLLECTIONS.USERS)
+            .where({ user_id: openid, first_report_used: db.command.neq(true) })
+            .update({ data: { first_report_used: true, updated_at: now } });
           if (!updateRes.stats || updateRes.stats.updated === 0) deductOk = false;
         }
       }
