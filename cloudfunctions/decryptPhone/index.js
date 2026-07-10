@@ -14,6 +14,11 @@ const { RESPONSE_CODE, COLLECTIONS, warmupConfig } = require('./common/constants
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 
+// 手机号脱敏：仅保留前 3 位与后 4 位，避免日志泄露 PII
+function maskPhone(phone) {
+  return String(phone || '').replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+}
+
 exports.main = async (event, context) => {
   await warmupConfig(db);
 
@@ -40,7 +45,8 @@ exports.main = async (event, context) => {
     const phoneData = res.list[0];
 
     if (!phoneData || !phoneData.data || !phoneData.data.phoneNumber) {
-      console.error('[decryptPhone] 解密结果异常:', JSON.stringify(res));
+      // 不序列化整个 res（可能含手机号），仅记录诊断信息
+      console.error('[decryptPhone] 解密结果异常: listLen=' + (res && res.list ? res.list.length : 0));
       return { code: RESPONSE_CODE.ERROR, msg: '手机号解密失败', data: {} };
     }
 
@@ -78,7 +84,7 @@ exports.main = async (event, context) => {
       });
     }
 
-    console.log('[decryptPhone] 手机号绑定成功:', OPENID, purePhoneNumber);
+    console.log('[decryptPhone] 手机号绑定成功:', OPENID, maskPhone(purePhoneNumber));
 
     return {
       code: RESPONSE_CODE.SUCCESS,
@@ -90,10 +96,10 @@ exports.main = async (event, context) => {
     };
 
   } catch (error) {
-    console.error('[decryptPhone] 处理异常:', error.message, error.stack);
+    console.error('[decryptPhone] 处理异常:', maskPhone(error.message), error.stack);
     return {
       code: RESPONSE_CODE.SERVER_ERROR,
-      msg: '服务暂时不可用，请稍后重试',
+      msg: '服务暂时不可用，请稍后再试',
       data: {}
     };
   }
