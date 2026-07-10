@@ -113,7 +113,12 @@ exports.main = async (event, context) => {
       const now = new Date();
       const nextResetAt = member.report_credits_reset_at ? new Date(member.report_credits_reset_at) : null;
 
-      // 月度重置：到期自动清零
+      // 先计算 expectedTotal/total（旧会员迁移：库里 total 低于当前配置则用新值）
+      const expectedTotal = member.type === 'yearly' ? dbCredits.YEARLY_REPORTS : dbCredits.MONTHLY_REPORTS;
+      let total = member.report_credits_total || expectedTotal;
+      if (total < expectedTotal) total = expectedTotal;
+
+      // 月度重置：到期清零 used 并把 total 一并落库（避免每次内存重算、旧数据不持久化）
       let used = member.report_credits_used || 0;
       if (nextResetAt && now >= nextResetAt) {
         used = 0;
@@ -122,6 +127,7 @@ exports.main = async (event, context) => {
         await db.collection(COLLECTIONS.MEMBERS).doc(member._id).update({
           data: {
             report_credits_used: 0,
+            report_credits_total: total,
             report_credits_reset_at: newResetAt,
             updated_at: now
           }
@@ -129,10 +135,6 @@ exports.main = async (event, context) => {
         console.log('[checkReportQuota] 会员额度已按月重置，下次重置:', newResetAt);
       }
 
-      const expectedTotal = member.type === 'yearly' ? dbCredits.YEARLY_REPORTS : dbCredits.MONTHLY_REPORTS;
-      let total = member.report_credits_total || expectedTotal;
-      // 旧会员迁移：如果库里的 total 低于当前配置，使用新值
-      if (total < expectedTotal) total = expectedTotal;
       const remaining = Math.max(0, total - used);
 
       if (remaining > 0) {

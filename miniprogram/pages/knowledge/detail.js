@@ -57,17 +57,15 @@ Page({
             contentBody = '## 暂无详细内容\n\n本文正在编辑中，请稍后再试。\n\n如需了解更多宠物健康知识，请浏览其他文章或使用症状自查功能。'
           }
 
-          // 调试日志
-          console.log('[知识库] 文章标题:', article.title)
-          console.log('[知识库] 原始内容长度:', contentBody.length)
-          console.log('[知识库] 内容预览:', contentBody.substring(0, 100))
+          log.debug('文章标题:', article.title)
+          log.debug('原始内容长度:', contentBody.length)
+          log.debug('内容预览:', contentBody.substring(0, 100))
 
           let nodes = self.parseContent(contentBody)
 
-          // 调试日志
-          console.log('[知识库] 解析后节点类型:', typeof nodes)
-          console.log('[知识库] 解析后内容长度:', String(nodes).length)
-          console.log('[知识库] 解析后内容预览:', String(nodes).substring(0, 200))
+          log.debug('解析后节点类型:', typeof nodes)
+          log.debug('解析后内容长度:', String(nodes).length)
+          log.debug('解析后内容预览:', String(nodes).substring(0, 200))
 
           // 字段名映射（数据库 snake_case → 前端 camelCase）
           let categoryMap = {

@@ -1,5 +1,7 @@
 // 订单列表页面逻辑
 const { invokePayment } = require('../../utils/pay')
+const logger = require('../../utils/logger.js')
+const log = logger.child('OrderList')
 let app = getApp()
 
 Page({
@@ -250,7 +252,7 @@ Page({
             })
             .catch(function(err) {
               wx.showToast({ title: '支付未完成', icon: 'none' })
-              console.warn('支付未完成:', err)
+              log.warn('支付未完成:', err)
             })
         } else {
           wx.showToast({ title: '支付参数异常', icon: 'none' })

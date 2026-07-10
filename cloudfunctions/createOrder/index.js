@@ -427,9 +427,10 @@ async function handleMemberOrder(event, openid, mockPay) {
     family_yearly: ORDER_TYPES.MEMBER_FAMILY_YEARLY,
   };
 
-  // 测试模式：使用指定金额（用于支付测试）
+  // 测试模式：使用指定金额（仅开发/体验环境；生产强制忽略，防止前端篡改金额）
+  const isDevEnv = process.env.NODE_ENV !== 'production';
   let amount = PRICE_MAP[memberTier];
-  let isTestMode = event._testMode || false;
+  let isTestMode = isDevEnv && event._testMode === true;
   if (isTestMode && event._testAmount) {
     amount = event._testAmount; // 测试金额（单位：分）
     console.log('[createOrder] 测试模式，金额:', amount);

@@ -19,8 +19,8 @@ function getPayInstance() {
     const publicKey = unescape(process.env.wxPayPublicKey);
 
     console.log('[PayService] ===== 初始化微信支付实例 (V2.6) =====');
-    console.log('[PayService] appId:', appId);
-    console.log('[PayService] merchantId:', merchantId);
+    console.log('[PayService] appId:', appId ? appId.slice(-4) : '(空)');
+    console.log('[PayService] merchantId:', merchantId ? merchantId.slice(-4) : '(空)');
     console.log('[PayService] 私钥长度:', privateKey.length, '公钥长度:', publicKey.length);
 
     if (!publicKey) {
@@ -50,17 +50,10 @@ function getPayInstance() {
 
 // Event 函数入口
 exports.main = async (event, context) => {
-  // 添加调试日志
-  console.log('[Gateway] ============ ENTRY ============');
-  console.log('[Gateway] event type:', typeof event);
-  console.log('[Gateway] event keys:', Object.keys(event || {}));
-  console.log('[Gateway] full event:', JSON.stringify(event || {}));
-  console.log('[Gateway] context:', JSON.stringify(context || {}));
+  // 调试日志（不打印完整 event/context，避免泄露 openid/订单/商户等敏感信息）
+  console.log('[Gateway] ENTRY: action=', (event && event.action) || '(空)', 'params=', (event && event.params) ? 'present' : 'missing');
 
   const { action, params, openid } = event || {};
-  console.log('[Gateway] parsed action:', action);
-  console.log('[Gateway] parsed params:', params ? 'present' : 'missing');
-  console.log('[Gateway] parsed openid:', openid);
 
   // 路由处理
   if (action === '/wx-pay/wxpay_order') {

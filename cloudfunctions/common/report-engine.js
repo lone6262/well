@@ -448,7 +448,7 @@ async function generateReport(db, symptomRecord, petInfo) {
     // 缓存命中埋点（非阻塞）
     try {
       db.collection(COLLECTIONS.ANALYTICS_EVENTS).add({
-        data: { event_type: 'cache_hit', event_data: { symptoms_hash: cacheKey, source: cached.source || 'cache' }, created_at: new Date() }
+        data: { event_name: 'cache_hit', event_data: { symptoms_hash: cacheKey, source: cached.source || 'cache' }, created_at: new Date() }
       }).catch(function() {});
     } catch (_) {}
     return {
@@ -493,7 +493,7 @@ async function generateReport(db, symptomRecord, petInfo) {
   // 缓存未命中埋点（非阻塞）
   try {
     db.collection(COLLECTIONS.ANALYTICS_EVENTS).add({
-      data: { event_type: 'cache_miss', event_data: { symptoms_hash: cacheKey, source: source }, created_at: new Date() }
+      data: { event_name: 'cache_miss', event_data: { symptoms_hash: cacheKey, source: source }, created_at: new Date() }
     }).catch(function() {});
   } catch (_) {}
 

@@ -576,7 +576,7 @@ async function creditPoints(openid, params) {
     }
   });
 
-  console.log('[payCallback] 点数已到账:', openid, '+', pointsCount);
+  console.log('[payCallback] 点数已到账: +' + pointsCount + '，订单:', orderId);
 }
 
 // ============================================

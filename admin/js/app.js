@@ -93,7 +93,7 @@ function renderPagination(containerId, pagination, callback) {
   html += `<button class="page-btn" ${page >= totalPages ? 'disabled' : ''} data-page="${page + 1}">下一页</button>`;
 
   // 信息
-  html += `<span class="page-info">共 ${total} 条</span>`;
+  html += `<span class="page-info">共 ${Number(total) || 0} 条</span>`;
 
   container.innerHTML = html;
 
@@ -542,10 +542,10 @@ function showImportResults(data) {
 
   const html = `
     <div><strong>导入完成：</strong></div>
-    <div>总计：${data.total} 篇</div>
-    <div>成功：${data.success} 篇 ✅</div>
-    <div>跳过：${data.skipped} 篇 ⏭️</div>
-    <div>失败：${data.failed} 篇 ❌</div>
+    <div>总计：${Number(data.total) || 0} 篇</div>
+    <div>成功：${Number(data.success) || 0} 篇 ✅</div>
+    <div>跳过：${Number(data.skipped) || 0} 篇 ⏭️</div>
+    <div>失败：${Number(data.failed) || 0} 篇 ❌</div>
   `;
 
   resultsDiv.innerHTML = html;

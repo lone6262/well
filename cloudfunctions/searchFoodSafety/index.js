@@ -1,79 +1,75 @@
-﻿// 食物安全查询云函数
+// 食物安全查询云函数
 // 搜索 food_safety 集合，支持关键词模糊匹配和分类过滤
 const cloud = require('wx-server-sdk');
 const { COLLECTIONS, RESPONSE_CODE, warmupConfig } = require('./common/constants');
+const { verifyToken } = require('./common/auth');
+const { checkRateLimit } = require('./common/rate-limiter');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
+const _ = db.command;
+
+// 转义正则元字符，防止用户输入导致正则注入 / ReDoS
+function escapeRegExp(s) {
+  return String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 exports.main = async (event, context) => {
   await warmupConfig(db);
-  const { keyword, category, page = 1, pageSize = 20 } = event;
+
+  const { keyword, category, page = 1, pageSize = 20, token } = event;
+
+  // 1. Token 鉴权（防止匿名爬取）
+  if (!verifyToken(token)) {
+    return { code: RESPONSE_CODE.UNAUTHORIZED, msg: '身份验证失败，请重新登录', data: {} };
+  }
+
+  // 2. 速率限制（读操作：限流故障时放行）
+  const { OPENID } = cloud.getWXContext();
+  if (!await checkRateLimit(db, OPENID, 'searchFoodSafety', 20, 60000, true)) {
+    return { code: RESPONSE_CODE.ERROR, msg: '操作过于频繁，请稍后再试', data: {} };
+  }
 
   try {
-    // 构建查询条件
-    let query = { status: 'published' };
-
-    // 关键词搜索：匹配 name 和 aliases
-    if (keyword && keyword.trim()) {
-      const reg = db.RegExp({ regexp: keyword.trim(), options: 'i' });
-      query = {
-        status: 'published',
-        db_RegExp_name: reg
-      };
-      // 云数据库不支持  直接写，用复合条件
-      // 先按 name 搜索，如果没有结果再按 aliases 搜索
-    }
-
-    // 分类过滤
-    if (category && category !== '') {
-      query.category = category;
-    }
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const size = Math.min(100, Math.max(1, parseInt(pageSize, 10) || 20));
+    const hasCategory = category && category !== '';
 
     let results = [];
+    let total = 0;
 
-    // 关键词搜索：先搜 name
     if (keyword && keyword.trim()) {
-      const reg = db.RegExp({ regexp: keyword.trim(), options: 'i' });
-      const nameQuery = { status: 'published', name: reg };
-      if (category) nameQuery.category = category;
-      
-      const nameResult = await db.collection('food_safety')
-        .where(nameQuery)
-        .orderBy('severity', 'desc')
-        .skip((page - 1) * pageSize)
-        .limit(pageSize)
-        .get();
-      
-      results = nameResult.data;
+      // 关键词搜索：匹配 name 或 aliases（OR 合并，保证 total 与分页准确）
+      const reg = db.RegExp({ regexp: escapeRegExp(keyword.trim()), options: 'i' });
+      const conditions = [{ status: 'published' }, _.or([{ name: reg }, { aliases: reg }])];
+      if (hasCategory) conditions.push({ category: category });
+      const kwQuery = _.and(conditions);
 
-      // 如果 name 没搜到，搜 aliases
-      if (results.length === 0) {
-        const aliasQuery = { status: 'published', aliases: reg };
-        if (category) aliasQuery.category = category;
-        
-        const aliasResult = await db.collection('food_safety')
-          .where(aliasQuery)
-          .orderBy('severity', 'desc')
-          .skip((page - 1) * pageSize)
-          .limit(pageSize)
-          .get();
-        
-        results = aliasResult.data;
-      }
+      const countResult = await db.collection(COLLECTIONS.FOOD_SAFETY).where(kwQuery).count();
+      const dataResult = await db.collection(COLLECTIONS.FOOD_SAFETY)
+        .where(kwQuery)
+        .orderBy('severity', 'desc')
+        .skip((pageNum - 1) * size)
+        .limit(size)
+        .get();
+
+      total = countResult.total;
+      results = dataResult.data;
     } else {
       // 无关键词：按分类或全部
-      const countResult = await db.collection('food_safety')
-        .where(query)
-        .count();
-      
-      const dataResult = await db.collection('food_safety')
+      const query = hasCategory
+        ? { status: 'published', category: category }
+        : { status: 'published' };
+
+      const countResult = await db.collection(COLLECTIONS.FOOD_SAFETY).where(query).count();
+      const dataResult = await db.collection(COLLECTIONS.FOOD_SAFETY)
         .where(query)
         .orderBy('severity', 'desc')
-        .skip((page - 1) * pageSize)
-        .limit(pageSize)
+        .skip((pageNum - 1) * size)
+        .limit(size)
         .get();
-      
+
+      total = countResult.total;
       results = dataResult.data;
     }
 
@@ -94,7 +90,7 @@ exports.main = async (event, context) => {
     return {
       code: RESPONSE_CODE.SUCCESS,
       msg: '搜索成功',
-      data: { foods: foods, total: foods.length }
+      data: { foods: foods, total: total }
     };
 
   } catch (error) {
