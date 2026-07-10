@@ -48,6 +48,10 @@ page {
   --bg-card: #FFFFFF;
   --bg-overlay: rgba(45, 42, 38, 0.5);
 
+  /* --- 终端 Terminal（日志/代码暗色容器，浅深色模式通用） --- */
+  --bg-terminal: #1e1e1e;
+  --text-terminal: #d4d4d4;
+
   /* --- 文字色 Text Colors --- */
   --text-primary: #2D2A26;
   --text-secondary: #7A7267;
