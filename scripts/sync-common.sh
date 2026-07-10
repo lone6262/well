@@ -49,6 +49,7 @@ COPIED=0
 SKIPPED=0
 STALE=0
 MISMATCH=0
+TOTAL=0
 
 for func_dir in "$CF_ROOT"/*/; do
   func_name=$(basename "$func_dir")
@@ -58,6 +59,8 @@ for func_dir in "$CF_ROOT"/*/; do
 
   # 跳过没有 index.js 的目录（不是云函数）
   [ ! -f "$func_dir/index.js" ] && continue
+
+  TOTAL=$((TOTAL + 1))
 
   # 检查该函数是否引用了 ./common/
   if grep -q "require.*['\"]\./common/" "$func_dir/index.js" 2>/dev/null; then
@@ -141,7 +144,7 @@ done
 echo ""
 echo "=== 结果 ==="
 if $CHECK_ONLY; then
-  echo "  ✅ 同步: $((47 - MISMATCH - SKIPPED)) / 47"
+  echo "  ✅ 同步: $((TOTAL - MISMATCH - SKIPPED)) / $TOTAL"
   echo "  ❌ 需同步: $MISMATCH"
   echo "  ⏭️  不使用 common: $SKIPPED"
   if [ "$MISMATCH" -gt 0 ]; then
