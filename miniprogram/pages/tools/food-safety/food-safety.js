@@ -3,6 +3,7 @@ const logger = require('../../../utils/logger.js');
 const log = logger.child('FoodSafetyTool');
 const api = require('../../../utils/api.js');
 const tracker = require('../../../utils/tracker.js');
+const app = getApp();
 const TOOL_NAME = 'food_safety';
 
 const HOT_FOODS = ['巧克力', '葡萄', '西瓜', '洋葱', '猫粮', '鸡胸肉'];
@@ -77,7 +78,7 @@ Page({
     log.info('搜索食物:', keyword);
     tracker.use(TOOL_NAME, { keyword: keyword });
 
-    api.call('searchFoodSafety', { keyword: keyword }).then(function(res) {
+    api.call('searchFoodSafety', { keyword: keyword, token: app.globalData.token }).then(function(res) {
       if (res && res.code === 0 && res.data && res.data.foods) {
         self.setData({ results: res.data.foods, loading: false });
       } else {
@@ -93,7 +94,7 @@ Page({
     const self = this;
     self.setData({ loading: true });
 
-    api.call('searchFoodSafety', { category: category, pageSize: 50 }).then(function(res) {
+    api.call('searchFoodSafety', { category: category, pageSize: 50, token: app.globalData.token }).then(function(res) {
       if (res && res.code === 0 && res.data && res.data.foods) {
         self.setData({ results: res.data.foods, loading: false });
       } else {

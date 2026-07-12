@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 > 本文件为 Claude Code 提供项目上下文。修改代码前请先通读本文档。
-> 最后更新：2026-06-16 · 对应版本 V1.5
+> 最后更新：2026-07-12 · 对应版本 V1.5（含会员升级链路加固）
 
 ## 项目概述
 
@@ -165,6 +165,76 @@ git commit -m "fix: 修复云函数鉴权失败问题"
 - [README.md](README.md)
 - [微信小程序文档](https://developers.weixin.qq.com/miniprogram/dev/framework/) · [云开发文档](https://developers.weixin.qq.com/miniprogram/dev/wxcloud/basis/getting-started.html)
 
+## 会员升级与支付链路
+
+### 订单流转
+
+```
+前端 order.js doPurchase()
+  → createOrder 云函数（handleMemberOrder）
+    → 升级补差价计算（UPGRADE_MATRIX）
+    → 创建订单（mock_pay 直接 PAID；真实支付返回 payParams）
+    → mock_pay: 调 payCallback → 校验激活 → 失败则 inlineActivateMember 兜底
+    → 真实支付: 前端调起微信支付 → 微信回调 payCallback
+  → payCallback（dispatchPostPayment）
+    → 按 order.type 分发：activateMember / activateFamilyMember / creditPoints
+    → 标记 dispatch_status: completed
+```
+
+### 升级路径矩阵（UPGRADE_MATRIX）
+
+| 当前会员 | 可升级到 |
+|---------|---------|
+| `monthly`（个人月卡） | `family_monthly` / `yearly` / `family_yearly` |
+| `family_monthly`（家庭月卡） | `family_yearly` |
+| `yearly`（个人年卡） | `family_yearly` |
+| `family_yearly`（家庭年卡） | 无（最高级） |
+
+### 会员额度配置（system_config 集合，DB 优先）
+
+| 配置 key | 个人月卡 | 个人年卡 | 家庭月卡 | 家庭年卡 |
+|----------|---------|---------|---------|---------|
+| `*_reports` | 3 次/月 | 3 次/月 | 6 次/月 | 6 次/月 |
+
+升级时 `report_credits_used` 重置为 0，`report_credits_total` 按目标类型刷新。
+
+### 关键字段（members 集合）
+
+- `type`：会员类型（monthly/yearly/family_monthly/family_yearly/trial）
+- `report_credits_total` / `report_credits_used`：报告额度（升级时重置）
+- `family_credits_total` / `family_credits_used`：家庭会员额度
+- `report_credits_reset_at`：下次额度重置时间（按开通日对齐，**不是** `next_reset_date`）
+- `activated_by_order`：激活来源订单 ID（用于幂等校验）
+- `dispatch_status`（orders 集合）：`pending` / `completed` / `failed`
+
+### ⚠️ mock_pay 加固（S6，2026-07-12）
+
+mock 模式下 `createOrder` 调 `payCallback` 是云函数间调用，可能超时/失败导致会员未激活。加固逻辑（[createOrder/index.js](cloudfunctions/createOrder/index.js) `inlineActivateMember`）：
+
+1. 调 `payCallback` 后**校验** members 表 `type` 是否已切换 + `activated_by_order` 是否匹配
+2. 校验失败 → **内联执行** `inlineActivateMember`（完整激活逻辑：到期日/额度/重置时间）
+3. 成功标记 `dispatch_status: completed`，失败标记 `dispatch_status: failed` + 记录 `dispatch_error`
+
+### 前端轮询校验（order.js）
+
+`_pollMemberActivation` 支付成功后轮询 `getMemberStatus` 确认激活：
+- 新开/续费：检查 `is_member === true`
+- **升级模式**：额外校验 `type` 已切换为目标类型（个人年卡升级时 `is_member` 本就为 true）
+- 轮询 8 次，每次间隔 1 秒
+
+### 排查会员问题（CLI）
+
+```bash
+# 查会员状态
+tcb db nosql execute --env-id cloud1-d8gdi44zqfec250b5 --command '[{"TableName":"members","CommandType":"COMMAND","Command":"{\"find\":\"members\",\"filter\":{\"user_id\":\"<openid>\"},\"limit\":1}"}]'
+
+# 查订单分发状态
+tcb db nosql execute --env-id cloud1-d8gdi44zqfec250b5 --command '[{"TableName":"orders","CommandType":"COMMAND","Command":"{\"find\":\"orders\",\"filter\":{\"user_id\":\"<openid>\",\"type\":{\"$in\":[\"member_yearly\",\"member_family_yearly\"]}},\"sort\":{\"created_at\":-1},\"limit\":5}"}]'
+```
+
+`dispatch_status=failed` → 查 `dispatch_error` 字段；`dispatch_status=undefined` → payCallback 从未执行。
+
+---
 ## 常见任务速查
 
 | 任务 | 怎么做 |

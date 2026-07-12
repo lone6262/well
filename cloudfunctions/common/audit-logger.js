@@ -7,7 +7,7 @@
  *   await logAuditEvent(db, openid, 'delete_pet', { petId: 'xxx', petName: '小白' });
  */
 
-var COLLECTION_NAME = 'audit_logs';
+const COLLECTION_NAME = 'audit_logs';
 
 /**
  * 记录审计事件

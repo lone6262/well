@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 常量定义文件
  * 用于云函数和前端共享的常量配置
  */
@@ -241,7 +241,7 @@ const FOLLOWUP_STATUS = {
 // 价格（单位：分）
 const PRICES = {
   // === AI 报告 ===
-  FIRST_REPORT: 100,              // 新用户首份 ¥1.00
+  FIRST_REPORT: 0,                // 新用户首份免费
   STANDARD_REPORT: 990,           // 标准报告 ¥9.90
 
   // === 个人会员 ===

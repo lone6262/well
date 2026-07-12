@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 报告额度服务（quota-service）
  *
  * 统一 createOrder 与 generateAIReport 的额度解析/扣减/回滚逻辑，
@@ -10,8 +10,28 @@
  *   const { resolveQuota, deductQuota, rollbackQuota } = require('./common/quota-service');
  *   const quotaInfo = await resolveQuota(db, openid, dbPrices, dbCredits);
  *   const ok = await deductQuota(db, openid, quotaInfo, dbCredits);
- *   if (!ok) await rollbackQuota(db, openid, quotaInfo);
+ *   if (ok) { 执行后续逻辑 } else { 付费失败或并发冲突，不应调用 rollback }
+ *
+ * F1 修复说明：rollbackQuota 仅在 deductQuota 返回 true 后调用，
+ *   且 rollbackQuota 内部会检查 quotaInfo._deducted 标志确保幂等。
  */
+
+/**
+ * 按会员类型计算期望的报告额度总数（F2 修复）
+ * 家庭会员 family_monthly/family_yearly 以前被错误地按个人 monthly 计算
+ */
+function expectedReportsByType(type, credits) {
+  switch (type) {
+    case 'yearly':
+      return credits.YEARLY_REPORTS;
+    case 'family_monthly':
+      return credits.FAMILY_MONTHLY_REPORTS || credits.MONTHLY_REPORTS;
+    case 'family_yearly':
+      return credits.FAMILY_YEARLY_REPORTS || credits.YEARLY_REPORTS;
+    default:
+      return credits.MONTHLY_REPORTS;
+  }
+}
 const {
   COLLECTIONS,
   ORDER_STATUS,
@@ -79,7 +99,7 @@ async function resolveQuota(db, openid, dbPrices, dbCredits) {
         user_id: openid,
         type: ORDER_TYPES.REPORT,
         'metadata.is_first_report': true,
-        status: ORDER_STATUS.PAID,
+        status: _.in([ORDER_STATUS.PENDING, ORDER_STATUS.PAID]),
       })
       .limit(1)
       .get();
@@ -87,16 +107,21 @@ async function resolveQuota(db, openid, dbPrices, dbCredits) {
     if (prevFirstOrder.data && prevFirstOrder.data.length > 0) {
       // 曾使用过首份优惠但标记可能丢失，修复标记并继续检查其他额度
       if (user && user._id) {
-        await db
-          .collection(COLLECTIONS.USERS)
-          .doc(user._id)
-          .update({ data: { first_report_used: true, updated_at: new Date() } });
+        try {
+          await db
+            .collection(COLLECTIONS.USERS)
+            .doc(user._id)
+            .update({ data: { first_report_used: true, updated_at: new Date() } });
+        } catch (fixErr) {
+          // W4 修复：修复标记失败不应阻塞 resolveQuota
+          console.error('[quota-service] 修复 first_report_used 标记失败:', fixErr.message);
+        }
       }
     } else {
       return {
         has_free_quota: true,
         quota_source: 'first_report',
-        price: prices.FIRST_REPORT,
+        price: 0,
         user: user,
         userExists: !!user,
       };
@@ -117,7 +142,7 @@ async function resolveQuota(db, openid, dbPrices, dbCredits) {
   // 体验会员额度（邀请 3 人获得 7 天体验，每月 1 次）
   const trialMemberResult = await db
     .collection(COLLECTIONS.MEMBERS)
-    .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE, type: 'trial' })
+    .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE, type: 'trial', expire_date: _.gt(new Date()) })
     .limit(1)
     .get();
 
@@ -154,7 +179,7 @@ async function resolveQuota(db, openid, dbPrices, dbCredits) {
   // 正式会员额度
   const memberResult = await db
     .collection(COLLECTIONS.MEMBERS)
-    .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE })
+    .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE, expire_date: _.gt(new Date()) })
     .limit(1)
     .get();
 
@@ -176,8 +201,9 @@ async function resolveQuota(db, openid, dbPrices, dbCredits) {
       member.report_credits_reset_at = newResetAt;
     }
 
-    const expectedTotal = member.type === 'yearly' ? credits.YEARLY_REPORTS : credits.MONTHLY_REPORTS;
+    const expectedTotal = expectedReportsByType(member.type, credits);
     let total = member.report_credits_total || expectedTotal;
+    total = Math.max(total, expectedTotal); // 统一迁移逻辑
     // 旧会员迁移：如果库里的 total 低于当前配置，使用新值
     if (total < expectedTotal) total = expectedTotal;
     const remaining = Math.max(0, total - used);
@@ -195,9 +221,11 @@ async function resolveQuota(db, openid, dbPrices, dbCredits) {
   }
 
   // 点数包余额（消耗 1 个点数即可「免费」生成报告）
+  // S3 修复：按 expire_at 升序，优先取最早过期的有效点数包
   const pointsResult = await db
     .collection(COLLECTIONS.USER_POINTS)
     .where({ user_id: openid })
+    .orderBy('expire_at', 'asc')
     .limit(1)
     .get();
 
@@ -290,10 +318,10 @@ async function deductQuota(db, openid, quotaInfo, dbCredits) {
 
   // 正式会员额度扣减（条件更新：剩余额度 > 0 才能扣减）
   if (quotaInfo.quota_source === 'member' && quotaInfo.member) {
-    const total = quotaInfo.member.report_credits_total || credits.MONTHLY_REPORTS;
+    const memberTotal = Math.max(quotaInfo.member.report_credits_total || 0, expectedReportsByType(quotaInfo.member.type, credits));
     const memberResult = await db
       .collection(COLLECTIONS.MEMBERS)
-      .where({ _id: quotaInfo.member._id, report_credits_used: _.lt(total) })
+      .where({ _id: quotaInfo.member._id, report_credits_used: _.lt(memberTotal) })
       .update({ data: { report_credits_used: _.inc(1), updated_at: now } });
     if (!memberResult.stats || memberResult.stats.updated === 0) {
       return false;
@@ -328,7 +356,7 @@ async function deductQuota(db, openid, quotaInfo, dbCredits) {
           user_id: openid,
           type: 'consume',
           amount: -1,
-          balance_after: (quotaInfo.points_balance || 1) - 1,
+          balance_after: Math.max(0, (quotaInfo.points_balance || 1) - 1), balance_snapshot: true, // S5: 快照值，非实时
           created_at: now,
         },
       });
@@ -349,19 +377,36 @@ async function deductQuota(db, openid, quotaInfo, dbCredits) {
  * @param {object} quotaInfo - resolveQuota 返回的额度信息
  */
 async function rollbackQuota(db, openid, quotaInfo) {
+  // F1 修复：仅在确实扣减过时才回滚，防止误调和重复回滚
+  if (!quotaInfo || !quotaInfo._deducted) {
+    return { ok: false, reason: 'not_deducted' };
+  }
+  // 防止重复回滚（幂等）
+  if (quotaInfo._rolledBack) {
+    return { ok: true, reason: 'already_rolled_back' };
+  }
+
   const _ = db.command;
   const now = new Date();
+  let rollbackOk = true;
+  let rollbackError = null;
+
   try {
     if (quotaInfo.quota_source === 'first_report') {
-      await db
-        .collection(COLLECTIONS.USERS)
-        .where({ user_id: openid })
-        .update({ data: { first_report_used: false, updated_at: now } });
+      // F4 修复：用 _id 精确定位而非 where({ user_id })，避免批量回写
+      if (quotaInfo.user && quotaInfo.user._id) {
+        await db
+          .collection(COLLECTIONS.USERS)
+          .where({ _id: quotaInfo.user._id, first_report_used: true })
+          .update({ data: { first_report_used: false, updated_at: now } });
+      }
     } else if (quotaInfo.quota_source === 'invite' && quotaInfo.user) {
-      await db
+      // F1 修复：带条件更新 invite_reward_credits >= 0（上界保护由业务逻辑保证，这里限制回滚一次）
+      const result = await db
         .collection(COLLECTIONS.USERS)
         .where({ _id: quotaInfo.user._id })
         .update({ data: { invite_reward_credits: _.inc(1), updated_at: now } });
+      if (!result.stats || result.stats.updated === 0) rollbackOk = false;
     } else if (quotaInfo.quota_source === 'member' && quotaInfo.member) {
       await db
         .collection(COLLECTIONS.MEMBERS)
@@ -373,14 +418,27 @@ async function rollbackQuota(db, openid, quotaInfo) {
         .where({ _id: quotaInfo.member._id, report_credits_used: _.gt(0) })
         .update({ data: { report_credits_used: _.inc(-1), updated_at: now } });
     } else if (quotaInfo.quota_source === 'points' && quotaInfo.points_record_id) {
-      await db
+      // F1 修复：total_used 带下界保护防止负数
+      const result = await db
         .collection(COLLECTIONS.USER_POINTS)
-        .where({ _id: quotaInfo.points_record_id })
+        .where({ _id: quotaInfo.points_record_id, total_used: _.gt(0) })
         .update({ data: { balance: _.inc(1), total_used: _.inc(-1), updated_at: now } });
+      if (!result.stats || result.stats.updated === 0) {
+        // total_used 已经是 0（可能已被其他回滚处理），只加余额不加 total_used
+        await db
+          .collection(COLLECTIONS.USER_POINTS)
+          .where({ _id: quotaInfo.points_record_id })
+          .update({ data: { balance: _.inc(1), updated_at: now } });
+      }
     }
+    quotaInfo._rolledBack = true; // 标记已回滚（幂等）
   } catch (e) {
+    rollbackOk = false;
+    rollbackError = e.message;
     console.error('[quota-service] 额度回滚失败:', e.message);
   }
+
+  return { ok: rollbackOk, error: rollbackError };
 }
 
 module.exports = {

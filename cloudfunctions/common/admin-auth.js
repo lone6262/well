@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 管理员认证模块
  * 提供管理员 Token 验证功能，供所有管理端云函数使用
  */
@@ -57,10 +57,13 @@ function verifyAdminToken(token) {
     // 检查 Token 类型
     if (payload.type !== 'admin') return false;
 
-    // 检查时间戳是否来自未来（防止未来时间戳攻击）
-    if (payload.timestamp > Date.now()) return false;
-    // 检查是否过期
-    if (Date.now() - payload.timestamp > (payload.expiresIn || 86400000)) return false;
+    // C-2 修复：强制校验 timestamp 存在且为有效数字（防止 NaN 绕过）
+    if (typeof payload.timestamp !== 'number' || payload.timestamp <= 0) return false;
+    // 检查时间戳是否来自未来（允许60秒时钟偏差）
+    if (payload.timestamp > Date.now() + 60000) return false;
+    // 检查是否过期（服务端硬编码最大有效期，不从 Token 读取）
+    const MAX_ADMIN_TOKEN_TTL = 24 * 60 * 60 * 1000; // 24小时
+    if (Date.now() - payload.timestamp > MAX_ADMIN_TOKEN_TTL) return false;
 
     return true;
   } catch (e) {

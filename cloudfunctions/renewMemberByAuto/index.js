@@ -93,12 +93,13 @@ async function processRenewal(member, now) {
         },
       });
 
-      // 更新会员：延长到期时间、重置额度、清零失败计数
+      // 更新会员：延长到期时间、重置额度、同步总额度、清零失败计数
       await db.collection(COLLECTIONS.MEMBERS).doc(member._id).update({
         data: {
           expire_date: newExpireDate,
+          report_credits_total: renewCredits,
           report_credits_used: 0,
-          next_reset_date: nextResetDate,
+          report_credits_reset_at: nextResetDate,
           renew_fail_count: 0,
           updated_at: now,
         },

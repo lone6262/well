@@ -1,4 +1,4 @@
-// 云函数入口文件
+﻿// 云函数入口文件
 const cloud = require('wx-server-sdk');
 const { COLLECTIONS, RESPONSE_CODE, MEMBER_STATUS , warmupConfig, loadPrices} = require('./common/constants');
 
@@ -23,12 +23,11 @@ function calcNextReset(startDate, currentReset) {
 /**
  * 检查用户报告额度
  * 优先级：
- * 1. 新用户首份优惠（¥1.00）
- * 2. 邀请奖励免费额度
- * 3. 体验会员额度（每月1次）
+ * 1. 邀请奖励免费额度
+ * 2. 新用户首份优惠（¥1.00）
+ * 3. 点数包余额
  * 4. 会员每月免费报告额度
- * 5. 点数包余额
- * 6. 付费报告（¥9.90）
+ * 5. 付费报告（¥9.90）
  */
 exports.main = async (event, context) => {
   await warmupConfig(db);
@@ -51,7 +50,25 @@ exports.main = async (event, context) => {
 
     const user = userResult.data && userResult.data[0];
 
-    // 2. 检查首份报告优惠（新用户或未使用过的用户）
+    
+// 2. 检查邀请奖励额度
+    if (user && user.invite_reward_credits && user.invite_reward_credits > 0) {
+      return {
+        code: RESPONSE_CODE.SUCCESS,
+        msg: '邀请奖励额度',
+        data: {
+          has_free_quota: true,
+          quota_source: 'invite',
+          price: 0,
+          price_display: '免费',
+          invite_remaining: user.invite_reward_credits,
+          description: '邀请奖励免费报告（剩余' + user.invite_reward_credits + '次）'
+        }
+      };
+    }
+
+    
+// 3. 检查首份报告优惠（新用户或未使用过的用户）
     // 追加 ORDERS 交叉验证：防止用户删除账号重新注册绕过首份优惠
     if (!user || !user.first_report_used) {
       const prevFirstOrder = await db.collection(COLLECTIONS.ORDERS)
@@ -78,31 +95,44 @@ exports.main = async (event, context) => {
           msg: '新用户首份优惠',
           data: {
             has_free_quota: true,
-            quota_source: 'first_report',
-            price: dbPrices.FIRST_REPORT,
-            price_display: '1.00',
-            description: '新用户首份AI报告仅需1元'
-          }
-        };
+           quota_source: 'first_report',
+           price: 0,
+           price_display: '免费',
+           description: '新用户首份AI报告免费'
+         }
+       };
       }
     }
 
-    // 3. 检查邀请奖励额度
-    if (user && user.invite_reward_credits && user.invite_reward_credits > 0) {
-      return {
-        code: RESPONSE_CODE.SUCCESS,
-        msg: '邀请奖励额度',
-        data: {
-          has_free_quota: true,
-          quota_source: 'invite',
-          price: 0,
-          price_display: '免费',
-          description: '邀请奖励免费报告（剩余' + user.invite_reward_credits + '次）'
-        }
-      };
+    
+// 4. 检查点数包余额
+    const pointsResult = await db.collection(COLLECTIONS.USER_POINTS)
+      .where({ user_id: openid })
+      .limit(1)
+      .get();
+
+    if (pointsResult.data && pointsResult.data.length > 0) {
+      const points = pointsResult.data[0];
+      const now = new Date();
+      if (points.balance > 0 && points.expire_at && new Date(points.expire_at) > now) {
+        return {
+          code: RESPONSE_CODE.SUCCESS,
+          msg: '点数包余额',
+          data: {
+            has_free_quota: true,
+            quota_source: 'points',
+            price: 0,
+            price_display: '免费',
+            points_balance: points.balance,
+            description: '使用点数包余额（剩余' + points.balance + '次）'
+          }
+        };
+      }
+      // 点数包余额已用完 → 继续检查会员余额
     }
 
-    // 4. 检查会员额度
+    
+// 5. 检查会员额度
     const memberResult = await db.collection(COLLECTIONS.MEMBERS)
       .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE })
       .limit(1)
@@ -146,38 +176,17 @@ exports.main = async (event, context) => {
             quota_source: 'member',
             price: 0,
             price_display: '免费',
+            member_remaining: remaining,
+            member_total: total,
             description: '会员每月免费报告（剩余' + remaining + '/' + total + '次）'
           }
         };
       }
-      // 会员额度已用完 → 继续检查点数包余额（不直接返回 paid）
+      // 会员额度已用完 → 返回付费价格
     }
 
-    // 4.5 检查点数包余额
-    const pointsResult = await db.collection(COLLECTIONS.USER_POINTS)
-      .where({ user_id: openid })
-      .limit(1)
-      .get();
-
-    if (pointsResult.data && pointsResult.data.length > 0) {
-      const points = pointsResult.data[0];
-      const now = new Date();
-      if (points.balance > 0 && points.expire_at && new Date(points.expire_at) > now) {
-        return {
-          code: RESPONSE_CODE.SUCCESS,
-          msg: '点数包余额',
-          data: {
-            has_free_quota: true,
-            quota_source: 'points',
-            price: 0,
-            price_display: '免费',
-            description: '使用点数包余额（剩余' + points.balance + '次）'
-          }
-        };
-      }
-    }
-
-    // 5. 无免费额度，需要付费
+    
+// 6. 无免费额度，需要付费
     return {
       code: RESPONSE_CODE.SUCCESS,
       msg: '需要付费',

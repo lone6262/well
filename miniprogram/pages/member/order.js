@@ -23,13 +23,19 @@ var MEMBER_TYPE_MAP = {
   family_yearly: '家庭年卡'
 }
 
-// 会员等级排序（按价值）：用于判断升级/降级，数字越大等级越高
-// 个人月卡 < 家庭月卡 < 个人年卡 < 家庭年卡
-var TIER_RANK = {
-  monthly: 1,
-  family_monthly: 2,
-  yearly: 3,
-  family_yearly: 4
+// 会员升级路径矩阵（与云函数 createOrder 保持一致）
+var UPGRADE_MATRIX = {
+  monthly:        ['family_monthly', 'yearly', 'family_yearly'],
+  family_monthly: ['family_yearly'],
+  yearly:         ['family_yearly'],
+  family_yearly:  []
+}
+
+// 判断从 currentType 是否可以升级/切换到 targetType
+function canUpgradeTo(currentType, targetType) {
+  if (currentType === targetType) return false
+  var allowed = UPGRADE_MATRIX[currentType] || []
+  return allowed.indexOf(targetType) >= 0
 }
 
 Page({
@@ -195,16 +201,16 @@ Page({
         if (!d || !d.is_member || !d.type) return
         // 仅生效中（未过期）的会员才限制降级
         if (d.expire_date && new Date(d.expire_date) < new Date()) return
-        var cur = TIER_RANK[d.type] || 0
-        if (!cur) return
+        // 使用 UPGRADE_MATRIX 判断每个类型是否可选
         var flags = {
           currentMemberType: d.type,
-          downgradeMonthly: TIER_RANK.monthly < cur,
-          downgradeYearly: TIER_RANK.yearly < cur,
-          downgradeFamilyMonthly: TIER_RANK.family_monthly < cur,
-          downgradeFamilyYearly: TIER_RANK.family_yearly < cur
+          // 同级或不在升级矩阵中的标记为不可选
+          downgradeMonthly: !canUpgradeTo(d.type, 'monthly'),
+          downgradeYearly: !canUpgradeTo(d.type, 'yearly'),
+          downgradeFamilyMonthly: !canUpgradeTo(d.type, 'family_monthly'),
+          downgradeFamilyYearly: !canUpgradeTo(d.type, 'family_yearly')
         }
-        // 若默认选中的是降级类型，自动切回当前会员类型（便于续费）
+        // 若默认选中的是不可选类型，自动切回当前会员类型（便于续费）
         var selKey = {
           monthly: 'downgradeMonthly', yearly: 'downgradeYearly',
           family_monthly: 'downgradeFamilyMonthly', family_yearly: 'downgradeFamilyYearly'
@@ -331,11 +337,34 @@ Page({
         success: function(res) {
           self.setData({ showPayProcessing: false })
           if (!res.result || res.result.code !== 0) {
-            wx.showToast({
-              title: (res.result && res.result.msg) || '操作失败',
-              icon: 'none',
-              duration: 2000
-            })
+            var errData = (res.result && res.result.data) || {}
+            var errMsg = (res.result && res.result.msg) || '操作失败'
+            // 已是当前会员 -> 提示购买点数包
+            if (errData.suggest_points) {
+              wx.showModal({
+                title: '已是当前会员',
+                content: errMsg,
+                confirmText: '去充值点数',
+                cancelText: '取消',
+                success: function(modalRes) {
+                  if (modalRes.confirm) {
+                    wx.navigateTo({ url: '/pages/points/index' })
+                  }
+                }
+              })
+              return
+            }
+            // 升级被拦截
+            if (errData.upgrade_blocked || errData.downgrade_blocked) {
+              wx.showModal({
+                title: '无法开通',
+                content: errMsg,
+                showCancel: false,
+                confirmText: '知道了'
+              })
+              return
+            }
+            wx.showToast({ title: errMsg, icon: 'none', duration: 2000 })
             return
           }
           var data = res.result.data || {}
@@ -363,6 +392,7 @@ Page({
   },
 
   // 支付成功后轮询会员状态：payCallback 异步激活会员，确认到账后再提示成功
+  // 升级场景下不能仅判断 is_member（个人会员本就是 true），需校验 type 已切换为目标类型
   _pollMemberActivation: function(attempt) {
     var self = this
     if (attempt === 0) {
@@ -374,16 +404,23 @@ Page({
       success: function(res) {
         var d = res.result && res.result.data
         var active = !!d && d.is_member === true
+        // 升级模式：必须等到会员类型切换为目标类型才算成功
+        if (active && self.data.upgradeMode) {
+          var targetType = self.data.selectedType
+          if (d.type !== targetType) {
+            active = false
+          }
+        }
         if (active) {
           self._finishActivation(false)
-        } else if (attempt < 4) {
+        } else if (attempt < 8) {
           setTimeout(function() { self._pollMemberActivation(attempt + 1) }, 1000)
         } else {
           self._finishActivation(true)
         }
       },
       fail: function() {
-        if (attempt < 4) {
+        if (attempt < 8) {
           setTimeout(function() { self._pollMemberActivation(attempt + 1) }, 1000)
         } else {
           self._finishActivation(true)

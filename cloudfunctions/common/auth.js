@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 认证工具模块
  * 提供统一的 openid 获取和 Token 验证功能
  *
@@ -100,8 +100,11 @@ function verifyToken(token) {
     // 解码 payload
     const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf8'));
 
-    // 检查过期
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+    // 检查过期（强制要求 exp 存在且为数字，防止伪造无过期时间的 Token）
+    if (!payload.exp || typeof payload.exp !== 'number') {
+      return null;
+    }
+    if (payload.exp < Math.floor(Date.now() / 1000)) {
       return null;
     }
 

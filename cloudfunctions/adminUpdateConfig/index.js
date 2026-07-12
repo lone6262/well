@@ -63,20 +63,23 @@ exports.main = async (event, context) => {
         .where({ key: dbKey })
         .get();
 
-      // feature_flags 特殊处理：存储 JSON 对象而非字符串
-      const isFeatureFlags = (dbKey === 'feature_flags');
-      const storedValue = isFeatureFlags ? value : String(value);
+     // feature_flags 特殊处理：存储 JSON 对象而非字符串
+     const isFeatureFlags = (dbKey === 'feature_flags');
+     const storedValue = isFeatureFlags ? value : String(value);
+     // feature_flags 需用 db.command.set 强制替换整个对象（否则深层 merge 会残留旧字段）
+     const _ = db.command;
+     const valueUpdate = isFeatureFlags ? _.set(storedValue) : storedValue;
 
-      if (existing.data && existing.data.length > 0) {
-        // 更新现有配置
-        await db.collection(COLLECTIONS.SYSTEM_CONFIG)
-          .doc(existing.data[0]._id)
-          .update({
-            data: {
-              value: storedValue,
-              updated_at: new Date()
-            }
-          });
+     if (existing.data && existing.data.length > 0) {
+       // 更新现有配置
+       await db.collection(COLLECTIONS.SYSTEM_CONFIG)
+         .doc(existing.data[0]._id)
+         .update({
+           data: {
+             value: valueUpdate,
+             updated_at: new Date()
+           }
+         });
 
         updateResults.push({
           key: dbKey,

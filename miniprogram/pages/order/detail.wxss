@@ -28,27 +28,3 @@ page { background: var(--bg-secondary); }
 .detail-value { font-size: 26rpx; color: var(--text-primary); flex: 1; text-align: right; word-break: break-all; }
 .detail-value.link { color: var(--brand-primary); }
 
-/* 退款相关 */
-.refund-card { border-left: 6rpx solid #1890ff; }
-.refund-status { color: #1890ff; font-weight: bold; }
-.refund-notice {
-  font-size: 24rpx;
-  color: var(--text-tertiary);
-  padding: 16rpx 0 0;
-  line-height: 1.6;
-}
-.action-area { padding: 32rpx 0; }
-.refund-btn {
-  background: var(--bg-card);
-  color: var(--brand-emergency);
-  border: 2rpx solid var(--brand-emergency);
-  border-radius: 40rpx;
-  font-size: 28rpx;
-  margin-bottom: 16rpx;
-}
-.refund-policy {
-  font-size: 22rpx;
-  color: var(--text-tertiary);
-  text-align: center;
-  line-height: 1.5;
-}

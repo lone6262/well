@@ -1,8 +1,8 @@
-// 食物安全查询云函数
+﻿// 食物安全查询云函数
 // 搜索 food_safety 集合，支持关键词模糊匹配和分类过滤
 const cloud = require('wx-server-sdk');
 const { COLLECTIONS, RESPONSE_CODE, warmupConfig } = require('./common/constants');
-const { verifyToken } = require('./common/auth');
+const { authenticate } = require('./common/auth');
 const { checkRateLimit } = require('./common/rate-limiter');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
@@ -19,8 +19,9 @@ exports.main = async (event, context) => {
 
   const { keyword, category, page = 1, pageSize = 20, token } = event;
 
-  // 1. Token 鉴权（防止匿名爬取）
-  if (!verifyToken(token)) {
+  // 1. Token 鉴权（C-1 修复：交叉校验 openid，防止跨用户 Token 重放）
+  const authResult = authenticate(event, context);
+  if (!authResult.valid) {
     return { code: RESPONSE_CODE.UNAUTHORIZED, msg: '身份验证失败，请重新登录', data: {} };
   }
 
@@ -31,16 +32,20 @@ exports.main = async (event, context) => {
   }
 
   try {
-    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const pageNum = Math.min(500, Math.max(1, parseInt(page, 10) || 1));
     const size = Math.min(100, Math.max(1, parseInt(pageSize, 10) || 20));
+    // C-3 修复：category 参数类型校验（防 NoSQL 操作符注入）
     const hasCategory = category && category !== '';
+    if (hasCategory && typeof category !== 'string') {
+      return { code: RESPONSE_CODE.ERROR, msg: '参数错误', data: {} };
+    }
 
     let results = [];
     let total = 0;
 
     if (keyword && keyword.trim()) {
       // 关键词搜索：匹配 name 或 aliases（OR 合并，保证 total 与分页准确）
-      const reg = db.RegExp({ regexp: escapeRegExp(keyword.trim()), options: 'i' });
+      const reg = db.RegExp({ regexp: escapeRegExp(keyword.trim().slice(0, 50)), options: 'i' });
       const conditions = [{ status: 'published' }, _.or([{ name: reg }, { aliases: reg }])];
       if (hasCategory) conditions.push({ category: category });
       const kwQuery = _.and(conditions);

@@ -43,9 +43,9 @@ Page({
     loading: true,
     quotaInfo: null,
     // V2.0: 动态价格
-    standardReportDisplay: '9.90',
-    firstReportDisplay: '1.00',
-    riskMonthlyPrice: '19.90',
+   standardReportDisplay: '9.90',
+   firstReportDisplay: '0.00',
+   riskMonthlyPrice: '19.90',
     riskMonthlyCredits: 3,
     // 点数包推荐文案（付费时点数包单份更划算）
     pointsPackDisplay: '19.90',
@@ -442,12 +442,12 @@ Page({
     // 防重复点击
     if (self.data.purchasing) return
 
-    // 首份优惠（¥1.00），确认后直接生成
-    if (quotaInfo && quotaInfo.quota_source === 'first_report') {
-      wx.showModal({
-        title: '获取AI健康报告',
-        content: '新用户首份仅需¥1.00，包含症状分析、护理建议、就医指导等8大章节。',
-        confirmText: '确认获取',
+   // 首份免费，确认后直接生成
+   if (quotaInfo && quotaInfo.quota_source === 'first_report') {
+     wx.showModal({
+       title: '获取AI健康报告',
+       content: '新用户首份免费，包含症状分析、护理建议、就医指导等8大章节。',
+       confirmText: '确认获取',
         cancelText: '再想想',
         success: function(res) {
           if (res.confirm) {

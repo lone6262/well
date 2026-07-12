@@ -1,20 +1,20 @@
-<view class="order-detail-page">
+﻿<view class="order-detail-page">
   <view class="page-header">
     <view class="back-btn" bindtap="goBack" hover-class="back-btn-active">
       <view class="back-arrow"></view>
-      <text class="back-text">返回</text>
+      <text class="back-text">杩斿洖</text>
     </view>
-    <view class="page-title">订单详情</view>
+    <view class="page-title">璁㈠崟璇︽儏</view>
     <view class="header-placeholder"></view>
   </view>
 
   <view class="loading-wrapper" wx:if="{{loading}}">
     <view class="loading-spinner"></view>
-    <text class="loading-text">加载中...</text>
+    <text class="loading-text">鍔犺浇涓?..</text>
   </view>
 
   <view class="content" wx:if="{{!loading && order}}">
-    <!-- 状态卡 -->
+    <!-- 鐘舵€佸崱 -->
     <view class="status-card">
       <image class="status-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />
       <view class="status-info">
@@ -23,66 +23,36 @@
       </view>
     </view>
 
-    <!-- 金额 -->
+    <!-- 閲戦 -->
     <view class="amount-card">
-      <text class="amount-label">支付金额</text>
-      <text class="amount-value">¥ {{amountDisplay}}</text>
+      <text class="amount-label">鏀粯閲戦</text>
+      <text class="amount-value">楼 {{amountDisplay}}</text>
     </view>
 
-    <!-- 订单信息 -->
+    <!-- 璁㈠崟淇℃伅 -->
     <view class="detail-card">
-      <view class="detail-title">订单信息</view>
+      <view class="detail-title">璁㈠崟淇℃伅</view>
       <view class="detail-row" bindtap="copyOrderNo">
-        <text class="detail-label">订单编号</text>
+        <text class="detail-label">璁㈠崟缂栧彿</text>
         <text class="detail-value link">{{order.out_trade_no || '-'}}</text>
       </view>
       <view class="detail-row" wx:if="{{order.transaction_id}}">
-        <text class="detail-label">交易流水号</text>
+        <text class="detail-label">浜ゆ槗娴佹按鍙</text>
         <text class="detail-value">{{order.transaction_id}}</text>
       </view>
       <view class="detail-row" wx:if="{{order.description}}">
-        <text class="detail-label">描述</text>
+        <text class="detail-label">鎻忚堪</text>
         <text class="detail-value">{{order.description}}</text>
       </view>
       <view class="detail-row">
-        <text class="detail-label">创建时间</text>
+        <text class="detail-label">鍒涘缓鏃堕棿</text>
         <text class="detail-value">{{createdText || '-'}}</text>
       </view>
       <view class="detail-row" wx:if="{{paidText}}">
-        <text class="detail-label">支付时间</text>
+        <text class="detail-label">鏀粯鏃堕棿</text>
         <text class="detail-value">{{paidText}}</text>
-      </view>
-    </view>
-
-    <!-- 退款信息 -->
-    <view class="detail-card refund-card" wx:if="{{order.status === 'refund_requested' || order.status === 'refunded'}}">
-      <view class="detail-title">退款信息</view>
-      <view class="detail-row">
-        <text class="detail-label">退款状态</text>
-        <text class="detail-value refund-status">{{order.status === 'refunded' ? '退款成功' : '退款审核中'}}</text>
-      </view>
-      <view class="detail-row" wx:if="{{order.refund_amount}}">
-        <text class="detail-label">退款金额</text>
-        <text class="detail-value">¥ {{order.refund_amount / 100}}</text>
-      </view>
-      <view class="refund-notice" wx:if="{{order.status === 'refunded'}}">
-        退款一般 T+1~3 个工作日到账，请注意查收
-      </view>
-      <view class="refund-notice" wx:if="{{order.status === 'refund_requested'}}">
-        退款申请已提交，等待审核，预计 1-3 个工作日处理
-      </view>
-    </view>
-
-    <!-- 操作按钮 -->
-    <view class="action-area">
-      <!-- 已支付订单可申请退款 -->
-      <button class="refund-btn" wx:if="{{order.status === 'paid'}}" bindtap="requestRefund">
-        申请退款
-      </button>
-      <!-- 退款须知 -->
-      <view class="refund-policy" wx:if="{{order.status === 'paid'}}">
-        本产品为虚拟商品，一经生成不支持退款，系统故障除外
       </view>
     </view>
   </view>
 </view>
+

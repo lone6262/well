@@ -98,6 +98,8 @@ function buildSystemConfigSeed(event) {
     { key: 'deepseek_api_key',  value: event.deepseekApiKey || '' },
     { key: 'deepseek_base_url', value: event.deepseekBaseUrl || 'https://api.deepseek.com' },
     { key: 'deepseek_model',    value: event.deepseekModel || 'deepseek-chat' },
+    // 支付配置：mock_pay=true 走模拟支付（本地测试用），mock_pay=false 走真实微信支付
+    { _id: 'wechat_pay_config', mock_pay: true, description: '支付配置（mock_pay=true 模拟支付）', updated_at: new Date() },
       // Phase 1.5: Feature Flags（命名与开发计划 V5 对齐）
       {
         key: 'feature_flags',

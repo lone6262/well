@@ -196,3 +196,13 @@ page { width: 100%; overflow-x: hidden; }
 
 .modal-confirm { width: 100%; background: var(--brand-primary); color: var(--text-inverse); border-radius: var(--radius-full); font-size: var(--font-size-md); font-weight: 700; padding: 20rpx 0; border: none; }
 .modal-confirm--disabled { background: var(--border-dark); }
+
+/* 扣费来源提示 */
+.report-quota-hint {
+  text-align: center;
+  margin-top: 8rpx;
+  padding: 8rpx 0;
+  font-size: 24rpx;
+  color: #999;
+  line-height: 1.4;
+}

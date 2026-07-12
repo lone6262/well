@@ -2,12 +2,16 @@
 const cloud = require('wx-server-sdk');
 const { generateToken, verifyToken } = require('./common/auth');
 const { warmupConfig } = require('./common/constants');
+const { checkRateLimit } = require('./common/rate-limiter');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
 });
 
 const db = cloud.database();
+
+// M3: source 参数白名单
+const ALLOWED_SOURCES = ['direct', 'invite', 'share', 'qrcode'];
 
 /**
  * 静默登录云函数
@@ -20,8 +24,13 @@ exports.main = async (event) => {
 
     // 直接从context获取openid（云开发内置）
     const { OPENID } = cloud.getWXContext();
-    const { source = '' } = event;
+    const source = ALLOWED_SOURCES.includes(event.source) ? event.source : 'direct';
 
+    // H7: 入口加速率限制，防止恶意频繁调用
+    const rateOk = await checkRateLimit(db, OPENID, 'silentLogin', 10, 60000, false);
+    if (!rateOk) {
+      return { code: -1, msg: '操作过于频繁，请稍后重试', data: {} };
+    }
 
     // 查找或创建用户（使用user_id字段与其他云函数保持一致）
     const userResult = await db.collection('users').where({
@@ -33,11 +42,11 @@ exports.main = async (event) => {
 
     if (userResult.data.length === 0) {
       // 新用户，创建记录
-      userData = {
+      const newUserData = {
         user_id: OPENID,
         nickName: '宠物主人',
         avatarUrl: '',
-        source: source || 'direct',  // Phase 1.5: 用户来源标记（默认 direct=直接打开）
+        source: source,
         createTime: new Date(),
         updateTime: new Date(),
         isMember: false,
@@ -45,14 +54,25 @@ exports.main = async (event) => {
         loginCount: 1
       };
 
-      const addResult = await db.collection('users').add({
-        data: userData
-      });
-
-      userData._id = addResult._id;
-      isNewUser = true;
-
-      console.log('[silentLogin] new user');
+      // H6: 并发安全 — catch 重复 key 错误后重新读取
+      try {
+        const addResult = await db.collection('users').add({
+          data: newUserData
+        });
+        userData = newUserData;
+        userData._id = addResult._id;
+        isNewUser = true;
+        console.log('[silentLogin] new user');
+      } catch (createErr) {
+        // 并发场景：另一个请求已创建同一用户，重新读取
+        console.warn('[silentLogin] 用户创建冲突，重试读取:', createErr.message);
+        const retry = await db.collection('users').where({ user_id: OPENID }).get();
+        if (retry.data.length > 0) {
+          userData = retry.data[0];
+        } else {
+          throw createErr;
+        }
+      }
     } else {
       // 老用户，更新登录信息
       const existingUser = userResult.data[0];

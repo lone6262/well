@@ -99,6 +99,20 @@ Page({
             expandedSections: expandedSections,
             loading: false
           })
+
+          var quotaLabels = {
+            member: '已扣除会员报告次数',
+            first_report: '首份免费报告',
+            invite: '已扣除邀请奖励次数',
+            points: '已扣除点数包次数',
+            paid: '已扣除付费报告'
+          }
+          var quotaLabel = quotaLabels[reportData.quota_source]
+          if (quotaLabel) {
+            setTimeout(function() {
+              wx.showToast({ title: quotaLabel, icon: 'none', duration: 2500 })
+            }, 800)
+          }
         } else {
           // 需要支付：可能是支付回调延迟，先主动查询订单状态
           const errData = res.result.data || {}

@@ -96,8 +96,8 @@
 }
 
 .age-input {
-  font-size: var(--font-size-3xl);
-  font-weight: 700;
+  font-size: var(--font-size-md);
+  font-weight: 600;
   color: var(--brand-primary);
   border-bottom: 4rpx solid var(--brand-primary);
   padding: var(--spacing-xs) 0;

@@ -66,9 +66,9 @@
       <text class="report-upgrade-link" bindtap="goToMember">升级年度会员 →</text>
     </view>
 
-    <view class="report-price-row">
-      <text class="report-price" wx:if="{{quotaInfo.quota_source === 'first_report'}}">首份 ¥{{firstReportDisplay}}</text>
-      <text class="report-price" wx:elif="{{quotaInfo.has_free_quota}}">免费获取</text>
+     <view class="report-price-row">
+       <text class="report-price" wx:if="{{quotaInfo.quota_source === 'first_report'}}">首份免费</text>
+       <text class="report-price" wx:elif="{{quotaInfo.has_free_quota}}">免费获取</text>
       <text class="report-price" wx:else>¥{{standardReportDisplay}}</text>
       <text class="report-member-link" wx:if="{{quotaInfo.quota_source === 'paid' && !quotaInfo.member_quota_exhausted}}" bindtap="goToMember">成为会员，免费获取 ›</text>
     </view>
@@ -83,6 +83,13 @@
     <button class="report-btn" bindtap="getAIReport" loading="{{purchasing}}">
       {{quotaInfo.has_free_quota && quotaInfo.price === 0 ? '免费获取报告' : '获取AI报告'}}
     </button>
+    <!-- 扣费来源提示 -->
+    <view class="report-quota-hint" wx:if="{{quotaInfo.has_free_quota && quotaInfo.price === 0}}">
+      <text wx:if="{{quotaInfo.quota_source === 'first_report'}}">本次将使用首份免费额度</text>
+      <text wx:elif="{{quotaInfo.quota_source === 'invite'}}">本次将扣除邀请奖励次数（剩余{{quotaInfo.invite_remaining || 0}}次）</text>
+      <text wx:elif="{{quotaInfo.quota_source === 'member'}}">本次将扣除会员报告次数（剩余{{quotaInfo.member_remaining || 0}}/{{quotaInfo.member_total || 0}}次）</text>
+      <text wx:elif="{{quotaInfo.quota_source === 'points'}}">本次将扣除点数包次数（剩余{{quotaInfo.points_balance || 0}}次）</text>
+    </view>
   </view>
 
   <!-- 已有报告 -->

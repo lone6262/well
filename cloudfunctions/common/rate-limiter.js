@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 基础速率限制模块
  * 基于用户 openid + 操作类型计数，防止 API 滥用
  *
@@ -50,7 +50,7 @@ async function checkRateLimit(db, openid, action, maxRequests, windowMs, failOpe
     if (Math.random() < 0.01) {
       try {
         await db.collection(COLLECTIONS.RATE_LIMITS || 'rate_limits')
-          .where({ created_at: db.command.lt(cutoff) })
+          .where({ openid: openid, action: action, created_at: db.command.lt(cutoff) })
           .limit(100)
           .remove();
       } catch (cleanupErr) {

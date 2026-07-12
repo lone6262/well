@@ -111,10 +111,14 @@ function loadPetList(pageCtx, app, options) {
       options.loadRecordCounts(petList)
 
       if (pageCtx.autoEditPetId) {
+        // 竞态修复：立即取出并清空，防止 onLoad+onShow 双重 loadPetList 导致重复调用
+        var editPetId = pageCtx.autoEditPetId
+        pageCtx.autoEditPetId = null
         log.info('宠物列表加载完成，准备自动打开编辑弹窗')
         setTimeout(function() {
-          options.autoOpenEditModal(pageCtx.autoEditPetId)
-          pageCtx.autoEditPetId = null
+          if (editPetId) {
+            options.autoOpenEditModal(editPetId)
+          }
         }, 300)
       }
     },

@@ -260,14 +260,14 @@ async function handleReportOrder(event, openid, mockPay) {
     let orderId;
     try {
       const orderData = {
-        user_id: openid,
-        type: ORDER_TYPES.REPORT,
-        status: mockPay ? ORDER_STATUS.PAID : ORDER_STATUS.PENDING,
-        amount: payAmount,
-        origin_amount: quotaInfo.price,
-        coupon_discount: couponDiscount,
-        out_trade_no: outTradeNo,
-        transaction_id: mockPay ? 'MOCK_' + outTradeNo : '',
+       user_id: openid,
+       type: ORDER_TYPES.REPORT,
+       status: (mockPay || payAmount === 0) ? ORDER_STATUS.PAID : ORDER_STATUS.PENDING,
+       amount: payAmount,
+       origin_amount: quotaInfo.price,
+       coupon_discount: couponDiscount,
+       out_trade_no: outTradeNo,
+       transaction_id: (mockPay || payAmount === 0) ? 'MOCK_' + outTradeNo : '',
         description: buildDescription(quotaInfo),
         metadata: {
           record_id: recordId,
@@ -386,15 +386,15 @@ async function handleReportOrder(event, openid, mockPay) {
       code: RESPONSE_CODE.SUCCESS,
       msg: '订单创建成功',
       data: {
-        orderId: orderId,
-        outTradeNo: outTradeNo,
-        status: mockPay ? ORDER_STATUS.PAID : ORDER_STATUS.PENDING,
-        amount: payAmount,
-        originAmount: quotaInfo.price,
-        couponDiscount: couponDiscount,
-        amountDisplay: (payAmount / 100).toFixed(2),
-        quotaSource: quotaInfo.quota_source,
-        payParams: null
+       orderId: orderId,
+       outTradeNo: outTradeNo,
+       status: (mockPay || payAmount === 0) ? ORDER_STATUS.PAID : ORDER_STATUS.PENDING,
+       amount: payAmount,
+       originAmount: quotaInfo.price,
+       couponDiscount: couponDiscount,
+       amountDisplay: (payAmount / 100).toFixed(2),
+       quotaSource: quotaInfo.quota_source,
+       payParams: null
       }
     };
 
@@ -427,24 +427,33 @@ async function handleMemberOrder(event, openid, mockPay) {
     family_yearly: ORDER_TYPES.MEMBER_FAMILY_YEARLY,
   };
 
-  // 测试模式：使用指定金额（仅开发/体验环境；生产强制忽略，防止前端篡改金额）
-  const isDevEnv = process.env.NODE_ENV !== 'production';
-  let amount = PRICE_MAP[memberTier];
-  let isTestMode = isDevEnv && event._testMode === true;
-  if (isTestMode && event._testAmount) {
-    amount = event._testAmount; // 测试金额（单位：分）
-    console.log('[createOrder] 测试模式，金额:', amount);
-  }
+  // 测试模式：金额仅由服务端环境变量控制，禁止前端篡改（安全修复 F4）
+  // 修复说明：微信云开发中 NODE_ENV 默认未设置，原 !== 'production' 判断恒为 true；
+  //   且 event._testMode / event._testAmount 来自客户端，可被攻击者用 ¥0.01 购买年卡。
+  //   现改为严格开发环境判定，且测试金额仅从服务端环境变量 TEST_ORDER_AMOUNT 读取。
+  const isDevEnv = process.env.NODE_ENV === 'development';
+  const TEST_AMOUNT = (isDevEnv && process.env.TEST_ORDER_AMOUNT)
+    ? parseInt(process.env.TEST_ORDER_AMOUNT, 10)
+    : null;
+  const isTestMode = TEST_AMOUNT !== null && TEST_AMOUNT > 0;
+  let amount = isTestMode ? TEST_AMOUNT : PRICE_MAP[memberTier];
+
+  let upgradeInfo = null; // 升级补差价信息
 
   const orderType = ORDER_TYPE_MAP[memberTier];
   const now = new Date();
   const outTradeNo = 'WELL_MEMBER_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
 
   try {
-    // 降级拦截：已有生效中会员时，仅允许续费（同级）或升级，禁止降级
-    // 等级排序（按价值）：个人月卡 < 家庭月卡 < 个人年卡 < 家庭年卡
+    // 会员升级/续费规则（UPGRADE_MATRIX）
     if (!isTestMode) {
-      const TIER_RANK = { monthly: 1, family_monthly: 2, yearly: 3, family_yearly: 4 };
+      // 允许的升级路径
+      const UPGRADE_MATRIX = {
+        monthly:        ['family_monthly', 'yearly', 'family_yearly'],
+        family_monthly: ['family_yearly'],  // 家庭月卡不能退回个人年卡
+        yearly:         ['family_yearly'],   // 个人年卡只能升级家庭年卡
+        family_yearly:  []                     // 已是最高级
+      };
       const TIER_TEXT = {
         monthly: '个人月卡', family_monthly: '家庭月卡',
         yearly: '个人年卡', family_yearly: '家庭年卡'
@@ -456,21 +465,56 @@ async function handleMemberOrder(event, openid, mockPay) {
       const active = activeRes.data && activeRes.data[0];
       const notExpired = active && active.expire_date && new Date(active.expire_date) > now;
       if (active && notExpired) {
-        const currentRank = TIER_RANK[active.type] || 0;
-        const targetRank = TIER_RANK[memberTier] || 0;
-        if (targetRank < currentRank) {
+        // 同级会员重复提交 -> 提示充值点数
+        if (active.type === memberTier) {
           return {
             code: RESPONSE_CODE.ERROR,
-            msg: '您已是' + (TIER_TEXT[active.type] || '会员')
-              + '，暂不支持降级开通' + (TIER_TEXT[memberTier] || '该会员')
-              + '，可续费当前会员或联系客服',
+            msg: '您已是' + (TIER_TEXT[active.type] || '会员') + '，无需重复开通。如需更多报告次数，请购买点数包',
             data: {
-              downgrade_blocked: true,
+              already_member: true,
+              suggest_points: true,
+              current_type: active.type
+            }
+          };
+        }
+
+        // 检查是否允许升级到目标类型
+        const allowedUpgrades = UPGRADE_MATRIX[active.type] || [];
+        if (!allowedUpgrades.includes(memberTier)) {
+          return {
+            code: RESPONSE_CODE.ERROR,
+            msg: '您已是' + (TIER_TEXT[active.type] || '会员') +
+              '，暂不支持开通' + (TIER_TEXT[memberTier] || '该会员') +
+              '，请选择更高等级会员或续费当前会员',
+            data: {
+              upgrade_blocked: true,
               current_type: active.type,
               target_type: memberTier
             }
           };
         }
+
+        // ===== 升级补差价 =====
+        const DURATION_MAP = { monthly: 30, family_monthly: 30, yearly: 365, family_yearly: 365 };
+        const remainingMs = new Date(active.expire_date).getTime() - now.getTime();
+        const remainingDays = Math.max(0, remainingMs / (24 * 60 * 60 * 1000));
+        const currentDuration = DURATION_MAP[active.type] || 30;
+        const currentValue = PRICE_MAP[active.type];
+        const targetValue = PRICE_MAP[memberTier];
+        const remainingValue = Math.round(currentValue * (remainingDays / currentDuration));
+        const upgradeAmount = Math.max(1, targetValue - remainingValue);
+        amount = upgradeAmount;
+        upgradeInfo = {
+          is_upgrade: true,
+          from_type: active.type,
+          to_type: memberTier,
+          remaining_days: Math.round(remainingDays),
+          credit_amount: remainingValue,
+          original_price: targetValue,
+          upgrade_price: upgradeAmount
+        };
+        console.log('[createOrder] 升级补差价:', active.type, '→', memberTier,
+          '剩余', Math.round(remainingDays), '天, 抵扣', remainingValue, '分, 补价', upgradeAmount, '分');
       }
     }
 
@@ -527,16 +571,17 @@ async function handleMemberOrder(event, openid, mockPay) {
       type: orderType,
       status: mockPay ? ORDER_STATUS.PAID : ORDER_STATUS.PENDING,
       amount: amount,
-      origin_amount: isTestMode ? PRICE_MAP[memberTier] : amount, // 测试模式记录原价
+      origin_amount: isTestMode ? PRICE_MAP[memberTier] : (upgradeInfo ? upgradeInfo.original_price : amount), // 升级时记录目标原价
       coupon_discount: 0,
       out_trade_no: outTradeNo,
       transaction_id: mockPay ? 'MOCK_' + outTradeNo : '',
-      description: (memberTier.includes('yearly') ? '年卡' : '月卡') + '会员购买',
+      description: upgradeInfo ? ('会员升级至' + (memberTier.includes('family') ? '家庭' : '个人') + (memberTier.includes('yearly') ? '年卡' : '月卡')) : ((memberTier.includes('yearly') ? '年卡' : '月卡') + '会员购买'),
       metadata: {
         member_tier: memberTier,
         mock_pay: mockPay,
         test_mode: isTestMode,
-        test_amount: isTestMode ? amount : null
+        test_amount: isTestMode ? amount : null,
+        upgrade_info: upgradeInfo  // 升级补差价信息（非升级时为 null）
       },
       paid_at: mockPay ? now : null,
       channel: event.channel || 'mp',
@@ -548,46 +593,203 @@ async function handleMemberOrder(event, openid, mockPay) {
 
     const orderResult = await db.collection(COLLECTIONS.ORDERS).add({ data: orderData });
 
-    // 真实支付模式：调用微信支付
-    if (!mockPay && amount > 0) {
-      try {
-        const payParams = await createWechatPayment(outTradeNo, amount, openid,
-          (memberTier.includes('yearly') ? '年卡' : '月卡') + '会员购买');
-        return {
-          code: RESPONSE_CODE.SUCCESS,
-          msg: '会员订单创建成功',
-          data: {
-            orderId: orderResult._id,
-            outTradeNo,
-            status: ORDER_STATUS.PENDING,
-            amount,
-            amountDisplay: (amount / 100).toFixed(2),
-            memberTier,
-            payParams: payParams
-          },
-        };
-      } catch (payErr) {
-        console.error('[createOrder] 统一下单失败:', payErr.message);
-        await db.collection(COLLECTIONS.ORDERS).doc(orderResult._id).remove();
-        return { code: RESPONSE_CODE.SERVER_ERROR, msg: '支付通道暂不可用，请稍后重试', data: {} };
-      }
-    }
+   // 真实支付模式：调用微信支付
+   if (!mockPay && amount > 0) {
+     try {
+       const payParams = await createWechatPayment(outTradeNo, amount, openid,
+         (memberTier.includes('yearly') ? '年卡' : '月卡') + '会员购买');
+       return {
+         code: RESPONSE_CODE.SUCCESS,
+         msg: '会员订单创建成功',
+         data: {
+           orderId: orderResult._id,
+           outTradeNo,
+           status: ORDER_STATUS.PENDING,
+           amount,
+           amountDisplay: (amount / 100).toFixed(2),
+           memberTier,
+           payParams: payParams
+         },
+       };
+     } catch (payErr) {
+       console.error('[createOrder] 统一下单失败:', payErr.message);
+       await db.collection(COLLECTIONS.ORDERS).doc(orderResult._id).remove();
+       return { code: RESPONSE_CODE.SERVER_ERROR, msg: '支付通道暂不可用，请稍后重试', data: {} };
+     }
+   }
 
-    return {
-      code: RESPONSE_CODE.SUCCESS,
-      msg: '会员订单创建成功',
-      data: {
-        orderId: orderResult._id,
-        outTradeNo,
-        status: orderData.status,
-        amount,
-        amountDisplay: (amount / 100).toFixed(2),
-        memberTier,
-      },
-    };
+   // mock_pay 模式：订单已标记 PAID，但没有微信回调触发会员激活。
+   // 主动调用 payCallback 分发业务（激活会员/到账点数），否则会员记录不会更新。
+   // S6 加固：payCallback 云函数间调用可能超时/失败，调用后校验会员是否真正激活，
+   // 未激活则内联兜底执行激活逻辑，确保 mock 模式下会员状态一致。
+   if (mockPay) {
+     let activated = false;
+     try {
+       console.log('[createOrder] mock_pay 模式，主动触发 payCallback 激活会员:', orderResult._id);
+       await cloud.callFunction({
+         name: 'payCallback',
+         data: {
+           out_trade_no: outTradeNo,
+           transaction_id: 'MOCK_' + outTradeNo,
+           result_code: 'SUCCESS'
+         }
+       });
+       // 校验会员是否真正激活（type 已切换为目标类型）
+       const verifyRes = await db.collection(COLLECTIONS.MEMBERS)
+         .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE })
+         .limit(1)
+         .get();
+       const vm = verifyRes.data && verifyRes.data[0];
+       if (vm && vm.type === memberTier && vm.activated_by_order === orderResult._id) {
+         activated = true;
+         console.log('[createOrder] mock_pay 激活校验通过:', memberTier);
+       } else {
+         console.warn('[createOrder] mock_pay 激活校验失败，预期 type=' + memberTier +
+           ' 实际 type=' + (vm ? vm.type : 'null') + '，执行内联兜底');
+       }
+     } catch (cbErr) {
+       console.error('[createOrder] mock_pay payCallback 调用异常:', cbErr.message);
+     }
+     // 兜底：payCallback 未成功激活时，内联执行激活逻辑
+     if (!activated) {
+       try {
+         await inlineActivateMember(openid, memberTier, orderResult._id, amount);
+         await db.collection(COLLECTIONS.ORDERS).doc(orderResult._id).update({
+           data: { dispatch_status: 'completed', dispatched_at: new Date(), updated_at: new Date() }
+         });
+         console.log('[createOrder] mock_pay 内联激活成功:', memberTier);
+       } catch (inlineErr) {
+         console.error('[createOrder] mock_pay 内联激活失败:', inlineErr.message);
+         await db.collection(COLLECTIONS.ORDERS).doc(orderResult._id).update({
+           data: { dispatch_status: 'failed', dispatch_error: inlineErr.message, updated_at: new Date() }
+         }).catch(() => {});
+       }
+     }
+   }
+
+   return {
+     code: RESPONSE_CODE.SUCCESS,
+     msg: '会员订单创建成功',
+     data: {
+       orderId: orderResult._id,
+       outTradeNo,
+       status: orderData.status,
+       amount,
+       amountDisplay: (amount / 100).toFixed(2),
+       memberTier,
+     },
+   };
   } catch (error) {
     console.error('创建会员订单失败:', error.message);
     return { code: RESPONSE_CODE.SERVER_ERROR, msg: '创建会员订单失败', data: {} };
+  }
+}
+
+
+/**
+ * mock_pay 兜底：内联激活会员（当 payCallback 云函数间调用失败时使用）
+ * 复用 payCallback.activateMember/activateFamilyMember 的核心逻辑
+ */
+async function inlineActivateMember(openid, memberTier, orderId, amount) {
+  const isFamily = memberTier === 'family_monthly' || memberTier === 'family_yearly';
+  const isYearly = memberTier === 'yearly' || memberTier === 'family_yearly';
+  const durationDays = isYearly ? 365 : 30;
+  const creditsKey = isFamily
+    ? (isYearly ? 'FAMILY_YEARLY_REPORTS' : 'FAMILY_MONTHLY_REPORTS')
+    : (isYearly ? 'YEARLY_REPORTS' : 'MONTHLY_REPORTS');
+  const reportCredits = MEMBER_CREDITS[creditsKey];
+  const now = new Date();
+
+  // 幂等检查：同一订单号已激活过则跳过
+  const existCheck = await db.collection(COLLECTIONS.MEMBERS)
+    .where({ user_id: openid, activated_by_order: orderId })
+    .limit(1)
+    .get();
+  if (existCheck.data && existCheck.data.length > 0) {
+    console.log('[createOrder] 内联激活幂等跳过:', orderId);
+    return;
+  }
+
+  const existingResult = await db.collection(COLLECTIONS.MEMBERS)
+    .where({ user_id: openid })
+    .limit(1)
+    .get();
+  const existingMember = (existingResult.data && existingResult.data.length > 0)
+    ? existingResult.data[0] : null;
+  const isActive = existingMember && existingMember.status === MEMBER_STATUS.ACTIVE;
+  const isUpgrade = isActive && existingMember.type !== memberTier;
+
+  // 到期日计算：升级取 max(原到期, now+新周期)；续费/新开累加
+  let expireDate;
+  if (isUpgrade) {
+    const freshExpire = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
+    const originalExpire = new Date(existingMember.expire_date);
+    expireDate = originalExpire > freshExpire ? originalExpire : freshExpire;
+  } else if (isActive && existingMember.expire_date) {
+    const currentExpire = new Date(existingMember.expire_date);
+    const baseDate = currentExpire > now ? currentExpire : now;
+    expireDate = new Date(baseDate.getTime() + durationDays * 24 * 60 * 60 * 1000);
+  } else {
+    expireDate = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
+  }
+
+  // 额度重置时间（按起始日对齐）
+  const startDate = (existingMember && existingMember.start_date)
+    ? new Date(existingMember.start_date) : now;
+  const startDay = startDate.getDate();
+  let resetMonth = now.getMonth() + 1;
+  let resetYear = now.getFullYear();
+  if (resetMonth > 11) { resetMonth = 0; resetYear += 1; }
+  const maxDay = new Date(resetYear, resetMonth + 1, 0).getDate();
+  const nextResetAt = new Date(resetYear, resetMonth, Math.min(startDay, maxDay),
+    now.getHours(), now.getMinutes(), now.getSeconds());
+
+  // 升级时重置已用次数为 0
+  const preservedUsed = 0;
+
+  const memberData = {
+    activated_by_order: orderId,
+    type: memberTier,
+    status: MEMBER_STATUS.ACTIVE,
+    expire_date: expireDate,
+    report_credits_total: reportCredits,
+    report_credits_used: preservedUsed,
+    report_credits_reset_at: nextResetAt,
+    updated_at: now
+  };
+
+  if (isFamily) {
+    memberData.family_member_ids = existingMember ? (existingMember.family_member_ids || []) : [];
+    memberData.family_max_pet = MEMBER_LIMITS.MAX_PETS_FAMILY;
+    memberData.family_credits_total = reportCredits;
+    memberData.family_credits_used = preservedUsed;
+    memberData.family_credits_reset_at = nextResetAt;
+  }
+
+  if (existingMember) {
+    await db.collection(COLLECTIONS.MEMBERS).doc(existingMember._id).update({ data: memberData });
+  } else {
+    await db.collection(COLLECTIONS.MEMBERS).add({
+      data: Object.assign({
+        user_id: openid,
+        start_date: now,
+        auto_renew: false,
+        created_at: now
+      }, memberData)
+    });
+  }
+
+  // 同步 users 集合会员标识
+  try {
+    const userResult = await db.collection(COLLECTIONS.USERS)
+      .where({ user_id: openid }).limit(1).get();
+    if (userResult.data && userResult.data.length > 0) {
+      await db.collection(COLLECTIONS.USERS).doc(userResult.data[0]._id).update({
+        data: { isMember: true, memberExpire: expireDate, updated_at: now }
+      });
+    }
+  } catch (e) {
+    console.warn('[createOrder] 内联激活同步 users 失败:', e.message);
   }
 }
 
@@ -819,20 +1021,37 @@ async function handleBundleOrder(event, openid, mockPay) {
       }
     }
 
-    return {
-      code: RESPONSE_CODE.SUCCESS,
-      msg: '套餐订单创建成功',
-      data: {
-        orderId: mainResult._id,
-        outTradeNo,
-        status: mainOrderData.status,
-        amount: bundle.price,
-        amountDisplay: (bundle.price / 100).toFixed(2),
-        originAmount: bundle.origin_price,
-        bundleName: bundle.name,
-        subOrders,
-      },
-    };
+   // mock_pay 模式：主订单已 PAID，主动调用 payCallback 触发套餐拆单激活（会员+点数）
+   if (mockPay) {
+     try {
+       console.log('[createOrder] mock_pay 模式，主动触发 payCallback 激活套餐:', mainResult._id);
+       await cloud.callFunction({
+         name: 'payCallback',
+         data: {
+           out_trade_no: outTradeNo,
+           transaction_id: 'MOCK_' + outTradeNo,
+           result_code: 'SUCCESS'
+         }
+       });
+     } catch (cbErr) {
+       console.error('[createOrder] mock_pay 套餐激活失败:', cbErr.message);
+     }
+   }
+
+   return {
+     code: RESPONSE_CODE.SUCCESS,
+     msg: '套餐订单创建成功',
+     data: {
+       orderId: mainResult._id,
+       outTradeNo,
+       status: mainOrderData.status,
+       amount: bundle.price,
+       amountDisplay: (bundle.price / 100).toFixed(2),
+       originAmount: bundle.origin_price,
+       bundleName: bundle.name,
+       subOrders,
+     },
+   };
   } catch (error) {
     console.error('创建套餐订单失败:', error.message);
     return { code: RESPONSE_CODE.SERVER_ERROR, msg: '创建套餐订单失败', data: {} };
