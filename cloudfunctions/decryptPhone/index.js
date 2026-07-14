@@ -96,7 +96,8 @@ exports.main = async (event, context) => {
     };
 
   } catch (error) {
-    console.error('[decryptPhone] 处理异常:', maskPhone(error.message), error.stack);
+    // error.message 是异常诊断信息（非手机号），对它脱敏无意义且妨碍排查；仅手机号字段才脱敏
+    console.error('[decryptPhone] 处理异常:', error.message, error.stack);
     return {
       code: RESPONSE_CODE.SERVER_ERROR,
       msg: '服务暂时不可用，请稍后再试',

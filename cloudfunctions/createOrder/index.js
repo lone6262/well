@@ -75,6 +75,13 @@ exports.main = async (event, context) => {
   const wechatPayConfig = await loadWechatPayConfig();
   const mockPay = wechatPayConfig.mockPay; // 局部变量，供后续使用
 
+  // 安全守卫：mock_pay 开启时所有订单跳过真实支付。生产环境若出现此日志须立即核查
+  // system_config.wechat_pay_config.mock_pay 与 MOCK_PAY 环境变量。
+  // （NODE_ENV 在微信云默认未设置、不可靠，故以 mockPay 本身作为信号）
+  if (mockPay) {
+    console.error('[createOrder] [MOCK_PAY] 警告：MOCK_PAY 已开启，订单跳过真实微信支付；生产环境请立即关闭。');
+  }
+
   const { OPENID } = cloud.getWXContext();
   const openid = OPENID;
   const orderType = event.type || 'report';

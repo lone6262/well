@@ -36,6 +36,10 @@ const recommendedRules = {
   'no-constant-condition': 'warn',
   'no-control-regex': 'error',
   'no-debugger': 'error',
+  // 安全规则：禁止动态代码执行（注入/供应链常见攻击面），flat config 迁移时补回
+  'no-eval': 'error',
+  'no-implied-eval': 'error',
+  'no-new-func': 'error',
   'no-dupe-keys': 'error',
   'no-empty': 'warn',
   'no-extra-boolean-cast': 'warn',
