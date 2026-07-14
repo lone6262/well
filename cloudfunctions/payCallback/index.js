@@ -1,23 +1,23 @@
-﻿// 寰俊鏀粯鍥炶皟浜戝嚱鏁?鈥?鐢熶骇绾у疄鐜?
+// 微信支付回调云函数 — 生产级实现
 // ==========================================
-// 鏈簯鍑芥暟浣滀负寰俊鏀粯缁熶竴鍥炶皟鍏ュ彛锛屽鐞嗘墍鏈夋敮浠樼粨鏋滅殑鍚庣画涓氬姟銆?
+// 本云函数作为微信支付统一回调入口，处理所有支付结果的后续业务。
 //
-// 鍔熻兘锛?
-//   1. 骞傜瓑鏍￠獙锛堝悓涓€璁㈠崟澶氭鍥炶皟鍙鐞嗕竴娆★級
-//   2. 閲戦涓€鑷存€ф牎楠?
-//   3. 鎸夎鍗曠被鍨嬪垎鍙戝悗缁鐞嗭細
-//      - report 鈫?鏇存柊璁㈠崟鐘舵€?
-//      - member / member_* 鈫?婵€娲讳細鍛?
-//      - points 鈫?鐐规暟鍒拌处
-//      - bundle 鈫?鎷嗗崟澶勭悊
-//   5. 鏀粯鎴愬姛璁㈤槄娑堟伅閫氱煡
-//   6. 浼樻儬鍒告爣璁板凡浣跨敤
+// 功能：
+//   1. 幂等校验（同一订单多次回调只处理一次）
+//   2. 金额一致性校验
+//   3. 按订单类型分发后续处理：
+//      - report → 更新订单状态
+//      - member / member_* → 激活会员
+//      - points → 点数到账
+//      - bundle → 拆单处理
+//   5. 支付成功订阅消息通知
+//   6. 优惠券标记已使用
 //
-// 寰俊鍥炶皟鏂囨。: https://pay.weixin.qq.com/wiki/doc/apiv3/wxpay/pages/index.shtml
+// 微信回调文档: https://pay.weixin.qq.com/wiki/doc/apiv3/wxpay/pages/index.shtml
 // ==========================================
 
 const cloud = require('wx-server-sdk');
-const crypto = require('crypto'); // F1: 缃戝叧 HMAC 绛惧悕楠岃瘉
+const crypto = require('crypto'); // F1: 网关 HMAC 签名验证
 const {
   COLLECTIONS,
   ORDER_STATUS,
@@ -36,22 +36,22 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const _ = db.command;
 
-// 妯″潡绾у眬閮ㄥ壇鏈?鈥?鐢?loadPrices 鍦ㄥ叆鍙ｅ～鍏咃紝閬垮厤鐩存帴姹℃煋妯″潡绾?MEMBER_CREDITS 甯搁噺
+// 模块级局部副本 — 由 loadPrices 在入口填充，避免直接污染模块级 MEMBER_CREDITS 常量
 let dbCredits = MEMBER_CREDITS;
 
 // ============================================
-// 鐜閰嶇疆锛堝晢鎴峰彿鍒颁綅鍚庢敼涓?false锛?
+// 环境配置（商户号到位后改为 false）
 // ============================================
-const GATEWAY_SECRET = process.env.CALLBACK_GATEWAY_SECRET; // F1: 缃戝叧鍥炶皟绛惧悕瀵嗛挜锛屾湭閰嶇疆鏃跺洖閫€鍒板瓧娈垫牎楠?
+const GATEWAY_SECRET = process.env.CALLBACK_GATEWAY_SECRET; // F1: 网关回调签名密钥，未配置时回退到字段校验
 
 // ============================================
-// 浜戝嚱鏁板叆鍙?
+// 云函数入口
 // ============================================
 
 /**
- * 浠庢暟鎹簱璇诲彇 MOCK_PAY 閰嶇疆锛堜笌 createOrder 淇濇寔涓€鑷达級鈥斺€?F3
- * DB 璇诲彇澶辫触鏃跺洖閫€鍒扮幆澧冨彉閲忥紙鍚戝悗鍏煎锛?
- * @param {object} db - cloud.database() 瀹炰緥
+ * 从数据库读取 MOCK_PAY 配置（与 createOrder 保持一致）—— F3
+ * DB 读取失败时回退到环境变量（向后兼容）
+ * @param {object} db - cloud.database() 实例
  * @returns {Promise<boolean>}
  */
 async function loadMockPayConfig(db) {
@@ -62,57 +62,57 @@ async function loadMockPayConfig(db) {
    }
    return process.env.MOCK_PAY === 'true';
   } catch (e) {
-    // DB 璇诲彇澶辫触鏃讹紝鍥為€€鍒扮幆澧冨彉閲忥紙鍚戝悗鍏煎锛?
-    console.warn('[payCallback] MOCK_PAY DB 璇诲彇澶辫触锛屽洖閫€鐜鍙橀噺:', e.message);
+    // DB 读取失败时，回退到环境变量（向后兼容）
+    console.warn('[payCallback] MOCK_PAY DB 读取失败，回退环境变量:', e.message);
     return process.env.MOCK_PAY === 'true';
   }
 }
 
 exports.main = async (event, context) => {
   await warmupConfig(db);
-  // V2.0: 浠锋牸浠?DB 鍔ㄦ€佸姞杞斤紙浣跨敤灞€閮ㄥ壇鏈紝涓嶆薄鏌撴ā鍧楃骇鍏ㄥ眬甯搁噺锛岄伩鍏嶅疄渚嬪鐢ㄧ疮绉級
+  // V2.0: 价格从 DB 动态加载（使用局部副本，不污染模块级全局常量，避免实例复用累积）
   const priceConfig = await loadPrices(db);
   dbCredits = priceConfig.memberCredits;
 
-  // F3: MOCK_PAY 閰嶇疆婧愮粺涓€涓?DB锛堜笌 createOrder 涓€鑷达級锛孌B 璇诲彇澶辫触鍥為€€鐜鍙橀噺
+  // F3: MOCK_PAY 配置源统一为 DB（与 createOrder 一致），DB 读取失败回退环境变量
   const MOCK_PAY = await loadMockPayConfig(db);
 
-  // 鍘熷鍥炶皟浜嬩欢鏃ュ織锛氱敤浜庢牳瀵归泦鎴愮綉鍏宠浆鍙戝悗鐨勫瓧娈靛悕锛堥涓湡瀹炲洖璋冨姟蹇呮煡鐪嬶級
+  // 原始回调事件日志：用于核对集成网关转发后的字段名（首个真实回调务必查看）
   console.log('[payCallback] raw event:', JSON.stringify(event));
 
-  // 鍦?try 涔嬪墠鎻愬彇璁㈠崟鍙凤紝渚夸簬缃戝叧绛惧悕楠岃瘉涓?catch 寮傚父琛ュ伩寮曠敤
+  // 在 try 之前提取订单号，便于网关签名验证与 catch 异常补偿引用
   const out_trade_no = event.out_trade_no;
 
   try {
     // ========================================
-    // 1. 缃戝叧韬唤楠岃瘉锛團1锛氶槻姝㈠鎴风浼€犳敮浠樺洖璋冿級
-    //    - 閰嶇疆浜?CALLBACK_GATEWAY_SECRET锛氱敤 HMAC-SHA256 楠岃瘉缃戝叧绛惧悕
-    //    - 鏈厤缃紙鍚戝悗鍏煎锛夛細鑷冲皯鏍￠獙寰俊鍥炶皟鐗规湁瀛楁锛坱ransaction_id 鎴?out_trade_no 鏍煎紡锛?
+    // 1. 网关身份验证（F1：防止客户端伪造支付回调）
+    //    - 配置了 CALLBACK_GATEWAY_SECRET：用 HMAC-SHA256 验证网关签名
+    //    - 未配置（向后兼容）：至少校验微信回调特有字段（transaction_id 或 out_trade_no 格式）
     // ========================================
     if (GATEWAY_SECRET) {
       const expectedSig = crypto.createHmac('sha256', GATEWAY_SECRET)
         .update((event.out_trade_no || '') + (event.transaction_id || ''))
         .digest('hex');
       if (event.gateway_signature !== expectedSig) {
-        console.error('[payCallback] 闈炴硶鍥炶皟鏉ユ簮锛氱綉鍏崇鍚嶆牎楠屽け璐?);
-        return wechatResponse('FAIL', '闈炴硶鍥炶皟鏉ユ簮');
+        console.error('[payCallback] 非法回调来源：网关签名校验失败');
+        return wechatResponse('FAIL', '非法回调来源');
       }
     } else {
-      // 鏈厤缃綉鍏冲瘑閽ワ紙鍚戝悗鍏煎锛夛細鑷冲皯鏍￠獙鍥炶皟鎼哄甫寰俊鏀粯鐗规湁瀛楁
+      // 未配置网关密钥（向后兼容）：至少校验回调携带微信支付特有字段
       const hasTransactionId = !!event.transaction_id;
       const validOrderNo = !!(event.out_trade_no && /^[A-Za-z0-9_-]{6,64}$/.test(event.out_trade_no));
       if (!hasTransactionId && !validOrderNo) {
-        console.error('[payCallback] 闈炴硶鍥炶皟鏉ユ簮锛氱己灏戝井淇℃敮浠樻爣璇嗗瓧娈?);
-        return wechatResponse('FAIL', '闈炴硶鍥炶皟鏉ユ簮');
+        console.error('[payCallback] 非法回调来源：缺少微信支付标识字段');
+        return wechatResponse('FAIL', '非法回调来源');
       }
     }
 
     // ========================================
-    // 2. 鎻愬彇鍥炶皟鏁版嵁
-    // 闆嗘垚涓績缃戝叧杞彂鐨勬槑鏂囧吋瀹逛袱绉嶅舰鎬侊細
+    // 2. 提取回调数据
+    // 集成中心网关转发的明文兼容两种形态：
     //   V2: { out_trade_no, transaction_id, total_fee, result_code }
     //   V3: { out_trade_no, transaction_id, amount:{total}, trade_state }
-    // 棣栦釜鐪熷疄鍥炶皟鍔″繀鐪?raw event 鏃ュ織鏍稿瀹為檯瀛楁銆?
+    // 首个真实回调务必看 raw event 日志核对实际字段。
     // ========================================
     const {
       transaction_id,
@@ -122,31 +122,31 @@ exports.main = async (event, context) => {
       amount: wxAmount
     } = event;
 
-    // 缁熶竴閲戦瀛楁锛氫紭鍏?V2 total_fee锛屽洖閫€ V3 amount.total
+    // 统一金额字段：优先 V2 total_fee，回退 V3 amount.total
     const paidAmount = (total_fee !== undefined)
       ? Number(total_fee)
       : (wxAmount && wxAmount.total !== undefined ? Number(wxAmount.total) : undefined);
 
-    // 缁熶竴鏀粯缁撴灉锛歏3 SUCCESS 鎴栫綉鍏充粎杞彂鎴愬姛鍥炶皟鏃跺潎瑙嗕负鎴愬姛
+    // 统一支付结果：V3 SUCCESS 或网关仅转发成功回调时均视为成功
     const payFailed = (result_code && result_code !== 'SUCCESS') ||
       (trade_state && !['SUCCESS', 'REFUND'].includes(trade_state));
 
-    // 鏀粯澶辫触鍥炶皟锛堢敤鎴峰彇娑堟垨鏀粯閿欒锛?
+    // 支付失败回调（用户取消或支付错误）
     if (payFailed) {
-      console.warn('[payCallback] 鏀粯鏈垚鍔?', out_trade_no, result_code || trade_state);
+      console.warn('[payCallback] 支付未成功:', out_trade_no, result_code || trade_state);
       await handlePaymentFailed(out_trade_no);
       return wechatResponse('OK');
     }
 
     if (!out_trade_no) {
-      console.error('[payCallback] 鍥炶皟缂哄皯 out_trade_no');
-      return wechatResponse('FAIL', '缂哄皯鍟嗘埛璁㈠崟鍙?);
+      console.error('[payCallback] 回调缺少 out_trade_no');
+      return wechatResponse('FAIL', '缺少商户订单号');
     }
 
-    console.log('[payCallback] 鏀跺埌鏀粯鍥炶皟:', out_trade_no, transaction_id);
+    console.log('[payCallback] 收到支付回调:', out_trade_no, transaction_id);
 
     // ========================================
-    // 3. 鏌ヨ璁㈠崟
+    // 3. 查询订单
     // ========================================
     const orderResult = await db.collection(COLLECTIONS.ORDERS)
       .where({ out_trade_no })
@@ -154,41 +154,41 @@ exports.main = async (event, context) => {
       .get();
 
     if (!orderResult.data || orderResult.data.length === 0) {
-      console.error('[payCallback] 璁㈠崟涓嶅瓨鍦?', out_trade_no);
-      return wechatResponse('FAIL', '璁㈠崟涓嶅瓨鍦?);
+      console.error('[payCallback] 订单不存在:', out_trade_no);
+      return wechatResponse('FAIL', '订单不存在');
     }
 
     const order = orderResult.data[0];
 
    // ========================================
-   // 4. 骞傜瓑鏍￠獙锛氬凡鏀粯璁㈠崟鐩存帴杩斿洖鎴愬姛
+   // 4. 幂等校验：已支付订单直接返回成功
    // ========================================
    if (order.status === ORDER_STATUS.PAID) {
-     // mock_pay 妯″紡涓嬭鍗曞湪 createOrder 涓洿鎺ユ爣璁?PAID锛屼絾 dispatchPostPayment 灏氭湭鎵ц銆?
-     // 濡傛灉 dispatch_status 涓嶆槸 completed锛岃鏄庝笟鍔″垎鍙戞湭瀹屾垚锛岄渶瑕佺户缁鐞嗐€?
+     // mock_pay 模式下订单在 createOrder 中直接标记 PAID，但 dispatchPostPayment 尚未执行。
+     // 如果 dispatch_status 不是 completed，说明业务分发未完成，需要继续处理。
      if (order.dispatch_status === 'completed') {
-       console.log('[payCallback] 骞傜瓑锛氳鍗曞凡鏀粯涓斿凡鍒嗗彂锛岃烦杩囧鐞?', out_trade_no);
+       console.log('[payCallback] 幂等：订单已支付且已分发，跳过处理', out_trade_no);
        return wechatResponse('OK');
      }
-     console.log('[payCallback] 璁㈠崟宸叉敮浠樹絾鏈垎鍙戯紝缁х画鎵ц涓氬姟鍒嗗彂:', out_trade_no, 'dispatch_status:', order.dispatch_status);
-     // 鐩存帴璺冲埌涓氬姟鍒嗗彂锛堣烦杩囩姸鎬佹洿鏂版楠わ紝鍥犱负宸茬粡鏄?PAID锛?
+     console.log('[payCallback] 订单已支付但未分发，继续执行业务分发:', out_trade_no, 'dispatch_status:', order.dispatch_status);
+     // 直接跳到业务分发（跳过状态更新步骤，因为已经是 PAID）
      await dispatchPostPayment(order, transaction_id);
      try {
        await cloud.callFunction({
          name: 'trackEvent',
          data: { eventName: 'pay_success', properties: { order_id: order._id, order_type: order.type, amount: order.amount } }
        });
-     } catch (trackErr) { console.warn('[payCallback] 鍩嬬偣璁板綍璺宠繃:', trackErr.message); }
+     } catch (trackErr) { console.warn('[payCallback] 埋点记录跳过:', trackErr.message); }
      await sendPaymentNotify(order);
-     console.log('[payCallback] 琛ュ厖鍒嗗彂澶勭悊瀹屾垚:', out_trade_no, 'type:', order.type);
+     console.log('[payCallback] 补充分发处理完成:', out_trade_no, 'type:', order.type);
      return wechatResponse('OK');
    }
 
-    // 宸插叧闂?宸查€€娆剧殑璁㈠崟鏀跺埌鍥炶皟 鈫?寮傚父锛岃褰曞樊寮?
+    // 已关闭/已退款的订单收到回调 → 异常，记录差异
     if (order.status === ORDER_STATUS.CLOSED ||
         order.status === ORDER_STATUS.REFUNDED ||
         order.status === ORDER_STATUS.REFUND_REQUESTED) {
-      console.error('[payCallback] 璁㈠崟鐘舵€佸紓甯?', out_trade_no,
+      console.error('[payCallback] 订单状态异常:', out_trade_no,
         'local_status:', order.status, 'wx_result:', result_code);
       await recordBillDifference(order, {
         wx_transaction_id: transaction_id,
@@ -196,27 +196,27 @@ exports.main = async (event, context) => {
         local_status: order.status,
         diff_type: 'status_conflict'
       });
-      return wechatResponse('FAIL', '璁㈠崟鐘舵€佸紓甯?);
+      return wechatResponse('FAIL', '订单状态异常');
     }
 
     // ========================================
-    // 5. 閲戦涓€鑷存€ф牎楠岋紙鍏煎 V2 total_fee / V3 amount.total锛?
+    // 5. 金额一致性校验（兼容 V2 total_fee / V3 amount.total）
     // ========================================
     if (!MOCK_PAY) {
-      // F2: 鐪熷疄鏀粯妯″紡涓嬮噾棰濆繀椤诲瓨鍦ㄤ笖涓€鑷达紝缂哄け鍗虫嫆缁濓紙闃叉缁曡繃閲戦鏍￠獙锛?
+      // F2: 真实支付模式下金额必须存在且一致，缺失即拒绝（防止绕过金额校验）
       if (paidAmount === undefined || isNaN(paidAmount)) {
-        console.error('[payCallback] 鍥炶皟缂哄皯閲戦瀛楁锛屾嫆缁濆鐞?', out_trade_no);
+        console.error('[payCallback] 回调缺少金额字段，拒绝处理:', out_trade_no);
         await recordBillDifference(order, {
           wx_transaction_id: transaction_id,
           wx_amount: null,
           local_amount: order.amount || order.pay_amount || 0,
           diff_type: 'amount_missing'
         });
-        return wechatResponse('FAIL', '閲戦鏍￠獙澶辫触');
+        return wechatResponse('FAIL', '金额校验失败');
       }
       const orderAmount = order.amount || order.pay_amount || 0;
       if (Number(paidAmount) !== Number(orderAmount)) {
-        console.error('[payCallback] 閲戦涓嶄竴鑷?',
+        console.error('[payCallback] 金额不一致:',
           'wx_amount:', paidAmount,
           'order_amount:', orderAmount,
           'out_trade_no:', out_trade_no);
@@ -226,14 +226,14 @@ exports.main = async (event, context) => {
           local_amount: orderAmount,
           diff_type: 'amount_mismatch'
         });
-        // 閲戦涓嶄竴鑷存殏涓嶈嚜鍔ㄤ慨澶嶏紝浜哄伐浠嬪叆
-        return wechatResponse('FAIL', '閲戦鏍￠獙澶辫触');
+        // 金额不一致暂不自动修复，人工介入
+        return wechatResponse('FAIL', '金额校验失败');
       }
     }
 
     // ========================================
-    // S4 淇锛歵ransaction_id 鍞竴鎬ф牎楠岋紙闃叉鍚屼竴寰俊娴佹按鍙风粦瀹氬涓鍗曪級
-    // 鍦ㄨ鍗?CAS 鏇存柊鍓嶏紝纭璇?transaction_id 鏈鍏朵粬璁㈠崟浣跨敤
+    // S4 修复：transaction_id 唯一性校验（防止同一微信流水号绑定多个订单）
+    // 在订单 CAS 更新前，确认该 transaction_id 未被其他订单使用
     // ========================================
     if (transaction_id && !MOCK_PAY) {
       const dupTx = await db.collection(COLLECTIONS.ORDERS)
@@ -241,23 +241,23 @@ exports.main = async (event, context) => {
         .limit(1)
         .get();
       if (dupTx.data && dupTx.data.length > 0 && dupTx.data[0]._id !== order._id) {
-        console.error('[payCallback] transaction_id 宸茶鍏朵粬璁㈠崟浣跨敤:', transaction_id,
-          '褰撳墠璁㈠崟:', order._id, '鍐茬獊璁㈠崟:', dupTx.data[0]._id);
+        console.error('[payCallback] transaction_id 已被其他订单使用:', transaction_id,
+          '当前订单:', order._id, '已冲突订单:', dupTx.data[0]._id);
         await recordBillDifference(order, {
           wx_transaction_id: transaction_id,
           conflict_order_id: dupTx.data[0]._id,
           diff_type: 'transaction_id_conflict'
         });
-        // 鍐茬獊璁㈠崟宸?PAID 鍒欏箓绛夎繑鍥烇紱鍚﹀垯鎷掔粷
+        // 已冲突订单已 PAID 则幂等返回；否则拒绝
         if (dupTx.data[0].status === ORDER_STATUS.PAID) {
-          return wechatResponse('OK'); // 骞傜瓑
+          return wechatResponse('OK'); // 幂等
         }
-        return wechatResponse('FAIL', '浜ゆ槗鍙峰啿绐?);
+        return wechatResponse('FAIL', '交易号冲突');
       }
     }
 
     // ========================================
-    // 6. 鏇存柊璁㈠崟鐘舵€佷负宸叉敮浠橈紙骞跺彂瀹夊叏锛氫粎鏇存柊 PENDING 鐘舵€侊級
+    // 6. 更新订单状态为已支付（并发安全：仅更新 PENDING 状态）
     // ========================================
     const now = new Date();
     const updateResult = await db.collection(COLLECTIONS.ORDERS)
@@ -269,21 +269,21 @@ exports.main = async (event, context) => {
         data: {
           status: ORDER_STATUS.PAID,
           transaction_id: transaction_id || order.transaction_id || '',
-          dispatch_status: 'pending', // S2: 鏍囪寰呭垎鍙戯紝宕╂仮澶嶅悗鐢辫ˉ鍋夸换鍔¤瘑鍒?
+          dispatch_status: 'pending', // S2: 标记待分发，宕机恢复后由补偿任务识别
           paid_at: now,
           profit: order.amount,
           updated_at: now
         }
       });
 
-    // 骞跺彂鍥炶皟鎴栭噸澶嶅洖璋冿細鐘舵€佸凡琚叾浠栬繘绋嬫洿鏂帮紝骞傜瓑杩斿洖
+    // 并发回调或重复回调：状态已被其他进程更新，幂等返回
     if (!updateResult.stats || updateResult.stats.updated === 0) {
-      console.warn('[payCallback] 璁㈠崟鐘舵€佸凡鍙樻洿锛岃烦杩囬噸澶嶅鐞?', order._id);
+      console.warn('[payCallback] 订单状态已变更，跳过重复处理:', order._id);
       return wechatResponse('OK');
     }
 
     // ========================================
-    // 7. 鏍囪浼樻儬鍒镐负宸蹭娇鐢?
+    // 7. 标记优惠券为已使用
     // ========================================
     if (order.metadata && order.metadata.coupon_user_id) {
       try {
@@ -298,17 +298,17 @@ exports.main = async (event, context) => {
             }
           });
       } catch (e) {
-        // 浼樻儬鍒搁泦鍚堝彲鑳藉皻鏈垱寤猴紝闈欓粯澶勭悊
-        console.warn('[payCallback] 浼樻儬鍒告爣璁板け璐?', e.message);
+        // 优惠券集合可能尚未创建，静默处理
+        console.warn('[payCallback] 优惠券标记失败:', e.message);
       }
     }
 
     // ========================================
-    // 8. 鎸夎鍗曠被鍨嬪垎鍙戝悗缁笟鍔″鐞?
+    // 8. 按订单类型分发后续业务处理
     // ========================================
     await dispatchPostPayment(order, transaction_id);
 
-    // V1.5: 鏀粯鎴愬姛鍩嬬偣
+    // V1.5: 支付成功埋点
     try {
       await cloud.callFunction({
         name: 'trackEvent',
@@ -322,21 +322,21 @@ exports.main = async (event, context) => {
         }
       });
     } catch (trackErr) {
-      console.warn('[payCallback] 鍩嬬偣璁板綍璺宠繃:', trackErr.message);
+      console.warn('[payCallback] 埋点记录跳过:', trackErr.message);
     }
 
     // ========================================
-    // 9. 鏀粯鎴愬姛閫氱煡
+    // 9. 支付成功通知
     // ========================================
     await sendPaymentNotify(order);
 
-    console.log('[payCallback] 澶勭悊瀹屾垚:', out_trade_no, 'type:', order.type);
+    console.log('[payCallback] 处理完成:', out_trade_no, 'type:', order.type);
     return wechatResponse('OK');
 
   } catch (error) {
-    console.error('[payCallback] 鏈煡寮傚父:', error.message, error.stack);
-    // F6: 涓氬姟鏈畬鎴愭椂杩斿洖 FAIL锛岃Е鍙戝井淇℃敮浠樺钩鍙伴噸璇曪紝閬垮厤鐢ㄦ埛浠樻鍚庢湭鎷垮埌浼氬憳/鐐规暟
-    // 璁板綍澶辫触璁㈠崟渚涜ˉ鍋夸换鍔′慨澶?
+    console.error('[payCallback] 未知异常:', error.message, error.stack);
+    // F6: 业务未完成时返回 FAIL，触发微信支付平台重试，避免用户付款后未拿到会员/点数
+    // 记录失败订单供补偿任务修复
     try {
       if (out_trade_no) {
         await db.collection('dispatch_failures').add({
@@ -350,42 +350,42 @@ exports.main = async (event, context) => {
         });
       }
     } catch (logErr) {
-      // 蹇界暐鏃ュ織鍐欏叆澶辫触锛屼笉闃诲杩斿洖
-      console.warn('[payCallback] 琛ュ伩璁板綍鍐欏叆澶辫触:', logErr.message);
+      // 忽略日志写入失败，不阻塞返回
+      console.warn('[payCallback] 补偿记录写入失败:', logErr.message);
     }
-    // 杩斿洖 FAIL 璁╁井淇￠噸璇?
-    return wechatResponse('FAIL', '涓氬姟澶勭悊寮傚父');
+    // 返回 FAIL 让微信重试
+    return wechatResponse('FAIL', '业务处理异常');
   }
 };
 
 // ============================================
-// 鏀粯鍚庝笟鍔″垎鍙?
+// 支付后业务分发
 // ============================================
 
 /**
- * 鏍规嵁璁㈠崟绫诲瀷鎵ц鏀粯鍚庝笟鍔″鐞?
+ * 根据订单类型执行支付后业务处理
  *
- * @param {object} order - 璁㈠崟璁板綍
- * @param {string} transactionId - 寰俊鏀粯娴佹按鍙?
+ * @param {object} order - 订单记录
+ * @param {string} transactionId - 微信支付流水号
  */
 async function dispatchPostPayment(order, transactionId) {
   const orderType = order.type;
   const openid = order.user_id;
   const metadata = order.metadata || {};
 
-  console.log('[payCallback] 鍒嗗彂涓氬姟澶勭悊:', orderType);
+  console.log('[payCallback] 分发业务处理:', orderType);
 
   try {
     switch (orderType) {
 
-      // --- 鎶ュ憡璁㈠崟 ---
+      // --- 报告订单 ---
       case ORDER_TYPES.REPORT:
-        // 鎶ュ憡璁㈠崟鐨勬牳蹇冧笟鍔″湪 createOrder 涓凡澶勭悊
-        // payCallback 鍙渶纭鏀粯鐘舵€侊紝棰濆害宸插湪 createOrder 涓鎵?
-        console.log('[payCallback] 鎶ュ憡璁㈠崟鏀粯纭:', order._id);
+        // 报告订单的核心业务在 createOrder 中已处理
+        // payCallback 只需确认支付状态，额度已在 createOrder 中预扣
+        console.log('[payCallback] 报告订单支付确认:', order._id);
         break;
 
-      // --- 涓汉浼氬憳锛堟湀鍗?骞村崱锛?--
+      // --- 个人会员（月卡/年卡）---
      case ORDER_TYPES.MEMBER:
      case ORDER_TYPES.MEMBER_MONTHLY:
      case ORDER_TYPES.MEMBER_YEARLY:
@@ -396,7 +396,7 @@ async function dispatchPostPayment(order, transactionId) {
        });
        break;
 
-     // --- 瀹跺涵浼氬憳 ---
+     // --- 家庭会员 ---
      case ORDER_TYPES.MEMBER_FAMILY_MONTHLY:
      case ORDER_TYPES.MEMBER_FAMILY_YEARLY:
        await activateFamilyMember(openid, {
@@ -406,7 +406,7 @@ async function dispatchPostPayment(order, transactionId) {
        });
        break;
 
-      // --- 鐐规暟鍖?---
+      // --- 点数包 ---
       case ORDER_TYPES.POINTS:
         await creditPoints(openid, {
           packType: metadata.pack_type,
@@ -416,61 +416,61 @@ async function dispatchPostPayment(order, transactionId) {
         });
         break;
 
-      // --- 缁勫悎濂楅 ---
+      // --- 组合套餐 ---
       case ORDER_TYPES.BUNDLE:
         await processBundle(order);
         break;
 
       default:
-        console.warn('[payCallback] 鏈煡璁㈠崟绫诲瀷:', orderType, order._id);
+        console.warn('[payCallback] 未知订单类型:', orderType, order._id);
     }
 
-    // S2: 璧勬簮鍙戞斁鎴愬姛锛屾爣璁板垎鍙戝畬鎴愶紙pending 鈫?completed锛?
+    // S2: 资源发放成功，标记分发完成（pending → completed）
     try {
       await db.collection(COLLECTIONS.ORDERS).doc(order._id).update({
         data: { dispatch_status: 'completed', dispatched_at: new Date() }
       });
     } catch (upErr) {
-      console.warn('[payCallback] 鍒嗗彂瀹屾垚鐘舵€佹洿鏂板紓甯?', order._id, upErr.message);
+      console.warn('[payCallback] 分发完成状态更新异常:', order._id, upErr.message);
     }
   } catch (dispatchError) {
-    // 涓氬姟鍒嗗彂澶辫触涓嶉樆濉炲洖璋冭繑鍥烇紙璁㈠崟鐘舵€佸凡鏇存柊涓?paid锛?
-    // 澶辫触鐨勪笟鍔￠€氳繃琛ュ伩浠诲姟淇
-    console.error('[payCallback] 涓氬姟鍒嗗彂澶辫触:', order._id, orderType, dispatchError.message);
-    // S2: 鏍囪鍒嗗彂澶辫触锛屼緵琛ュ伩浠诲姟璇嗗埆閲嶅彂锛坧ending 鈫?failed锛?
+    // 业务分发失败不阻塞回调返回（订单状态已更新为 paid）
+    // 失败的业务通过补偿任务修复
+    console.error('[payCallback] 业务分发失败:', order._id, orderType, dispatchError.message);
+    // S2: 标记分发失败，供补偿任务识别重发（pending → failed）
     try {
       await db.collection(COLLECTIONS.ORDERS).doc(order._id).update({
         data: { dispatch_status: 'failed', dispatch_error: dispatchError.message, dispatched_at: new Date() }
       });
     } catch (upErr) {
-      console.warn('[payCallback] 鍒嗗彂澶辫触鐘舵€佹洿鏂板紓甯?', order._id, upErr.message);
+      console.warn('[payCallback] 分发失败状态更新异常:', order._id, upErr.message);
     }
     await recordDispatchFailure(order, dispatchError);
   }
 }
 
 // ============================================
-// 浼氬憳婵€娲?
+// 会员激活
 // ============================================
 
 /**
- * 婵€娲?缁垂涓汉浼氬憳
- * 鏀寔鏂板紑閫氥€佺画璐广€佽繃鏈熷悗閲嶆柊寮€閫?
+ * 激活/续费个人会员
+ * 支持新开通、续费、过期后重新开通
  *
- * @param {string} openid - 鐢ㄦ埛 openid
+ * @param {string} openid - 用户 openid
  * @param {object} params - { memberType, orderId, amount }
  */
 async function activateMember(openid, params) {
   const { memberType } = params;
 
-  // S3 淇锛氬箓绛夋鏌?鈥?鍚屼竴璁㈠崟鍙縺娲讳竴娆′細鍛橈紝闃叉閲嶅鍥炶皟瑕嗙洊寮忛噸缃?report_credits_used
+  // S3 修复：幂等检查 — 同一订单号只激活一次会员，防止重复回调覆盖式重置 report_credits_used
   if (params.orderId) {
     const existing = await db.collection(COLLECTIONS.MEMBERS)
       .where({ user_id: openid, activated_by_order: params.orderId })
       .limit(1)
       .get();
     if (existing.data && existing.data.length > 0) {
-      console.log('[payCallback] 浼氬憳宸叉縺娲昏繃锛岃烦杩?', params.orderId);
+      console.log('[payCallback] 会员已激活过，跳过:', params.orderId);
       return;
     }
   }
@@ -482,7 +482,7 @@ async function activateMember(openid, params) {
     : dbCredits.MONTHLY_REPORTS;
   const now = new Date();
 
-  // 鏌ヨ鐜版湁浼氬憳璁板綍
+  // 查询现有会员记录
   const existingResult = await db.collection(COLLECTIONS.MEMBERS)
     .where({ user_id: openid })
     .limit(1)
@@ -494,13 +494,13 @@ async function activateMember(openid, params) {
 
  const isActive = existingMember && existingMember.status === MEMBER_STATUS.ACTIVE;
 
- // 鍒ゆ柇鏄柊寮€閫?缁垂锛堝悓绫诲瀷锛夎繕鏄崌绾э紙涓嶅悓绫诲瀷锛?
+ // 判断是新开通/续费（同类型）还是升级（不同类型）
  const isUpgrade = isActive && existingMember.type !== memberType;
 
- // 璁＄畻鍒版湡鏃ユ湡
+ // 计算到期日期
  let expireDate;
  if (isUpgrade) {
-   // 鍗囩骇锛氬彇 max(鍘熷埌鏈熸棩, now+鏂板懆鏈?锛屼繚璇佺敤鎴蜂笉鍥犲崌绾ф崯澶辨椂闂?
+   // 升级：取 max(原到期日, now+新周期)，保证用户不因升级损失时间
    const freshExpire = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
    const originalExpire = new Date(existingMember.expire_date);
    expireDate = originalExpire > freshExpire ? originalExpire : freshExpire;
@@ -521,7 +521,7 @@ async function activateMember(openid, params) {
  }
 
 
- // 璁＄畻棰濆害閲嶇疆鏃堕棿锛堟寜寮€閫氭棩瀵归綈锛?
+ // 计算额度重置时间（按开通日对齐）
   const resetBase = (existingMember && existingMember.start_date)
     ? new Date(existingMember.start_date)
     : now;
@@ -535,7 +535,7 @@ async function activateMember(openid, params) {
   const nextResetAt = new Date(resetYear, resetMonth, resetDay,
     now.getHours(), now.getMinutes(), now.getSeconds());
 
-  // 鏇存柊鎴栧垱寤轰細鍛樿褰?
+  // 更新或创建会员记录
   if (existingMember) {
     await db.collection(COLLECTIONS.MEMBERS).doc(existingMember._id).update({
       data: {
@@ -545,8 +545,8 @@ async function activateMember(openid, params) {
         report_credits_total: reportCredits,
         report_credits_used: preservedUsed,
         report_credits_reset_at: nextResetAt,
-        activated_by_order: params.orderId, // S3: 璁板綍婵€娲绘潵婧愶紝渚涘箓绛夋牎楠?
-        // 浠庡搴細鍛橀檷绾у埌涓汉浼氬憳鏃讹紝娓呯悊瀹跺涵涓撳睘瀛楁
+        activated_by_order: params.orderId, // S3: 记录激活来源，供幂等校验
+        // 从家庭会员降级到个人会员时，清理家庭专属字段
         ...(isUpgrade && (existingMember.type === 'family_monthly' || existingMember.type === 'family_yearly')
           ? {
               family_member_ids: _.remove(),
@@ -570,7 +570,7 @@ async function activateMember(openid, params) {
         report_credits_total: reportCredits,
         report_credits_used: preservedUsed,
         report_credits_reset_at: nextResetAt,
-        activated_by_order: params.orderId, // S3: 璁板綍婵€娲绘潵婧愶紝渚涘箓绛夋牎楠?
+        activated_by_order: params.orderId, // S3: 记录激活来源，供幂等校验
         auto_renew: false,
         created_at: now,
         updated_at: now
@@ -578,24 +578,24 @@ async function activateMember(openid, params) {
     });
   }
 
-  // 鍚屾 users 闆嗗悎鐨勪細鍛樻爣璁?
+  // 同步 users 集合的会员标记
   await syncUserMemberStatus(openid, true, expireDate);
 }
 
 /**
- * 婵€娲诲搴細鍛?
+ * 激活家庭会员
  */
 async function activateFamilyMember(openid, params) {
   const isYearly = params.memberType === 'family_yearly';
 
-  // S3 淇锛氬箓绛夋鏌?鈥?鍚屼竴璁㈠崟鍙縺娲讳竴娆″搴細鍛橈紝闃叉閲嶅鍥炶皟閲嶇疆棰濆害
+  // S3 修复：幂等检查 — 同一订单号只激活一次家庭会员，防止重复回调重置额度
   if (params.orderId) {
     const existing = await db.collection(COLLECTIONS.MEMBERS)
       .where({ user_id: openid, activated_by_order: params.orderId })
       .limit(1)
       .get();
     if (existing.data && existing.data.length > 0) {
-      console.log('[payCallback] 瀹跺涵浼氬憳宸叉縺娲昏繃锛岃烦杩?', params.orderId);
+      console.log('[payCallback] 家庭会员已激活过，跳过:', params.orderId);
       return;
     }
   }
@@ -613,7 +613,7 @@ async function activateFamilyMember(openid, params) {
 
   const isActive = existingMember && existingMember.status === MEMBER_STATUS.ACTIVE;
 
-  // 鍒ゆ柇鏄柊寮€閫?缁垂杩樻槸鍗囩骇锛堜笉鍚屼細鍛樼被鍨嬮棿鍒囨崲锛?
+  // 判断是新开通/续费还是升级（不同会员类型间切换）
   const isUpgrade = isActive && existingMember.type !== params.memberType;
 
  // 升级时重置已用次数为 0（用户花钱升级应享受新会员全部额度）
@@ -626,7 +626,7 @@ async function activateFamilyMember(openid, params) {
 
   let expireDate;
   if (isUpgrade) {
-    // 鍗囩骇锛氬彇 max(鍘熷埌鏈熸棩, now+鏂板懆鏈?锛屼繚璇佺敤鎴蜂笉鍥犲崌绾ф崯澶辨椂闂?
+    // 升级：取 max(原到期日, now+新周期)，保证用户不因升级损失时间
     const freshExpire = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
     const originalExpire = new Date(existingMember.expire_date);
     expireDate = originalExpire > freshExpire ? originalExpire : freshExpire;
@@ -650,7 +650,7 @@ async function activateFamilyMember(openid, params) {
     now.getHours(), now.getMinutes(), now.getSeconds());
 
   const memberData = {
-    activated_by_order: params.orderId, // S3: 璁板綍婵€娲绘潵婧愶紝渚涘箓绛夋牎楠岋紙update/add 鍏辩敤锛?
+    activated_by_order: params.orderId, // S3: 记录激活来源，供幂等校验（update/add 共用）
     type: params.memberType,
     status: MEMBER_STATUS.ACTIVE,
     expire_date: expireDate,
@@ -685,7 +685,7 @@ async function activateFamilyMember(openid, params) {
 }
 
 /**
- * 鍚屾 users 闆嗗悎鐨勪細鍛樼姸鎬佹爣璁?
+ * 同步 users 集合的会员状态标记
  */
 async function syncUserMemberStatus(openid, isMember, expireDate) {
   const now = new Date();
@@ -718,26 +718,26 @@ async function syncUserMemberStatus(openid, isMember, expireDate) {
 }
 
 // ============================================
-// 鐐规暟鍒拌处
+// 点数到账
 // ============================================
 
 /**
- * 鐐规暟鍖呮敮浠樻垚鍔熷悗锛岀偣鏁板埌璐?
+ * 点数包支付成功后，点数到账
  *
- * @param {string} openid - 鐢ㄦ埛 openid
+ * @param {string} openid - 用户 openid
  * @param {object} params - { packType, pointsCount, expireDays, orderId }
  */
 async function creditPoints(openid, params) {
   const { pointsCount, expireDays, orderId } = params;
 
-  // S3 淇锛氬箓绛夋鏌?鈥?鍚屼竴璁㈠崟鐨勭偣鏁板彧鍙戞斁涓€娆★紝闃叉閲嶅鍥炶皟鐢?_.inc 鍙犲姞鐐规暟
+  // S3 修复：幂等检查 — 同一订单的点数只发放一次，防止重复回调用 _.inc 叠加点数
   if (orderId) {
     const existing = await db.collection(COLLECTIONS.POINT_TRANSACTIONS)
       .where({ order_id: orderId, type: 'purchase' })
       .limit(1)
       .get();
     if (existing.data && existing.data.length > 0) {
-      console.log('[payCallback] 鐐规暟宸插彂鏀捐繃锛岃烦杩?', orderId);
+      console.log('[payCallback] 点数已发放过，跳过:', orderId);
       return;
     }
   }
@@ -745,7 +745,7 @@ async function creditPoints(openid, params) {
   const now = new Date();
   const expireAt = new Date(now.getTime() + (expireDays || 90) * 24 * 60 * 60 * 1000);
 
-  // 鏌ユ壘鎴栧垱寤虹敤鎴风偣鏁拌褰?
+  // 查找或创建用户点数记录
   const existingResult = await db.collection(COLLECTIONS.USER_POINTS)
     .where({ user_id: openid })
     .limit(1)
@@ -780,7 +780,7 @@ async function creditPoints(openid, params) {
     });
   }
 
-  // 璁板綍浜ゆ槗娴佹按
+  // 记录交易流水
   await db.collection(COLLECTIONS.POINT_TRANSACTIONS).add({
     data: {
       user_id: openid,
@@ -792,24 +792,24 @@ async function creditPoints(openid, params) {
     }
   });
 
-  console.log('[payCallback] 鐐规暟宸插埌璐? +' + pointsCount + '锛岃鍗?', orderId);
+  console.log('[payCallback] 点数已到账: +' + pointsCount + '，订单:', orderId);
 }
 
 // ============================================
-// 濂楅鎷嗗崟澶勭悊
+// 套餐拆单处理
 // ============================================
 
 /**
- * 澶勭悊缁勫悎濂楅鏀粯鎴愬姛
- * 濂楅鍖呭惈瀛愯鍗曪紙浼氬憳 + 鐐规暟鍖咃級锛屽垎鍒縺娲?
+ * 处理组合套餐支付成功
+ * 套餐包含子订单（会员 + 点数包），分别激活
  *
- * @param {object} order - 濂楅涓昏鍗?
+ * @param {object} order - 套餐主订单
  */
 async function processBundle(order) {
   const bundleType = order.metadata && order.metadata.bundle_type;
-  console.log('[payCallback] 濂楅璁㈠崟澶勭悊:', order._id, bundleType);
+  console.log('[payCallback] 套餐订单处理:', order._id, bundleType);
 
-  // 鏌ユ壘瀛愯鍗?
+  // 查找子订单
   if (order.sub_orders && order.sub_orders.length > 0) {
     const now = new Date();
     for (const sub of order.sub_orders) {
@@ -824,23 +824,23 @@ async function processBundle(order) {
               updated_at: now
             }
           });
-          // 閫掑綊澶勭悊瀛愯鍗曚笟鍔?
+          // 递归处理子订单业务
           await dispatchPostPayment(subResult.data, order.transaction_id);
         }
       } catch (e) {
-        console.error('[payCallback] 瀛愯鍗曞鐞嗗け璐?', sub.order_id, e.message);
+        console.error('[payCallback] 子订单处理失败:', sub.order_id, e.message);
       }
     }
   }
 }
 
 // ============================================
-// 鏀粯澶辫触澶勭悊
+// 支付失败处理
 // ============================================
 
 /**
- * 澶勭悊鏀粯澶辫触鍥炶皟
- * 灏?pending 璁㈠崟鏍囪涓?failed锛堜繚鐣欒褰曚緵鍒嗘瀽锛?
+ * 处理支付失败回调
+ * 将 pending 订单标记为 failed（保留记录供分析）
  */
 async function handlePaymentFailed(outTradeNo) {
   try {
@@ -853,9 +853,9 @@ async function handlePaymentFailed(outTradeNo) {
         }
       });
     if (result.stats && result.stats.updated > 0) {
-      console.log('[payCallback] 璁㈠崟鏍囪涓烘敮浠樺け璐?', outTradeNo);
+      console.log('[payCallback] 订单标记为支付失败:', outTradeNo);
 
-      // V1.5: 鏀粯澶辫触鍩嬬偣
+      // V1.5: 支付失败埋点
       try {
         const failedOrderResult = await db.collection(COLLECTIONS.ORDERS)
           .where({ out_trade_no: outTradeNo })
@@ -875,27 +875,27 @@ async function handlePaymentFailed(outTradeNo) {
           }
         });
       } catch (trackErr) {
-        console.warn('[payCallback] 鏀粯澶辫触鍩嬬偣璺宠繃:', trackErr.message);
+        console.warn('[payCallback] 支付失败埋点跳过:', trackErr.message);
       }
     }
   } catch (e) {
-    console.error('[payCallback] 鏀粯澶辫触澶勭悊寮傚父:', e.message);
+    console.error('[payCallback] 支付失败处理异常:', e.message);
   }
 }
 
 // ============================================
-// 鏀粯鎴愬姛閫氱煡
+// 支付成功通知
 // ============================================
 
 /**
- * 鍙戦€佹敮浠樻垚鍔熻闃呮秷鎭€氱煡
- * 閫氳繃 sendPaymentNotification 浜戝嚱鏁板彂閫?
+ * 发送支付成功订阅消息通知
+ * 通过 sendPaymentNotification 云函数发送
  */
 async function sendPaymentNotify(order) {
   try {
     let templateType;
     let page;
-    const amountDisplay = '楼' + ((order.amount || 0) / 100).toFixed(2);
+    const amountDisplay = '¥' + ((order.amount || 0) / 100).toFixed(2);
 
     switch (order.type) {
       case ORDER_TYPES.REPORT:
@@ -915,10 +915,10 @@ async function sendPaymentNotify(order) {
         page = 'pages/points/index';
         break;
       default:
-        return; // 涓嶉渶瑕侀€氱煡
+        return; // 不需要通知
     }
 
-    // 浜戝嚱鏁板唴璋冪敤鍙︿竴涓簯鍑芥暟
+    // 云函数内调用另一个云函数
     await cloud.callFunction({
       name: 'sendPaymentNotification',
       data: {
@@ -927,28 +927,28 @@ async function sendPaymentNotify(order) {
         data: {
           page,
           templateData: {
-            thing1: { value: (order.description || '鍋ュ悍鎶ュ憡').substring(0, 20) },
+            thing1: { value: (order.description || '健康报告').substring(0, 20) },
             amount2: { value: amountDisplay },
             time3: { value: new Date().toLocaleString('zh-CN') }
           }
         }
       }
     }).catch(e => {
-      // 閫氱煡鍙戦€佸け璐ヤ笉褰卞搷涓绘祦绋?
-      console.warn('[payCallback] 閫氱煡鍙戦€佸け璐?', e.message);
+      // 通知发送失败不影响主流程
+      console.warn('[payCallback] 通知发送失败:', e.message);
     });
 
   } catch (e) {
-    console.warn('[payCallback] 閫氱煡鏋勫缓澶辫触:', e.message);
+    console.warn('[payCallback] 通知构建失败:', e.message);
   }
 }
 
 // ============================================
-// 寮傚父璁板綍
+// 异常记录
 // ============================================
 
 /**
- * 璁板綍瀵硅处宸紓锛堥噾棰濅笉涓€鑷?/ 鐘舵€佸啿绐侊級
+ * 记录对账差异（金额不一致 / 状态冲突）
  */
 async function recordBillDifference(order, diff) {
   try {
@@ -968,12 +968,12 @@ async function recordBillDifference(order, diff) {
       }
     });
   } catch (e) {
-    console.error('[payCallback] 宸紓璁板綍鍐欏叆澶辫触:', e.message);
+    console.error('[payCallback] 差异记录写入失败:', e.message);
   }
 }
 
 /**
- * 璁板綍涓氬姟鍒嗗彂澶辫触锛堣ˉ鍋夸换鍔′慨澶嶏級
+ * 记录业务分发失败（补偿任务修复）
  */
 async function recordDispatchFailure(order, error) {
   try {
@@ -989,21 +989,21 @@ async function recordDispatchFailure(order, error) {
       }
     });
   } catch (e) {
-    // 鏃ュ織鍐欏叆澶辫触涓嶉樆濉?
+    // 日志写入失败不阻塞
   }
 }
 
 // ============================================
-// 寰俊鏀粯鍝嶅簲鏍煎紡
+// 微信支付响应格式
 // ============================================
 
 /**
- * 杩斿洖寰俊鏀粯瑕佹眰鐨勬爣鍑嗗搷搴旀牸寮?
- * 寰俊鏀粯骞冲彴瑕佹眰杩斿洖 XML/JSON锛屾敹鍒?SUCCESS 鍚庝笉鍐嶉噸璇?
+ * 返回微信支付要求的标准响应格式
+ * 微信支付平台要求返回 XML/JSON，收到 SUCCESS 后不再重试
  *
  * @param {string} code - 'OK' | 'FAIL'
- * @param {string} [msg] - 澶辫触鏃剁殑鍘熷洜
- * @returns {object} 寰俊鏀粯鍥炶皟鍝嶅簲
+ * @param {string} [msg] - 失败时的原因
+ * @returns {object} 微信支付回调响应
  */
 function wechatResponse(code, msg) {
   if (code === 'OK') {

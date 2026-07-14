@@ -229,20 +229,29 @@ async function rollbackUserResources(order) {
   const metadata = order.metadata || {};
 
   // 会员订单：取消会员资格
-  if (order.type === 'member' && metadata.member_id) {
+  // 修复：metadata.member_id 从不被 createOrder 写入（原为死代码，回滚永远不执行），
+  // 改为按 user_id 查询会员记录，与 closeExpiredOrders 对齐
+  if (order.type === 'member') {
     try {
-      await db.collection(COLLECTIONS.MEMBERS).doc(metadata.member_id).update({
-        data: { status: 'refunded', updated_at: new Date() }
-      });
+      const mRes = await db.collection(COLLECTIONS.MEMBERS)
+        .where({ user_id: order.user_id }).limit(1).get();
+      if (mRes.data && mRes.data.length > 0) {
+        await db.collection(COLLECTIONS.MEMBERS).doc(mRes.data[0]._id).update({
+          data: { status: 'refunded', updated_at: new Date() }
+        });
+      }
     } catch (e) { console.error('回滚会员失败:', e.message); }
   }
 
-  // 报告订单：回滚会员额度（W4 修复：条件更新 report_credits_used > 0，防止额度变为负数）
-  if (order.type === 'report' && metadata.quota_source === 'member' && metadata.member_id) {
+  // 报告订单：回滚会员额度（按 user_id 查询；条件更新 report_credits_used > 0 防止负数）
+  if (order.type === 'report' && metadata.quota_source === 'member') {
     try {
-      await db.collection(COLLECTIONS.MEMBERS)
-        .where({ _id: metadata.member_id, report_credits_used: _.gt(0) })
-        .update({ data: { report_credits_used: _.inc(-1), updated_at: new Date() } });
+      const mRes = await db.collection(COLLECTIONS.MEMBERS)
+        .where({ user_id: order.user_id, report_credits_used: _.gt(0) }).limit(1).get();
+      if (mRes.data && mRes.data.length > 0) {
+        await db.collection(COLLECTIONS.MEMBERS).doc(mRes.data[0]._id)
+          .update({ data: { report_credits_used: _.inc(-1), updated_at: new Date() } });
+      }
     } catch (e) { console.error('回滚额度失败:', e.message); }
   }
 

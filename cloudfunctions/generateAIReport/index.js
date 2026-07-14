@@ -321,13 +321,17 @@ async function resolveReportOrder(db, openid, recordId, dbPrices, dbCredits) {
           : (isYearly2 ? dbCredits.YEARLY_REPORTS : dbCredits.MONTHLY_REPORTS);
         const total = Math.max(m.report_credits_total || expectedTotal, expectedTotal);
       console.log("[resolveReportOrder] expectedTotal=" + expectedTotal + " isFamily=" + isFamily + " total=" + total);
-        const memberRes = await db.collection(COLLECTIONS.MEMBERS).doc(m._id).update({
-          data: {
-            report_credits_used: db.command.inc(1),
-            report_credits_total: total,
-            updated_at: now
-          }
-        });
+        // 并发守卫：仅当 report_credits_used < total 时才扣减（CAS 条件更新），
+        // 与 quota-service.js 一致；并发请求中第二个会 updated=0 → deductOk=false → 拒绝生成
+        const memberRes = await db.collection(COLLECTIONS.MEMBERS)
+          .where({ _id: m._id, report_credits_used: db.command.lt(total) })
+          .update({
+            data: {
+              report_credits_used: db.command.inc(1),
+              report_credits_total: total,
+              updated_at: now
+            }
+          });
         if (!memberRes.stats || memberRes.stats.updated === 0) deductOk = false;
       } else {
         deductOk = false;

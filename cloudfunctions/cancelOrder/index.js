@@ -49,13 +49,19 @@ exports.main = async (event, context) => {
       }
     });
 
-    // 回滚资源
+    // 回滚资源：报告订单的会员额度
+    // 修复：metadata.member_id 从不被 createOrder 写入（原为死代码），改为按 user_id 查询，
+    // 与 closeExpiredOrders / processRefund 对齐
     const metadata = order.metadata || {};
-    if (metadata.quota_source === 'member' && metadata.member_id) {
+    if (order.type === 'report' && metadata.quota_source === 'member') {
       try {
-        await db.collection(COLLECTIONS.MEMBERS).doc(metadata.member_id).update({
-          data: { report_credits_used: _.inc(-1), updated_at: new Date() }
-        });
+        const mRes = await db.collection(COLLECTIONS.MEMBERS)
+          .where({ user_id: order.user_id, report_credits_used: _.gt(0) }).limit(1).get();
+        if (mRes.data && mRes.data.length > 0) {
+          await db.collection(COLLECTIONS.MEMBERS).doc(mRes.data[0]._id).update({
+            data: { report_credits_used: _.inc(-1), updated_at: new Date() }
+          });
+        }
       } catch (e) {
         console.error('[cancelOrder] 回滚会员额度失败:', e.message);
       }
