@@ -225,8 +225,10 @@ async function restoreRefundPending(refundId) {
 }
 
 // 回滚用户资源
+// 多步回滚无事务：任一步失败时收集到 failures 并写入 rollback_failures 集合，供补偿任务/人工对账
 async function rollbackUserResources(order) {
   const metadata = order.metadata || {};
+  const failures = []; // 记录回滚失败的步骤，供补偿
 
   // 会员订单：取消会员资格
   // 修复：metadata.member_id 从不被 createOrder 写入（原为死代码，回滚永远不执行），
@@ -240,7 +242,10 @@ async function rollbackUserResources(order) {
           data: { status: 'refunded', updated_at: new Date() }
         });
       }
-    } catch (e) { console.error('回滚会员失败:', e.message); }
+    } catch (e) {
+      console.error('回滚会员失败:', e.message);
+      failures.push({ step: 'cancel_member', error: e.message });
+    }
   }
 
   // 报告订单：回滚会员额度（按 user_id 查询；条件更新 report_credits_used > 0 防止负数）
@@ -252,7 +257,10 @@ async function rollbackUserResources(order) {
         await db.collection(COLLECTIONS.MEMBERS).doc(mRes.data[0]._id)
           .update({ data: { report_credits_used: _.inc(-1), updated_at: new Date() } });
       }
-    } catch (e) { console.error('回滚额度失败:', e.message); }
+    } catch (e) {
+      console.error('回滚额度失败:', e.message);
+      failures.push({ step: 'restore_member_credits', error: e.message });
+    }
   }
 
   // 释放优惠券
@@ -261,6 +269,29 @@ async function rollbackUserResources(order) {
       await db.collection('user_coupons').doc(metadata.coupon_user_id).update({
         data: { status: 'unused', order_id: '', updated_at: new Date() }
       });
-    } catch (e) { /* 静默 */ }
+    } catch (e) {
+      console.error('释放优惠券失败:', e.message);
+      failures.push({ step: 'release_coupon', error: e.message });
+    }
+  }
+
+  // 任一步回滚失败 → 记录补偿，供补偿任务/人工对账（不抛错，避免阻塞退款主流程）
+  if (failures.length > 0) {
+    try {
+      await db.collection('rollback_failures').add({
+        data: {
+          order_id: order._id,
+          out_trade_no: order.out_trade_no,
+          user_id: order.user_id,
+          order_type: order.type,
+          failures,
+          status: 'pending',
+          created_at: new Date()
+        }
+      });
+      console.error('[processRefund] 部分资源回滚失败，已写入 rollback_failures 供补偿:', failures);
+    } catch (logErr) {
+      console.error('[processRefund] rollback_failures 记录写入失败:', logErr.message);
+    }
   }
 }
