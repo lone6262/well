@@ -16,12 +16,12 @@ const {
   PAYMENT_TIMEOUT,
   MEMBER_CREDITS,
   MEMBER_STATUS,
-  POINTS_PACKS,
-  MEMBER_LIMITS
+  POINTS_PACKS
 , warmupConfig, loadPrices} = require('./common/constants');
 const { verifyToken } = require('./common/auth');
 const { checkRateLimit } = require('./common/rate-limiter');
 const { resolveQuota, deductQuota, rollbackQuota } = require('./common/quota-service');
+const { activateMembership } = require('./common/activation-service');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
@@ -660,7 +660,7 @@ async function handleMemberOrder(event, openid, mockPay) {
      // 兜底：payCallback 未成功激活时，内联执行激活逻辑
      if (!activated) {
        try {
-         await inlineActivateMember(openid, memberTier, orderResult._id, amount);
+         await inlineActivateMember(openid, memberTier, orderResult._id);
          await db.collection(COLLECTIONS.ORDERS).doc(orderResult._id).update({
            data: { dispatch_status: 'completed', dispatched_at: new Date(), updated_at: new Date() }
          });
@@ -695,109 +695,18 @@ async function handleMemberOrder(event, openid, mockPay) {
 
 /**
  * mock_pay 兜底：内联激活会员（当 payCallback 云函数间调用失败时使用）
- * 复用 payCallback.activateMember/activateFamilyMember 的核心逻辑
+ * 复用统一激活服务 common/activation-service.js，与 payCallback 保持一致，避免逻辑漂移
  */
-async function inlineActivateMember(openid, memberTier, orderId, amount) {
-  const isFamily = memberTier === 'family_monthly' || memberTier === 'family_yearly';
-  const isYearly = memberTier === 'yearly' || memberTier === 'family_yearly';
-  const durationDays = isYearly ? 365 : 30;
-  const creditsKey = isFamily
-    ? (isYearly ? 'FAMILY_YEARLY_REPORTS' : 'FAMILY_MONTHLY_REPORTS')
-    : (isYearly ? 'YEARLY_REPORTS' : 'MONTHLY_REPORTS');
-  const reportCredits = MEMBER_CREDITS[creditsKey];
-  const now = new Date();
-
-  // 幂等检查：同一订单号已激活过则跳过
-  const existCheck = await db.collection(COLLECTIONS.MEMBERS)
-    .where({ user_id: openid, activated_by_order: orderId })
-    .limit(1)
-    .get();
-  if (existCheck.data && existCheck.data.length > 0) {
-    console.log('[createOrder] 内联激活幂等跳过:', orderId);
-    return;
-  }
-
-  const existingResult = await db.collection(COLLECTIONS.MEMBERS)
-    .where({ user_id: openid })
-    .limit(1)
-    .get();
-  const existingMember = (existingResult.data && existingResult.data.length > 0)
-    ? existingResult.data[0] : null;
-  const isActive = existingMember && existingMember.status === MEMBER_STATUS.ACTIVE;
-  const isUpgrade = isActive && existingMember.type !== memberTier;
-
-  // 到期日计算：升级取 max(原到期, now+新周期)；续费/新开累加
-  let expireDate;
-  if (isUpgrade) {
-    const freshExpire = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
-    const originalExpire = new Date(existingMember.expire_date);
-    expireDate = originalExpire > freshExpire ? originalExpire : freshExpire;
-  } else if (isActive && existingMember.expire_date) {
-    const currentExpire = new Date(existingMember.expire_date);
-    const baseDate = currentExpire > now ? currentExpire : now;
-    expireDate = new Date(baseDate.getTime() + durationDays * 24 * 60 * 60 * 1000);
-  } else {
-    expireDate = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
-  }
-
-  // 额度重置时间（按起始日对齐）
-  const startDate = (existingMember && existingMember.start_date)
-    ? new Date(existingMember.start_date) : now;
-  const startDay = startDate.getDate();
-  let resetMonth = now.getMonth() + 1;
-  let resetYear = now.getFullYear();
-  if (resetMonth > 11) { resetMonth = 0; resetYear += 1; }
-  const maxDay = new Date(resetYear, resetMonth + 1, 0).getDate();
-  const nextResetAt = new Date(resetYear, resetMonth, Math.min(startDay, maxDay),
-    now.getHours(), now.getMinutes(), now.getSeconds());
-
-  // 升级时重置已用次数为 0
-  const preservedUsed = 0;
-
-  const memberData = {
-    activated_by_order: orderId,
-    type: memberTier,
-    status: MEMBER_STATUS.ACTIVE,
-    expire_date: expireDate,
-    report_credits_total: reportCredits,
-    report_credits_used: preservedUsed,
-    report_credits_reset_at: nextResetAt,
-    updated_at: now
-  };
-
-  if (isFamily) {
-    memberData.family_member_ids = existingMember ? (existingMember.family_member_ids || []) : [];
-    memberData.family_max_pet = MEMBER_LIMITS.MAX_PETS_FAMILY;
-    memberData.family_credits_total = reportCredits;
-    memberData.family_credits_used = preservedUsed;
-    memberData.family_credits_reset_at = nextResetAt;
-  }
-
-  if (existingMember) {
-    await db.collection(COLLECTIONS.MEMBERS).doc(existingMember._id).update({ data: memberData });
-  } else {
-    await db.collection(COLLECTIONS.MEMBERS).add({
-      data: Object.assign({
-        user_id: openid,
-        start_date: now,
-        auto_renew: false,
-        created_at: now
-      }, memberData)
-    });
-  }
-
-  // 同步 users 集合会员标识
-  try {
-    const userResult = await db.collection(COLLECTIONS.USERS)
-      .where({ user_id: openid }).limit(1).get();
-    if (userResult.data && userResult.data.length > 0) {
-      await db.collection(COLLECTIONS.USERS).doc(userResult.data[0]._id).update({
-        data: { isMember: true, memberExpire: expireDate, updated_at: now }
-      });
-    }
-  } catch (e) {
-    console.warn('[createOrder] 内联激活同步 users 失败:', e.message);
-  }
+async function inlineActivateMember(openid, memberTier, orderId) {
+  // MEMBER_CREDITS 已在入口被 Object.assign 为 DB 动态值，作为 dbCredits 传入
+  await activateMembership({
+    db,
+    _,
+    dbCredits: MEMBER_CREDITS,
+    openid,
+    memberType: memberTier,
+    orderId
+  });
 }
 
 /**

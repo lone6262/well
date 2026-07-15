@@ -25,12 +25,10 @@ const {
   PRICES,
   POINTS_PACKS,
   MEMBER_CREDITS,
-  MEMBER_STATUS,
-  MEMBER_DURATION,
-  MEMBER_LIMITS,
   warmupConfig,
   loadPrices
 } = require('./common/constants');
+const { activateMembership } = require('./common/activation-service');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
@@ -454,267 +452,35 @@ async function dispatchPostPayment(order, transactionId) {
 // ============================================
 
 /**
- * 激活/续费个人会员
- * 支持新开通、续费、过期后重新开通
- *
- * @param {string} openid - 用户 openid
- * @param {object} params - { memberType, orderId, amount }
+ * 激活/续费/升级个人会员
+ * 委托统一激活服务 common/activation-service.js（isFamily=false），与 createOrder 兜底共用同一实现，消除逻辑漂移
  */
 async function activateMember(openid, params) {
-  const { memberType } = params;
-
-  // S3 修复：幂等检查 — 同一订单号只激活一次会员，防止重复回调覆盖式重置 report_credits_used
-  if (params.orderId) {
-    const existing = await db.collection(COLLECTIONS.MEMBERS)
-      .where({ user_id: openid, activated_by_order: params.orderId })
-      .limit(1)
-      .get();
-    if (existing.data && existing.data.length > 0) {
-      console.log('[payCallback] 会员已激活过，跳过:', params.orderId);
-      return;
-    }
-  }
-
-  const isYearly = memberType === 'yearly';
-  const durationDays = isYearly ? MEMBER_DURATION.YEAR : MEMBER_DURATION.MONTH;
-  const reportCredits = isYearly
-    ? dbCredits.YEARLY_REPORTS
-    : dbCredits.MONTHLY_REPORTS;
-  const now = new Date();
-
-  // 查询现有会员记录
-  const existingResult = await db.collection(COLLECTIONS.MEMBERS)
-    .where({ user_id: openid })
-    .limit(1)
-    .get();
-
-  const existingMember = (existingResult.data && existingResult.data.length > 0)
-    ? existingResult.data[0]
-    : null;
-
- const isActive = existingMember && existingMember.status === MEMBER_STATUS.ACTIVE;
-
- // 判断是新开通/续费（同类型）还是升级（不同类型）
- const isUpgrade = isActive && existingMember.type !== memberType;
-
- // 计算到期日期
- let expireDate;
- if (isUpgrade) {
-   // 升级：取 max(原到期日, now+新周期)，保证用户不因升级损失时间
-   const freshExpire = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
-   const originalExpire = new Date(existingMember.expire_date);
-   expireDate = originalExpire > freshExpire ? originalExpire : freshExpire;
- } else if (isActive && existingMember.expire_date) {
-   const currentExpire = new Date(existingMember.expire_date);
-   const baseDate = currentExpire > now ? currentExpire : now;
-   expireDate = new Date(baseDate.getTime() + durationDays * 24 * 60 * 60 * 1000);
- } else {
-   expireDate = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
- }
-
- // 升级时重置已用次数为 0（用户花钱升级应享受新会员全部额度）
- let preservedUsed = 0;
- if (isUpgrade) {
-   preservedUsed = 0;
-   console.log('[payCallback] 会员升级:', existingMember.type, '→', memberType,
-     '重置已用次数，新总额:', reportCredits);
- }
-
-
- // 计算额度重置时间（按开通日对齐）
-  const resetBase = (existingMember && existingMember.start_date)
-    ? new Date(existingMember.start_date)
-    : now;
-  const startDay = resetBase.getDate();
-  let resetMonth = now.getMonth();
-  let resetYear = now.getFullYear();
-  resetMonth += 1;
-  if (resetMonth > 11) { resetMonth = 0; resetYear += 1; }
-  const maxDay = new Date(resetYear, resetMonth + 1, 0).getDate();
-  const resetDay = Math.min(startDay, maxDay);
-  const nextResetAt = new Date(resetYear, resetMonth, resetDay,
-    now.getHours(), now.getMinutes(), now.getSeconds());
-
-  // 更新或创建会员记录
-  if (existingMember) {
-    await db.collection(COLLECTIONS.MEMBERS).doc(existingMember._id).update({
-      data: {
-        type: memberType,
-        status: MEMBER_STATUS.ACTIVE,
-        expire_date: expireDate,
-        report_credits_total: reportCredits,
-        report_credits_used: preservedUsed,
-        report_credits_reset_at: nextResetAt,
-        activated_by_order: params.orderId, // S3: 记录激活来源，供幂等校验
-        // 从家庭会员降级到个人会员时，清理家庭专属字段
-        ...(isUpgrade && (existingMember.type === 'family_monthly' || existingMember.type === 'family_yearly')
-          ? {
-              family_member_ids: _.remove(),
-              family_max_pet: _.remove(),
-              family_credits_total: _.remove(),
-              family_credits_used: _.remove(),
-              family_credits_reset_at: _.remove()
-            }
-          : {}),
-        updated_at: now
-      }
-    });
-  } else {
-    await db.collection(COLLECTIONS.MEMBERS).add({
-      data: {
-        user_id: openid,
-        type: memberType,
-        status: MEMBER_STATUS.ACTIVE,
-        start_date: now,
-        expire_date: expireDate,
-        report_credits_total: reportCredits,
-        report_credits_used: preservedUsed,
-        report_credits_reset_at: nextResetAt,
-        activated_by_order: params.orderId, // S3: 记录激活来源，供幂等校验
-        auto_renew: false,
-        created_at: now,
-        updated_at: now
-      }
-    });
-  }
-
-  // 同步 users 集合的会员标记
-  await syncUserMemberStatus(openid, true, expireDate);
+  await activateMembership({
+    db,
+    _,
+    dbCredits,
+    openid,
+    memberType: params.memberType,
+    orderId: params.orderId,
+    isFamily: false
+  });
 }
 
 /**
- * 激活家庭会员
+ * 激活/续费/升级家庭会员
+ * 委托统一激活服务 common/activation-service.js（isFamily=true）
  */
 async function activateFamilyMember(openid, params) {
-  const isYearly = params.memberType === 'family_yearly';
-
-  // S3 修复：幂等检查 — 同一订单号只激活一次家庭会员，防止重复回调重置额度
-  if (params.orderId) {
-    const existing = await db.collection(COLLECTIONS.MEMBERS)
-      .where({ user_id: openid, activated_by_order: params.orderId })
-      .limit(1)
-      .get();
-    if (existing.data && existing.data.length > 0) {
-      console.log('[payCallback] 家庭会员已激活过，跳过:', params.orderId);
-      return;
-    }
-  }
-  const durationDays = isYearly ? MEMBER_DURATION.YEAR : MEMBER_DURATION.MONTH;
-  const reportCredits = isYearly ? dbCredits.FAMILY_YEARLY_REPORTS : dbCredits.FAMILY_MONTHLY_REPORTS;
-  const now = new Date();
-
-  const existingResult = await db.collection(COLLECTIONS.MEMBERS)
-    .where({ user_id: openid })
-    .limit(1)
-    .get();
-
-  const existingMember = (existingResult.data && existingResult.data.length > 0)
-    ? existingResult.data[0] : null;
-
-  const isActive = existingMember && existingMember.status === MEMBER_STATUS.ACTIVE;
-
-  // 判断是新开通/续费还是升级（不同会员类型间切换）
-  const isUpgrade = isActive && existingMember.type !== params.memberType;
-
- // 升级时重置已用次数为 0（用户花钱升级应享受新会员全部额度）
- let preservedUsed = 0;
- if (isUpgrade) {
-   preservedUsed = 0;
-   console.log('[payCallback] 家庭会员升级:', existingMember.type, '→', params.memberType,
-     '重置已用次数，新总额:', reportCredits);
- }
-
-  let expireDate;
-  if (isUpgrade) {
-    // 升级：取 max(原到期日, now+新周期)，保证用户不因升级损失时间
-    const freshExpire = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
-    const originalExpire = new Date(existingMember.expire_date);
-    expireDate = originalExpire > freshExpire ? originalExpire : freshExpire;
-  } else if (isActive && existingMember.expire_date) {
-    const currentExpire = new Date(existingMember.expire_date);
-    const baseDate = currentExpire > now ? currentExpire : now;
-    expireDate = new Date(baseDate.getTime() + durationDays * 24 * 60 * 60 * 1000);
-  } else {
-    expireDate = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
-  }
-
-  const startDate = (existingMember && existingMember.start_date)
-    ? new Date(existingMember.start_date) : now;
-  const startDay = startDate.getDate();
-  let resetMonth = now.getMonth() + 1;
-  let resetYear = now.getFullYear();
-  if (resetMonth > 11) { resetMonth = 0; resetYear += 1; }
-  const maxDay = new Date(resetYear, resetMonth + 1, 0).getDate();
-  const nextResetAt = new Date(resetYear, resetMonth,
-    Math.min(startDay, maxDay),
-    now.getHours(), now.getMinutes(), now.getSeconds());
-
-  const memberData = {
-    activated_by_order: params.orderId, // S3: 记录激活来源，供幂等校验（update/add 共用）
-    type: params.memberType,
-    status: MEMBER_STATUS.ACTIVE,
-    expire_date: expireDate,
-    report_credits_total: reportCredits,
-    report_credits_used: preservedUsed,
-    report_credits_reset_at: nextResetAt,
-    family_member_ids: existingMember ? (existingMember.family_member_ids || []) : [],
-    family_max_pet: MEMBER_LIMITS.MAX_PETS_FAMILY,
-    family_credits_total: reportCredits,
-    family_credits_used: preservedUsed,
-    family_credits_reset_at: nextResetAt,
-    updated_at: now
-  };
-
-  if (existingMember) {
-    await db.collection(COLLECTIONS.MEMBERS).doc(existingMember._id).update({
-      data: memberData
-    });
-  } else {
-    await db.collection(COLLECTIONS.MEMBERS).add({
-      data: {
-        user_id: openid,
-        start_date: now,
-        auto_renew: false,
-        created_at: now,
-        ...memberData
-      }
-    });
-  }
-
-  await syncUserMemberStatus(openid, true, expireDate);
-}
-
-/**
- * 同步 users 集合的会员状态标记
- */
-async function syncUserMemberStatus(openid, isMember, expireDate) {
-  const now = new Date();
-  const userResult = await db.collection(COLLECTIONS.USERS)
-    .where({ user_id: openid })
-    .limit(1)
-    .get();
-
-  if (userResult.data && userResult.data.length > 0) {
-    await db.collection(COLLECTIONS.USERS).doc(userResult.data[0]._id).update({
-      data: {
-        isMember: isMember,
-        memberExpire: expireDate,
-        updated_at: now
-      }
-    });
-  } else {
-    await db.collection(COLLECTIONS.USERS).add({
-      data: {
-        user_id: openid,
-        isMember: isMember,
-        memberExpire: expireDate,
-        first_report_used: false,
-        invite_reward_credits: 0,
-        created_at: now,
-        updated_at: now
-      }
-    });
-  }
+  await activateMembership({
+    db,
+    _,
+    dbCredits,
+    openid,
+    memberType: params.memberType,
+    orderId: params.orderId,
+    isFamily: true
+  });
 }
 
 // ============================================
