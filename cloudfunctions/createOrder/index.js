@@ -763,11 +763,12 @@ async function handlePointsOrder(event, openid, mockPay) {
   const description = `${pack.count} 次点数包购买`;
 
   try {
-    // 自动选最优优惠券（用户指定 couponId 优先；金额>0 才选）
+    // 优惠券：前端传 couponId 才用（指定券→校验后用，无效则自动选最优兜底）；
+    // couponId 为空（用户选"不使用"或老客户端）→ 不使用优惠券。
     let appliedCoupon = null;
-    if (pack.price > 0) {
+    if (pack.price > 0 && event.couponId) {
       try {
-        appliedCoupon = await autoSelectCoupon(openid, pack.price, ORDER_TYPES.POINTS, event.couponId || null);
+        appliedCoupon = await autoSelectCoupon(openid, pack.price, ORDER_TYPES.POINTS, event.couponId);
       } catch (couponErr) {
         console.warn('[createOrder] 点数优惠券查询跳过:', couponErr.message);
       }
