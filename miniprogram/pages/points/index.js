@@ -23,6 +23,13 @@ Page({
     pack5SavePct: '40',
     pack3Original: '29.70',
     pack5Original: '49.50',
+    // 优惠券（点数券）
+    coupons: [],
+    hasCoupons: false,
+    selectedCouponId: '',     // 选中的 user_coupon._id；'' = 不使用
+    couponDiscountFen: 0,
+    couponDiscountDisplay: '0.00',
+    finalPriceDisplay: '',
   },
 
   onLoad: function() {
@@ -32,6 +39,7 @@ Page({
     }
     this.loadPrices()
     this.loadBalance()
+    this.loadCoupons()
   },
 
   // 检查登录状态
@@ -95,8 +103,92 @@ Page({
     })
   },
 
+  // 加载可用点数券（后端按 orderType=points 过滤）
+  loadCoupons: function() {
+    var self = this
+    if (!app.globalData.cloudDevelopmentAvailable) return
+    wx.cloud.callFunction({
+      name: 'getUserCoupons',
+      data: { token: app.globalData.token, status: 'unused', orderType: 'points' },
+      success: function(res) {
+        if (!res.result || res.result.code !== 0) return
+        var list = (res.result.data && res.result.data.coupons) || []
+        list = self.enrichCoupons(list)
+        // 默认预选折扣最大且可用的券
+        var usable = list.filter(function(c) { return c.usable })
+        var best = ''
+        if (usable.length > 0) {
+          var bestC = usable.reduce(function(a, b) { return b.discountFen > a.discountFen ? b : a })
+          best = bestC._id
+        }
+        self.setData({ coupons: list, hasCoupons: list.length > 0, selectedCouponId: best })
+        self.recomputeCouponDiscount()
+      }
+    })
+  },
+
+  // 当前选中包价格（分）
+  currentPackPriceFen: function() {
+    var packDisplay = this.data.selectedPack === 'PACK_3' ? this.data.pack3Display : this.data.pack5Display
+    return Math.round(parseFloat(packDisplay) * 100)
+  },
+
+  // 为每张券计算对当前包的折扣与可用性（与后端 autoSelectCoupon 口径一致）
+  enrichCoupons: function(list) {
+    var packPriceFen = this.currentPackPriceFen()
+    return list.map(function(c) {
+      var discountFen = 0
+      var usable = true
+      if (c.minAmount && packPriceFen < c.minAmount) {
+        usable = false
+      } else if (c.discountType === 'fixed') {
+        discountFen = c.discountValue || 0
+      } else if (c.discountType === 'percent') {
+        discountFen = Math.floor(packPriceFen * (100 - (c.discountValue || 100)) / 100)
+      }
+      discountFen = Math.min(discountFen, packPriceFen)
+      return Object.assign({}, c, {
+        discountFen: discountFen,
+        discountDisplay: (discountFen / 100).toFixed(2),
+        usable: usable
+      })
+    })
+  },
+
+  // 选中包/券变化时重算折扣与实付
+  recomputeCouponDiscount: function() {
+    var coupons = this.enrichCoupons(this.data.coupons)
+    var packPriceFen = this.currentPackPriceFen()
+    var selected = this.data.selectedCouponId
+    var sel = coupons.filter(function(c) { return c._id === selected })[0]
+    if (sel && !sel.usable) { sel = null; selected = '' }
+    var discountFen = sel ? sel.discountFen : 0
+    var payFen = Math.max(packPriceFen - discountFen, 0)
+    this.setData({
+      coupons: coupons,
+      selectedCouponId: selected,
+      couponDiscountFen: discountFen,
+      couponDiscountDisplay: (discountFen / 100).toFixed(2),
+      finalPriceDisplay: (payFen / 100).toFixed(2)
+    })
+  },
+
   selectPack: function(e) {
     this.setData({ selectedPack: e.currentTarget.dataset.pack })
+    this.recomputeCouponDiscount()
+  },
+
+  selectCoupon: function(e) {
+    var id = e.currentTarget.dataset.id || ''
+    if (!id) {
+      this.setData({ selectedCouponId: '' })
+    } else {
+      var c = this.data.coupons.filter(function(x) { return x._id === id })[0]
+      if (c && !c.usable) return
+      if (id === this.data.selectedCouponId) id = ''   // 再次点击取消选择
+      this.setData({ selectedCouponId: id })
+    }
+    this.recomputeCouponDiscount()
   },
 
   purchasePack: function() {
@@ -104,17 +196,21 @@ Page({
     if (self.data.purchasing) return
     var packType = self.data.selectedPack
     var packDisplay = packType === 'PACK_3' ? self.data.pack3Display : self.data.pack5Display
-    var packName = packType === 'PACK_3' ? '3次包(¥' + packDisplay + ')' : '5次包(¥' + packDisplay + ')'
+    var packName = packType === 'PACK_3' ? '3次包' : '5次包'
+    var finalDisplay = self.data.finalPriceDisplay || packDisplay
+    var content = self.data.couponDiscountFen > 0
+      ? '购买' + packName + '（原价¥' + packDisplay + '，券后¥' + finalDisplay + '）？\n购买后90天有效。'
+      : '购买' + packName + '（¥' + finalDisplay + '）？\n购买后90天有效。'
 
     wx.showModal({
       title: '确认购买',
-      content: '购买' + packName + '？\n购买后90天有效。',
+      content: content,
       success: function(res) {
         if (res.confirm) {
           self.setData({ purchasing: true })
           wx.cloud.callFunction({
             name: 'createOrder',
-            data: { type: 'points', packType: packType, token: app.globalData.token },
+            data: { type: 'points', packType: packType, couponId: self.data.selectedCouponId || '', token: app.globalData.token },
             success: function(res2) {
               if (!res2.result || res2.result.code !== 0) {
                 self.setData({ purchasing: false })

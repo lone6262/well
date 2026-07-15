@@ -54,6 +54,31 @@
     </view>
   </view>
 
+  <!-- 优惠券 -->
+  <view class="coupon-section" wx:if="{{hasCoupons}}">
+    <view class="section-title">优惠券</view>
+    <view class="coupon-list">
+      <view class="coupon-item {{selectedCouponId === '' ? 'selected' : ''}}" bindtap="selectCoupon" data-id="">
+        <text class="coupon-name">不使用优惠券</text>
+      </view>
+      <view wx:for="{{coupons}}" wx:key="_id"
+            class="coupon-item {{selectedCouponId === item._id ? 'selected' : ''}} {{!item.usable ? 'disabled' : ''}}"
+            bindtap="selectCoupon" data-id="{{item._id}}">
+        <view class="coupon-value" wx:if="{{item.usable}}">-¥{{item.discountDisplay}}</view>
+        <view class="coupon-value" wx:else>—</view>
+        <view class="coupon-main">
+          <text class="coupon-name">{{item.couponName}}</text>
+          <text class="coupon-desc" wx:if="{{!item.usable}}">未满使用门槛</text>
+        </view>
+      </view>
+    </view>
+    <view class="coupon-summary" wx:if="{{couponDiscountFen > 0}}">
+      <text class="coupon-summary-label">券后价</text>
+      <text class="coupon-summary-price">¥{{finalPriceDisplay}}</text>
+      <text class="coupon-summary-save">已享 -¥{{couponDiscountDisplay}}</text>
+    </view>
+  </view>
+
   <!-- 购买按钮 -->
   <view class="buy-section">
     <button class="buy-btn" bindtap="purchasePack" loading="{{purchasing}}">

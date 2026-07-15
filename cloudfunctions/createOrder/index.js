@@ -763,24 +763,42 @@ async function handlePointsOrder(event, openid, mockPay) {
   const description = `${pack.count} 次点数包购买`;
 
   try {
+    // 自动选最优优惠券（用户指定 couponId 优先；金额>0 才选）
+    let appliedCoupon = null;
+    if (pack.price > 0) {
+      try {
+        appliedCoupon = await autoSelectCoupon(openid, pack.price, ORDER_TYPES.POINTS, event.couponId || null);
+      } catch (couponErr) {
+        console.warn('[createOrder] 点数优惠券查询跳过:', couponErr.message);
+      }
+    }
+    const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0;
+    const payAmount = Math.max(pack.price - couponDiscount, 0);
+    const isFreeOrder = payAmount === 0;          // 券全额抵扣 → 免单
+    const instantPaid = mockPay || isFreeOrder;   // 立即付清（不走微信支付）
+    const transactionId = instantPaid ? (mockPay ? 'MOCK_' : 'FREE_') + outTradeNo : '';
+
     const orderData = {
       user_id: openid,
       type: ORDER_TYPES.POINTS,
-      status: mockPay ? ORDER_STATUS.PAID : ORDER_STATUS.PENDING,
-      amount: pack.price,
+      status: instantPaid ? ORDER_STATUS.PAID : ORDER_STATUS.PENDING,
+      amount: payAmount,
       origin_amount: pack.price,
-      coupon_discount: 0,
+      coupon_discount: couponDiscount,
       out_trade_no: outTradeNo,
-      transaction_id: mockPay ? 'MOCK_' + outTradeNo : '',
+      transaction_id: transactionId,
       description,
       // metadata 字段名与 payCallback.creditPoints 读取对齐
       metadata: {
         pack_type: packType,
         points_count: pack.count,
         expire_days: pack.expire_days,
-        mock_pay: mockPay
+        mock_pay: mockPay,
+        coupon_user_id: appliedCoupon ? appliedCoupon.userCouponId : '',
+        coupon_name: appliedCoupon ? appliedCoupon.couponName : '',
+        coupon_discount: couponDiscount
       },
-      paid_at: mockPay ? now : null,
+      paid_at: instantPaid ? now : null,
       channel: event.channel || 'mp',
       is_checked: false,
       need_manual_review: pack.price >= PRICES.MANUAL_REVIEW_THRESHOLD,
@@ -791,15 +809,30 @@ async function handlePointsOrder(event, openid, mockPay) {
     const orderResult = await db.collection(COLLECTIONS.ORDERS).add({ data: orderData });
     const orderId = orderResult._id;
 
-    // Mock 模式直接发放点数
-    if (mockPay) {
+    // 锁定优惠券（真实支付由 payCallback 标 used；失败/取消/退款/过期释放）
+    if (appliedCoupon && appliedCoupon.userCouponId) {
+      try {
+        await db.collection(COLLECTIONS.USER_COUPONS)
+          .doc(appliedCoupon.userCouponId)
+          .update({ data: { status: 'locked', order_id: orderId, updated_at: now } });
+      } catch (e) { /* 优惠券集合可能尚未创建 */ }
+    }
+
+    // 立即付清（mock 或券全额抵扣免单）：直接发放点数 + 标记券已用（真实支付由 payCallback 标记）
+    if (instantPaid) {
       await creditPoints(openid, pack.count, pack.expire_days, orderId);
+      if (appliedCoupon && appliedCoupon.userCouponId) {
+        try {
+          await db.collection(COLLECTIONS.USER_COUPONS).doc(appliedCoupon.userCouponId)
+            .update({ data: { status: 'used', order_id: orderId, used_at: now, updated_at: now } });
+        } catch (_) {}
+      }
     }
 
     // 真实支付模式：调用微信统一下单，返回支付参数给前端
-    if (!mockPay && pack.price > 0) {
+    if (!instantPaid) {
       try {
-        const payParams = await createWechatPayment(outTradeNo, pack.price, openid, description);
+        const payParams = await createWechatPayment(outTradeNo, payAmount, openid, description);
         return {
           code: RESPONSE_CODE.SUCCESS,
           msg: '点数包订单创建成功，请完成支付',
@@ -807,15 +840,23 @@ async function handlePointsOrder(event, openid, mockPay) {
             orderId,
             outTradeNo,
             status: ORDER_STATUS.PENDING,
-            amount: pack.price,
-            amountDisplay: (pack.price / 100).toFixed(2),
+            amount: payAmount,
+            amountDisplay: (payAmount / 100).toFixed(2),
             packCount: pack.count,
+            couponDiscount: couponDiscount,
             payParams,
           },
         };
       } catch (payErr) {
         console.error('[createOrder] 点数包统一下单失败:', payErr.message);
+        // 支付失败：删除订单并释放已锁定的优惠券
         await db.collection(COLLECTIONS.ORDERS).doc(orderId).remove();
+        if (appliedCoupon && appliedCoupon.userCouponId) {
+          try {
+            await db.collection(COLLECTIONS.USER_COUPONS).doc(appliedCoupon.userCouponId)
+              .update({ data: { status: 'unused', order_id: '', updated_at: new Date() } });
+          } catch (_) {}
+        }
         return { code: RESPONSE_CODE.SERVER_ERROR, msg: '支付通道暂不可用，请稍后重试', data: {} };
       }
     }
@@ -827,9 +868,10 @@ async function handlePointsOrder(event, openid, mockPay) {
         orderId,
         outTradeNo,
         status: orderData.status,
-        amount: pack.price,
-        amountDisplay: (pack.price / 100).toFixed(2),
+        amount: payAmount,
+        amountDisplay: (payAmount / 100).toFixed(2),
         packCount: pack.count,
+        couponDiscount: couponDiscount,
       },
     };
   } catch (error) {
@@ -1085,9 +1127,10 @@ function buildDescription(quotaInfo) {
  * @param {string} openid - 用户 openid
  * @param {number} orderAmount - 原始订单金额（分）
  * @param {string} orderType - 订单类型（report / member / points）
+ * @param {string} [preferCouponId] - 用户指定的 user_coupons._id；命中且通过 type/min 校验则优先返回，否则自动选最优
  * @returns {object|null} { userCouponId, couponName, discount, couponType }
  */
-async function autoSelectCoupon(openid, orderAmount, orderType) {
+async function autoSelectCoupon(openid, orderAmount, orderType, preferCouponId) {
   const now = new Date();
 
   // 查询用户所有未使用、未过期的优惠券
@@ -1147,6 +1190,16 @@ async function autoSelectCoupon(openid, orderAmount, orderType) {
     if (discount > maxDiscount) {
       maxDiscount = discount;
       bestCoupon = {
+        userCouponId: uc._id,
+        couponId: uc.coupon_id,
+        couponName: tmpl.name || '优惠券',
+        discount: discount,
+        discountType: tmpl.discount_type
+      };
+    }
+    // 用户指定券优先：命中即返回（已通过上方 type/min_amount 校验）
+    if (preferCouponId && uc._id === preferCouponId) {
+      return {
         userCouponId: uc._id,
         couponId: uc.coupon_id,
         couponName: tmpl.name || '优惠券',
