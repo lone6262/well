@@ -464,8 +464,12 @@ async function generateReport(db, symptomRecord, petInfo) {
   const ageRange = getAgeRange(petInfo.age, petInfo.type);
   const cacheKey = generateCacheKey(symptomRecord.symptoms, petInfo.type, ageRange);
 
-  // 2. 查缓存
-  const cached = await getCache(db, cacheKey);
+  // 方案A：用户提供了有意义的描述 → 报告需按描述个性化，绕过缓存（不读不写），
+  // 避免"描述进了 prompt 却被症状级缓存架空"的不一致；无描述时仍走缓存以节省成本。
+  const hasDescription = sanitizeUserText(symptomRecord.description, 500).length > 0;
+
+  // 2. 查缓存（有描述时跳过）
+  const cached = hasDescription ? null : await getCache(db, cacheKey);
   if (cached) {
     console.log('[report] 命中缓存, cacheId=' + cached._id);
     // 缓存命中埋点（非阻塞）
@@ -505,12 +509,14 @@ async function generateReport(db, symptomRecord, petInfo) {
     source = REPORT_SOURCE.TEMPLATE;
   }
 
-  // 5. 写入缓存
+  // 5. 写入缓存（有描述时跳过——避免把按描述个性化的报告污染通用症状级缓存）
   let cacheId = null;
-  try {
-    cacheId = await setCache(db, cacheKey, content, source, petInfo, ageRange, symptomRecord.risk_level);
-  } catch (err) {
-    console.warn('[report] 缓存写入失败（不影响返回）: ' + err.message);
+  if (!hasDescription) {
+    try {
+      cacheId = await setCache(db, cacheKey, content, source, petInfo, ageRange, symptomRecord.risk_level);
+    } catch (err) {
+      console.warn('[report] 缓存写入失败（不影响返回）: ' + err.message);
+    }
   }
 
   // 缓存未命中埋点（非阻塞）
