@@ -573,24 +573,45 @@ async function handleMemberOrder(event, openid, mockPay) {
       }
     }
 
+    // 自动选取最优优惠券（测试单跳过；金额>0 才选）。抵扣最终金额（新购价或升级补差价）。
+    let appliedCoupon = null;
+    let couponDiscount = 0;
+    if (!isTestMode && amount > 0) {
+      try {
+        appliedCoupon = await autoSelectCoupon(openid, amount, ORDER_TYPES.MEMBER);
+        if (appliedCoupon) {
+          couponDiscount = appliedCoupon.discount || 0;
+        }
+      } catch (couponErr) {
+        console.warn('[createOrder] 会员优惠券查询跳过:', couponErr.message);
+      }
+    }
+    const payAmount = Math.max(amount - couponDiscount, 0);
+    const isFreeOrder = payAmount === 0;          // 券全额抵扣 → 免单
+    const instantPaid = mockPay || isFreeOrder;   // 立即付清（不走微信支付）
+    const transactionId = instantPaid ? (mockPay ? 'MOCK_' : 'FREE_') + outTradeNo : '';
+
     const orderData = {
       user_id: openid,
       type: orderType,
-      status: mockPay ? ORDER_STATUS.PAID : ORDER_STATUS.PENDING,
-      amount: amount,
-      origin_amount: isTestMode ? PRICE_MAP[memberTier] : (upgradeInfo ? upgradeInfo.original_price : amount), // 升级时记录目标原价
-      coupon_discount: 0,
+      status: instantPaid ? ORDER_STATUS.PAID : ORDER_STATUS.PENDING,
+      amount: payAmount,
+      origin_amount: isTestMode ? PRICE_MAP[memberTier] : (upgradeInfo ? upgradeInfo.original_price : amount), // 升级时记录目标原价（券前）
+      coupon_discount: couponDiscount,
       out_trade_no: outTradeNo,
-      transaction_id: mockPay ? 'MOCK_' + outTradeNo : '',
+      transaction_id: transactionId,
       description: upgradeInfo ? ('会员升级至' + (memberTier.includes('family') ? '家庭' : '个人') + (memberTier.includes('yearly') ? '年卡' : '月卡')) : ((memberTier.includes('yearly') ? '年卡' : '月卡') + '会员购买'),
       metadata: {
         member_tier: memberTier,
         mock_pay: mockPay,
         test_mode: isTestMode,
         test_amount: isTestMode ? amount : null,
-        upgrade_info: upgradeInfo  // 升级补差价信息（非升级时为 null）
+        upgrade_info: upgradeInfo,  // 升级补差价信息（非升级时为 null）
+        coupon_user_id: appliedCoupon ? appliedCoupon.userCouponId : '',
+        coupon_name: appliedCoupon ? appliedCoupon.couponName : '',
+        coupon_discount: couponDiscount
       },
-      paid_at: mockPay ? now : null,
+      paid_at: instantPaid ? now : null,
       channel: event.channel || 'mp',
       is_checked: false,
       need_manual_review: false, // 测试订单不需要人工审核
@@ -600,10 +621,19 @@ async function handleMemberOrder(event, openid, mockPay) {
 
     const orderResult = await db.collection(COLLECTIONS.ORDERS).add({ data: orderData });
 
-   // 真实支付模式：调用微信支付
-   if (!mockPay && amount > 0) {
+    // 锁定优惠券（payCallback 标记 used；支付失败/取消/退款/过期会释放）
+    if (appliedCoupon && appliedCoupon.userCouponId) {
+      try {
+        await db.collection(COLLECTIONS.USER_COUPONS)
+          .doc(appliedCoupon.userCouponId)
+          .update({ data: { status: 'locked', order_id: orderResult._id, updated_at: now } });
+      } catch (e) { /* 优惠券集合可能尚未创建 */ }
+    }
+
+   // 真实支付模式：调用微信支付（instantPaid=true 时跳过：mock 或券全额抵扣免单）
+   if (!instantPaid) {
      try {
-       const payParams = await createWechatPayment(outTradeNo, amount, openid,
+       const payParams = await createWechatPayment(outTradeNo, payAmount, openid,
          (memberTier.includes('yearly') ? '年卡' : '月卡') + '会员购买');
        return {
          code: RESPONSE_CODE.SUCCESS,
@@ -612,15 +642,23 @@ async function handleMemberOrder(event, openid, mockPay) {
            orderId: orderResult._id,
            outTradeNo,
            status: ORDER_STATUS.PENDING,
-           amount,
-           amountDisplay: (amount / 100).toFixed(2),
+           amount: payAmount,
+           amountDisplay: (payAmount / 100).toFixed(2),
            memberTier,
+           couponDiscount: couponDiscount,
            payParams: payParams
          },
        };
      } catch (payErr) {
        console.error('[createOrder] 统一下单失败:', payErr.message);
+       // 支付失败：删除订单并释放已锁定的优惠券
        await db.collection(COLLECTIONS.ORDERS).doc(orderResult._id).remove();
+       if (appliedCoupon && appliedCoupon.userCouponId) {
+         try {
+           await db.collection(COLLECTIONS.USER_COUPONS).doc(appliedCoupon.userCouponId)
+             .update({ data: { status: 'unused', order_id: '', updated_at: new Date() } });
+         } catch (_) {}
+       }
        return { code: RESPONSE_CODE.SERVER_ERROR, msg: '支付通道暂不可用，请稍后重试', data: {} };
      }
    }
@@ -629,15 +667,15 @@ async function handleMemberOrder(event, openid, mockPay) {
    // 主动调用 payCallback 分发业务（激活会员/到账点数），否则会员记录不会更新。
    // S6 加固：payCallback 云函数间调用可能超时/失败，调用后校验会员是否真正激活，
    // 未激活则内联兜底执行激活逻辑，确保 mock 模式下会员状态一致。
-   if (mockPay) {
+   if (instantPaid) {
      let activated = false;
      try {
-       console.log('[createOrder] mock_pay 模式，主动触发 payCallback 激活会员:', orderResult._id);
+       console.log('[createOrder] ' + (isFreeOrder ? '免单(券全额抵扣)' : 'mock_pay') + '模式，主动触发 payCallback 激活会员:', orderResult._id);
        await cloud.callFunction({
          name: 'payCallback',
          data: {
            out_trade_no: outTradeNo,
-           transaction_id: 'MOCK_' + outTradeNo,
+           transaction_id: transactionId,
            result_code: 'SUCCESS'
          }
        });
@@ -681,9 +719,10 @@ async function handleMemberOrder(event, openid, mockPay) {
        orderId: orderResult._id,
        outTradeNo,
        status: orderData.status,
-       amount,
-       amountDisplay: (amount / 100).toFixed(2),
+       amount: payAmount,
+       amountDisplay: (payAmount / 100).toFixed(2),
        memberTier,
+       couponDiscount: couponDiscount,
      },
    };
   } catch (error) {
