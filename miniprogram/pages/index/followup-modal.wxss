@@ -36,14 +36,14 @@
   display: block;
   font-size: 36rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 8rpx;
 }
 
 .followup-modal-subtitle {
   display: block;
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-tertiary);
   margin-bottom: 20rpx;
 }
 
@@ -58,11 +58,11 @@
   margin-bottom: 4rpx;
 }
 
-.followup-pet-name { font-size: 28rpx; font-weight: bold; color: #333; }
+.followup-pet-name { font-size: 28rpx; font-weight: bold; color: var(--text-primary); }
 
 .followup-pet-sep { margin: 0 12rpx; color: #d9d9d9; }
 
-.followup-pet-symptoms { font-size: 26rpx; color: #666; }
+.followup-pet-symptoms { font-size: 26rpx; color: var(--text-secondary); }
 
 .followup-modal-actions {
   display: flex;
@@ -74,7 +74,7 @@
   height: 96rpx;
   line-height: 96rpx;
   font-size: 30rpx;
-  color: #999;
+  color: var(--text-tertiary);
   background: #fff;
   border: none;
   border-right: 1rpx solid #f0f0f0;

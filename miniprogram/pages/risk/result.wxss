@@ -203,6 +203,6 @@ page { width: 100%; overflow-x: hidden; }
   margin-top: 8rpx;
   padding: 8rpx 0;
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-tertiary);
   line-height: 1.4;
 }

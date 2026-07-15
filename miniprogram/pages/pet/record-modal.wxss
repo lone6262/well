@@ -34,7 +34,7 @@
 .record-modal-title {
   font-size: 30rpx;
   font-weight: 600;
-  color: #333333;
+  color: var(--text-primary);
 }
 
 .record-modal-close {
@@ -46,7 +46,7 @@
   align-items: center;
   justify-content: center;
   font-size: 28rpx;
-  color: #666666;
+  color: var(--text-secondary);
 }
 
 .record-modal-list {
@@ -89,14 +89,14 @@
 
 .record-item-title {
   font-size: 26rpx;
-  color: #333333;
+  color: var(--text-primary);
   font-weight: 500;
   margin-bottom: 4rpx;
 }
 
 .record-item-desc {
   font-size: 22rpx;
-  color: #999999;
+  color: var(--text-tertiary);
 }
 
 .record-item-arrow {
@@ -119,7 +119,7 @@
 
 .empty-text {
   font-size: 28rpx;
-  color: #999999;
+  color: var(--text-tertiary);
   margin-bottom: 8rpx;
 }
 
@@ -143,5 +143,5 @@
 
 .loading-text {
   font-size: 26rpx;
-  color: #999999;
+  color: var(--text-tertiary);
 }

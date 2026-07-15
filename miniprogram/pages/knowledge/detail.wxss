@@ -30,7 +30,7 @@
 
 .loading-text {
   font-size: 26rpx;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 /* === 文章头部 === */
@@ -43,7 +43,7 @@
 .article-title {
   font-size: 36rpx;
   font-weight: 700;
-  color: #333;
+  color: var(--text-primary);
   line-height: 1.5;
   display: block;
   margin-bottom: 16rpx;
@@ -70,12 +70,12 @@
 
 .meta-category {
   font-size: 22rpx;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .meta-views {
   font-size: 22rpx;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 /* === 文章正文 === */
@@ -89,7 +89,7 @@
 .content-h2 {
   font-size: 32rpx;
   font-weight: 700;
-  color: #333;
+  color: var(--text-primary);
   margin-top: 32rpx;
   margin-bottom: 16rpx;
   padding-bottom: 8rpx;
@@ -99,7 +99,7 @@
 .content-h3 {
   font-size: 28rpx;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   margin-top: 24rpx;
   margin-bottom: 12rpx;
 }
@@ -134,7 +134,7 @@
 .title-text {
   font-size: 30rpx;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .symptom-tags {
