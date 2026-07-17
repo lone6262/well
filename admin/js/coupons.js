@@ -42,7 +42,7 @@ function displayCoupons(coupons) {
   tbody.innerHTML = coupons.map(coupon => {
     const discountText = coupon.discount_type === 'fixed'
       ? `减 ¥${((coupon.discount_value || 0) / 100).toFixed(2)}`
-      : `${coupon.discount_value}% 折`;
+      : `${coupon.discount_value} 折`;
     const sceneText = COUPON_SCENE_MAP[coupon.scene] || coupon.scene || '-';
     const appTypeText = coupon.type || '通用';
     const statusText = coupon.is_active ? '活跃' : '已下架';
@@ -53,7 +53,7 @@ function displayCoupons(coupons) {
     return `
       <tr>
         <td>${escapeHtml(coupon.name || '-')}</td>
-        <td>${coupon.discount_type === 'fixed' ? '固定减' : '百分比'}</td>
+        <td>${coupon.discount_type === 'fixed' ? '固定减' : '折扣'}</td>
         <td>${discountText}</td>
         <td>${escapeHtml(appTypeText)}</td>
         <td>${escapeHtml(sceneText)}</td>
@@ -141,7 +141,7 @@ async function saveCoupon() {
     ],
     couponDiscountValue: [
       { required: true, message: '请输入折扣值' },
-      { number: true, min: 0.01, max: discountType === 'percent' ? 100 : undefined, message: discountType === 'percent' ? '百分比必须在 0.01 到 100 之间' : '固定减金额必须大于 0' }
+      { number: true, min: 0.01, max: discountType === 'percent' ? 9.9 : undefined, message: discountType === 'percent' ? '折扣必须在 0.01 到 9.9 之间（8 = 8 折）' : '固定减金额必须大于 0' }
     ],
     couponMinAmount: { number: true, min: 0, message: '最低使用金额不能小于 0' },
     couponValidityDays: [

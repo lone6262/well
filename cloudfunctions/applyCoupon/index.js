@@ -49,7 +49,10 @@ exports.main = async (event, context) => {
     if (coupon.discount_type === 'fixed') {
       discount = coupon.discount_value || 0;
     } else if (coupon.discount_type === 'percent') {
-      discount = Math.floor(orderAmount * (100 - (coupon.discount_value || 100)) / 100);
+      // discount_value 为「折」数：8 = 8 折（实付 80%），与 createOrder.autoSelectCoupon 口径一致
+      // clamp 到 [0,10]，防止历史脏数据算出负折扣
+      const zhe = Math.min(Math.max(coupon.discount_value || 10, 0), 10);
+      discount = Math.floor(orderAmount * (10 - zhe) / 10);
     }
 
     const payAmount = Math.max(orderAmount - discount, 0);
