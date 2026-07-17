@@ -3,6 +3,7 @@ const logger = require('../../utils/logger.js')
 const log = logger.child('RiskResult')
 const priceService = require('../../utils/price-service')
 const { invokePayment } = require('../../utils/pay')
+const helper = require('../../utils/coupon-helper')
 let app = getApp()
 
 // 本地风险显示信息函数
@@ -57,7 +58,14 @@ Page({
     showPayOptions: false,
     showDisclaimerModal: false,
     disclaimerAgreed: false,
-    isMember: false
+    isMember: false,
+    // 优惠券（仅付费报告）
+    coupons: [],
+    hasCoupons: false,
+    selectedCouponId: '',
+    couponDiscountFen: 0,
+    couponDiscountDisplay: '0.00',
+    finalPriceDisplay: ''
   },
 
   onLoad: function(options) {
@@ -353,11 +361,44 @@ Page({
       success: function(res) {
         if (res.result && res.result.code === 0) {
           self.setData({ quotaInfo: res.result.data })
+          // 仅付费报告加载可选券
+          if (res.result.data && res.result.data.quota_source === 'paid') {
+            self.loadCouponsForReport()
+          }
           // 检查是否有待支付订单，引导恢复
           self.checkPendingOrder()
         }
       }
     })
+  },
+
+  // 当前报告订单原价（分）= 后端 quotaInfo.price（权威）；orderType=report
+  orderPriceFen: function() {
+    return (this.data.quotaInfo && this.data.quotaInfo.price) || 0
+  },
+
+  // 加载可用报告券（后端按 orderType=report 过滤，含 universal）；默认预选最优
+  loadCouponsForReport: function() {
+    var self = this
+    if (!app.globalData.cloudDevelopmentAvailable) return
+    helper.loadCoupons(
+      app.globalData.token, 'report', this.orderPriceFen(),
+      function(snap) { self.setData(snap) },
+      function() {}
+    )
+  },
+
+  // 券选择变化时重算折扣与实付
+  recomputeCoupon: function() {
+    var enriched = helper.enrichCoupons(this.data.coupons, this.orderPriceFen())
+    this.setData(helper.computeFinal(enriched, this.data.selectedCouponId, this.orderPriceFen()))
+  },
+
+  selectCoupon: function(e) {
+    var id = e.currentTarget.dataset.id || ''
+    var next = helper.toggleSelect(this.data.selectedCouponId, id, this.data.coupons)
+    this.setData({ selectedCouponId: next })
+    this.recomputeCoupon()
   },
 
   // 检查是否有待支付订单（支付中断恢复）
@@ -489,7 +530,7 @@ Page({
 
     wx.cloud.callFunction({
       name: 'createOrder',
-      data: { type: 'report', recordId: recordId, token: app.globalData.token },
+      data: { type: 'report', recordId: recordId, couponId: self.data.selectedCouponId || '', token: app.globalData.token },
       success: function(res) {
         wx.hideLoading()
         if (!res.result || res.result.code !== 0) {

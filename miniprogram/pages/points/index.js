@@ -2,6 +2,7 @@
 var app = getApp()
 const priceService = require('../../utils/price-service')
 const { invokePayment } = require('../../utils/pay')
+const helper = require('../../utils/coupon-helper')
 
 Page({
   data: {
@@ -103,28 +104,15 @@ Page({
     })
   },
 
-  // 加载可用点数券（后端按 orderType=points 过滤）
+  // 加载可用点数券（后端按 orderType=points 过滤）；默认预选最优可用券
   loadCoupons: function() {
     var self = this
     if (!app.globalData.cloudDevelopmentAvailable) return
-    wx.cloud.callFunction({
-      name: 'getUserCoupons',
-      data: { token: app.globalData.token, status: 'unused', orderType: 'points' },
-      success: function(res) {
-        if (!res.result || res.result.code !== 0) return
-        var list = (res.result.data && res.result.data.coupons) || []
-        list = self.enrichCoupons(list)
-        // 默认预选折扣最大且可用的券
-        var usable = list.filter(function(c) { return c.usable })
-        var best = ''
-        if (usable.length > 0) {
-          var bestC = usable.reduce(function(a, b) { return b.discountFen > a.discountFen ? b : a })
-          best = bestC._id
-        }
-        self.setData({ coupons: list, hasCoupons: list.length > 0, selectedCouponId: best })
-        self.recomputeCouponDiscount()
-      }
-    })
+    helper.loadCoupons(
+      app.globalData.token, 'points', this.currentPackPriceFen(),
+      function(snap) { self.setData(snap) },
+      function() {}
+    )
   },
 
   // 当前选中包价格（分）
@@ -133,44 +121,10 @@ Page({
     return Math.round(parseFloat(packDisplay) * 100)
   },
 
-  // 为每张券计算对当前包的折扣与可用性（与后端 autoSelectCoupon 口径一致）
-  enrichCoupons: function(list) {
-    var packPriceFen = this.currentPackPriceFen()
-    return list.map(function(c) {
-      var discountFen = 0
-      var usable = true
-      if (c.minAmount && packPriceFen < c.minAmount) {
-        usable = false
-      } else if (c.discountType === 'fixed') {
-        discountFen = c.discountValue || 0
-      } else if (c.discountType === 'percent') {
-        discountFen = Math.floor(packPriceFen * (100 - (c.discountValue || 100)) / 100)
-      }
-      discountFen = Math.min(discountFen, packPriceFen)
-      return Object.assign({}, c, {
-        discountFen: discountFen,
-        discountDisplay: (discountFen / 100).toFixed(2),
-        usable: usable
-      })
-    })
-  },
-
-  // 选中包/券变化时重算折扣与实付
+  // 选中包/券变化时重算折扣与实付（计算逻辑统一切到 utils/coupon-helper）
   recomputeCouponDiscount: function() {
-    var coupons = this.enrichCoupons(this.data.coupons)
-    var packPriceFen = this.currentPackPriceFen()
-    var selected = this.data.selectedCouponId
-    var sel = coupons.filter(function(c) { return c._id === selected })[0]
-    if (sel && !sel.usable) { sel = null; selected = '' }
-    var discountFen = sel ? sel.discountFen : 0
-    var payFen = Math.max(packPriceFen - discountFen, 0)
-    this.setData({
-      coupons: coupons,
-      selectedCouponId: selected,
-      couponDiscountFen: discountFen,
-      couponDiscountDisplay: (discountFen / 100).toFixed(2),
-      finalPriceDisplay: (payFen / 100).toFixed(2)
-    })
+    var enriched = helper.enrichCoupons(this.data.coupons, this.currentPackPriceFen())
+    this.setData(helper.computeFinal(enriched, this.data.selectedCouponId, this.currentPackPriceFen()))
   },
 
   selectPack: function(e) {
@@ -180,14 +134,8 @@ Page({
 
   selectCoupon: function(e) {
     var id = e.currentTarget.dataset.id || ''
-    if (!id) {
-      this.setData({ selectedCouponId: '' })
-    } else {
-      var c = this.data.coupons.filter(function(x) { return x._id === id })[0]
-      if (c && !c.usable) return
-      if (id === this.data.selectedCouponId) id = ''   // 再次点击取消选择
-      this.setData({ selectedCouponId: id })
-    }
+    var next = helper.toggleSelect(this.data.selectedCouponId, id, this.data.coupons)
+    this.setData({ selectedCouponId: next })
     this.recomputeCouponDiscount()
   },
 
