@@ -249,11 +249,12 @@ async function handleReportOrder(event, openid, mockPay) {
       }
     }
 
-    // 7.6. 自动选取最优优惠券（仅付费订单且非套餐）
+    // 7.6. 优惠券：前端传 couponId 才用（指定券→校验后用，无效则自动选最优兜底）；
+    // couponId 为空（用户选"不使用"或老客户端）→ 不使用优惠券，与 points 订单口径一致
     let appliedCoupon = null;
-    if (quotaInfo.price > 0 && quotaInfo.quota_source === 'paid') {
+    if (quotaInfo.price > 0 && quotaInfo.quota_source === 'paid' && event.couponId) {
       try {
-        appliedCoupon = await autoSelectCoupon(openid, quotaInfo.price, ORDER_TYPES.REPORT);
+        appliedCoupon = await autoSelectCoupon(openid, quotaInfo.price, ORDER_TYPES.REPORT, event.couponId);
       } catch (couponErr) {
         console.warn('[createOrder] 优惠券查询跳过:', couponErr.message);
       }
@@ -501,27 +502,19 @@ async function handleMemberOrder(event, openid, mockPay) {
           };
         }
 
-        // ===== 升级补差价 =====
-        const DURATION_MAP = { monthly: 30, family_monthly: 30, yearly: 365, family_yearly: 365 };
-        const remainingMs = new Date(active.expire_date).getTime() - now.getTime();
-        const remainingDays = Math.max(0, remainingMs / (24 * 60 * 60 * 1000));
-        const currentDuration = DURATION_MAP[active.type] || 30;
-        const currentValue = PRICE_MAP[active.type];
+        // ===== 升级补差价：按目标会员全价收费 =====
+        // 旧会员剩余报告额度不再按剩余天数折算抵扣，改为激活时按 1:1 转为点数（见 activation-service）
         const targetValue = PRICE_MAP[memberTier];
-        const remainingValue = Math.round(currentValue * (remainingDays / currentDuration));
-        const upgradeAmount = Math.max(1, targetValue - remainingValue);
-        amount = upgradeAmount;
+        // amount 已是 PRICE_MAP[memberTier]（目标全价），无需补差价折算
         upgradeInfo = {
           is_upgrade: true,
           from_type: active.type,
           to_type: memberTier,
-          remaining_days: Math.round(remainingDays),
-          credit_amount: remainingValue,
           original_price: targetValue,
-          upgrade_price: upgradeAmount
+          upgrade_price: targetValue
         };
-        console.log('[createOrder] 升级补差价:', active.type, '→', memberTier,
-          '剩余', Math.round(remainingDays), '天, 抵扣', remainingValue, '分, 补价', upgradeAmount, '分');
+        console.log('[createOrder] 会员升级:', active.type, '→', memberTier,
+          '按全价', targetValue, '分; 剩余报告额度将在激活时转为点数');
       }
     }
 
@@ -573,12 +566,14 @@ async function handleMemberOrder(event, openid, mockPay) {
       }
     }
 
-    // 自动选取最优优惠券（测试单跳过；金额>0 才选）。抵扣最终金额（新购价或升级补差价）。
+    // 优惠券：前端传 couponId 才用（指定券→校验后用，无效则自动选最优兜底）；
+    // couponId 为空（用户选"不使用"或老客户端）→ 不使用优惠券，与 points 订单口径一致。
+    // amount 为最终抵扣基数（新购价或升级补差价）。
     let appliedCoupon = null;
     let couponDiscount = 0;
-    if (!isTestMode && amount > 0) {
+    if (!isTestMode && amount > 0 && event.couponId) {
       try {
-        appliedCoupon = await autoSelectCoupon(openid, amount, ORDER_TYPES.MEMBER);
+        appliedCoupon = await autoSelectCoupon(openid, amount, ORDER_TYPES.MEMBER, event.couponId);
         if (appliedCoupon) {
           couponDiscount = appliedCoupon.discount || 0;
         }
@@ -1181,8 +1176,10 @@ async function autoSelectCoupon(openid, orderAmount, orderType, preferCouponId) 
     if (tmpl.discount_type === 'fixed') {
       discount = tmpl.discount_value || 0;
     } else if (tmpl.discount_type === 'percent') {
-      // percent: 80 表示 8 折 => 优惠 20%
-      discount = Math.floor(orderAmount * (100 - (tmpl.discount_value || 100)) / 100);
+      // discount_value 为「折」数：8 = 8 折（实付 80%），与领券页展示 (value+'折') 口径一致
+      // clamp 到 [0,10]，防止历史脏数据（如按百分比误录的 80）算出负折扣
+      const zhe = Math.min(Math.max(tmpl.discount_value || 10, 0), 10);
+      discount = Math.floor(orderAmount * (10 - zhe) / 10);
     }
 
     // 优惠不能超过订单金额

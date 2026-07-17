@@ -368,3 +368,22 @@ page {
   font-size: var(--font-size-sm);
   color: var(--text-tertiary);
 }
+
+/* ========================================
+   优惠券
+   ======================================== */
+.coupon-section { margin-bottom: 24rpx; }
+.coupon-section-title { font-size: 28rpx; font-weight: bold; color: var(--text-primary); margin-bottom: 16rpx; }
+.coupon-list { display: flex; flex-direction: column; gap: 16rpx; }
+.coupon-item { display: flex; align-items: center; background: var(--bg-card); border: 2rpx solid var(--border-color); border-radius: var(--radius-lg); padding: 20rpx 24rpx; }
+.coupon-item.selected { border-color: var(--brand-primary); background: var(--brand-primary-light); }
+.coupon-item.disabled { opacity: 0.5; }
+.coupon-value { min-width: 140rpx; font-size: 32rpx; font-weight: bold; color: var(--color-danger); }
+.coupon-main { display: flex; flex-direction: column; gap: 4rpx; }
+.coupon-name { font-size: 28rpx; color: var(--text-primary); }
+.coupon-desc { font-size: 22rpx; color: var(--text-tertiary); }
+.coupon-summary { display: flex; align-items: baseline; gap: 12rpx; margin-top: 16rpx; padding: 16rpx 24rpx; background: var(--brand-primary-light); border-radius: var(--radius-lg); }
+.coupon-summary-label { font-size: 26rpx; color: var(--text-secondary); }
+.coupon-summary-price { font-size: 36rpx; font-weight: bold; color: var(--brand-primary); }
+.coupon-summary-save { margin-left: auto; font-size: 24rpx; color: var(--color-danger); }
+.coupon-tip { margin-top: 12rpx; font-size: 22rpx; color: var(--text-tertiary); line-height: 1.5; }

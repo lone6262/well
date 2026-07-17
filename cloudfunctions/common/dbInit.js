@@ -111,6 +111,15 @@ async function createIndexes() {
       ]
     },
     {
+      collection: 'point_transactions',
+      indexes: [
+        // 部分唯一索引：仅 order_id 非空时强制 (order_id, type) 唯一，防同一订单重复发放点数。
+        // 控制台建索引时需配 partialFilterExpression: { order_id: { $ne: "" } }
+        // （consume/refund 流水 order_id='' 不参与，否则空串互相冲突建不上）
+        { name: 'order_type_unique', keys: { order_id: 1, type: 1 }, unique: true }
+      ]
+    },
+    {
       collection: 'hospitals',
       indexes: [
         { name: 'location_index', keys: { location: '2dsphere' } },

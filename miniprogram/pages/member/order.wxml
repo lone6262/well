@@ -109,13 +109,40 @@
 
     <!-- 价格说明 -->
     <view class="price-note">
-      <text class="note-text" wx:if="{{upgradeMode}}">升级后月度剩余天数将叠加到年度会员中</text>
+      <text class="note-text" wx:if="{{upgradeMode && currentCreditsRemaining > 0}}">当前会员剩余 {{currentCreditsRemaining}} 次{{isFamilyCurrent ? '（家庭共享）' : ''}}，升级后将转为 {{currentCreditsRemaining}} 点点数；剩余有效期叠加到新会员</text>
+      <text class="note-text" wx:elif="{{upgradeMode}}">升级后剩余有效期将叠加到新会员</text>
       <text class="note-text" wx:elif="{{renewMode}}">续费后有效期将延长</text>
       <view class="agreement-row" wx:else>
         <text class="note-text">开通即表示同意</text>
         <text class="agreement-link" bindtap="viewAgreement">《会员服务协议》</text>
         <text class="note-text">，会员权益立时生效</text>
       </view>
+    </view>
+
+    <!-- 优惠券 -->
+    <view class="coupon-section" wx:if="{{hasCoupons}}">
+      <view class="coupon-section-title">优惠券</view>
+      <view class="coupon-list">
+        <view class="coupon-item {{selectedCouponId === '' ? 'selected' : ''}}" bindtap="selectCoupon" data-id="">
+          <text class="coupon-name">不使用优惠券</text>
+        </view>
+        <view wx:for="{{coupons}}" wx:key="_id"
+              class="coupon-item {{selectedCouponId === item._id ? 'selected' : ''}} {{!item.usable ? 'disabled' : ''}}"
+              bindtap="selectCoupon" data-id="{{item._id}}">
+          <view class="coupon-value" wx:if="{{item.usable}}">-¥{{item.discountDisplay}}</view>
+          <view class="coupon-value" wx:else>—</view>
+          <view class="coupon-main">
+            <text class="coupon-name">{{item.couponName}}</text>
+            <text class="coupon-desc" wx:if="{{!item.usable}}">未满使用门槛</text>
+          </view>
+        </view>
+      </view>
+      <view class="coupon-summary" wx:if="{{couponDiscountFen > 0}}">
+        <text class="coupon-summary-label">券后价</text>
+        <text class="coupon-summary-price">¥{{finalPriceDisplay}}</text>
+        <text class="coupon-summary-save">已享 -¥{{couponDiscountDisplay}}</text>
+      </view>
+      <view class="coupon-tip" wx:if="{{renewMode && couponDiscountFen > 0}}">续费时优惠券以下单金额为准</view>
     </view>
 
     <!-- 底部按钮 -->
@@ -133,7 +160,7 @@
       <view class="pay-spinner"></view>
       <text class="pay-title">正在处理{{upgradeMode ? "升级" : (renewMode ? "续费" : "支付")}}...</text>
       <text class="pay-desc">请稍候，正在连接支付服务</text>
-      <text class="pay-amount">¥{{selectedPrice}}</text>
+      <text class="pay-amount">¥{{couponDiscountFen > 0 ? finalPriceDisplay : selectedPrice}}</text>
       <text class="pay-method">微信支付（模拟）</text>
     </view>
   </view>

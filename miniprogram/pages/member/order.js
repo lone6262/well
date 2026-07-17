@@ -2,6 +2,7 @@
 // V2.0: 价格从云端动态加载，管理后台可配置
 const priceService = require('../../utils/price-service')
 const { invokePayment } = require('../../utils/pay')
+const helper = require('../../utils/coupon-helper')
 let app = getApp()
 
 // 默认价格映射表（云端价格加载失败时的兜底）
@@ -75,7 +76,14 @@ Page({
     downgradeMonthly: false,
     downgradeYearly: false,
     downgradeFamilyMonthly: false,
-    downgradeFamilyYearly: false
+    downgradeFamilyYearly: false,
+    // 优惠券（与点数页/报告页同构）
+    coupons: [],
+    hasCoupons: false,
+    selectedCouponId: '',
+    couponDiscountFen: 0,
+    couponDiscountDisplay: '0.00',
+    finalPriceDisplay: ''
   },
 
   // 运行时价格缓存
@@ -186,6 +194,8 @@ Page({
         }
       }
       if (callback) callback();
+      // 价格/套餐就绪后加载可用会员券（依赖 selectedPrice，由 onLoad callback 已设置）
+      self.loadCouponsForMember();
     });
   },
 
@@ -204,6 +214,9 @@ Page({
         // 使用 UPGRADE_MATRIX 判断每个类型是否可选
         var flags = {
           currentMemberType: d.type,
+          // 升级页展示「剩余 X 次转 X 点」用（getMemberStatus 已返回，此前被丢弃）
+          currentCreditsRemaining: d.report_credits_remaining || 0,
+          isFamilyCurrent: d.type.indexOf('family') === 0,
           // 同级或不在升级矩阵中的标记为不可选
           downgradeMonthly: !canUpgradeTo(d.type, 'monthly'),
           downgradeYearly: !canUpgradeTo(d.type, 'yearly'),
@@ -226,6 +239,35 @@ Page({
     })
   },
 
+  // 当前订单原价（分）= 选中套餐展示价；orderType 固定 member（5 种 tier 归一，与后端/admin 一致）
+  orderPriceFen: function() {
+    return Math.round(parseFloat(this.data.selectedPrice) * 100)
+  },
+
+  // 加载可用会员券（后端按 orderType=member 过滤，含 universal）；默认预选最优
+  loadCouponsForMember: function() {
+    var self = this
+    if (!app.globalData.cloudDevelopmentAvailable) return
+    helper.loadCoupons(
+      app.globalData.token, 'member', this.orderPriceFen(),
+      function(snap) { self.setData(snap) },
+      function() {}
+    )
+  },
+
+  // 切换套餐/券时重算折扣与实付
+  recomputeCoupon: function() {
+    var enriched = helper.enrichCoupons(this.data.coupons, this.orderPriceFen())
+    this.setData(helper.computeFinal(enriched, this.data.selectedCouponId, this.orderPriceFen()))
+  },
+
+  selectCoupon: function(e) {
+    var id = e.currentTarget.dataset.id || ''
+    var next = helper.toggleSelect(this.data.selectedCouponId, id, this.data.coupons)
+    this.setData({ selectedCouponId: next })
+    this.recomputeCoupon()
+  },
+
   switchTab: function(e) {
     if (this.data.upgradeMode || this.data.renewMode) return
     var tab = e.currentTarget.dataset.tab
@@ -236,6 +278,7 @@ Page({
       selectedType: defaultType,
       selectedPrice: this._priceMap[defaultType] || DEFAULT_PRICE_MAP[defaultType]
     })
+    this.recomputeCoupon()
   },
 
   selectPlan: function(e) {
@@ -258,6 +301,7 @@ Page({
         selectedType: type,
         selectedPrice: priceMap[type]
       })
+      this.recomputeCoupon()
     }
   },
 
@@ -332,6 +376,7 @@ Page({
         data: {
           type: 'member',
           memberTier: memberTier,
+          couponId: self.data.selectedCouponId || '',
           token: app.globalData.token
         },
         success: function(res) {

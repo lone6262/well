@@ -21,6 +21,7 @@
 const { COLLECTIONS, MEMBER_STATUS, MEMBER_DURATION, MEMBER_LIMITS } = require('./constants');
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const CARRYOVER_EXPIRE_DAYS = 90; // 升级转点数有效期，对齐点数包 POINTS_PACKS.expire_days
 
 /**
  * 激活 / 续费 / 升级会员
@@ -106,6 +107,18 @@ async function activateMembership(opts) {
   if (isUpgrade) {
     console.log('[activation-service] 会员升级:', existingMember.type, '→', memberType,
       '重置已用次数，新总额:', reportCredits);
+    // 5.1 旧会员剩余报告额度按 1:1 转为点数（必须在下方 update members 之前读旧额度快照）
+    //     family_credits_* 是冗余副本（消费侧只扣 report_credits_used），不重复转，否则翻倍
+    if (orderId && existingMember) {
+      const oldReportRemaining = Math.max(0,
+        (existingMember.report_credits_total || 0) - (existingMember.report_credits_used || 0));
+      if (oldReportRemaining > 0) {
+        await carryoverMemberCreditsToPoints({
+          db, _, openid, points: oldReportRemaining,
+          orderId, relatedMemberId: existingMember._id, now
+        });
+      }
+    }
   }
 
   // 6. 家庭→个人降级时清理 family_* 专属字段（isFamily=false 且本次为升级切换）
@@ -193,4 +206,113 @@ async function syncUserMemberStatus(db, openid, isMember, expireDate, now) {
   }
 }
 
-module.exports = { activateMembership };
+/**
+ * 会员升级时，把旧会员剩余的报告额度（report_credits_remaining）按 1:1 转为点数。
+ *
+ * 设计要点：
+ *   - family_credits_* 是冗余副本（消费侧只扣 report_credits_used），不参与转换，避免翻倍
+ *   - 幂等：按 (order_id, type='member_upgrade_carryover') 查流水判重，同一订单只转一次
+ *   - 有效期：取 max(原 expire_at, now+90天)，不缩短已有余额（与 payCallback.creditPoints 口径一致）
+ *   - 顺序：必须在 activateMembership 的 update members 之前调用，配合 orderId 幂等，
+ *     使「转点数成功 / update 失败」重试时不会重复发点数（见 plan 时序分析）
+ *   - 失败抛异常 → dispatchPostPayment 捕获 → dispatch_status=failed
+ *
+ * @param {object} opts
+ * @param {object} opts.db               cloud.database()
+ * @param {object} opts._                db.command（_.inc）
+ * @param {string} opts.openid
+ * @param {number} opts.points           待转入的点数（=旧 report_credits_remaining）
+ * @param {string} [opts.orderId]        升级订单号（幂等键）
+ * @param {string} [opts.relatedMemberId] 旧 members 记录 _id（审计）
+ * @param {Date}   [opts.now]            当前时间
+ */
+async function carryoverMemberCreditsToPoints(opts) {
+  const { db, _, openid, points, orderId, relatedMemberId } = opts;
+  const now = opts.now || new Date();
+  if (!points || points <= 0) return;
+
+  // 1. 幂等：同一订单的升级转点数只发一次
+  if (orderId) {
+    const issued = await db.collection(COLLECTIONS.POINT_TRANSACTIONS)
+      .where({ order_id: orderId, type: 'member_upgrade_carryover' })
+      .limit(1)
+      .get();
+    if (issued.data && issued.data.length > 0) {
+      console.log('[activation-service] 升级转点数已发放过，跳过:', orderId);
+      return;
+    }
+  }
+
+  const expireAt = new Date(now.getTime() + CARRYOVER_EXPIRE_DAYS * DAY_MS);
+
+  // 2. 读现有 user_points，计算 balance_after（写流水的快照值）
+  const existingResult = await db.collection(COLLECTIONS.USER_POINTS)
+    .where({ user_id: openid })
+    .limit(1)
+    .get();
+  const hasRecord = existingResult.data && existingResult.data.length > 0;
+  const record = hasRecord ? existingResult.data[0] : null;
+  const balanceAfter = hasRecord ? (record.balance || 0) + points : points;
+
+  // 3. 先写流水作为「凭证」——配合 point_transactions (order_id, type) 唯一索引：
+  //    并发时第二个 add 触发 duplicate key → 视为已发放、跳过余额更新，防并发重复发点数。
+  //    未建索引时退回第 1 步的查重幂等，无副作用。
+  try {
+    await db.collection(COLLECTIONS.POINT_TRANSACTIONS).add({
+      data: {
+        user_id: openid,
+        type: 'member_upgrade_carryover',
+        amount: points,
+        order_id: orderId || '',
+        balance_after: balanceAfter,
+        source: 'member_upgrade',
+        related_member_id: relatedMemberId || '',
+        created_at: now
+      }
+    });
+  } catch (e) {
+    if (isDuplicateKeyError(e)) {
+      console.log('[activation-service] 升级转点数并发命中唯一索引，跳过余额更新:', orderId);
+      return;
+    }
+    throw e;
+  }
+
+  // 4. 凭证已立 → 累加/新建余额（取较晚到期日，不缩短已有余额）
+  if (hasRecord) {
+    const newExpire = record.expire_at && new Date(record.expire_at) > now
+      ? new Date(record.expire_at) : expireAt;
+    await db.collection(COLLECTIONS.USER_POINTS).doc(record._id).update({
+      data: {
+        balance: _.inc(points),
+        total_purchased: _.inc(points),
+        expire_at: newExpire,
+        updated_at: now
+      }
+    });
+  } else {
+    await db.collection(COLLECTIONS.USER_POINTS).add({
+      data: {
+        user_id: openid,
+        balance: points,
+        total_purchased: points,
+        total_used: 0,
+        expire_at: expireAt,
+        created_at: now,
+        updated_at: now
+      }
+    });
+  }
+
+  console.log('[activation-service] 升级转点数: +' + points + '，订单:', orderId);
+}
+
+// duplicate key 判定（兼容 MongoDB code 11000 / CloudBase errCode / 文案）
+function isDuplicateKeyError(e) {
+  if (!e) return false;
+  if (e.code === 11000 || e.errCode === 11000 || e.errCode === -502001) return true;
+  const msg = (e.message || '') + (e.errMsg || '');
+  return /duplicate key|E11000/i.test(msg);
+}
+
+module.exports = { activateMembership, carryoverMemberCreditsToPoints };
