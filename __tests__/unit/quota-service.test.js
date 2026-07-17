@@ -434,6 +434,49 @@ async function run() {
     assertEqual(q.price, PRICES.STANDARD_REPORT, '标准报告价');
   })();
 
+  console.log('\n=== 17. resolveQuota: 会员+点数同时有 → 点数优先（保护付费会员权益） ===');
+  await (async function testResolvePointsOverMember() {
+    const db = createQuotaMockDb({
+      [COLLECTIONS.USERS]: [
+        { _id: 'u1', user_id: 'openid_pm', first_report_used: true, invite_reward_credits: 0 },
+      ],
+      [COLLECTIONS.ORDERS]: [],
+      [COLLECTIONS.MEMBERS]: [
+        {
+          _id: 'm1',
+          user_id: 'openid_pm',
+          status: MEMBER_STATUS.ACTIVE,
+          type: 'monthly',
+          report_credits_used: 0,
+          report_credits_total: 3,
+          report_credits_reset_at: new Date(Date.now() + 86400000),
+        },
+      ],
+      [COLLECTIONS.USER_POINTS]: [
+        { _id: 'p1', user_id: 'openid_pm', balance: 2, expire_at: new Date(Date.now() + 86400000) },
+      ],
+    });
+    const q = await resolveQuota(db, 'openid_pm');
+    assertEqual(q.quota_source, 'points', '会员+点数 → 点数优先（最后才扣会员次数）');
+    assertEqual(q.has_free_quota, true, '有免费额度');
+    assertEqual(q.points_balance, 2, '命中点数余额');
+  })();
+
+  console.log('\n=== 18. resolveQuota: 邀请+首份都可用 → 邀请优先 ===');
+  await (async function testResolveInviteOverFirst() {
+    const db = createQuotaMockDb({
+      [COLLECTIONS.USERS]: [
+        { _id: 'u1', user_id: 'openid_if', first_report_used: false, invite_reward_credits: 3 },
+      ],
+      [COLLECTIONS.ORDERS]: [],
+      [COLLECTIONS.MEMBERS]: [],
+      [COLLECTIONS.USER_POINTS]: [],
+    });
+    const q = await resolveQuota(db, 'openid_if');
+    assertEqual(q.quota_source, 'invite', '邀请+首份都可用 → 邀请优先于首份');
+    assertEqual(q.has_free_quota, true, '有免费额度');
+  })();
+
   console.log('\n=== 17. resolveQuota: 会员用尽且无点数 → 付费 ===');
   await (async function testResolveMemberExhausted() {
     const db = createQuotaMockDb({

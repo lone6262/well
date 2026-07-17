@@ -4,7 +4,7 @@
  * 统一 createOrder 与 generateAIReport 的额度解析/扣减/回滚逻辑，
  * 消除两处实现的规则不一致风险。
  *
- * 优先级: 首份优惠 > 邀请奖励 > 体验会员 > 正式会员 > 点数包 > 付费
+ * 优先级: 邀请奖励 > 首份优惠 > 点数包 > 体验会员 > 正式会员 > 付费
  *
  * 使用方式：
  *   const { resolveQuota, deductQuota, rollbackQuota } = require('./common/quota-service');
@@ -69,7 +69,7 @@ function calcNextReset(startDate, currentReset) {
 
 /**
  * 解析用户可用的报告额度
- * 优先级: 首份优惠 > 邀请奖励 > 体验会员 > 正式会员 > 点数包 > 付费
+ * 优先级: 邀请奖励 > 首份优惠 > 点数包 > 体验会员 > 正式会员 > 付费
  *
  * @param {object} db - cloud.database() 实例
  * @param {string} openid - 用户 openid
@@ -89,6 +89,17 @@ async function resolveQuota(db, openid, dbPrices, dbCredits) {
     .get();
 
   const user = (userResult.data && userResult.data[0]) || null;
+
+  // 邀请奖励额度（优先消耗免费额度）
+  if (user && user.invite_reward_credits && user.invite_reward_credits > 0) {
+    return {
+      has_free_quota: true,
+      quota_source: 'invite',
+      price: 0,
+      user: user,
+      userExists: true,
+    };
+  }
 
   // 首份报告优惠（无用户记录 或 有记录但未使用首份）
   // 追加 ORDERS 交叉验证：防止用户删除账号重新注册绕过首份优惠
@@ -128,15 +139,29 @@ async function resolveQuota(db, openid, dbPrices, dbCredits) {
     }
   }
 
-  // 邀请奖励额度
-  if (user && user.invite_reward_credits && user.invite_reward_credits > 0) {
-    return {
-      has_free_quota: true,
-      quota_source: 'invite',
-      price: 0,
-      user: user,
-      userExists: true,
-    };
+  // 点数包余额（消耗 1 个点数即可「免费」生成报告）
+  // S3 修复：按 expire_at 升序，优先取最早过期的有效点数包
+  const pointsResult = await db
+    .collection(COLLECTIONS.USER_POINTS)
+    .where({ user_id: openid })
+    .orderBy('expire_at', 'asc')
+    .limit(1)
+    .get();
+
+  if (pointsResult.data && pointsResult.data.length > 0) {
+    const points = pointsResult.data[0];
+    const now = new Date();
+    if (points.balance > 0 && points.expire_at && new Date(points.expire_at) > now) {
+      return {
+        has_free_quota: true,
+        quota_source: 'points',
+        price: 0,
+        user: user,
+        userExists: !!user,
+        points_balance: points.balance,
+        points_record_id: points._id,
+      };
+    }
   }
 
   // 体验会员额度（邀请 3 人获得 7 天体验，每月 1 次）
@@ -216,31 +241,6 @@ async function resolveQuota(db, openid, dbPrices, dbCredits) {
         user: user,
         userExists: true,
         member: member,
-      };
-    }
-  }
-
-  // 点数包余额（消耗 1 个点数即可「免费」生成报告）
-  // S3 修复：按 expire_at 升序，优先取最早过期的有效点数包
-  const pointsResult = await db
-    .collection(COLLECTIONS.USER_POINTS)
-    .where({ user_id: openid })
-    .orderBy('expire_at', 'asc')
-    .limit(1)
-    .get();
-
-  if (pointsResult.data && pointsResult.data.length > 0) {
-    const points = pointsResult.data[0];
-    const now = new Date();
-    if (points.balance > 0 && points.expire_at && new Date(points.expire_at) > now) {
-      return {
-        has_free_quota: true,
-        quota_source: 'points',
-        price: 0,
-        user: user,
-        userExists: !!user,
-        points_balance: points.balance,
-        points_record_id: points._id,
       };
     }
   }
