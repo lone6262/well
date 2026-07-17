@@ -1,20 +1,20 @@
-﻿<view class="order-detail-page">
+<view class="order-detail-page">
   <view class="page-header">
     <view class="back-btn" bindtap="goBack" hover-class="back-btn-active">
       <view class="back-arrow"></view>
-      <text class="back-text">杩斿洖</text>
+      <text class="back-text">返回</text>
     </view>
-    <view class="page-title">璁㈠崟璇︽儏</view>
+    <view class="page-title">订单详情</view>
     <view class="header-placeholder"></view>
   </view>
 
   <view class="loading-wrapper" wx:if="{{loading}}">
     <view class="loading-spinner"></view>
-    <text class="loading-text">鍔犺浇涓?..</text>
+    <text class="loading-text">加载中...</text>
   </view>
 
   <view class="content" wx:if="{{!loading && order}}">
-    <!-- 鐘舵€佸崱 -->
+    <!-- 状态卡 -->
     <view class="status-card">
       <image class="status-icon" src="/images/icons/clipboard.svg" mode="aspectFit" />
       <view class="status-info">
@@ -23,36 +23,35 @@
       </view>
     </view>
 
-    <!-- 閲戦 -->
+    <!-- 金额 -->
     <view class="amount-card">
-      <text class="amount-label">鏀粯閲戦</text>
-      <text class="amount-value">楼 {{amountDisplay}}</text>
+      <text class="amount-label">支付金额</text>
+      <text class="amount-value">¥ {{amountDisplay}}</text>
     </view>
 
-    <!-- 璁㈠崟淇℃伅 -->
+    <!-- 订单信息 -->
     <view class="detail-card">
-      <view class="detail-title">璁㈠崟淇℃伅</view>
+      <view class="detail-title">订单信息</view>
       <view class="detail-row" bindtap="copyOrderNo">
-        <text class="detail-label">璁㈠崟缂栧彿</text>
+        <text class="detail-label">订单编号</text>
         <text class="detail-value link">{{order.out_trade_no || '-'}}</text>
       </view>
       <view class="detail-row" wx:if="{{order.transaction_id}}">
-        <text class="detail-label">浜ゆ槗娴佹按鍙</text>
+        <text class="detail-label">交易流水号</text>
         <text class="detail-value">{{order.transaction_id}}</text>
       </view>
       <view class="detail-row" wx:if="{{order.description}}">
-        <text class="detail-label">鎻忚堪</text>
+        <text class="detail-label">描述</text>
         <text class="detail-value">{{order.description}}</text>
       </view>
       <view class="detail-row">
-        <text class="detail-label">鍒涘缓鏃堕棿</text>
+        <text class="detail-label">创建时间</text>
         <text class="detail-value">{{createdText || '-'}}</text>
       </view>
       <view class="detail-row" wx:if="{{paidText}}">
-        <text class="detail-label">鏀粯鏃堕棿</text>
+        <text class="detail-label">支付时间</text>
         <text class="detail-value">{{paidText}}</text>
       </view>
     </view>
   </view>
 </view>
-
