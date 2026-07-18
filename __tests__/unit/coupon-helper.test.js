@@ -76,23 +76,35 @@ function run() {
     assertEqual(r80[0].discountFen, 0, 'percent 80 脏数据 clamp→0折扣');
 
     // 15 clamp→10: 0折扣
-    const r15 = helper.enrichCoupons([{ _id: 'x', discountType: 'percent', discountValue: 15 }], 1000);
+    const r15 = helper.enrichCoupons(
+      [{ _id: 'x', discountType: 'percent', discountValue: 15 }],
+      1000
+    );
     assertEqual(r15[0].discountFen, 0, 'percent 15 clamp→0折扣');
 
     // -5 clamp→0: floor(1000*10/10)=1000（全免，防历史脏数据）
-    const rNeg = helper.enrichCoupons([{ _id: 'x', discountType: 'percent', discountValue: -5 }], 1000);
+    const rNeg = helper.enrichCoupons(
+      [{ _id: 'x', discountType: 'percent', discountValue: -5 }],
+      1000
+    );
     assertEqual(rNeg[0].discountFen, 1000, 'percent -5 clamp→0折=全免');
 
     // 注意：discountValue=0 触发 `|| 10` 默认 → 10折（无折扣），而非全免。
     // 因 admin 录入校验 min=0.01，0 不会是合法值，此处按脏数据处理（characterized）。
-    const r0 = helper.enrichCoupons([{ _id: 'x', discountType: 'percent', discountValue: 0 }], 1000);
+    const r0 = helper.enrichCoupons(
+      [{ _id: 'x', discountType: 'percent', discountValue: 0 }],
+      1000
+    );
     assertEqual(r0[0].discountFen, 0, 'percent 0 触发 ||10 默认→10折=无折扣');
   })();
 
   console.log('\n=== 4. enrichCoupons: 折扣封顶不超过订单金额 ===');
   (function () {
     // fixed 2000 on 1000 → 封顶 1000
-    const r = helper.enrichCoupons([{ _id: 'c', discountType: 'fixed', discountValue: 2000 }], 1000);
+    const r = helper.enrichCoupons(
+      [{ _id: 'c', discountType: 'fixed', discountValue: 2000 }],
+      1000
+    );
     assertEqual(r[0].discountFen, 1000, 'fixed 超额封顶 = 订单金额');
   })();
 
@@ -157,7 +169,10 @@ function run() {
     assertEqual(selBad.couponDiscountFen, 0, '选中不可用 → 折扣0');
     assertEqual(selBad.selectedCouponId, '', '选中不可用 → id 置空');
     // 折扣大于订单 → 实付0
-    const big = helper.enrichCoupons([{ _id: 'c', discountType: 'fixed', discountValue: 9999 }], 1000);
+    const big = helper.enrichCoupons(
+      [{ _id: 'c', discountType: 'fixed', discountValue: 9999 }],
+      1000
+    );
     const over = helper.computeFinal(big, 'c', 1000);
     assertEqual(over.finalPriceDisplay, '0.00', '超额折扣 → 实付0.00');
     // 未知 id
@@ -201,30 +216,34 @@ function run() {
                 data: {
                   coupons: [
                     { _id: 'uc1', discountType: 'percent', discountValue: 8 },
-                    { _id: 'uc2', discountType: 'fixed', discountValue: 500 }
-                  ]
-                }
-              }
+                    { _id: 'uc2', discountType: 'fixed', discountValue: 500 },
+                  ],
+                },
+              },
             });
           }, 0);
-        }
-      }
+        },
+      },
     };
-    let snapshot = null;
     helper.loadCoupons(
       'TOKEN',
       'points',
       1000,
       function (snap) {
-        snapshot = snap;
+        // 异步结果断言（loadCoupons enrichment + onSuccess 路径，原 test 10 漏测此处）
+        assertEqual(snap.coupons.length, 2, 'loadCoupons 返回 2 张券');
+        assertEqual(snap.hasCoupons, true, 'hasCoupons=true');
+        // uc1=8折→200分, uc2=fixed 500→500分；pickBestCouponId 应选折扣最大者 uc2
+        assertEqual(snap.selectedCouponId, 'uc2', '预选折扣最大者 uc2');
+        assertEqual(snap.couponDiscountFen, 500, '券后折扣 500 分');
+        assertEqual(snap.finalPriceDisplay, '5.00', '实付 5.00');
       },
       function () {}
     );
-    // 异步：sync 立即断言 callFunction 入参
+    // 同步断言：callFunction 入参（onSuccess 异步断言见上方回调，summary 在底部 setTimeout(50) 后打印）
     assertEqual(calls[0].name, 'getUserCoupons', '调用 getUserCoupons');
     assertEqual(calls[0].data.orderType, 'points', '透传 orderType');
     assertEqual(calls[0].data.status, 'unused', '只拉 unused');
-    // 注：异步回调用 setTimeout 延迟断言，见下方 async 包装
   })();
 }
 
@@ -243,7 +262,9 @@ setTimeout(function () {
   console.log(`coupon-helper.test.js: ${passed}/${total} 通过, ${failed} 失败`);
   if (failed > 0) {
     console.error('\n❌ 失败详情:');
-    errors.forEach(function (e) { console.error(`  ${e}`); });
+    errors.forEach(function (e) {
+      console.error(`  ${e}`);
+    });
     process.exit(1);
   } else {
     console.log('\n✅ 所有测试通过！');

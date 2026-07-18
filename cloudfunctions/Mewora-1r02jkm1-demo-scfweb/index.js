@@ -37,7 +37,7 @@ function getPayInstance() {
       privateKey: privateKey,
       serial_no: merchantSerialNumber,
       publicKey: publicKey,
-      key: apiV3Key
+      key: apiV3Key,
     };
 
     console.log('[PayService] 配置参数:', Object.keys(payConfig));
@@ -51,7 +51,12 @@ function getPayInstance() {
 // Event 函数入口
 exports.main = async (event, context) => {
   // 调试日志（不打印完整 event/context，避免泄露 openid/订单/商户等敏感信息）
-  console.log('[Gateway] ENTRY: action=', (event && event.action) || '(空)', 'params=', (event && event.params) ? 'present' : 'missing');
+  console.log(
+    '[Gateway] ENTRY: action=',
+    (event && event.action) || '(空)',
+    'params=',
+    event && event.params ? 'present' : 'missing'
+  );
 
   const { action, params, openid } = event || {};
 
@@ -88,18 +93,18 @@ async function handleWxPayOrder(params, openid) {
       notify_url: process.env.notifyURLPayURL,
       amount: {
         total: amount.total,
-        currency: amount.currency || 'CNY'
+        currency: amount.currency || 'CNY',
       },
       payer: {
-        openid: openid || 'openid_placeholder'
-      }
+        openid: openid || 'openid_placeholder',
+      },
     });
 
     console.log('[PayService] unifiedOrder result:', JSON.stringify(result));
 
     // 实测 wechatpay-node-v3 返回 { status:200, data:{ appId,timeStamp,nonceStr,package,signType,paySign } }
     // 兼容顶层扁平结构与嵌套结构两种形态
-    const payData = (result && result.data && result.data.paySign) ? result.data : result;
+    const payData = result && result.data && result.data.paySign ? result.data : result;
     if (!payData || !payData.paySign) {
       throw new Error('微信下单失败: ' + JSON.stringify(result));
     }
@@ -112,15 +117,15 @@ async function handleWxPayOrder(params, openid) {
         nonceStr: payData.nonceStr,
         package: payData.package,
         signType: payData.signType || 'RSA',
-        paySign: payData.paySign
-      }
+        paySign: payData.paySign,
+      },
     };
   } catch (error) {
     console.error('[PayService] unifiedOrder error:', error);
     return {
       code: -1,
       msg: error.message || '下单失败',
-      data: null
+      data: null,
     };
   }
 }
@@ -143,8 +148,8 @@ async function handleWxPayRefund(params, openid) {
       amount: {
         refund: amount.refund,
         total: amount.total,
-        currency: amount.currency || 'CNY'
-      }
+        currency: amount.currency || 'CNY',
+      },
     });
 
     console.log('[PayService] refund success:', result);
@@ -152,14 +157,14 @@ async function handleWxPayRefund(params, openid) {
     return {
       code: 0,
       msg: 'success',
-      data: result
+      data: result,
     };
   } catch (error) {
     console.error('[PayService] refund error:', error);
     return {
       code: -1,
       msg: error.message || '退款失败',
-      data: null
+      data: null,
     };
   }
 }

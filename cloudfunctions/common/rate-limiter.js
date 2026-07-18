@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 基础速率限制模块
  * 基于用户 openid + 操作类型计数，防止 API 滥用
  *
@@ -29,17 +29,21 @@ async function checkRateLimit(db, openid, action, maxRequests, windowMs, failOpe
     // 微信云开发基础版无多文档事务，真原子限流需事务改造（已记为 P2）。
     // 当前对支付等写操作保持 failOpen=false，放行策略偏收紧。
     const addResult = await db.collection(COLLECTIONS.RATE_LIMITS || 'rate_limits').add({
-      data: { openid: openid, action: action, created_at: new Date() }
+      data: { openid: openid, action: action, created_at: new Date() },
     });
 
-    const countResult = await db.collection(COLLECTIONS.RATE_LIMITS || 'rate_limits')
+    const countResult = await db
+      .collection(COLLECTIONS.RATE_LIMITS || 'rate_limits')
       .where({ openid: openid, action: action, created_at: db.command.gte(cutoff) })
       .count();
 
     if (countResult.total > maxRequests) {
       // 超限：回滚刚写入的记录
       try {
-        await db.collection(COLLECTIONS.RATE_LIMITS || 'rate_limits').doc(addResult._id).remove();
+        await db
+          .collection(COLLECTIONS.RATE_LIMITS || 'rate_limits')
+          .doc(addResult._id)
+          .remove();
       } catch (rollbackErr) {
         console.warn('[rate-limiter] 回滚限流记录失败:', rollbackErr.message);
       }
@@ -49,7 +53,8 @@ async function checkRateLimit(db, openid, action, maxRequests, windowMs, failOpe
     // 概率性清理过期记录（约 1% 概率，避免每次调用都清理）
     if (Math.random() < 0.01) {
       try {
-        await db.collection(COLLECTIONS.RATE_LIMITS || 'rate_limits')
+        await db
+          .collection(COLLECTIONS.RATE_LIMITS || 'rate_limits')
           .where({ openid: openid, action: action, created_at: db.command.lt(cutoff) })
           .limit(100)
           .remove();

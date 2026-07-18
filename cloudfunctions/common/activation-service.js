@@ -40,14 +40,16 @@ const CARRYOVER_EXPIRE_DAYS = 90; // 升级转点数有效期，对齐点数包 
 async function activateMembership(opts) {
   const { db, _, dbCredits, openid, memberType, orderId } = opts;
   const now = opts.now || new Date();
-  const isFamily = opts.isFamily !== undefined
-    ? opts.isFamily
-    : (memberType === 'family_monthly' || memberType === 'family_yearly');
+  const isFamily =
+    opts.isFamily !== undefined
+      ? opts.isFamily
+      : memberType === 'family_monthly' || memberType === 'family_yearly';
   const isYearly = memberType === 'yearly' || memberType === 'family_yearly';
 
   // 1. 幂等：同一订单号已激活过则跳过（防重复回调覆盖式重置额度）
   if (orderId) {
-    const existing = await db.collection(COLLECTIONS.MEMBERS)
+    const existing = await db
+      .collection(COLLECTIONS.MEMBERS)
       .where({ user_id: openid, activated_by_order: orderId })
       .limit(1)
       .get();
@@ -59,17 +61,21 @@ async function activateMembership(opts) {
 
   const durationDays = isYearly ? MEMBER_DURATION.YEAR : MEMBER_DURATION.MONTH;
   const reportCredits = isFamily
-    ? (isYearly ? dbCredits.FAMILY_YEARLY_REPORTS : dbCredits.FAMILY_MONTHLY_REPORTS)
-    : (isYearly ? dbCredits.YEARLY_REPORTS : dbCredits.MONTHLY_REPORTS);
+    ? isYearly
+      ? dbCredits.FAMILY_YEARLY_REPORTS
+      : dbCredits.FAMILY_MONTHLY_REPORTS
+    : isYearly
+      ? dbCredits.YEARLY_REPORTS
+      : dbCredits.MONTHLY_REPORTS;
 
   // 2. 查询现有会员记录
-  const existingResult = await db.collection(COLLECTIONS.MEMBERS)
+  const existingResult = await db
+    .collection(COLLECTIONS.MEMBERS)
     .where({ user_id: openid })
     .limit(1)
     .get();
-  const existingMember = (existingResult.data && existingResult.data.length > 0)
-    ? existingResult.data[0]
-    : null;
+  const existingMember =
+    existingResult.data && existingResult.data.length > 0 ? existingResult.data[0] : null;
   const isActive = existingMember && existingMember.status === MEMBER_STATUS.ACTIVE;
   const isUpgrade = isActive && existingMember.type !== memberType;
 
@@ -91,39 +97,62 @@ async function activateMembership(opts) {
   }
 
   // 4. 额度重置时间（按开通日对齐到下月同日）
-  const startDate = (existingMember && existingMember.start_date)
-    ? new Date(existingMember.start_date)
-    : now;
+  const startDate =
+    existingMember && existingMember.start_date ? new Date(existingMember.start_date) : now;
   const startDay = startDate.getDate();
   let resetMonth = now.getMonth() + 1;
   let resetYear = now.getFullYear();
-  if (resetMonth > 11) { resetMonth = 0; resetYear += 1; }
+  if (resetMonth > 11) {
+    resetMonth = 0;
+    resetYear += 1;
+  }
   const maxDay = new Date(resetYear, resetMonth + 1, 0).getDate();
-  const nextResetAt = new Date(resetYear, resetMonth, Math.min(startDay, maxDay),
-    now.getHours(), now.getMinutes(), now.getSeconds());
+  const nextResetAt = new Date(
+    resetYear,
+    resetMonth,
+    Math.min(startDay, maxDay),
+    now.getHours(),
+    now.getMinutes(),
+    now.getSeconds()
+  );
 
   // 5. 升级时重置已用次数为 0（花钱升级应享新会员全部额度）
   const preservedUsed = 0;
   if (isUpgrade) {
-    console.log('[activation-service] 会员升级:', existingMember.type, '→', memberType,
-      '重置已用次数，新总额:', reportCredits);
+    console.log(
+      '[activation-service] 会员升级:',
+      existingMember.type,
+      '→',
+      memberType,
+      '重置已用次数，新总额:',
+      reportCredits
+    );
     // 5.1 旧会员剩余报告额度按 1:1 转为点数（必须在下方 update members 之前读旧额度快照）
     //     family_credits_* 是冗余副本（消费侧只扣 report_credits_used），不重复转，否则翻倍
     if (orderId && existingMember) {
-      const oldReportRemaining = Math.max(0,
-        (existingMember.report_credits_total || 0) - (existingMember.report_credits_used || 0));
+      const oldReportRemaining = Math.max(
+        0,
+        (existingMember.report_credits_total || 0) - (existingMember.report_credits_used || 0)
+      );
       if (oldReportRemaining > 0) {
         await carryoverMemberCreditsToPoints({
-          db, _, openid, points: oldReportRemaining,
-          orderId, relatedMemberId: existingMember._id, now
+          db,
+          _,
+          openid,
+          points: oldReportRemaining,
+          orderId,
+          relatedMemberId: existingMember._id,
+          now,
         });
       }
     }
   }
 
   // 6. 家庭→个人降级时清理 family_* 专属字段（isFamily=false 且本次为升级切换）
-  const downgradeFromFamily = !isFamily && isUpgrade
-    && (existingMember.type === 'family_monthly' || existingMember.type === 'family_yearly');
+  const downgradeFromFamily =
+    !isFamily &&
+    isUpgrade &&
+    (existingMember.type === 'family_monthly' || existingMember.type === 'family_yearly');
 
   // 7. 组装会员数据（update / add 共用）
   const memberData = {
@@ -134,10 +163,10 @@ async function activateMembership(opts) {
     report_credits_total: reportCredits,
     report_credits_used: preservedUsed,
     report_credits_reset_at: nextResetAt,
-    updated_at: now
+    updated_at: now,
   };
   if (isFamily) {
-    memberData.family_member_ids = existingMember ? (existingMember.family_member_ids || []) : [];
+    memberData.family_member_ids = existingMember ? existingMember.family_member_ids || [] : [];
     memberData.family_max_pet = MEMBER_LIMITS.MAX_PETS_FAMILY;
     memberData.family_credits_total = reportCredits;
     memberData.family_credits_used = preservedUsed;
@@ -153,18 +182,21 @@ async function activateMembership(opts) {
         family_max_pet: _.remove(),
         family_credits_total: _.remove(),
         family_credits_used: _.remove(),
-        family_credits_reset_at: _.remove()
+        family_credits_reset_at: _.remove(),
       });
     }
     await db.collection(COLLECTIONS.MEMBERS).doc(existingMember._id).update({ data: updateData });
   } else {
     await db.collection(COLLECTIONS.MEMBERS).add({
-      data: Object.assign({
-        user_id: openid,
-        start_date: now,
-        auto_renew: false,
-        created_at: now
-      }, memberData)
+      data: Object.assign(
+        {
+          user_id: openid,
+          start_date: now,
+          auto_renew: false,
+          created_at: now,
+        },
+        memberData
+      ),
     });
   }
 
@@ -178,19 +210,23 @@ async function activateMembership(opts) {
  * 同步 users 集合的会员状态标记（存在则 update，不存在则 add）
  */
 async function syncUserMemberStatus(db, openid, isMember, expireDate, now) {
-  const userResult = await db.collection(COLLECTIONS.USERS)
+  const userResult = await db
+    .collection(COLLECTIONS.USERS)
     .where({ user_id: openid })
     .limit(1)
     .get();
 
   if (userResult.data && userResult.data.length > 0) {
-    await db.collection(COLLECTIONS.USERS).doc(userResult.data[0]._id).update({
-      data: {
-        isMember: isMember,
-        memberExpire: expireDate,
-        updated_at: now
-      }
-    });
+    await db
+      .collection(COLLECTIONS.USERS)
+      .doc(userResult.data[0]._id)
+      .update({
+        data: {
+          isMember: isMember,
+          memberExpire: expireDate,
+          updated_at: now,
+        },
+      });
   } else {
     await db.collection(COLLECTIONS.USERS).add({
       data: {
@@ -200,8 +236,8 @@ async function syncUserMemberStatus(db, openid, isMember, expireDate, now) {
         first_report_used: false,
         invite_reward_credits: 0,
         created_at: now,
-        updated_at: now
-      }
+        updated_at: now,
+      },
     });
   }
 }
@@ -233,7 +269,8 @@ async function carryoverMemberCreditsToPoints(opts) {
 
   // 1. 幂等：同一订单的升级转点数只发一次
   if (orderId) {
-    const issued = await db.collection(COLLECTIONS.POINT_TRANSACTIONS)
+    const issued = await db
+      .collection(COLLECTIONS.POINT_TRANSACTIONS)
       .where({ order_id: orderId, type: 'member_upgrade_carryover' })
       .limit(1)
       .get();
@@ -246,7 +283,8 @@ async function carryoverMemberCreditsToPoints(opts) {
   const expireAt = new Date(now.getTime() + CARRYOVER_EXPIRE_DAYS * DAY_MS);
 
   // 2. 读现有 user_points，计算 balance_after（写流水的快照值）
-  const existingResult = await db.collection(COLLECTIONS.USER_POINTS)
+  const existingResult = await db
+    .collection(COLLECTIONS.USER_POINTS)
     .where({ user_id: openid })
     .limit(1)
     .get();
@@ -267,8 +305,8 @@ async function carryoverMemberCreditsToPoints(opts) {
         balance_after: balanceAfter,
         source: 'member_upgrade',
         related_member_id: relatedMemberId || '',
-        created_at: now
-      }
+        created_at: now,
+      },
     });
   } catch (e) {
     if (isDuplicateKeyError(e)) {
@@ -280,16 +318,19 @@ async function carryoverMemberCreditsToPoints(opts) {
 
   // 4. 凭证已立 → 累加/新建余额（取较晚到期日，不缩短已有余额）
   if (hasRecord) {
-    const newExpire = record.expire_at && new Date(record.expire_at) > now
-      ? new Date(record.expire_at) : expireAt;
-    await db.collection(COLLECTIONS.USER_POINTS).doc(record._id).update({
-      data: {
-        balance: _.inc(points),
-        total_purchased: _.inc(points),
-        expire_at: newExpire,
-        updated_at: now
-      }
-    });
+    const newExpire =
+      record.expire_at && new Date(record.expire_at) > now ? new Date(record.expire_at) : expireAt;
+    await db
+      .collection(COLLECTIONS.USER_POINTS)
+      .doc(record._id)
+      .update({
+        data: {
+          balance: _.inc(points),
+          total_purchased: _.inc(points),
+          expire_at: newExpire,
+          updated_at: now,
+        },
+      });
   } else {
     await db.collection(COLLECTIONS.USER_POINTS).add({
       data: {
@@ -299,8 +340,8 @@ async function carryoverMemberCreditsToPoints(opts) {
         total_used: 0,
         expire_at: expireAt,
         created_at: now,
-        updated_at: now
-      }
+        updated_at: now,
+      },
     });
   }
 

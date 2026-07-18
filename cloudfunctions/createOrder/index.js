@@ -7,6 +7,7 @@
 //   2. 环境变量 MOCK_PAY
 const cloud = require('wx-server-sdk');
 const https = require('https');
+const crypto = require('crypto'); // 网关 HMAC 签名（createOrder→payCallback 内部调用，与 payCallback 验签对称）
 const {
   COLLECTIONS,
   RESPONSE_CODE,
@@ -16,8 +17,10 @@ const {
   PAYMENT_TIMEOUT,
   MEMBER_CREDITS,
   MEMBER_STATUS,
-  POINTS_PACKS
-, warmupConfig, loadPrices} = require('./common/constants');
+  POINTS_PACKS,
+  warmupConfig,
+  loadPrices,
+} = require('./common/constants');
 const { verifyToken } = require('./common/auth');
 const { checkRateLimit } = require('./common/rate-limiter');
 const { resolveQuota, deductQuota, rollbackQuota } = require('./common/quota-service');
@@ -27,6 +30,20 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const _ = db.command;
 
+/**
+ * 网关签名：createOrder 内部调 payCallback 时签名（与 payCallback 验签算法一致）。
+ * 配置 CALLBACK_GATEWAY_SECRET 后生效；未配置返回 undefined，payCallback 走字段校验回退。
+ * 作用：部署网关密钥后，避免 createOrder→payCallback 内部调用因缺签名被拒（mock_pay / 免单激活链路）。
+ */
+function signGatewayPayload(outTradeNo, transactionId) {
+  const secret = process.env.CALLBACK_GATEWAY_SECRET;
+  if (!secret) return undefined;
+  return crypto
+    .createHmac('sha256', secret)
+    .update((outTradeNo || '') + (transactionId || ''))
+    .digest('hex');
+}
+
 const MOCK_PAY = process.env.MOCK_PAY === 'true'; // 从环境变量读取，部署时设为 false
 
 /**
@@ -35,13 +52,11 @@ const MOCK_PAY = process.env.MOCK_PAY === 'true'; // 从环境变量读取，部
  */
 async function loadWechatPayConfig() {
   try {
-    const result = await db.collection(COLLECTIONS.SYSTEM_CONFIG)
-      .doc('wechat_pay_config')
-      .get();
+    const result = await db.collection(COLLECTIONS.SYSTEM_CONFIG).doc('wechat_pay_config').get();
 
     if (result.data) {
       return {
-        mockPay: result.data.mock_pay !== undefined ? result.data.mock_pay : MOCK_PAY
+        mockPay: result.data.mock_pay !== undefined ? result.data.mock_pay : MOCK_PAY,
       };
     }
   } catch (e) {
@@ -79,7 +94,9 @@ exports.main = async (event, context) => {
   // system_config.wechat_pay_config.mock_pay 与 MOCK_PAY 环境变量。
   // （NODE_ENV 在微信云默认未设置、不可靠，故以 mockPay 本身作为信号）
   if (mockPay) {
-    console.error('[createOrder] [MOCK_PAY] 警告：MOCK_PAY 已开启，订单跳过真实微信支付；生产环境请立即关闭。');
+    console.error(
+      '[createOrder] [MOCK_PAY] 警告：MOCK_PAY 已开启，订单跳过真实微信支付；生产环境请立即关闭。'
+    );
   }
 
   const { OPENID } = cloud.getWXContext();
@@ -92,7 +109,7 @@ exports.main = async (event, context) => {
   }
 
   // 速率限制
-  if (!await checkRateLimit(db, openid, 'createOrder', 5, 60000, false)) {
+  if (!(await checkRateLimit(db, openid, 'createOrder', 5, 60000, false))) {
     return { code: RESPONSE_CODE.ERROR, msg: '操作过于频繁，请稍后再试', data: {} };
   }
 
@@ -143,8 +160,8 @@ async function handleReportOrder(event, openid, mockPay) {
           orderId: 'existing',
           existingReportId: record.ai_report_id,
           status: ORDER_STATUS.PAID,
-          quotaSource: 'existing'
-        }
+          quotaSource: 'existing',
+        },
       };
     }
 
@@ -153,7 +170,7 @@ async function handleReportOrder(event, openid, mockPay) {
       return {
         code: RESPONSE_CODE.ERROR,
         msg: '检测到高风险症状，请立即就医，不建议生成报告',
-        data: { riskLevel: 'high' }
+        data: { riskLevel: 'high' },
       };
     }
 
@@ -161,12 +178,13 @@ async function handleReportOrder(event, openid, mockPay) {
     const quotaInfo = await resolveQuota(db, openid);
 
     // 5. 检查是否有未支付的重复订单
-    const existingOrder = await db.collection(COLLECTIONS.ORDERS)
+    const existingOrder = await db
+      .collection(COLLECTIONS.ORDERS)
       .where({
         user_id: openid,
         type: ORDER_TYPES.REPORT,
         'metadata.record_id': recordId,
-        status: db.command.in([ORDER_STATUS.PENDING, ORDER_STATUS.PAID])
+        status: db.command.in([ORDER_STATUS.PENDING, ORDER_STATUS.PAID]),
       })
       .limit(1)
       .get();
@@ -177,15 +195,24 @@ async function handleReportOrder(event, openid, mockPay) {
       // （避免复用旧订单号导致微信支付缓存/冲突问题）
       if (event.repay && dup.status === ORDER_STATUS.PENDING && !mockPay && dup.amount > 0) {
         try {
-          const newOutTradeNo = 'WELL_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+          const newOutTradeNo =
+            'WELL_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
           // 更新订单号（旧订单的资源如优惠券、额度仍保留）
-          await db.collection(COLLECTIONS.ORDERS).doc(dup._id).update({
-            data: {
-              out_trade_no: newOutTradeNo,
-              updated_at: new Date()
-            }
-          });
-          const payParams = await createWechatPayment(newOutTradeNo, dup.amount, openid, dup.description);
+          await db
+            .collection(COLLECTIONS.ORDERS)
+            .doc(dup._id)
+            .update({
+              data: {
+                out_trade_no: newOutTradeNo,
+                updated_at: new Date(),
+              },
+            });
+          const payParams = await createWechatPayment(
+            newOutTradeNo,
+            dup.amount,
+            openid,
+            dup.description
+          );
           return {
             code: RESPONSE_CODE.SUCCESS,
             msg: '订单已更新，请完成支付',
@@ -199,12 +226,16 @@ async function handleReportOrder(event, openid, mockPay) {
               amountDisplay: (dup.amount / 100).toFixed(2),
               quotaSource: dup.metadata && dup.metadata.quota_source,
               payParams: payParams,
-              isRepay: true
-            }
+              isRepay: true,
+            },
           };
         } catch (payErr) {
           console.error('[createOrder] 重新支付统一下单失败:', payErr.message);
-          return { code: RESPONSE_CODE.SERVER_ERROR, msg: '支付通道暂不可用，请稍后重试', data: {} };
+          return {
+            code: RESPONSE_CODE.SERVER_ERROR,
+            msg: '支付通道暂不可用，请稍后重试',
+            data: {},
+          };
         }
       }
       return {
@@ -213,8 +244,8 @@ async function handleReportOrder(event, openid, mockPay) {
         data: {
           orderId: dup._id,
           outTradeNo: dup.out_trade_no,
-          status: dup.status
-        }
+          status: dup.status,
+        },
       };
     }
 
@@ -233,14 +264,14 @@ async function handleReportOrder(event, openid, mockPay) {
       try {
         const riskResult = await cloud.callFunction({
           name: 'checkRiskControl',
-          data: { openid, orderType: ORDER_TYPES.REPORT, amount: quotaInfo.price }
+          data: { openid, orderType: ORDER_TYPES.REPORT, amount: quotaInfo.price },
         });
         if (riskResult.result && riskResult.result.blocked) {
           await rollbackQuota(db, openid, quotaInfo);
           return {
             code: RESPONSE_CODE.ERROR,
             msg: riskResult.result.reason || '订单触发风控限制，请稍后再试',
-            data: { riskBlocked: true }
+            data: { riskBlocked: true },
           };
         }
       } catch (riskErr) {
@@ -254,7 +285,12 @@ async function handleReportOrder(event, openid, mockPay) {
     let appliedCoupon = null;
     if (quotaInfo.price > 0 && quotaInfo.quota_source === 'paid' && event.couponId) {
       try {
-        appliedCoupon = await autoSelectCoupon(openid, quotaInfo.price, ORDER_TYPES.REPORT, event.couponId);
+        appliedCoupon = await autoSelectCoupon(
+          openid,
+          quotaInfo.price,
+          ORDER_TYPES.REPORT,
+          event.couponId
+        );
       } catch (couponErr) {
         console.warn('[createOrder] 优惠券查询跳过:', couponErr.message);
       }
@@ -268,14 +304,14 @@ async function handleReportOrder(event, openid, mockPay) {
     let orderId;
     try {
       const orderData = {
-       user_id: openid,
-       type: ORDER_TYPES.REPORT,
-       status: (mockPay || payAmount === 0) ? ORDER_STATUS.PAID : ORDER_STATUS.PENDING,
-       amount: payAmount,
-       origin_amount: quotaInfo.price,
-       coupon_discount: couponDiscount,
-       out_trade_no: outTradeNo,
-       transaction_id: (mockPay || payAmount === 0) ? 'MOCK_' + outTradeNo : '',
+        user_id: openid,
+        type: ORDER_TYPES.REPORT,
+        status: mockPay || payAmount === 0 ? ORDER_STATUS.PAID : ORDER_STATUS.PENDING,
+        amount: payAmount,
+        origin_amount: quotaInfo.price,
+        coupon_discount: couponDiscount,
+        out_trade_no: outTradeNo,
+        transaction_id: mockPay || payAmount === 0 ? 'MOCK_' + outTradeNo : '',
         description: buildDescription(quotaInfo),
         metadata: {
           record_id: recordId,
@@ -286,28 +322,40 @@ async function handleReportOrder(event, openid, mockPay) {
           coupon_user_id: appliedCoupon ? appliedCoupon.userCouponId : '',
           coupon_name: appliedCoupon ? appliedCoupon.couponName : '',
           origin_amount: quotaInfo.price,
-          coupon_discount: couponDiscount
+          coupon_discount: couponDiscount,
         },
         paid_at: mockPay ? now : null,
         channel: event.channel || 'mp',
         is_checked: false,
         need_manual_review: payAmount >= PRICES.MANUAL_REVIEW_THRESHOLD,
         created_at: now,
-        updated_at: now
+        updated_at: now,
       };
 
       const orderResult = await db.collection(COLLECTIONS.ORDERS).add({ data: orderData });
       orderId = orderResult._id;
 
-      // 标记优惠券已锁定（后续 payCallback 中标记 used）
+      // 原子锁定优惠券（CAS：仅当仍为 unused 才占用，防止并发请求重复抵扣同一张券）
       if (appliedCoupon && appliedCoupon.userCouponId) {
-        try {
-          await db.collection(COLLECTIONS.USER_COUPONS)
-            .doc(appliedCoupon.userCouponId)
-            .update({
-              data: { status: 'locked', order_id: orderId, updated_at: now }
-            });
-        } catch (e) { /* 优惠券集合可能未创建 */ }
+        const claimRes = await db
+          .collection(COLLECTIONS.USER_COUPONS)
+          .where({ _id: appliedCoupon.userCouponId, status: 'unused' })
+          .update({ data: { status: 'locked', order_id: orderId, updated_at: now } })
+          .catch(() => ({ stats: { updated: 0 } }));
+        if (!claimRes.stats || claimRes.stats.updated === 0) {
+          // 已被并发请求占用：回滚已扣额度 + 删除订单，提示重新选择
+          await rollbackQuota(db, openid, quotaInfo);
+          await db
+            .collection(COLLECTIONS.ORDERS)
+            .doc(orderId)
+            .remove()
+            .catch(() => {});
+          return {
+            code: RESPONSE_CODE.ERROR,
+            msg: '优惠券已被使用，请重新选择',
+            data: { coupon_unavailable: true },
+          };
+        }
       }
     } catch (orderCreateError) {
       console.error('[createOrder] 订单创建失败，回滚额度:', orderCreateError.message);
@@ -315,22 +363,26 @@ async function handleReportOrder(event, openid, mockPay) {
       // 释放已锁定的优惠券
       if (appliedCoupon && appliedCoupon.userCouponId) {
         try {
-          await db.collection(COLLECTIONS.USER_COUPONS)
+          await db
+            .collection(COLLECTIONS.USER_COUPONS)
             .doc(appliedCoupon.userCouponId)
             .update({ data: { status: 'unused', order_id: '', updated_at: now } });
-        } catch (e) { /* 静默 */ }
+        } catch (e) {
+          /* 静默 */
+        }
       }
       return { code: RESPONSE_CODE.SERVER_ERROR, msg: '订单创建失败，额度已回退', data: {} };
     }
 
     // 9. 二次去重检查
-    const dupCheck = await db.collection(COLLECTIONS.ORDERS)
+    const dupCheck = await db
+      .collection(COLLECTIONS.ORDERS)
       .where({
         user_id: openid,
         type: ORDER_TYPES.REPORT,
         'metadata.record_id': recordId,
         status: db.command.in([ORDER_STATUS.PENDING, ORDER_STATUS.PAID]),
-        _id: db.command.neq(orderId)
+        _id: db.command.neq(orderId),
       })
       .limit(1)
       .get();
@@ -340,24 +392,31 @@ async function handleReportOrder(event, openid, mockPay) {
       await db.collection(COLLECTIONS.ORDERS).doc(orderId).remove();
       if (appliedCoupon && appliedCoupon.userCouponId) {
         try {
-          await db.collection(COLLECTIONS.USER_COUPONS)
+          await db
+            .collection(COLLECTIONS.USER_COUPONS)
             .doc(appliedCoupon.userCouponId)
             .update({ data: { status: 'unused', order_id: '', updated_at: now } });
-        } catch (e) { /* 静默 */ }
+        } catch (e) {
+          /* 静默 */
+        }
       }
       const dup = dupCheck.data[0];
       return {
         code: RESPONSE_CODE.ERROR,
         msg: '该记录已有进行中的订单',
-        data: { orderId: dup._id, outTradeNo: dup.out_trade_no, status: dup.status }
+        data: { orderId: dup._id, outTradeNo: dup.out_trade_no, status: dup.status },
       };
     }
 
     // 10. 真实支付模式：调用微信统一下单，返回支付参数给前端
     if (!mockPay && payAmount > 0) {
       try {
-        const payParams = await createWechatPayment(outTradeNo, payAmount, openid,
-          buildDescription(quotaInfo));
+        const payParams = await createWechatPayment(
+          outTradeNo,
+          payAmount,
+          openid,
+          buildDescription(quotaInfo)
+        );
         return {
           code: RESPONSE_CODE.SUCCESS,
           msg: '订单创建成功，请完成支付',
@@ -370,8 +429,8 @@ async function handleReportOrder(event, openid, mockPay) {
             couponDiscount: couponDiscount,
             amountDisplay: (payAmount / 100).toFixed(2),
             quotaSource: quotaInfo.quota_source,
-            payParams: payParams  // 前端调起微信支付的参数
-          }
+            payParams: payParams, // 前端调起微信支付的参数
+          },
         };
       } catch (payErr) {
         // 统一下单失败，回滚全部
@@ -380,10 +439,13 @@ async function handleReportOrder(event, openid, mockPay) {
         await db.collection(COLLECTIONS.ORDERS).doc(orderId).remove();
         if (appliedCoupon && appliedCoupon.userCouponId) {
           try {
-            await db.collection(COLLECTIONS.USER_COUPONS)
+            await db
+              .collection(COLLECTIONS.USER_COUPONS)
               .doc(appliedCoupon.userCouponId)
               .update({ data: { status: 'unused', order_id: '', updated_at: now } });
-          } catch (e) { /* 静默 */ }
+          } catch (e) {
+            /* 静默 */
+          }
         }
         return { code: RESPONSE_CODE.SERVER_ERROR, msg: '支付通道暂不可用，请稍后重试', data: {} };
       }
@@ -394,18 +456,17 @@ async function handleReportOrder(event, openid, mockPay) {
       code: RESPONSE_CODE.SUCCESS,
       msg: '订单创建成功',
       data: {
-       orderId: orderId,
-       outTradeNo: outTradeNo,
-       status: (mockPay || payAmount === 0) ? ORDER_STATUS.PAID : ORDER_STATUS.PENDING,
-       amount: payAmount,
-       originAmount: quotaInfo.price,
-       couponDiscount: couponDiscount,
-       amountDisplay: (payAmount / 100).toFixed(2),
-       quotaSource: quotaInfo.quota_source,
-       payParams: null
-      }
+        orderId: orderId,
+        outTradeNo: outTradeNo,
+        status: mockPay || payAmount === 0 ? ORDER_STATUS.PAID : ORDER_STATUS.PENDING,
+        amount: payAmount,
+        originAmount: quotaInfo.price,
+        couponDiscount: couponDiscount,
+        amountDisplay: (payAmount / 100).toFixed(2),
+        quotaSource: quotaInfo.quota_source,
+        payParams: null,
+      },
     };
-
   } catch (error) {
     console.error('创建报告订单失败:', error.message);
     return { code: RESPONSE_CODE.SERVER_ERROR, msg: '创建订单失败', data: {} };
@@ -440,9 +501,8 @@ async function handleMemberOrder(event, openid, mockPay) {
   //   且 event._testMode / event._testAmount 来自客户端，可被攻击者用 ¥0.01 购买年卡。
   //   现改为严格开发环境判定，且测试金额仅从服务端环境变量 TEST_ORDER_AMOUNT 读取。
   const isDevEnv = process.env.NODE_ENV === 'development';
-  const TEST_AMOUNT = (isDevEnv && process.env.TEST_ORDER_AMOUNT)
-    ? parseInt(process.env.TEST_ORDER_AMOUNT, 10)
-    : null;
+  const TEST_AMOUNT =
+    isDevEnv && process.env.TEST_ORDER_AMOUNT ? parseInt(process.env.TEST_ORDER_AMOUNT, 10) : null;
   const isTestMode = TEST_AMOUNT !== null && TEST_AMOUNT > 0;
   let amount = isTestMode ? TEST_AMOUNT : PRICE_MAP[memberTier];
 
@@ -457,16 +517,19 @@ async function handleMemberOrder(event, openid, mockPay) {
     if (!isTestMode) {
       // 允许的升级路径
       const UPGRADE_MATRIX = {
-        monthly:        ['family_monthly', 'yearly', 'family_yearly'],
-        family_monthly: ['family_yearly'],  // 家庭月卡不能退回个人年卡
-        yearly:         ['family_yearly'],   // 个人年卡只能升级家庭年卡
-        family_yearly:  []                     // 已是最高级
+        monthly: ['family_monthly', 'yearly', 'family_yearly'],
+        family_monthly: ['family_yearly'], // 家庭月卡不能退回个人年卡
+        yearly: ['family_yearly'], // 个人年卡只能升级家庭年卡
+        family_yearly: [], // 已是最高级
       };
       const TIER_TEXT = {
-        monthly: '个人月卡', family_monthly: '家庭月卡',
-        yearly: '个人年卡', family_yearly: '家庭年卡'
+        monthly: '个人月卡',
+        family_monthly: '家庭月卡',
+        yearly: '个人年卡',
+        family_yearly: '家庭年卡',
       };
-      const activeRes = await db.collection(COLLECTIONS.MEMBERS)
+      const activeRes = await db
+        .collection(COLLECTIONS.MEMBERS)
         .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE })
         .limit(1)
         .get();
@@ -477,12 +540,15 @@ async function handleMemberOrder(event, openid, mockPay) {
         if (active.type === memberTier) {
           return {
             code: RESPONSE_CODE.ERROR,
-            msg: '您已是' + (TIER_TEXT[active.type] || '会员') + '，无需重复开通。如需更多报告次数，请购买点数包',
+            msg:
+              '您已是' +
+              (TIER_TEXT[active.type] || '会员') +
+              '，无需重复开通。如需更多报告次数，请购买点数包',
             data: {
               already_member: true,
               suggest_points: true,
-              current_type: active.type
-            }
+              current_type: active.type,
+            },
           };
         }
 
@@ -491,14 +557,17 @@ async function handleMemberOrder(event, openid, mockPay) {
         if (!allowedUpgrades.includes(memberTier)) {
           return {
             code: RESPONSE_CODE.ERROR,
-            msg: '您已是' + (TIER_TEXT[active.type] || '会员') +
-              '，暂不支持开通' + (TIER_TEXT[memberTier] || '该会员') +
+            msg:
+              '您已是' +
+              (TIER_TEXT[active.type] || '会员') +
+              '，暂不支持开通' +
+              (TIER_TEXT[memberTier] || '该会员') +
               '，请选择更高等级会员或续费当前会员',
             data: {
               upgrade_blocked: true,
               current_type: active.type,
-              target_type: memberTier
-            }
+              target_type: memberTier,
+            },
           };
         }
 
@@ -511,21 +580,34 @@ async function handleMemberOrder(event, openid, mockPay) {
           from_type: active.type,
           to_type: memberTier,
           original_price: targetValue,
-          upgrade_price: targetValue
+          upgrade_price: targetValue,
         };
-        console.log('[createOrder] 会员升级:', active.type, '→', memberTier,
-          '按全价', targetValue, '分; 剩余报告额度将在激活时转为点数');
+        console.log(
+          '[createOrder] 会员升级:',
+          active.type,
+          '→',
+          memberTier,
+          '按全价',
+          targetValue,
+          '分; 剩余报告额度将在激活时转为点数'
+        );
       }
     }
 
     // 检查重复 pending 订单（测试模式跳过此检查）
     if (!isTestMode) {
-      const pendingResult = await db.collection(COLLECTIONS.ORDERS)
+      const pendingResult = await db
+        .collection(COLLECTIONS.ORDERS)
         .where({
           user_id: openid,
-          type: _.in([ORDER_TYPES.MEMBER, ORDER_TYPES.MEMBER_MONTHLY, ORDER_TYPES.MEMBER_YEARLY,
-            ORDER_TYPES.MEMBER_FAMILY_MONTHLY, ORDER_TYPES.MEMBER_FAMILY_YEARLY]),
-          status: ORDER_STATUS.PENDING
+          type: _.in([
+            ORDER_TYPES.MEMBER,
+            ORDER_TYPES.MEMBER_MONTHLY,
+            ORDER_TYPES.MEMBER_YEARLY,
+            ORDER_TYPES.MEMBER_FAMILY_MONTHLY,
+            ORDER_TYPES.MEMBER_FAMILY_YEARLY,
+          ]),
+          status: ORDER_STATUS.PENDING,
         })
         .limit(1)
         .get();
@@ -535,14 +617,23 @@ async function handleMemberOrder(event, openid, mockPay) {
         // 重新支付模式：生成新订单号并重新统一下单
         if (event.repay && !mockPay && dup.amount > 0) {
           try {
-            const newOutTradeNo = 'WELL_MEMBER_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
-            await db.collection(COLLECTIONS.ORDERS).doc(dup._id).update({
-              data: {
-                out_trade_no: newOutTradeNo,
-                updated_at: new Date()
-              }
-            });
-            const payParams = await createWechatPayment(newOutTradeNo, dup.amount, openid, dup.description);
+            const newOutTradeNo =
+              'WELL_MEMBER_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+            await db
+              .collection(COLLECTIONS.ORDERS)
+              .doc(dup._id)
+              .update({
+                data: {
+                  out_trade_no: newOutTradeNo,
+                  updated_at: new Date(),
+                },
+              });
+            const payParams = await createWechatPayment(
+              newOutTradeNo,
+              dup.amount,
+              openid,
+              dup.description
+            );
             return {
               code: RESPONSE_CODE.SUCCESS,
               msg: '订单已更新，请完成支付',
@@ -554,15 +645,23 @@ async function handleMemberOrder(event, openid, mockPay) {
                 amountDisplay: (dup.amount / 100).toFixed(2),
                 memberTier: dup.metadata && dup.metadata.member_tier,
                 payParams: payParams,
-                isRepay: true
-              }
+                isRepay: true,
+              },
             };
           } catch (payErr) {
             console.error('[createOrder] 会员重新支付统一下单失败:', payErr.message);
-            return { code: RESPONSE_CODE.SERVER_ERROR, msg: '支付通道暂不可用，请稍后重试', data: {} };
+            return {
+              code: RESPONSE_CODE.SERVER_ERROR,
+              msg: '支付通道暂不可用，请稍后重试',
+              data: {},
+            };
           }
         }
-        return { code: RESPONSE_CODE.ERROR, msg: '已有进行中的会员订单', data: { orderId: dup._id } };
+        return {
+          code: RESPONSE_CODE.ERROR,
+          msg: '已有进行中的会员订单',
+          data: { orderId: dup._id },
+        };
       }
     }
 
@@ -582,8 +681,8 @@ async function handleMemberOrder(event, openid, mockPay) {
       }
     }
     const payAmount = Math.max(amount - couponDiscount, 0);
-    const isFreeOrder = payAmount === 0;          // 券全额抵扣 → 免单
-    const instantPaid = mockPay || isFreeOrder;   // 立即付清（不走微信支付）
+    const isFreeOrder = payAmount === 0; // 券全额抵扣 → 免单
+    const instantPaid = mockPay || isFreeOrder; // 立即付清（不走微信支付）
     const transactionId = instantPaid ? (mockPay ? 'MOCK_' : 'FREE_') + outTradeNo : '';
 
     const orderData = {
@@ -591,20 +690,28 @@ async function handleMemberOrder(event, openid, mockPay) {
       type: orderType,
       status: instantPaid ? ORDER_STATUS.PAID : ORDER_STATUS.PENDING,
       amount: payAmount,
-      origin_amount: isTestMode ? PRICE_MAP[memberTier] : (upgradeInfo ? upgradeInfo.original_price : amount), // 升级时记录目标原价（券前）
+      origin_amount: isTestMode
+        ? PRICE_MAP[memberTier]
+        : upgradeInfo
+          ? upgradeInfo.original_price
+          : amount, // 升级时记录目标原价（券前）
       coupon_discount: couponDiscount,
       out_trade_no: outTradeNo,
       transaction_id: transactionId,
-      description: upgradeInfo ? ('会员升级至' + (memberTier.includes('family') ? '家庭' : '个人') + (memberTier.includes('yearly') ? '年卡' : '月卡')) : ((memberTier.includes('yearly') ? '年卡' : '月卡') + '会员购买'),
+      description: upgradeInfo
+        ? '会员升级至' +
+          (memberTier.includes('family') ? '家庭' : '个人') +
+          (memberTier.includes('yearly') ? '年卡' : '月卡')
+        : (memberTier.includes('yearly') ? '年卡' : '月卡') + '会员购买',
       metadata: {
         member_tier: memberTier,
         mock_pay: mockPay,
         test_mode: isTestMode,
         test_amount: isTestMode ? amount : null,
-        upgrade_info: upgradeInfo,  // 升级补差价信息（非升级时为 null）
+        upgrade_info: upgradeInfo, // 升级补差价信息（非升级时为 null）
         coupon_user_id: appliedCoupon ? appliedCoupon.userCouponId : '',
         coupon_name: appliedCoupon ? appliedCoupon.couponName : '',
-        coupon_discount: couponDiscount
+        coupon_discount: couponDiscount,
       },
       paid_at: instantPaid ? now : null,
       channel: event.channel || 'mp',
@@ -616,116 +723,161 @@ async function handleMemberOrder(event, openid, mockPay) {
 
     const orderResult = await db.collection(COLLECTIONS.ORDERS).add({ data: orderData });
 
-    // 锁定优惠券（payCallback 标记 used；支付失败/取消/退款/过期会释放）
+    // 原子锁定优惠券（CAS：仅当仍为 unused 才占用，防止并发请求重复抵扣同一张券）
     if (appliedCoupon && appliedCoupon.userCouponId) {
-      try {
-        await db.collection(COLLECTIONS.USER_COUPONS)
-          .doc(appliedCoupon.userCouponId)
-          .update({ data: { status: 'locked', order_id: orderResult._id, updated_at: now } });
-      } catch (e) { /* 优惠券集合可能尚未创建 */ }
+      const claimRes = await db
+        .collection(COLLECTIONS.USER_COUPONS)
+        .where({ _id: appliedCoupon.userCouponId, status: 'unused' })
+        .update({ data: { status: 'locked', order_id: orderResult._id, updated_at: now } })
+        .catch(() => ({ stats: { updated: 0 } }));
+      if (!claimRes.stats || claimRes.stats.updated === 0) {
+        // 已被并发请求占用：删除刚创建的订单，提示重新选择（会员订单未预扣额度，无需回滚）
+        await db
+          .collection(COLLECTIONS.ORDERS)
+          .doc(orderResult._id)
+          .remove()
+          .catch(() => {});
+        return {
+          code: RESPONSE_CODE.ERROR,
+          msg: '优惠券已被使用，请重新选择',
+          data: { coupon_unavailable: true },
+        };
+      }
     }
 
-   // 真实支付模式：调用微信支付（instantPaid=true 时跳过：mock 或券全额抵扣免单）
-   if (!instantPaid) {
-     try {
-       const payParams = await createWechatPayment(outTradeNo, payAmount, openid,
-         (memberTier.includes('yearly') ? '年卡' : '月卡') + '会员购买');
-       return {
-         code: RESPONSE_CODE.SUCCESS,
-         msg: '会员订单创建成功',
-         data: {
-           orderId: orderResult._id,
-           outTradeNo,
-           status: ORDER_STATUS.PENDING,
-           amount: payAmount,
-           amountDisplay: (payAmount / 100).toFixed(2),
-           memberTier,
-           couponDiscount: couponDiscount,
-           payParams: payParams
-         },
-       };
-     } catch (payErr) {
-       console.error('[createOrder] 统一下单失败:', payErr.message);
-       // 支付失败：删除订单并释放已锁定的优惠券
-       await db.collection(COLLECTIONS.ORDERS).doc(orderResult._id).remove();
-       if (appliedCoupon && appliedCoupon.userCouponId) {
-         try {
-           await db.collection(COLLECTIONS.USER_COUPONS).doc(appliedCoupon.userCouponId)
-             .update({ data: { status: 'unused', order_id: '', updated_at: new Date() } });
-         } catch (_) {}
-       }
-       return { code: RESPONSE_CODE.SERVER_ERROR, msg: '支付通道暂不可用，请稍后重试', data: {} };
-     }
-   }
+    // 真实支付模式：调用微信支付（instantPaid=true 时跳过：mock 或券全额抵扣免单）
+    if (!instantPaid) {
+      try {
+        const payParams = await createWechatPayment(
+          outTradeNo,
+          payAmount,
+          openid,
+          (memberTier.includes('yearly') ? '年卡' : '月卡') + '会员购买'
+        );
+        return {
+          code: RESPONSE_CODE.SUCCESS,
+          msg: '会员订单创建成功',
+          data: {
+            orderId: orderResult._id,
+            outTradeNo,
+            status: ORDER_STATUS.PENDING,
+            amount: payAmount,
+            amountDisplay: (payAmount / 100).toFixed(2),
+            memberTier,
+            couponDiscount: couponDiscount,
+            payParams: payParams,
+          },
+        };
+      } catch (payErr) {
+        console.error('[createOrder] 统一下单失败:', payErr.message);
+        // 支付失败：删除订单并释放已锁定的优惠券
+        await db.collection(COLLECTIONS.ORDERS).doc(orderResult._id).remove();
+        if (appliedCoupon && appliedCoupon.userCouponId) {
+          try {
+            await db
+              .collection(COLLECTIONS.USER_COUPONS)
+              .doc(appliedCoupon.userCouponId)
+              .update({ data: { status: 'unused', order_id: '', updated_at: new Date() } });
+          } catch (_) {}
+        }
+        return { code: RESPONSE_CODE.SERVER_ERROR, msg: '支付通道暂不可用，请稍后重试', data: {} };
+      }
+    }
 
-   // mock_pay 模式：订单已标记 PAID，但没有微信回调触发会员激活。
-   // 主动调用 payCallback 分发业务（激活会员/到账点数），否则会员记录不会更新。
-   // S6 加固：payCallback 云函数间调用可能超时/失败，调用后校验会员是否真正激活，
-   // 未激活则内联兜底执行激活逻辑，确保 mock 模式下会员状态一致。
-   if (instantPaid) {
-     let activated = false;
-     try {
-       console.log('[createOrder] ' + (isFreeOrder ? '免单(券全额抵扣)' : 'mock_pay') + '模式，主动触发 payCallback 激活会员:', orderResult._id);
-       await cloud.callFunction({
-         name: 'payCallback',
-         data: {
-           out_trade_no: outTradeNo,
-           transaction_id: transactionId,
-           result_code: 'SUCCESS'
-         }
-       });
-       // 校验会员是否真正激活（type 已切换为目标类型）
-       const verifyRes = await db.collection(COLLECTIONS.MEMBERS)
-         .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE })
-         .limit(1)
-         .get();
-       const vm = verifyRes.data && verifyRes.data[0];
-       if (vm && vm.type === memberTier && vm.activated_by_order === orderResult._id) {
-         activated = true;
-         console.log('[createOrder] mock_pay 激活校验通过:', memberTier);
-       } else {
-         console.warn('[createOrder] mock_pay 激活校验失败，预期 type=' + memberTier +
-           ' 实际 type=' + (vm ? vm.type : 'null') + '，执行内联兜底');
-       }
-     } catch (cbErr) {
-       console.error('[createOrder] mock_pay payCallback 调用异常:', cbErr.message);
-     }
-     // 兜底：payCallback 未成功激活时，内联执行激活逻辑
-     if (!activated) {
-       try {
-         await inlineActivateMember(openid, memberTier, orderResult._id);
-         await db.collection(COLLECTIONS.ORDERS).doc(orderResult._id).update({
-           data: { dispatch_status: 'completed', dispatched_at: new Date(), updated_at: new Date() }
-         });
-         console.log('[createOrder] mock_pay 内联激活成功:', memberTier);
-       } catch (inlineErr) {
-         console.error('[createOrder] mock_pay 内联激活失败:', inlineErr.message);
-         await db.collection(COLLECTIONS.ORDERS).doc(orderResult._id).update({
-           data: { dispatch_status: 'failed', dispatch_error: inlineErr.message, updated_at: new Date() }
-         }).catch(() => {});
-       }
-     }
-   }
+    // mock_pay 模式：订单已标记 PAID，但没有微信回调触发会员激活。
+    // 主动调用 payCallback 分发业务（激活会员/到账点数），否则会员记录不会更新。
+    // S6 加固：payCallback 云函数间调用可能超时/失败，调用后校验会员是否真正激活，
+    // 未激活则内联兜底执行激活逻辑，确保 mock 模式下会员状态一致。
+    if (instantPaid) {
+      let activated = false;
+      try {
+        console.log(
+          '[createOrder] ' +
+            (isFreeOrder ? '免单(券全额抵扣)' : 'mock_pay') +
+            '模式，主动触发 payCallback 激活会员:',
+          orderResult._id
+        );
+        await cloud.callFunction({
+          name: 'payCallback',
+          data: {
+            out_trade_no: outTradeNo,
+            transaction_id: transactionId,
+            result_code: 'SUCCESS',
+            gateway_signature: signGatewayPayload(outTradeNo, transactionId),
+          },
+        });
+        // 校验会员是否真正激活（type 已切换为目标类型）
+        const verifyRes = await db
+          .collection(COLLECTIONS.MEMBERS)
+          .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE })
+          .limit(1)
+          .get();
+        const vm = verifyRes.data && verifyRes.data[0];
+        if (vm && vm.type === memberTier && vm.activated_by_order === orderResult._id) {
+          activated = true;
+          console.log('[createOrder] mock_pay 激活校验通过:', memberTier);
+        } else {
+          console.warn(
+            '[createOrder] mock_pay 激活校验失败，预期 type=' +
+              memberTier +
+              ' 实际 type=' +
+              (vm ? vm.type : 'null') +
+              '，执行内联兜底'
+          );
+        }
+      } catch (cbErr) {
+        console.error('[createOrder] mock_pay payCallback 调用异常:', cbErr.message);
+      }
+      // 兜底：payCallback 未成功激活时，内联执行激活逻辑
+      if (!activated) {
+        try {
+          await inlineActivateMember(openid, memberTier, orderResult._id);
+          await db
+            .collection(COLLECTIONS.ORDERS)
+            .doc(orderResult._id)
+            .update({
+              data: {
+                dispatch_status: 'completed',
+                dispatched_at: new Date(),
+                updated_at: new Date(),
+              },
+            });
+          console.log('[createOrder] mock_pay 内联激活成功:', memberTier);
+        } catch (inlineErr) {
+          console.error('[createOrder] mock_pay 内联激活失败:', inlineErr.message);
+          await db
+            .collection(COLLECTIONS.ORDERS)
+            .doc(orderResult._id)
+            .update({
+              data: {
+                dispatch_status: 'failed',
+                dispatch_error: inlineErr.message,
+                updated_at: new Date(),
+              },
+            })
+            .catch(() => {});
+        }
+      }
+    }
 
-   return {
-     code: RESPONSE_CODE.SUCCESS,
-     msg: '会员订单创建成功',
-     data: {
-       orderId: orderResult._id,
-       outTradeNo,
-       status: orderData.status,
-       amount: payAmount,
-       amountDisplay: (payAmount / 100).toFixed(2),
-       memberTier,
-       couponDiscount: couponDiscount,
-     },
-   };
+    return {
+      code: RESPONSE_CODE.SUCCESS,
+      msg: '会员订单创建成功',
+      data: {
+        orderId: orderResult._id,
+        outTradeNo,
+        status: orderData.status,
+        amount: payAmount,
+        amountDisplay: (payAmount / 100).toFixed(2),
+        memberTier,
+        couponDiscount: couponDiscount,
+      },
+    };
   } catch (error) {
     console.error('创建会员订单失败:', error.message);
     return { code: RESPONSE_CODE.SERVER_ERROR, msg: '创建会员订单失败', data: {} };
   }
 }
-
 
 /**
  * mock_pay 兜底：内联激活会员（当 payCallback 云函数间调用失败时使用）
@@ -739,7 +891,7 @@ async function inlineActivateMember(openid, memberTier, orderId) {
     dbCredits: MEMBER_CREDITS,
     openid,
     memberType: memberTier,
-    orderId
+    orderId,
   });
 }
 
@@ -763,15 +915,20 @@ async function handlePointsOrder(event, openid, mockPay) {
     let appliedCoupon = null;
     if (pack.price > 0 && event.couponId) {
       try {
-        appliedCoupon = await autoSelectCoupon(openid, pack.price, ORDER_TYPES.POINTS, event.couponId);
+        appliedCoupon = await autoSelectCoupon(
+          openid,
+          pack.price,
+          ORDER_TYPES.POINTS,
+          event.couponId
+        );
       } catch (couponErr) {
         console.warn('[createOrder] 点数优惠券查询跳过:', couponErr.message);
       }
     }
     const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0;
     const payAmount = Math.max(pack.price - couponDiscount, 0);
-    const isFreeOrder = payAmount === 0;          // 券全额抵扣 → 免单
-    const instantPaid = mockPay || isFreeOrder;   // 立即付清（不走微信支付）
+    const isFreeOrder = payAmount === 0; // 券全额抵扣 → 免单
+    const instantPaid = mockPay || isFreeOrder; // 立即付清（不走微信支付）
     const transactionId = instantPaid ? (mockPay ? 'MOCK_' : 'FREE_') + outTradeNo : '';
 
     const orderData = {
@@ -792,7 +949,7 @@ async function handlePointsOrder(event, openid, mockPay) {
         mock_pay: mockPay,
         coupon_user_id: appliedCoupon ? appliedCoupon.userCouponId : '',
         coupon_name: appliedCoupon ? appliedCoupon.couponName : '',
-        coupon_discount: couponDiscount
+        coupon_discount: couponDiscount,
       },
       paid_at: instantPaid ? now : null,
       channel: event.channel || 'mp',
@@ -805,13 +962,26 @@ async function handlePointsOrder(event, openid, mockPay) {
     const orderResult = await db.collection(COLLECTIONS.ORDERS).add({ data: orderData });
     const orderId = orderResult._id;
 
-    // 锁定优惠券（真实支付由 payCallback 标 used；失败/取消/退款/过期释放）
+    // 原子锁定优惠券（CAS：仅当仍为 unused 才占用，防止并发请求重复抵扣同一张券）
     if (appliedCoupon && appliedCoupon.userCouponId) {
-      try {
-        await db.collection(COLLECTIONS.USER_COUPONS)
-          .doc(appliedCoupon.userCouponId)
-          .update({ data: { status: 'locked', order_id: orderId, updated_at: now } });
-      } catch (e) { /* 优惠券集合可能尚未创建 */ }
+      const claimRes = await db
+        .collection(COLLECTIONS.USER_COUPONS)
+        .where({ _id: appliedCoupon.userCouponId, status: 'unused' })
+        .update({ data: { status: 'locked', order_id: orderId, updated_at: now } })
+        .catch(() => ({ stats: { updated: 0 } }));
+      if (!claimRes.stats || claimRes.stats.updated === 0) {
+        // 已被并发请求占用：删除刚创建的订单，提示重新选择（点数订单未预扣额度，无需回滚）
+        await db
+          .collection(COLLECTIONS.ORDERS)
+          .doc(orderId)
+          .remove()
+          .catch(() => {});
+        return {
+          code: RESPONSE_CODE.ERROR,
+          msg: '优惠券已被使用，请重新选择',
+          data: { coupon_unavailable: true },
+        };
+      }
     }
 
     // 立即付清（mock 或券全额抵扣免单）：直接发放点数 + 标记券已用（真实支付由 payCallback 标记）
@@ -819,7 +989,9 @@ async function handlePointsOrder(event, openid, mockPay) {
       await creditPoints(openid, pack.count, pack.expire_days, orderId);
       if (appliedCoupon && appliedCoupon.userCouponId) {
         try {
-          await db.collection(COLLECTIONS.USER_COUPONS).doc(appliedCoupon.userCouponId)
+          await db
+            .collection(COLLECTIONS.USER_COUPONS)
+            .doc(appliedCoupon.userCouponId)
             .update({ data: { status: 'used', order_id: orderId, used_at: now, updated_at: now } });
         } catch (_) {}
       }
@@ -849,7 +1021,9 @@ async function handlePointsOrder(event, openid, mockPay) {
         await db.collection(COLLECTIONS.ORDERS).doc(orderId).remove();
         if (appliedCoupon && appliedCoupon.userCouponId) {
           try {
-            await db.collection(COLLECTIONS.USER_COUPONS).doc(appliedCoupon.userCouponId)
+            await db
+              .collection(COLLECTIONS.USER_COUPONS)
+              .doc(appliedCoupon.userCouponId)
               .update({ data: { status: 'unused', order_id: '', updated_at: new Date() } });
           } catch (_) {}
         }
@@ -883,21 +1057,27 @@ async function handleBundleOrder(event, openid, mockPay) {
   const bundleKey = event.bundleKey;
   const BUNDLES_CONST = {
     STARTER: {
-      name: '新手礼包', price: 2990, origin_price: 3980,
+      name: '新手礼包',
+      price: 2990,
+      origin_price: 3980,
       items: [
         { type: 'member', tier: 'monthly' },
         { type: 'points', pack: 'PACK_3' },
       ],
     },
     ESSENTIAL: {
-      name: '铲屎官必备', price: 11900, origin_price: 12890,
+      name: '铲屎官必备',
+      price: 11900,
+      origin_price: 12890,
       items: [
         { type: 'member', tier: 'yearly' },
         { type: 'points', pack: 'PACK_5' },
       ],
     },
     FAMILY: {
-      name: '家庭尊享', price: 3990, origin_price: 4980,
+      name: '家庭尊享',
+      price: 3990,
+      origin_price: 4980,
       items: [
         { type: 'member', tier: 'family_monthly' },
         { type: 'points', pack: 'PACK_3' },
@@ -921,12 +1101,16 @@ async function handleBundleOrder(event, openid, mockPay) {
       let subType, subAmount, subDesc;
       if (item.type === 'member') {
         const PRICE_MAP = {
-          monthly: PRICES.MEMBER_MONTHLY, yearly: PRICES.MEMBER_YEARLY,
-          family_monthly: PRICES.MEMBER_FAMILY_MONTHLY, family_yearly: PRICES.MEMBER_FAMILY_YEARLY,
+          monthly: PRICES.MEMBER_MONTHLY,
+          yearly: PRICES.MEMBER_YEARLY,
+          family_monthly: PRICES.MEMBER_FAMILY_MONTHLY,
+          family_yearly: PRICES.MEMBER_FAMILY_YEARLY,
         };
         subType = 'member_' + item.tier;
         subAmount = PRICE_MAP[item.tier] || 0;
-        subDesc = (item.tier.includes('family') ? '家庭' : '个人') + (item.tier.includes('yearly') ? '年卡' : '月卡');
+        subDesc =
+          (item.tier.includes('family') ? '家庭' : '个人') +
+          (item.tier.includes('yearly') ? '年卡' : '月卡');
       } else {
         const pack = POINTS_PACKS[item.pack];
         subType = 'points';
@@ -979,9 +1163,12 @@ async function handleBundleOrder(event, openid, mockPay) {
 
     // 回写子订单的 parent_order_id
     for (const sub of subOrders) {
-      await db.collection(COLLECTIONS.ORDERS).doc(sub.order_id).update({
-        data: { parent_order_id: mainResult._id },
-      });
+      await db
+        .collection(COLLECTIONS.ORDERS)
+        .doc(sub.order_id)
+        .update({
+          data: { parent_order_id: mainResult._id },
+        });
     }
 
     // 真实支付模式：用主订单金额调微信统一下单，返回支付参数给前端
@@ -1006,45 +1193,54 @@ async function handleBundleOrder(event, openid, mockPay) {
       } catch (payErr) {
         console.error('[createOrder] 套餐统一下单失败:', payErr.message);
         // 回滚：删除主订单 + 所有子订单
-        try { await db.collection(COLLECTIONS.ORDERS).doc(mainResult._id).remove(); } catch (e) { /* 忽略 */ }
+        try {
+          await db.collection(COLLECTIONS.ORDERS).doc(mainResult._id).remove();
+        } catch (e) {
+          /* 忽略 */
+        }
         for (const sub of subOrders) {
-          try { await db.collection(COLLECTIONS.ORDERS).doc(sub.order_id).remove(); } catch (e) { /* 忽略 */ }
+          try {
+            await db.collection(COLLECTIONS.ORDERS).doc(sub.order_id).remove();
+          } catch (e) {
+            /* 忽略 */
+          }
         }
         return { code: RESPONSE_CODE.SERVER_ERROR, msg: '支付通道暂不可用，请稍后重试', data: {} };
       }
     }
 
-   // mock_pay 模式：主订单已 PAID，主动调用 payCallback 触发套餐拆单激活（会员+点数）
-   if (mockPay) {
-     try {
-       console.log('[createOrder] mock_pay 模式，主动触发 payCallback 激活套餐:', mainResult._id);
-       await cloud.callFunction({
-         name: 'payCallback',
-         data: {
-           out_trade_no: outTradeNo,
-           transaction_id: 'MOCK_' + outTradeNo,
-           result_code: 'SUCCESS'
-         }
-       });
-     } catch (cbErr) {
-       console.error('[createOrder] mock_pay 套餐激活失败:', cbErr.message);
-     }
-   }
+    // mock_pay 模式：主订单已 PAID，主动调用 payCallback 触发套餐拆单激活（会员+点数）
+    if (mockPay) {
+      try {
+        console.log('[createOrder] mock_pay 模式，主动触发 payCallback 激活套餐:', mainResult._id);
+        await cloud.callFunction({
+          name: 'payCallback',
+          data: {
+            out_trade_no: outTradeNo,
+            transaction_id: 'MOCK_' + outTradeNo,
+            result_code: 'SUCCESS',
+            gateway_signature: signGatewayPayload(outTradeNo, 'MOCK_' + outTradeNo),
+          },
+        });
+      } catch (cbErr) {
+        console.error('[createOrder] mock_pay 套餐激活失败:', cbErr.message);
+      }
+    }
 
-   return {
-     code: RESPONSE_CODE.SUCCESS,
-     msg: '套餐订单创建成功',
-     data: {
-       orderId: mainResult._id,
-       outTradeNo,
-       status: mainOrderData.status,
-       amount: bundle.price,
-       amountDisplay: (bundle.price / 100).toFixed(2),
-       originAmount: bundle.origin_price,
-       bundleName: bundle.name,
-       subOrders,
-     },
-   };
+    return {
+      code: RESPONSE_CODE.SUCCESS,
+      msg: '套餐订单创建成功',
+      data: {
+        orderId: mainResult._id,
+        outTradeNo,
+        status: mainOrderData.status,
+        amount: bundle.price,
+        amountDisplay: (bundle.price / 100).toFixed(2),
+        originAmount: bundle.origin_price,
+        bundleName: bundle.name,
+        subOrders,
+      },
+    };
   } catch (error) {
     console.error('创建套餐订单失败:', error.message);
     return { code: RESPONSE_CODE.SERVER_ERROR, msg: '创建套餐订单失败', data: {} };
@@ -1059,21 +1255,25 @@ async function creditPoints(openid, count, expireDays, orderId) {
   const expireAt = new Date(now.getTime() + expireDays * 24 * 60 * 60 * 1000);
 
   // 查找或创建 user_points 记录
-  const existing = await db.collection(COLLECTIONS.USER_POINTS)
+  const existing = await db
+    .collection(COLLECTIONS.USER_POINTS)
     .where({ user_id: openid })
     .limit(1)
     .get();
 
   if (existing.data && existing.data.length > 0) {
     const record = existing.data[0];
-    await db.collection(COLLECTIONS.USER_POINTS).doc(record._id).update({
-      data: {
-        balance: _.inc(count),
-        total_purchased: _.inc(count),
-        expire_at: expireAt, // 简化：以最新购买为准
-        updated_at: now,
-      },
-    });
+    await db
+      .collection(COLLECTIONS.USER_POINTS)
+      .doc(record._id)
+      .update({
+        data: {
+          balance: _.inc(count),
+          total_purchased: _.inc(count),
+          expire_at: expireAt, // 简化：以最新购买为准
+          updated_at: now,
+        },
+      });
   } else {
     await db.collection(COLLECTIONS.USER_POINTS).add({
       data: {
@@ -1130,11 +1330,12 @@ async function autoSelectCoupon(openid, orderAmount, orderType, preferCouponId) 
   const now = new Date();
 
   // 查询用户所有未使用、未过期的优惠券
-  const userCouponsResult = await db.collection(COLLECTIONS.USER_COUPONS)
+  const userCouponsResult = await db
+    .collection(COLLECTIONS.USER_COUPONS)
     .where({
       user_id: openid,
       status: 'unused',
-      expire_at: _.gt(now)
+      expire_at: _.gt(now),
     })
     .get();
 
@@ -1143,11 +1344,12 @@ async function autoSelectCoupon(openid, orderAmount, orderType, preferCouponId) 
   }
 
   // 批量查询券模板
-  const couponIds = [...new Set(userCouponsResult.data.map(uc => uc.coupon_id))];
-  const templatesResult = await db.collection(COLLECTIONS.COUPONS)
+  const couponIds = [...new Set(userCouponsResult.data.map((uc) => uc.coupon_id))];
+  const templatesResult = await db
+    .collection(COLLECTIONS.COUPONS)
     .where({
       _id: _.in(couponIds),
-      is_active: true
+      is_active: true,
     })
     .get();
 
@@ -1179,7 +1381,7 @@ async function autoSelectCoupon(openid, orderAmount, orderType, preferCouponId) 
       // discount_value 为「折」数：8 = 8 折（实付 80%），与领券页展示 (value+'折') 口径一致
       // clamp 到 [0,10]，防止历史脏数据（如按百分比误录的 80）算出负折扣
       const zhe = Math.min(Math.max(tmpl.discount_value || 10, 0), 10);
-      discount = Math.floor(orderAmount * (10 - zhe) / 10);
+      discount = Math.floor((orderAmount * (10 - zhe)) / 10);
     }
 
     // 优惠不能超过订单金额
@@ -1192,7 +1394,7 @@ async function autoSelectCoupon(openid, orderAmount, orderType, preferCouponId) 
         couponId: uc.coupon_id,
         couponName: tmpl.name || '优惠券',
         discount: discount,
-        discountType: tmpl.discount_type
+        discountType: tmpl.discount_type,
       };
     }
     // 用户指定券优先：命中即返回（已通过上方 type/min_amount 校验）
@@ -1202,7 +1404,7 @@ async function autoSelectCoupon(openid, orderAmount, orderType, preferCouponId) 
         couponId: uc.coupon_id,
         couponName: tmpl.name || '优惠券',
         discount: discount,
-        discountType: tmpl.discount_type
+        discountType: tmpl.discount_type,
       };
     }
   }
@@ -1235,12 +1437,12 @@ async function createWechatPayment(outTradeNo, totalFee, openid, body) {
           description: body || 'AI健康报告',
           out_trade_no: outTradeNo,
           amount: {
-            total: totalFee,  // 单位：分（正整数）
-            currency: 'CNY'
-          }
+            total: totalFee, // 单位：分（正整数）
+            currency: 'CNY',
+          },
         },
-        openid: openid  // 传递 openid
-      }
+        openid: openid, // 传递 openid
+      },
     });
 
     console.log('[createWechatPayment] 云函数返回:', result);
@@ -1258,7 +1460,7 @@ async function createWechatPayment(outTradeNo, totalFee, openid, body) {
       nonceStr: payment.nonceStr,
       package: payment.package || `prepay_id=${payment.prepay_id}`,
       signType: payment.signType || 'RSA',
-      paySign: payment.paySign
+      paySign: payment.paySign,
     };
   } catch (error) {
     console.error('[createWechatPayment] 调用失败:', error);

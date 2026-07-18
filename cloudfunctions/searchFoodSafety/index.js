@@ -1,4 +1,4 @@
-﻿// 食物安全查询云函数
+// 食物安全查询云函数
 // 搜索 food_safety 集合，支持关键词模糊匹配和分类过滤
 const cloud = require('wx-server-sdk');
 const { COLLECTIONS, RESPONSE_CODE, warmupConfig } = require('./common/constants');
@@ -27,7 +27,7 @@ exports.main = async (event, context) => {
 
   // 2. 速率限制（读操作：限流故障时放行）
   const { OPENID } = cloud.getWXContext();
-  if (!await checkRateLimit(db, OPENID, 'searchFoodSafety', 20, 60000, true)) {
+  if (!(await checkRateLimit(db, OPENID, 'searchFoodSafety', 20, 60000, true))) {
     return { code: RESPONSE_CODE.ERROR, msg: '操作过于频繁，请稍后再试', data: {} };
   }
 
@@ -51,7 +51,8 @@ exports.main = async (event, context) => {
       const kwQuery = _.and(conditions);
 
       const countResult = await db.collection(COLLECTIONS.FOOD_SAFETY).where(kwQuery).count();
-      const dataResult = await db.collection(COLLECTIONS.FOOD_SAFETY)
+      const dataResult = await db
+        .collection(COLLECTIONS.FOOD_SAFETY)
         .where(kwQuery)
         .orderBy('severity', 'desc')
         .skip((pageNum - 1) * size)
@@ -67,7 +68,8 @@ exports.main = async (event, context) => {
         : { status: 'published' };
 
       const countResult = await db.collection(COLLECTIONS.FOOD_SAFETY).where(query).count();
-      const dataResult = await db.collection(COLLECTIONS.FOOD_SAFETY)
+      const dataResult = await db
+        .collection(COLLECTIONS.FOOD_SAFETY)
         .where(query)
         .orderBy('severity', 'desc')
         .skip((pageNum - 1) * size)
@@ -79,7 +81,7 @@ exports.main = async (event, context) => {
     }
 
     // 格式化结果
-    const foods = results.map(function(item) {
+    const foods = results.map(function (item) {
       return {
         _id: item._id,
         name: item.name,
@@ -88,22 +90,21 @@ exports.main = async (event, context) => {
         dog_safety: item.dog_safety,
         effect: item.effect,
         alternative: item.alternative || '',
-        severity: item.severity || 1
+        severity: item.severity || 1,
       };
     });
 
     return {
       code: RESPONSE_CODE.SUCCESS,
       msg: '搜索成功',
-      data: { foods: foods, total: total }
+      data: { foods: foods, total: total },
     };
-
   } catch (error) {
     console.error('[searchFoodSafety] 查询失败:', error);
     return {
       code: RESPONSE_CODE.SERVER_ERROR,
       msg: '查询失败，请稍后重试',
-      data: {}
+      data: {},
     };
   }
 };

@@ -271,9 +271,7 @@ async function run() {
   await (async function testNoKeyword() {
     resetSpies();
     foodTotal = 1;
-    foodData = [
-      { _id: 'f9', name: '牛肉', category: '肉类', cat_safety: 'safe', severity: 1 },
-    ];
+    foodData = [{ _id: 'f9', name: '牛肉', category: '肉类', cat_safety: 'safe', severity: 1 }];
     const res = await main({ token: 'tok' });
     assertEqual(res.code, RESPONSE_CODE.SUCCESS, '无关键词也成功');
     assertEqual(res.data.foods.length, 1, '返回 1 条');

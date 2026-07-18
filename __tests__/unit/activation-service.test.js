@@ -35,7 +35,8 @@ function assertEqual(actual, expected, message) {
     passed++;
   } else {
     failed++;
-    const msg = message + ' - 期望: ' + JSON.stringify(expected) + ', 实际: ' + JSON.stringify(actual);
+    const msg =
+      message + ' - 期望: ' + JSON.stringify(expected) + ', 实际: ' + JSON.stringify(actual);
     errors.push('FAIL: ' + msg);
     console.error('  ✗ ' + msg);
   }
@@ -48,7 +49,13 @@ function getPath(obj, path) {
 function matchDoc(doc, query) {
   for (const k of Object.keys(query || {})) {
     const qv = query[k];
-    if (qv !== null && qv !== undefined && typeof qv === 'object' && !Array.isArray(qv) && !(qv instanceof Date)) {
+    if (
+      qv !== null &&
+      qv !== undefined &&
+      typeof qv === 'object' &&
+      !Array.isArray(qv) &&
+      !(qv instanceof Date)
+    ) {
       continue; // command 操作符对象（inc），mock 假定通过
     }
     if (getPath(doc, k) !== qv) return false;
@@ -73,7 +80,12 @@ function createMockDb(collections, opts) {
           get: async () => ({ data: filtered }),
           update: async ({ data: patch }) => {
             if (filtered.length > 0) filtered.forEach((d) => Object.assign(d, patch));
-            updates.push({ collection: name, query: query, patch: patch, updated: filtered.length });
+            updates.push({
+              collection: name,
+              query: query,
+              patch: patch,
+              updated: filtered.length,
+            });
             return { stats: { updated: filtered.length } };
           },
         };
@@ -102,7 +114,10 @@ function createMockDb(collections, opts) {
   return { command: command, collection: (name) => chainFor(name), _updates: updates, _data: data };
 }
 
-const { carryoverMemberCreditsToPoints, activateMembership } = require('../../cloudfunctions/common/activation-service');
+const {
+  carryoverMemberCreditsToPoints,
+  activateMembership,
+} = require('../../cloudfunctions/common/activation-service');
 const { COLLECTIONS, MEMBER_CREDITS } = require('../../cloudfunctions/common/constants');
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -112,10 +127,19 @@ async function run() {
   // 1. 无现有记录 → 新建
   console.log('\n=== 1. 无现有 user_points → 新建 + 写流水 ===');
   await (async function () {
-    const db = createMockDb({ [COLLECTIONS.USER_POINTS]: [], [COLLECTIONS.POINT_TRANSACTIONS]: [] });
+    const db = createMockDb({
+      [COLLECTIONS.USER_POINTS]: [],
+      [COLLECTIONS.POINT_TRANSACTIONS]: [],
+    });
     const now = new Date('2026-07-17T10:00:00Z');
     await carryoverMemberCreditsToPoints({
-      db, _: db.command, openid: 'U1', points: 2, orderId: 'O1', relatedMemberId: 'M1', now: now,
+      db,
+      _: db.command,
+      openid: 'U1',
+      points: 2,
+      orderId: 'O1',
+      relatedMemberId: 'M1',
+      now: now,
     });
     const ups = db._data[COLLECTIONS.USER_POINTS];
     const txs = db._data[COLLECTIONS.POINT_TRANSACTIONS];
@@ -138,15 +162,29 @@ async function run() {
     const futureExpire = new Date('2026-10-17T10:00:00Z');
     const db = createMockDb({
       [COLLECTIONS.USER_POINTS]: [
-        { _id: 'UP1', user_id: 'U1', balance: 5, total_purchased: 10, total_used: 5, expire_at: futureExpire },
+        {
+          _id: 'UP1',
+          user_id: 'U1',
+          balance: 5,
+          total_purchased: 10,
+          total_used: 5,
+          expire_at: futureExpire,
+        },
       ],
       [COLLECTIONS.POINT_TRANSACTIONS]: [],
     });
     const now = new Date('2026-07-17T10:00:00Z');
     await carryoverMemberCreditsToPoints({
-      db, _: db.command, openid: 'U1', points: 3, orderId: 'O2', now: now,
+      db,
+      _: db.command,
+      openid: 'U1',
+      points: 3,
+      orderId: 'O2',
+      now: now,
     });
-    const upUpdate = db._updates.find((u) => u.collection === COLLECTIONS.USER_POINTS && u.docId === 'UP1');
+    const upUpdate = db._updates.find(
+      (u) => u.collection === COLLECTIONS.USER_POINTS && u.docId === 'UP1'
+    );
     assert(!!upUpdate, '调用了 user_points doc.update');
     assertEqual(upUpdate.patch.balance.$op, 'inc', 'balance 用 _.inc');
     assertEqual(upUpdate.patch.balance.v, 3, 'balance _.inc(3)');
@@ -168,7 +206,12 @@ async function run() {
     });
     const beforeTxs = db._data[COLLECTIONS.POINT_TRANSACTIONS].length;
     await carryoverMemberCreditsToPoints({
-      db, _: db.command, openid: 'U1', points: 2, orderId: 'O3', now: new Date(),
+      db,
+      _: db.command,
+      openid: 'U1',
+      points: 2,
+      orderId: 'O3',
+      now: new Date(),
     });
     assertEqual(db._data[COLLECTIONS.POINT_TRANSACTIONS].length, beforeTxs, '流水数不变');
     assertEqual(db._data[COLLECTIONS.USER_POINTS].length, 0, 'user_points 不新建');
@@ -181,16 +224,32 @@ async function run() {
     const futureExpire = new Date('2026-12-31T00:00:00Z'); // 比 now+90 更晚
     const db = createMockDb({
       [COLLECTIONS.USER_POINTS]: [
-        { _id: 'UP1', user_id: 'U1', balance: 1, total_purchased: 1, total_used: 0, expire_at: futureExpire },
+        {
+          _id: 'UP1',
+          user_id: 'U1',
+          balance: 1,
+          total_purchased: 1,
+          total_used: 0,
+          expire_at: futureExpire,
+        },
       ],
       [COLLECTIONS.POINT_TRANSACTIONS]: [],
     });
     const now = new Date('2026-07-17T10:00:00Z');
     await carryoverMemberCreditsToPoints({
-      db, _: db.command, openid: 'U1', points: 1, orderId: 'O4', now: now,
+      db,
+      _: db.command,
+      openid: 'U1',
+      points: 1,
+      orderId: 'O4',
+      now: now,
     });
     const upUpdate = db._updates.find((u) => u.collection === COLLECTIONS.USER_POINTS);
-    assertEqual(upUpdate.patch.expire_at.getTime(), futureExpire.getTime(), '保留更晚的原 expire_at');
+    assertEqual(
+      upUpdate.patch.expire_at.getTime(),
+      futureExpire.getTime(),
+      '保留更晚的原 expire_at'
+    );
   })();
 
   // 5. expire_at 现有过期 → now+90
@@ -199,13 +258,25 @@ async function run() {
     const pastExpire = new Date('2020-01-01T00:00:00Z');
     const db = createMockDb({
       [COLLECTIONS.USER_POINTS]: [
-        { _id: 'UP1', user_id: 'U1', balance: 1, total_purchased: 1, total_used: 0, expire_at: pastExpire },
+        {
+          _id: 'UP1',
+          user_id: 'U1',
+          balance: 1,
+          total_purchased: 1,
+          total_used: 0,
+          expire_at: pastExpire,
+        },
       ],
       [COLLECTIONS.POINT_TRANSACTIONS]: [],
     });
     const now = new Date('2026-07-17T10:00:00Z');
     await carryoverMemberCreditsToPoints({
-      db, _: db.command, openid: 'U1', points: 1, orderId: 'O5', now: now,
+      db,
+      _: db.command,
+      openid: 'U1',
+      points: 1,
+      orderId: 'O5',
+      now: now,
     });
     const upUpdate = db._updates.find((u) => u.collection === COLLECTIONS.USER_POINTS);
     const expected90 = new Date(now.getTime() + 90 * DAY_MS);
@@ -215,9 +286,17 @@ async function run() {
   // 6. points<=0 → 直接 return
   console.log('\n=== 6. points<=0 → 直接 return，无写操作 ===');
   await (async function () {
-    const db = createMockDb({ [COLLECTIONS.USER_POINTS]: [], [COLLECTIONS.POINT_TRANSACTIONS]: [] });
+    const db = createMockDb({
+      [COLLECTIONS.USER_POINTS]: [],
+      [COLLECTIONS.POINT_TRANSACTIONS]: [],
+    });
     await carryoverMemberCreditsToPoints({
-      db, _: db.command, openid: 'U1', points: 0, orderId: 'O6', now: new Date(),
+      db,
+      _: db.command,
+      openid: 'U1',
+      points: 0,
+      orderId: 'O6',
+      now: new Date(),
     });
     assertEqual(db._updates.length, 0, 'points=0 无写操作');
   })();
@@ -225,9 +304,17 @@ async function run() {
   // 7. 无 orderId → 仍发放（正常场景 orderId 必传，此处验证不崩）
   console.log('\n=== 7. 无 orderId → 正常发放 ===');
   await (async function () {
-    const db = createMockDb({ [COLLECTIONS.USER_POINTS]: [], [COLLECTIONS.POINT_TRANSACTIONS]: [] });
+    const db = createMockDb({
+      [COLLECTIONS.USER_POINTS]: [],
+      [COLLECTIONS.POINT_TRANSACTIONS]: [],
+    });
     await carryoverMemberCreditsToPoints({
-      db, _: db.command, openid: 'U1', points: 2, orderId: '', now: new Date(),
+      db,
+      _: db.command,
+      openid: 'U1',
+      points: 2,
+      orderId: '',
+      now: new Date(),
     });
     assertEqual(db._data[COLLECTIONS.USER_POINTS].length, 1, '无 orderId 仍新建 user_points');
     assertEqual(db._data[COLLECTIONS.POINT_TRANSACTIONS][0].order_id, '', '流水 order_id 为空串');
@@ -241,21 +328,41 @@ async function run() {
     const start = new Date('2026-07-15T10:00:00Z');
     const futurePointsExpire = new Date('2026-10-17T10:00:00Z');
     const db = createMockDb({
-      [COLLECTIONS.MEMBERS]: [{
-        _id: 'M1', user_id: 'U1', type: 'monthly', status: 'active',
-        expire_date: monthExpire, start_date: start,
-        report_credits_total: 3, report_credits_used: 1,
-        report_credits_reset_at: monthExpire, activated_by_order: 'OLD_ORDER',
-      }],
+      [COLLECTIONS.MEMBERS]: [
+        {
+          _id: 'M1',
+          user_id: 'U1',
+          type: 'monthly',
+          status: 'active',
+          expire_date: monthExpire,
+          start_date: start,
+          report_credits_total: 3,
+          report_credits_used: 1,
+          report_credits_reset_at: monthExpire,
+          activated_by_order: 'OLD_ORDER',
+        },
+      ],
       [COLLECTIONS.USER_POINTS]: [
-        { _id: 'UP1', user_id: 'U1', balance: 5, total_purchased: 5, total_used: 0, expire_at: futurePointsExpire },
+        {
+          _id: 'UP1',
+          user_id: 'U1',
+          balance: 5,
+          total_purchased: 5,
+          total_used: 0,
+          expire_at: futurePointsExpire,
+        },
       ],
       [COLLECTIONS.POINT_TRANSACTIONS]: [],
       [COLLECTIONS.USERS]: [{ _id: 'US1', user_id: 'U1', isMember: true }],
     });
     const res = await activateMembership({
-      db, _: db.command, dbCredits: MEMBER_CREDITS,
-      openid: 'U1', memberType: 'yearly', orderId: 'NEW_UPGRADE_O', now: now,
+      db,
+      _: db.command,
+      dbCredits: MEMBER_CREDITS,
+      openid: 'U1',
+      memberType: 'yearly',
+      orderId: 'NEW_UPGRADE_O',
+      now: now,
     });
     assertEqual(res.activated, true, 'activated=true');
     // members 原地更新：type=yearly、used 重置 0、total=YEARLY_REPORTS(3)
@@ -284,14 +391,26 @@ async function run() {
     const db = createMockDb(
       {
         [COLLECTIONS.USER_POINTS]: [
-          { _id: 'UP1', user_id: 'U1', balance: 5, total_purchased: 5, total_used: 0, expire_at: new Date('2026-10-17T00:00:00Z') },
+          {
+            _id: 'UP1',
+            user_id: 'U1',
+            balance: 5,
+            total_purchased: 5,
+            total_used: 0,
+            expire_at: new Date('2026-10-17T00:00:00Z'),
+          },
         ],
         [COLLECTIONS.POINT_TRANSACTIONS]: [],
       },
       { dupKeyOnAddTxn: true }
     );
     await carryoverMemberCreditsToPoints({
-      db, _: db.command, openid: 'U1', points: 2, orderId: 'O9', now: new Date(),
+      db,
+      _: db.command,
+      openid: 'U1',
+      points: 2,
+      orderId: 'O9',
+      now: new Date(),
     });
     // 余额更新被跳过（不重复发）
     const upUpdates = db._updates.filter((u) => u.collection === COLLECTIONS.USER_POINTS);
@@ -299,7 +418,10 @@ async function run() {
     assertEqual(db._data[COLLECTIONS.USER_POINTS][0].balance, 5, '余额未被 +2（仍为 5）');
   })();
 
-  console.log('\n========== SUMMARY: ' + passed + ' passed, ' + failed + ' failed ==========');
+  // summary 格式与 run-tests.js 解析正则对齐：X/Y 通过, Z 失败
+  console.log(
+    'activation-service.test.js: ' + passed + '/' + (passed + failed) + ' 通过, ' + failed + ' 失败'
+  );
   if (failed > 0) {
     errors.forEach((e) => console.error(e));
     process.exit(1);

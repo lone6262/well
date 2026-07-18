@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 认证工具模块
  * 提供统一的 openid 获取和 Token 验证功能
  *
@@ -13,7 +13,7 @@ const crypto = require('crypto');
 const { SERVER_CONFIG } = require('./constants');
 
 cloud.init({
-  env: cloud.DYNAMIC_CURRENT_ENV
+  env: cloud.DYNAMIC_CURRENT_ENV,
 });
 
 const TOKEN_EXPIRE_DAYS = 1; // Token 有效期 1 天，前端 refreshTokenIfNeeded 负责自动续期
@@ -26,7 +26,9 @@ const TOKEN_EXPIRE_DAYS = 1; // Token 有效期 1 天，前端 refreshTokenIfNee
 function getTokenSecret() {
   const secret = SERVER_CONFIG.TOKEN_SECRET;
   if (!secret) {
-    throw new Error('[auth] TOKEN_SECRET 未配置！请确保 secrets.js 或 system_config 集合中已设置。');
+    throw new Error(
+      '[auth] TOKEN_SECRET 未配置！请确保 secrets.js 或 system_config 集合中已设置。'
+    );
   }
   return secret;
 }
@@ -48,9 +50,7 @@ function getOpenid(context) {
  * @returns {string} 签名结果
  */
 function createSignature(payload, secret) {
-  return crypto.createHmac('sha256', secret)
-    .update(payload)
-    .digest('hex');
+  return crypto.createHmac('sha256', secret).update(payload).digest('hex');
 }
 
 /**
@@ -65,7 +65,7 @@ function generateToken(openid, userId) {
     openid: openid,
     userId: userId,
     iat: Math.floor(Date.now() / 1000),
-    exp: Math.floor(Date.now() / 1000) + TOKEN_EXPIRE_DAYS * 24 * 60 * 60
+    exp: Math.floor(Date.now() / 1000) + TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
   };
 
   const headerB64 = Buffer.from(JSON.stringify(header)).toString('base64url');
@@ -129,7 +129,7 @@ function authenticate(event, context) {
   return {
     openid: openid,
     valid: !!(payload && tokenOpenidMatch),
-    payload: tokenOpenidMatch ? payload : null
+    payload: tokenOpenidMatch ? payload : null,
   };
 }
 
@@ -138,5 +138,5 @@ module.exports = {
   generateToken,
   verifyToken,
   authenticate,
-  TOKEN_EXPIRE_DAYS
+  TOKEN_EXPIRE_DAYS,
 };

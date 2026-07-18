@@ -24,8 +24,8 @@ async function logAuditEvent(db, openid, action, details) {
         openid: openid,
         action: action,
         details: details || {},
-        created_at: new Date()
-      }
+        created_at: new Date(),
+      },
     });
   } catch (error) {
     // 审计日志写入失败不应阻断主流程，仅记录错误

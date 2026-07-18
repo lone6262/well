@@ -1,8 +1,8 @@
-﻿// 定时关闭超时未支付订单
+// 定时关闭超时未支付订单
 // 触发方式：定时触发器（每 10 分钟）
 // 逻辑：扫描 pending 且 created_at < now - 30min 的订单，标记为 closed，释放占用的资源
 const cloud = require('wx-server-sdk');
-const { COLLECTIONS, ORDER_STATUS, PAYMENT_TIMEOUT , warmupConfig} = require('./common/constants');
+const { COLLECTIONS, ORDER_STATUS, PAYMENT_TIMEOUT, warmupConfig } = require('./common/constants');
 const { MEMBER_STATUS } = require('./common/constants');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
@@ -19,10 +19,11 @@ exports.main = async (event, context) => {
 
   try {
     // 扫描所有超时的 pending 订单
-    const result = await db.collection(COLLECTIONS.ORDERS)
+    const result = await db
+      .collection(COLLECTIONS.ORDERS)
       .where({
         status: ORDER_STATUS.PENDING,
-        created_at: _.lt(cutoff)
+        created_at: _.lt(cutoff),
       })
       .limit(100)
       .get();
@@ -39,14 +40,17 @@ exports.main = async (event, context) => {
     for (const order of expiredOrders) {
       try {
         // 1. 关闭订单
-        await db.collection(COLLECTIONS.ORDERS).doc(order._id).update({
-          data: {
-            status: ORDER_STATUS.CLOSED,
-            closed_at: now,
-            close_reason: 'timeout',
-            updated_at: now
-          }
-        });
+        await db
+          .collection(COLLECTIONS.ORDERS)
+          .doc(order._id)
+          .update({
+            data: {
+              status: ORDER_STATUS.CLOSED,
+              closed_at: now,
+              close_reason: 'timeout',
+              updated_at: now,
+            },
+          });
 
         // 2. 释放资源（回滚已占用的额度）
         await rollbackOrderResources(order);
@@ -80,9 +84,8 @@ exports.main = async (event, context) => {
     return {
       code: 0,
       msg: '执行完成',
-      data: { closedCount, failCount, totalCount: expiredOrders.length }
+      data: { closedCount, failCount, totalCount: expiredOrders.length },
     };
-
   } catch (error) {
     console.error('[closeExpiredOrders] 扫描失败:', error.message);
     return { code: -1, msg: '执行失败，请稍后重试', data: {} };
@@ -102,37 +105,61 @@ async function rollbackOrderResources(order) {
   if (order.type === 'report' && quotaSource) {
     if (quotaSource === 'member') {
       try {
-        const mRes = await db.collection(COLLECTIONS.MEMBERS)
-          .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE }).limit(1).get();
+        const mRes = await db
+          .collection(COLLECTIONS.MEMBERS)
+          .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE })
+          .limit(1)
+          .get();
         if (mRes.data && mRes.data.length > 0) {
-          await db.collection(COLLECTIONS.MEMBERS).doc(mRes.data[0]._id).update({
-            data: { report_credits_used: _.inc(-1), updated_at: now }
-          });
+          // 条件守卫：仅当 report_credits_used > 0 时回扣，防止负数（与 quota-service / cancelOrder 一致）
+          await db
+            .collection(COLLECTIONS.MEMBERS)
+            .where({ _id: mRes.data[0]._id, report_credits_used: _.gt(0) })
+            .update({ data: { report_credits_used: _.inc(-1), updated_at: now } });
           console.log('[closeExpiredOrders] 回滚会员额度:', openid);
         }
-      } catch (err) { console.error('[closeExpiredOrders] 回滚会员额度失败:', err.message); }
+      } catch (err) {
+        console.error('[closeExpiredOrders] 回滚会员额度失败:', err.message);
+      }
     } else if (quotaSource === 'first_report') {
       try {
-        await db.collection(COLLECTIONS.USERS).where({ user_id: openid })
+        await db
+          .collection(COLLECTIONS.USERS)
+          .where({ user_id: openid })
           .update({ data: { first_report_used: false, updated_at: now } });
         console.log('[closeExpiredOrders] 回滚首份免费:', openid);
-      } catch (err) { console.error('[closeExpiredOrders] 回滚首份免费失败:', err.message); }
+      } catch (err) {
+        console.error('[closeExpiredOrders] 回滚首份免费失败:', err.message);
+      }
     } else if (quotaSource === 'invite') {
       try {
-        await db.collection(COLLECTIONS.USERS).where({ user_id: openid })
+        await db
+          .collection(COLLECTIONS.USERS)
+          .where({ user_id: openid })
           .update({ data: { invite_reward_credits: _.inc(1), updated_at: now } });
         console.log('[closeExpiredOrders] 回滚邀请奖励:', openid);
-      } catch (err) { console.error('[closeExpiredOrders] 回滚邀请奖励失败:', err.message); }
+      } catch (err) {
+        console.error('[closeExpiredOrders] 回滚邀请奖励失败:', err.message);
+      }
     } else if (quotaSource === 'points') {
       try {
-        const pRes = await db.collection(COLLECTIONS.USER_POINTS).where({ user_id: openid }).limit(1).get();
+        const pRes = await db
+          .collection(COLLECTIONS.USER_POINTS)
+          .where({ user_id: openid })
+          .limit(1)
+          .get();
         if (pRes.data && pRes.data.length > 0) {
-          await db.collection(COLLECTIONS.USER_POINTS).doc(pRes.data[0]._id).update({
-            data: { balance: _.inc(1), updated_at: now }
-          });
+          await db
+            .collection(COLLECTIONS.USER_POINTS)
+            .doc(pRes.data[0]._id)
+            .update({
+              data: { balance: _.inc(1), updated_at: now },
+            });
           console.log('[closeExpiredOrders] 回滚点数包:', openid);
         }
-      } catch (err) { console.error('[closeExpiredOrders] 回滚点数包失败:', err.message); }
+      } catch (err) {
+        console.error('[closeExpiredOrders] 回滚点数包失败:', err.message);
+      }
     }
     // quotaSource === 'paid'：无额度预扣，无需回滚
   }
@@ -140,13 +167,16 @@ async function rollbackOrderResources(order) {
   // 释放已锁定的优惠券
   if (metadata.coupon_user_id) {
     try {
-      await db.collection('user_coupons').doc(metadata.coupon_user_id).update({
-        data: {
-          status: 'unused',
-          order_id: '',
-          updated_at: now
-        }
-      });
+      await db
+        .collection('user_coupons')
+        .doc(metadata.coupon_user_id)
+        .update({
+          data: {
+            status: 'unused',
+            order_id: '',
+            updated_at: now,
+          },
+        });
       console.log('[closeExpiredOrders] 释放优惠券:', metadata.coupon_user_id);
     } catch (err) {
       // 优惠券集合可能尚未创建，静默忽略

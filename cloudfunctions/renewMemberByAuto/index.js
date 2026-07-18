@@ -2,9 +2,16 @@
 // 由云函数定时触发器调用，非用户主动触发
 const cloud = require('wx-server-sdk');
 const {
-  COLLECTIONS, RESPONSE_CODE, ORDER_STATUS, ORDER_TYPES,
-  MEMBER_STATUS, PRICES, MEMBER_DURATION, MEMBER_CREDITS,
-  warmupConfig, loadPrices
+  COLLECTIONS,
+  RESPONSE_CODE,
+  ORDER_STATUS,
+  ORDER_TYPES,
+  MEMBER_STATUS,
+  PRICES,
+  MEMBER_DURATION,
+  MEMBER_CREDITS,
+  warmupConfig,
+  loadPrices,
 } = require('./common/constants');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
@@ -70,7 +77,9 @@ async function processRenewal(member, now) {
   try {
     if (MOCK_PAY) {
       // ---- 模拟支付：直接完成续费 ----
-      const newExpireDate = new Date(member.expire_date.getTime() + renewDays * 24 * 60 * 60 * 1000);
+      const newExpireDate = new Date(
+        member.expire_date.getTime() + renewDays * 24 * 60 * 60 * 1000
+      );
       const nextResetDate = new Date(now.getTime() + MEMBER_DURATION.MONTH * 24 * 60 * 60 * 1000);
 
       // 创建已支付订单
@@ -94,16 +103,19 @@ async function processRenewal(member, now) {
       });
 
       // 更新会员：延长到期时间、重置额度、同步总额度、清零失败计数
-      await db.collection(COLLECTIONS.MEMBERS).doc(member._id).update({
-        data: {
-          expire_date: newExpireDate,
-          report_credits_total: renewCredits,
-          report_credits_used: 0,
-          report_credits_reset_at: nextResetDate,
-          renew_fail_count: 0,
-          updated_at: now,
-        },
-      });
+      await db
+        .collection(COLLECTIONS.MEMBERS)
+        .doc(member._id)
+        .update({
+          data: {
+            expire_date: newExpireDate,
+            report_credits_total: renewCredits,
+            report_credits_used: 0,
+            report_credits_reset_at: nextResetDate,
+            renew_fail_count: 0,
+            updated_at: now,
+          },
+        });
 
       // 记录续费日志
       await db.collection(COLLECTIONS.MEMBER_RENEW_LOG).add({
@@ -120,9 +132,10 @@ async function processRenewal(member, now) {
         },
       });
 
-      console.log(`[renewMemberByAuto] 续费成功: member=${member._id}, plan=${planType}, new_expire=${newExpireDate.toISOString()}`);
+      console.log(
+        `[renewMemberByAuto] 续费成功: member=${member._id}, plan=${planType}, new_expire=${newExpireDate.toISOString()}`
+      );
       return { success: true };
-
     } else {
       // ---- 真实支付：创建待支付订单，发起微信支付（stub） ----
       await db.collection(COLLECTIONS.ORDERS).add({
@@ -145,7 +158,9 @@ async function processRenewal(member, now) {
       // TODO: 调用微信支付统一下单接口
       // const payResult = await cloud.cloudPay.unifiedOrder({ ... });
 
-      console.log(`[renewMemberByAuto] 真实支付订单已创建: member=${member._id}, out_trade_no=${outTradeNo}`);
+      console.log(
+        `[renewMemberByAuto] 真实支付订单已创建: member=${member._id}, out_trade_no=${outTradeNo}`
+      );
       return { success: true };
     }
   } catch (error) {
@@ -157,13 +172,16 @@ async function processRenewal(member, now) {
 
       if (newFailCount >= 2) {
         // 失败 2 次及以上，关闭自动续费
-        await db.collection(COLLECTIONS.MEMBERS).doc(member._id).update({
-          data: {
-            auto_renew: false,
-            renew_fail_count: newFailCount,
-            updated_at: now,
-          },
-        });
+        await db
+          .collection(COLLECTIONS.MEMBERS)
+          .doc(member._id)
+          .update({
+            data: {
+              auto_renew: false,
+              renew_fail_count: newFailCount,
+              updated_at: now,
+            },
+          });
 
         await db.collection(COLLECTIONS.MEMBER_RENEW_LOG).add({
           data: {
@@ -177,17 +195,25 @@ async function processRenewal(member, now) {
           },
         });
 
-        console.warn(`[renewMemberByAuto] 自动续费已关闭: member=${member._id}, fail_count=${newFailCount}`);
+        console.warn(
+          `[renewMemberByAuto] 自动续费已关闭: member=${member._id}, fail_count=${newFailCount}`
+        );
       } else {
-        await db.collection(COLLECTIONS.MEMBERS).doc(member._id).update({
-          data: {
-            renew_fail_count: newFailCount,
-            updated_at: now,
-          },
-        });
+        await db
+          .collection(COLLECTIONS.MEMBERS)
+          .doc(member._id)
+          .update({
+            data: {
+              renew_fail_count: newFailCount,
+              updated_at: now,
+            },
+          });
       }
     } catch (updateError) {
-      console.error(`[renewMemberByAuto] 更新失败计数异常: member=${member._id}`, updateError.message);
+      console.error(
+        `[renewMemberByAuto] 更新失败计数异常: member=${member._id}`,
+        updateError.message
+      );
     }
 
     return { success: false, reason: error.message };
@@ -207,7 +233,8 @@ exports.main = async (event, context) => {
 
   try {
     // 查询即将到期且开启自动续费的会员
-    const { data: members } = await db.collection(COLLECTIONS.MEMBERS)
+    const { data: members } = await db
+      .collection(COLLECTIONS.MEMBERS)
       .where({
         status: MEMBER_STATUS.ACTIVE,
         auto_renew: true,

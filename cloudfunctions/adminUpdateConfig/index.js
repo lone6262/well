@@ -5,11 +5,7 @@
  * 警告：此函数允许修改核心业务配置，请谨慎使用
  */
 const cloud = require('wx-server-sdk');
-const {
-  COLLECTIONS,
-  RESPONSE_CODE,
-  warmupConfig
-} = require('./common/constants');
+const { COLLECTIONS, RESPONSE_CODE, warmupConfig } = require('./common/constants');
 const { validateAdminRequest } = require('./common/admin-auth');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
@@ -36,7 +32,7 @@ exports.main = async (event, context) => {
     return {
       code: RESPONSE_CODE.UNAUTHORIZED,
       msg: auth.error,
-      data: {}
+      data: {},
     };
   }
 
@@ -46,7 +42,7 @@ exports.main = async (event, context) => {
     return {
       code: RESPONSE_CODE.ERROR,
       msg: '无效的更新数据',
-      data: {}
+      data: {},
     };
   }
 
@@ -59,53 +55,50 @@ exports.main = async (event, context) => {
       const dbKey = camelToSnake(key);
 
       // 查找是否已存在该配置
-      const existing = await db.collection(COLLECTIONS.SYSTEM_CONFIG)
-        .where({ key: dbKey })
-        .get();
+      const existing = await db.collection(COLLECTIONS.SYSTEM_CONFIG).where({ key: dbKey }).get();
 
-     // feature_flags 特殊处理：存储 JSON 对象而非字符串
-     const isFeatureFlags = (dbKey === 'feature_flags');
-     const storedValue = isFeatureFlags ? value : String(value);
-     // feature_flags 需用 db.command.set 强制替换整个对象（否则深层 merge 会残留旧字段）
-     const _ = db.command;
-     const valueUpdate = isFeatureFlags ? _.set(storedValue) : storedValue;
+      // feature_flags 特殊处理：存储 JSON 对象而非字符串
+      const isFeatureFlags = dbKey === 'feature_flags';
+      const storedValue = isFeatureFlags ? value : String(value);
+      // feature_flags 需用 db.command.set 强制替换整个对象（否则深层 merge 会残留旧字段）
+      const _ = db.command;
+      const valueUpdate = isFeatureFlags ? _.set(storedValue) : storedValue;
 
-     if (existing.data && existing.data.length > 0) {
-       // 更新现有配置
-       await db.collection(COLLECTIONS.SYSTEM_CONFIG)
-         .doc(existing.data[0]._id)
-         .update({
-           data: {
-             value: valueUpdate,
-             updated_at: new Date()
-           }
-         });
+      if (existing.data && existing.data.length > 0) {
+        // 更新现有配置
+        await db
+          .collection(COLLECTIONS.SYSTEM_CONFIG)
+          .doc(existing.data[0]._id)
+          .update({
+            data: {
+              value: valueUpdate,
+              updated_at: new Date(),
+            },
+          });
 
         updateResults.push({
           key: dbKey,
           action: 'updated',
           oldValue: existing.data[0].value,
-          newValue: isFeatureFlags ? '[JSON]' : String(value)
+          newValue: isFeatureFlags ? '[JSON]' : String(value),
         });
 
         console.log(`[adminUpdateConfig] 更新配置: ${dbKey} = ${value}`);
-
       } else {
         // 创建新配置
-        await db.collection(COLLECTIONS.SYSTEM_CONFIG)
-          .add({
-            data: {
-              key: dbKey,
-              value: storedValue,
-              created_at: new Date(),
-              updated_at: new Date()
-            }
-          });
+        await db.collection(COLLECTIONS.SYSTEM_CONFIG).add({
+          data: {
+            key: dbKey,
+            value: storedValue,
+            created_at: new Date(),
+            updated_at: new Date(),
+          },
+        });
 
         updateResults.push({
           key: dbKey,
           action: 'created',
-          newValue: isFeatureFlags ? '[JSON]' : String(value)
+          newValue: isFeatureFlags ? '[JSON]' : String(value),
         });
 
         console.log(`[adminUpdateConfig] 创建配置: ${dbKey} = ${value}`);
@@ -117,16 +110,15 @@ exports.main = async (event, context) => {
       msg: '配置更新成功',
       data: {
         updated: updateResults.length,
-        changes: updateResults
-      }
+        changes: updateResults,
+      },
     };
-
   } catch (error) {
     console.error('[adminUpdateConfig] 更新失败:', error);
     return {
       code: RESPONSE_CODE.SERVER_ERROR,
       msg: '更新失败，请稍后重试',
-      data: {}
+      data: {},
     };
   }
 };

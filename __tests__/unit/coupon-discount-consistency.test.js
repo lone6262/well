@@ -22,14 +22,19 @@ let passed = 0,
 const errors = [];
 function assert(condition, message) {
   if (condition) passed++;
-  else { failed++; errors.push(`FAIL: ${message}`); console.error(`  ✗ ${message}`); }
+  else {
+    failed++;
+    errors.push(`FAIL: ${message}`);
+    console.error(`  ✗ ${message}`);
+  }
 }
 function assertEqual(actual, expected, message) {
   if (actual === expected) passed++;
   else {
     failed++;
     const msg = `${message} - 期望: ${expected}, 实际: ${actual}`;
-    errors.push(`FAIL: ${msg}`); console.error(`  ✗ ${msg}`);
+    errors.push(`FAIL: ${msg}`);
+    console.error(`  ✗ ${msg}`);
   }
 }
 
@@ -37,7 +42,7 @@ function assertEqual(actual, expected, message) {
 function helperPercent(amountFen, zheInput) {
   // 复刻 enrichCoupons percent 分支 + 封顶
   var zhe = Math.min(Math.max(zheInput || 10, 0), 10);
-  var d = Math.floor(amountFen * (10 - zhe) / 10);
+  var d = Math.floor((amountFen * (10 - zhe)) / 10);
   return Math.min(d, amountFen);
 }
 function helperFixed(amountFen, valueFen) {
@@ -48,7 +53,7 @@ function helperFixed(amountFen, valueFen) {
 // ===== 端2：createOrder.autoSelectCoupon（字面复刻，snake_case） =====
 function createOrderPercent(orderAmount, discountValue) {
   const zhe = Math.min(Math.max(discountValue || 10, 0), 10);
-  let discount = Math.floor(orderAmount * (10 - zhe) / 10);
+  let discount = Math.floor((orderAmount * (10 - zhe)) / 10);
   discount = Math.min(discount, orderAmount); // line 1194
   return discount;
 }
@@ -61,7 +66,7 @@ function createOrderFixed(orderAmount, discountValue) {
 // ===== 端3：applyCoupon（字面复刻，⚠️ 死代码） =====
 function applyCouponPercent(orderAmount, discountValue) {
   const zhe = Math.min(Math.max(discountValue || 10, 0), 10);
-  let discount = Math.floor(orderAmount * (10 - zhe) / 10);
+  let discount = Math.floor((orderAmount * (10 - zhe)) / 10);
   // applyCoupon 未对 discount 做 min(discount,orderAmount)；但 percent 恒 ≤ orderAmount，等价
   return discount;
 }

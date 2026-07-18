@@ -66,11 +66,7 @@ function run() {
   (function testInit() {
     const { cloud, db, _ } = require('../../cloudfunctions/common/db');
     assert(initCalls.length >= 1, 'cloud.init 被调用');
-    assertEqual(
-      initCalls[0],
-      { env: '__DYNAMIC_CURRENT_ENV__' },
-      'init 使用 DYNAMIC_CURRENT_ENV'
-    );
+    assertEqual(initCalls[0], { env: '__DYNAMIC_CURRENT_ENV__' }, 'init 使用 DYNAMIC_CURRENT_ENV');
   })();
 
   console.log('\n=== 2. 导出结构完整 ===');

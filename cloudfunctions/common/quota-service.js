@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 报告额度服务（quota-service）
  *
  * 统一 createOrder 与 generateAIReport 的额度解析/扣减/回滚逻辑，
@@ -167,14 +167,21 @@ async function resolveQuota(db, openid, dbPrices, dbCredits) {
   // 体验会员额度（邀请 3 人获得 7 天体验，每月 1 次）
   const trialMemberResult = await db
     .collection(COLLECTIONS.MEMBERS)
-    .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE, type: 'trial', expire_date: _.gt(new Date()) })
+    .where({
+      user_id: openid,
+      status: MEMBER_STATUS.ACTIVE,
+      type: 'trial',
+      expire_date: _.gt(new Date()),
+    })
     .limit(1)
     .get();
 
   if (trialMemberResult.data && trialMemberResult.data.length > 0) {
     const trial = trialMemberResult.data[0];
     const trialNow = new Date();
-    const trialNextReset = trial.report_credits_reset_at ? new Date(trial.report_credits_reset_at) : null;
+    const trialNextReset = trial.report_credits_reset_at
+      ? new Date(trial.report_credits_reset_at)
+      : null;
 
     let trialUsed = trial.report_credits_used || 0;
     if (trialNextReset && trialNow >= trialNextReset) {
@@ -184,7 +191,9 @@ async function resolveQuota(db, openid, dbPrices, dbCredits) {
       await db
         .collection(COLLECTIONS.MEMBERS)
         .doc(trial._id)
-        .update({ data: { report_credits_used: 0, report_credits_reset_at: newReset, updated_at: trialNow } });
+        .update({
+          data: { report_credits_used: 0, report_credits_reset_at: newReset, updated_at: trialNow },
+        });
       trial.report_credits_used = 0;
     }
 
@@ -211,7 +220,9 @@ async function resolveQuota(db, openid, dbPrices, dbCredits) {
   if (memberResult.data && memberResult.data.length > 0) {
     const member = memberResult.data[0];
     const now = new Date();
-    const nextResetAt = member.report_credits_reset_at ? new Date(member.report_credits_reset_at) : null;
+    const nextResetAt = member.report_credits_reset_at
+      ? new Date(member.report_credits_reset_at)
+      : null;
 
     let used = member.report_credits_used || 0;
     if (nextResetAt && now >= nextResetAt) {
@@ -221,7 +232,9 @@ async function resolveQuota(db, openid, dbPrices, dbCredits) {
       await db
         .collection(COLLECTIONS.MEMBERS)
         .doc(member._id)
-        .update({ data: { report_credits_used: 0, report_credits_reset_at: newResetAt, updated_at: now } });
+        .update({
+          data: { report_credits_used: 0, report_credits_reset_at: newResetAt, updated_at: now },
+        });
       member.report_credits_used = 0;
       member.report_credits_reset_at = newResetAt;
     }
@@ -318,7 +331,10 @@ async function deductQuota(db, openid, quotaInfo, dbCredits) {
 
   // 正式会员额度扣减（条件更新：剩余额度 > 0 才能扣减）
   if (quotaInfo.quota_source === 'member' && quotaInfo.member) {
-    const memberTotal = Math.max(quotaInfo.member.report_credits_total || 0, expectedReportsByType(quotaInfo.member.type, credits));
+    const memberTotal = Math.max(
+      quotaInfo.member.report_credits_total || 0,
+      expectedReportsByType(quotaInfo.member.type, credits)
+    );
     const memberResult = await db
       .collection(COLLECTIONS.MEMBERS)
       .where({ _id: quotaInfo.member._id, report_credits_used: _.lt(memberTotal) })
@@ -356,7 +372,8 @@ async function deductQuota(db, openid, quotaInfo, dbCredits) {
           user_id: openid,
           type: 'consume',
           amount: -1,
-          balance_after: Math.max(0, (quotaInfo.points_balance || 1) - 1), balance_snapshot: true, // S5: 快照值，非实时
+          balance_after: Math.max(0, (quotaInfo.points_balance || 1) - 1),
+          balance_snapshot: true, // S5: 快照值，非实时
           created_at: now,
         },
       });
@@ -365,6 +382,8 @@ async function deductQuota(db, openid, quotaInfo, dbCredits) {
     }
   }
 
+  // 标记已成功扣减，供 rollbackQuota 守卫识别（防止未扣减却误回滚 / 重复回滚）
+  quotaInfo._deducted = true;
   return true;
 }
 

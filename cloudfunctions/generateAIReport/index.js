@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 生成AI健康报告云函数
  *
  * 输入: { recordId }
@@ -13,12 +13,21 @@
  */
 
 const cloud = require('wx-server-sdk');
-const { COLLECTIONS, RESPONSE_CODE, FOLLOWUP_STATUS, MEMBER_STATUS, ORDER_TYPES, ORDER_STATUS , warmupConfig, loadPrices} = require('./common/constants');
+const {
+  COLLECTIONS,
+  RESPONSE_CODE,
+  FOLLOWUP_STATUS,
+  MEMBER_STATUS,
+  ORDER_TYPES,
+  ORDER_STATUS,
+  warmupConfig,
+  loadPrices,
+} = require('./common/constants');
 const reportEngine = require('./common/report-engine');
 const { verifyToken } = require('./common/auth');
 
 cloud.init({
-  env: cloud.DYNAMIC_CURRENT_ENV
+  env: cloud.DYNAMIC_CURRENT_ENV,
 });
 
 const db = cloud.database();
@@ -32,9 +41,7 @@ const db = cloud.database();
  * @throws {Error} 记录不存在或不属于当前用户时抛出
  */
 async function getVerifiedRecord(recordId, openid) {
-  const recordResult = await db.collection(COLLECTIONS.SYMPTOM_RECORDS)
-    .doc(recordId)
-    .get();
+  const recordResult = await db.collection(COLLECTIONS.SYMPTOM_RECORDS).doc(recordId).get();
 
   if (!recordResult.data || Object.keys(recordResult.data).length === 0) {
     const error = new Error('评估记录不存在');
@@ -59,27 +66,35 @@ async function getVerifiedRecord(recordId, openid) {
 
   if (record.has_ai_report && record.ai_report_id) {
     // 已有报告，从缓存读取
-    const cacheResult = await db.collection(COLLECTIONS.AI_CACHE)
-      .doc(record.ai_report_id).get();
+    const cacheResult = await db.collection(COLLECTIONS.AI_CACHE).doc(record.ai_report_id).get();
 
     if (cacheResult.data && cacheResult.data.report_content) {
       const content = cacheResult.data.report_content;
       // 校验缓存内容是否有效（必须包含 risk_summary 字段）
-      if (content.risk_summary && typeof content.risk_summary === 'string' && content.risk_summary.length > 0) {
+      if (
+        content.risk_summary &&
+        typeof content.risk_summary === 'string' &&
+        content.risk_summary.length > 0
+      ) {
         const existing = cacheResult.data;
         return {
           alreadyExists: true,
           content: existing.report_content,
           source: existing.source || 'cache',
           cacheId: existing._id,
-          risk_level: record.risk_level
+          risk_level: record.risk_level,
         };
       }
       // 缓存内容无效，清除标记以便重新生成
-      console.warn('[generateAIReport] 缓存内容无效，将重新生成报告, cacheId=' + record.ai_report_id);
-      await db.collection(COLLECTIONS.SYMPTOM_RECORDS).doc(recordId).update({
-        data: { has_ai_report: false, ai_report_id: '' }
-      });
+      console.warn(
+        '[generateAIReport] 缓存内容无效，将重新生成报告, cacheId=' + record.ai_report_id
+      );
+      await db
+        .collection(COLLECTIONS.SYMPTOM_RECORDS)
+        .doc(recordId)
+        .update({
+          data: { has_ai_report: false, ai_report_id: '' },
+        });
     }
   }
 
@@ -95,9 +110,7 @@ async function getVerifiedRecord(recordId, openid) {
  * @throws {Error} 宠物不存在或不属于当前用户时抛出
  */
 async function getVerifiedPet(petId, openid) {
-  const petResult = await db.collection(COLLECTIONS.PETS)
-    .doc(petId)
-    .get();
+  const petResult = await db.collection(COLLECTIONS.PETS).doc(petId).get();
 
   if (!petResult.data || Object.keys(petResult.data).length === 0) {
     const error = new Error('宠物信息不存在');
@@ -118,7 +131,7 @@ async function getVerifiedPet(petId, openid) {
     age: pet.age,
     name: pet.name,
     breed: pet.breed || '',
-    gender: pet.gender || ''
+    gender: pet.gender || '',
   };
 }
 
@@ -140,11 +153,11 @@ async function createFollowupRecord(recordId, openid, petId) {
     pet_id: petId,
     status: FOLLOWUP_STATUS.PENDING,
     followup_at: followupAt,
-    created_at: now
+    created_at: now,
   };
 
   const result = await db.collection(COLLECTIONS.FOLLOWUP_RECORDS).add({
-    data: followupData
+    data: followupData,
   });
 
   return result._id;
@@ -169,21 +182,19 @@ async function createFollowupRecord(recordId, openid, petId) {
  * @returns {Promise<{ok:boolean, orderId:string|null, msg:string, data:object}>}
  */
 async function resolveReportOrder(db, openid, recordId, dbPrices, dbCredits) {
-  console.log("[resolveReportOrder] ENTER openid=" + openid + " recordId=" + recordId);
-  console.log("[resolveReportOrder] dbCredits keys:", Object.keys(dbCredits));
-  console.log("[resolveReportOrder] FAMILY_MONTHLY_REPORTS=" + dbCredits.FAMILY_MONTHLY_REPORTS);
-
   const now = new Date();
 
   // 1. 查找该记录已有的报告订单（createOrder 建单时写入 metadata.record_id）
   let existingOrder = null;
   try {
-    const ordRes = await db.collection(COLLECTIONS.ORDERS)
+    const ordRes = await db
+      .collection(COLLECTIONS.ORDERS)
       .where({ type: ORDER_TYPES.REPORT, 'metadata.record_id': recordId })
       .limit(10)
       .get();
-    const candidates = (ordRes.data || []).filter(o =>
-      [ORDER_STATUS.PENDING, ORDER_STATUS.PAID].includes(o.status));
+    const candidates = (ordRes.data || []).filter((o) =>
+      [ORDER_STATUS.PENDING, ORDER_STATUS.PAID].includes(o.status)
+    );
     if (candidates.length > 0) {
       existingOrder = candidates[0];
     }
@@ -193,26 +204,53 @@ async function resolveReportOrder(db, openid, recordId, dbPrices, dbCredits) {
 
   if (existingOrder) {
     if (existingOrder.status === ORDER_STATUS.PAID) {
-      return { ok: true, orderId: existingOrder._id, msg: '', data: { quota_source: (existingOrder.metadata && existingOrder.metadata.quota_source) || 'existing' } };
+      return {
+        ok: true,
+        orderId: existingOrder._id,
+        msg: '',
+        data: {
+          quota_source:
+            (existingOrder.metadata && existingOrder.metadata.quota_source) || 'existing',
+        },
+      };
     }
     // PENDING
     const amt = existingOrder.amount || 0;
     if (amt === 0) {
-      await db.collection(COLLECTIONS.ORDERS).doc(existingOrder._id).update({
-        data: { status: ORDER_STATUS.PAID, paid_at: now, updated_at: now }
-      });
-      return { ok: true, orderId: existingOrder._id, msg: '', data: { quota_source: (existingOrder.metadata && existingOrder.metadata.quota_source) || 'existing' } };
+      await db
+        .collection(COLLECTIONS.ORDERS)
+        .doc(existingOrder._id)
+        .update({
+          data: { status: ORDER_STATUS.PAID, paid_at: now, updated_at: now },
+        });
+      return {
+        ok: true,
+        orderId: existingOrder._id,
+        msg: '',
+        data: {
+          quota_source:
+            (existingOrder.metadata && existingOrder.metadata.quota_source) || 'existing',
+        },
+      };
     }
     return {
       ok: false,
       orderId: existingOrder._id,
       msg: '请先完成支付后再生成报告',
-      data: { needPayment: true, orderId: existingOrder._id, outTradeNo: existingOrder.out_trade_no }
+      data: {
+        needPayment: true,
+        orderId: existingOrder._id,
+        outTradeNo: existingOrder.out_trade_no,
+      },
     };
   }
 
   // 2. 无既有订单：解析免费额度。付费来源拒绝（必须先走 createOrder）
-  const userResult = await db.collection(COLLECTIONS.USERS).where({ user_id: openid }).limit(1).get();
+  const userResult = await db
+    .collection(COLLECTIONS.USERS)
+    .where({ user_id: openid })
+    .limit(1)
+    .get();
   const user = userResult.data && userResult.data[0];
   let quotaSource = 'paid';
   let quotaPrice = dbPrices.STANDARD_REPORT;
@@ -236,8 +274,11 @@ async function resolveReportOrder(db, openid, recordId, dbPrices, dbCredits) {
 
   // 3. 点数包余额
   if (!matched) {
-    const pointsResult = await db.collection(COLLECTIONS.USER_POINTS)
-      .where({ user_id: openid }).limit(1).get();
+    const pointsResult = await db
+      .collection(COLLECTIONS.USER_POINTS)
+      .where({ user_id: openid })
+      .limit(1)
+      .get();
     const pts = pointsResult.data && pointsResult.data[0];
     if (pts && pts.balance > 0 && pts.expire_at && new Date(pts.expire_at) > now) {
       quotaSource = 'points';
@@ -248,18 +289,23 @@ async function resolveReportOrder(db, openid, recordId, dbPrices, dbCredits) {
 
   // 4. 会员额度（最后才扣会员次数，保护付费会员权益）
   if (!matched) {
-    const memberResult = await db.collection(COLLECTIONS.MEMBERS)
-      .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE }).limit(1).get();
+    const memberResult = await db
+      .collection(COLLECTIONS.MEMBERS)
+      .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE })
+      .limit(1)
+      .get();
     if (memberResult.data && memberResult.data.length > 0) {
       const m = memberResult.data[0];
-      console.log("[resolveReportOrder] MEMBER FOUND type=" + m.type + " used=" + (m.report_credits_used || 0) + " total_field=" + (m.report_credits_total || 0));
       const isFamily = m.type === 'family_monthly' || m.type === 'family_yearly';
       const isYearly = m.type === 'yearly' || m.type === 'family_yearly';
       const expectedTotal = isFamily
-        ? (isYearly ? dbCredits.FAMILY_YEARLY_REPORTS : dbCredits.FAMILY_MONTHLY_REPORTS)
-        : (isYearly ? dbCredits.YEARLY_REPORTS : dbCredits.MONTHLY_REPORTS);
+        ? isYearly
+          ? dbCredits.FAMILY_YEARLY_REPORTS
+          : dbCredits.FAMILY_MONTHLY_REPORTS
+        : isYearly
+          ? dbCredits.YEARLY_REPORTS
+          : dbCredits.MONTHLY_REPORTS;
       const total = Math.max(m.report_credits_total || expectedTotal, expectedTotal);
-      console.log("[resolveReportOrder] expectedTotal=" + expectedTotal + " isFamily=" + isFamily + " total=" + total);
       const used = m.report_credits_used || 0;
       if (used < total) {
         quotaSource = 'member';
@@ -269,14 +315,13 @@ async function resolveReportOrder(db, openid, recordId, dbPrices, dbCredits) {
     }
   }
 
-  console.log("[resolveReportOrder] RESULT matched=" + matched + " quotaSource=" + quotaSource + " quotaPrice=" + quotaPrice);
   // 付费且无订单：拒绝生成
   if (quotaPrice > 0) {
     return {
       ok: false,
       orderId: null,
       msg: '该报告需要购买，请先下单支付',
-      data: { needCreateOrder: true, recordId }
+      data: { needCreateOrder: true, recordId },
     };
   }
 
@@ -286,51 +331,67 @@ async function resolveReportOrder(db, openid, recordId, dbPrices, dbCredits) {
     if (quotaSource === 'first_report') {
       if (user && user._id) {
         // 条件守卫：仅当 first_report_used 未置 true 时扣减，防止并发请求重复薅免费额度
-        const updateRes = await db.collection(COLLECTIONS.USERS)
+        const updateRes = await db
+          .collection(COLLECTIONS.USERS)
           .where({ _id: user._id, first_report_used: db.command.neq(true) })
           .update({ data: { first_report_used: true, updated_at: now } });
         if (!updateRes.stats || updateRes.stats.updated === 0) deductOk = false;
       } else {
         try {
           await db.collection(COLLECTIONS.USERS).add({
-            data: { user_id: openid, first_report_used: true, invite_reward_credits: 0, isMember: false, created_at: now, updated_at: now }
+            data: {
+              user_id: openid,
+              first_report_used: true,
+              invite_reward_credits: 0,
+              isMember: false,
+              created_at: now,
+              updated_at: now,
+            },
           });
         } catch (addErr) {
           // 并发创建可能因唯一索引失败，尝试条件更新（守卫同上）
-          const updateRes = await db.collection(COLLECTIONS.USERS)
+          const updateRes = await db
+            .collection(COLLECTIONS.USERS)
             .where({ user_id: openid, first_report_used: db.command.neq(true) })
             .update({ data: { first_report_used: true, updated_at: now } });
           if (!updateRes.stats || updateRes.stats.updated === 0) deductOk = false;
         }
       }
     } else if (quotaSource === 'invite') {
-      const inviteRes = await db.collection(COLLECTIONS.USERS)
+      const inviteRes = await db
+        .collection(COLLECTIONS.USERS)
         .where({ user_id: openid, invite_reward_credits: db.command.gt(0) })
         .update({ data: { invite_reward_credits: db.command.inc(-1), updated_at: now } });
       if (!inviteRes.stats || inviteRes.stats.updated === 0) deductOk = false;
     } else if (quotaSource === 'member') {
-      const memberResult = await db.collection(COLLECTIONS.MEMBERS)
-        .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE }).limit(1).get();
+      const memberResult = await db
+        .collection(COLLECTIONS.MEMBERS)
+        .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE })
+        .limit(1)
+        .get();
       const m = memberResult.data && memberResult.data[0];
       if (m) {
-        console.log("[resolveReportOrder] MEMBER FOUND type=" + m.type + " used=" + (m.report_credits_used || 0) + " total_field=" + (m.report_credits_total || 0));
-      const isFamily = m.type === 'family_monthly' || m.type === 'family_yearly';
+        const isFamily = m.type === 'family_monthly' || m.type === 'family_yearly';
         const isYearly2 = m.type === 'yearly' || m.type === 'family_yearly';
         const expectedTotal = isFamily
-          ? (isYearly2 ? dbCredits.FAMILY_YEARLY_REPORTS : dbCredits.FAMILY_MONTHLY_REPORTS)
-          : (isYearly2 ? dbCredits.YEARLY_REPORTS : dbCredits.MONTHLY_REPORTS);
+          ? isYearly2
+            ? dbCredits.FAMILY_YEARLY_REPORTS
+            : dbCredits.FAMILY_MONTHLY_REPORTS
+          : isYearly2
+            ? dbCredits.YEARLY_REPORTS
+            : dbCredits.MONTHLY_REPORTS;
         const total = Math.max(m.report_credits_total || expectedTotal, expectedTotal);
-      console.log("[resolveReportOrder] expectedTotal=" + expectedTotal + " isFamily=" + isFamily + " total=" + total);
         // 并发守卫：仅当 report_credits_used < total 时才扣减（CAS 条件更新），
         // 与 quota-service.js 一致；并发请求中第二个会 updated=0 → deductOk=false → 拒绝生成
-        const memberRes = await db.collection(COLLECTIONS.MEMBERS)
+        const memberRes = await db
+          .collection(COLLECTIONS.MEMBERS)
           .where({ _id: m._id, report_credits_used: db.command.lt(total) })
           .update({
             data: {
               report_credits_used: db.command.inc(1),
               report_credits_total: total,
-              updated_at: now
-            }
+              updated_at: now,
+            },
           });
         if (!memberRes.stats || memberRes.stats.updated === 0) deductOk = false;
       } else {
@@ -338,7 +399,8 @@ async function resolveReportOrder(db, openid, recordId, dbPrices, dbCredits) {
       }
     } else if (quotaSource === 'points') {
       // 点数包扣减（条件更新，并发安全）
-      const ptsRes = await db.collection(COLLECTIONS.USER_POINTS)
+      const ptsRes = await db
+        .collection(COLLECTIONS.USER_POINTS)
         .where({ user_id: openid, balance: db.command.gt(0) })
         .update({ data: { balance: db.command.inc(-1), updated_at: now } });
       if (!ptsRes.stats || ptsRes.stats.updated === 0) deductOk = false;
@@ -348,7 +410,6 @@ async function resolveReportOrder(db, openid, recordId, dbPrices, dbCredits) {
     deductOk = false;
   }
 
-  console.log("[resolveReportOrder] DEDUCT_OK=" + deductOk + " source=" + quotaSource);
   if (!deductOk) {
     // 并发导致额度失效：记录补偿日志，拒绝生成（用户可重试或购买）
     try {
@@ -361,8 +422,8 @@ async function resolveReportOrder(db, openid, recordId, dbPrices, dbCredits) {
           description: '额度扣减失败，待补偿',
           metadata: { quota_source: 'compensation_needed', record_id: recordId },
           created_at: now,
-          updated_at: now
-        }
+          updated_at: now,
+        },
       });
     } catch (logErr) {
       console.error('[resolveReportOrder] 补偿日志写入失败:', logErr.message);
@@ -371,7 +432,7 @@ async function resolveReportOrder(db, openid, recordId, dbPrices, dbCredits) {
       ok: false,
       orderId: null,
       msg: '免费额度扣减失败，请稍后重试或购买报告',
-      data: { needCreateOrder: true, recordId }
+      data: { needCreateOrder: true, recordId },
     };
   }
 
@@ -389,11 +450,11 @@ async function resolveReportOrder(db, openid, recordId, dbPrices, dbCredits) {
     metadata: {
       quota_source: quotaSource,
       is_first_report: quotaSource === 'first_report',
-      record_id: recordId
+      record_id: recordId,
     },
     mock_pay: true,
     created_at: now,
-    updated_at: now
+    updated_at: now,
   };
   const orderResult = await db.collection(COLLECTIONS.ORDERS).add({ data: orderData });
   return { ok: true, orderId: orderResult._id, msg: '', data: { quota_source: quotaSource } };
@@ -410,13 +471,12 @@ exports.main = async (event, context) => {
   const { OPENID } = cloud.getWXContext();
   const openid = OPENID;
 
-
   // 1. 用户身份校验
   if (!openid) {
     return {
       code: RESPONSE_CODE.UNAUTHORIZED,
       msg: '用户未登录',
-      data: {}
+      data: {},
     };
   }
 
@@ -425,7 +485,7 @@ exports.main = async (event, context) => {
     return {
       code: RESPONSE_CODE.UNAUTHORIZED,
       msg: '登录已过期，请重新登录',
-      data: {}
+      data: {},
     };
   }
 
@@ -434,13 +494,13 @@ exports.main = async (event, context) => {
     return {
       code: RESPONSE_CODE.ERROR,
       msg: '记录ID不能为空',
-      data: {}
+      data: {},
     };
   }
 
- let orderId = null;
- let reportQuotaSource = 'unknown';
- try {
+  let orderId = null;
+  let reportQuotaSource = 'unknown';
+  try {
     // 3. 查询并验证症状记录
     const record = await getVerifiedRecord(recordId, openid);
 
@@ -456,8 +516,8 @@ exports.main = async (event, context) => {
           cache_hit: true,
           risk_level: record.risk_level,
           pet_name: '',
-          created_at: new Date().toLocaleString('zh-CN')
-        }
+          created_at: new Date().toLocaleString('zh-CN'),
+        },
       };
     }
 
@@ -472,30 +532,33 @@ exports.main = async (event, context) => {
       return {
         code: RESPONSE_CODE.ERROR,
         msg: orderCtx.msg,
-        data: orderCtx.data || {}
+        data: orderCtx.data || {},
       };
     }
-   orderId = orderCtx.orderId;
-   reportQuotaSource = (orderCtx.data && orderCtx.data.quota_source) || 'unknown';
+    orderId = orderCtx.orderId;
+    reportQuotaSource = (orderCtx.data && orderCtx.data.quota_source) || 'unknown';
 
     // 5. 构造 report-engine 所需参数
     const symptomRecord = {
       symptoms: record.symptoms || [],
       symptom_names: record.symptom_names || [],
       risk_level: record.risk_level,
-      description: record.description || ''
+      description: record.description || '',
     };
 
     // 6. 调用报告引擎生成报告（内部处理缓存逻辑）
     const reportResult = await reportEngine.generateReport(db, symptomRecord, pet);
 
     // 7. 更新症状记录标记
-    await db.collection(COLLECTIONS.SYMPTOM_RECORDS).doc(recordId).update({
-      data: {
-        has_ai_report: true,
-        ai_report_id: reportResult.cacheId
-      }
-    });
+    await db
+      .collection(COLLECTIONS.SYMPTOM_RECORDS)
+      .doc(recordId)
+      .update({
+        data: {
+          has_ai_report: true,
+          ai_report_id: reportResult.cacheId,
+        },
+      });
 
     // V1.5: 报告生成埋点
     try {
@@ -503,8 +566,8 @@ exports.main = async (event, context) => {
         name: 'trackEvent',
         data: {
           eventName: 'report_generate',
-          properties: { source: reportResult.source || 'llm' }
-        }
+          properties: { source: reportResult.source || 'llm' },
+        },
       });
     } catch (trackErr) {
       console.warn('[generateAIReport] 埋点记录跳过:', trackErr.message);
@@ -528,8 +591,8 @@ exports.main = async (event, context) => {
             record_id: recordId,
             user_id: openid,
             error: followupError.message || String(followupError),
-            created_at: new Date()
-          }
+            created_at: new Date(),
+          },
         });
       } catch (_) {
         // error_logs 写入失败，仅记录到控制台
@@ -550,10 +613,9 @@ exports.main = async (event, context) => {
         followup_id: followupId,
         risk_level: record.risk_level,
         pet_name: pet.name || '',
-        created_at: new Date().toLocaleString('zh-CN')
-      }
+        created_at: new Date().toLocaleString('zh-CN'),
+      },
     };
-
   } catch (error) {
     console.error('generateAIReport 云函数执行失败:', error);
 
@@ -562,72 +624,101 @@ exports.main = async (event, context) => {
       try {
         const failedOrderResult = await db.collection(COLLECTIONS.ORDERS).doc(orderId).get();
         const failedOrder = failedOrderResult.data;
-        const orderAmount = failedOrder ? (failedOrder.amount || 0) : 0;
+        const orderAmount = failedOrder ? failedOrder.amount || 0 : 0;
         if (orderAmount > 0) {
           try {
             await cloud.callFunction({
               name: 'requestRefund',
-              data: { orderId: orderId, reason: 'AI报告生成失败，自动退款', token: event.token }
+              data: { orderId: orderId, reason: 'AI报告生成失败，自动退款', token: event.token },
             });
           } catch (refundErr) {
             console.error('[generateAIReport] 自动退款失败:', refundErr.message);
           }
         }
-     } catch (fetchErr) {
-       console.error('[generateAIReport] 查询订单失败，跳过退款:', fetchErr.message);
-     }
-   }
+      } catch (fetchErr) {
+        console.error('[generateAIReport] 查询订单失败，跳过退款:', fetchErr.message);
+      }
+    }
 
-   // 免费报告（member/invite/first_report/points）生成失败：回滚已扣额度
-   // 付费报告(amount>0)已通过上方 requestRefund 退款，此处仅处理免费额度
-   if (orderId && ['member', 'invite', 'first_report', 'points'].includes(reportQuotaSource)) {
-     try {
-       const rollbackNow = new Date();
-       if (reportQuotaSource === 'member') {
-         const mRes = await db.collection(COLLECTIONS.MEMBERS)
-           .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE }).limit(1).get();
-         if (mRes.data && mRes.data.length > 0) {
-           await db.collection(COLLECTIONS.MEMBERS).doc(mRes.data[0]._id).update({
-             data: { report_credits_used: db.command.inc(-1), updated_at: rollbackNow }
-           });
-           console.log('[generateAIReport] 回滚会员额度:', openid);
-         }
-       } else if (reportQuotaSource === 'first_report') {
-         await db.collection(COLLECTIONS.USERS).where({ user_id: openid })
-           .update({ data: { first_report_used: false, updated_at: rollbackNow } });
-         console.log('[generateAIReport] 回滚首份免费:', openid);
-       } else if (reportQuotaSource === 'invite') {
-         await db.collection(COLLECTIONS.USERS).where({ user_id: openid })
-           .update({ data: { invite_reward_credits: db.command.inc(1), updated_at: rollbackNow } });
-         console.log('[generateAIReport] 回滚邀请奖励:', openid);
-       } else if (reportQuotaSource === 'points') {
-         const pRes = await db.collection(COLLECTIONS.USER_POINTS).where({ user_id: openid }).limit(1).get();
-         if (pRes.data && pRes.data.length > 0) {
-           await db.collection(COLLECTIONS.USER_POINTS).doc(pRes.data[0]._id).update({
-             data: { balance: db.command.inc(1), updated_at: rollbackNow }
-           });
-           console.log('[generateAIReport] 回滚点数包:', openid);
-         }
-       }
-       // 标记失败订单为 closed（resolveReportOrder 创建的免费 PAID 单）
-       try {
-         await db.collection(COLLECTIONS.ORDERS).doc(orderId).update({
-           data: { status: ORDER_STATUS.CLOSED, close_reason: 'report_generation_failed', updated_at: rollbackNow }
-         });
-       } catch (closeErr) { /* 订单可能不存在，忽略 */ }
-     } catch (rollbackErr) {
-       console.error('[generateAIReport] 免费额度回滚失败:', rollbackErr.message);
-     }
-   }
+    // 免费报告（member/invite/first_report/points）生成失败：回滚已扣额度
+    // 付费报告(amount>0)已通过上方 requestRefund 退款，此处仅处理免费额度
+    if (orderId && ['member', 'invite', 'first_report', 'points'].includes(reportQuotaSource)) {
+      try {
+        const rollbackNow = new Date();
+        if (reportQuotaSource === 'member') {
+          const mRes = await db
+            .collection(COLLECTIONS.MEMBERS)
+            .where({ user_id: openid, status: MEMBER_STATUS.ACTIVE })
+            .limit(1)
+            .get();
+          if (mRes.data && mRes.data.length > 0) {
+            // 条件守卫：仅当 report_credits_used > 0 时才回扣，防止并发/重试推到负数（与 quota-service 一致）
+            const rbRes = await db
+              .collection(COLLECTIONS.MEMBERS)
+              .where({ _id: mRes.data[0]._id, report_credits_used: db.command.gt(0) })
+              .update({
+                data: { report_credits_used: db.command.inc(-1), updated_at: rollbackNow },
+              });
+            if (rbRes.stats && rbRes.stats.updated > 0) {
+              console.log('[generateAIReport] 回滚会员额度:', openid);
+            }
+          }
+        } else if (reportQuotaSource === 'first_report') {
+          await db
+            .collection(COLLECTIONS.USERS)
+            .where({ user_id: openid })
+            .update({ data: { first_report_used: false, updated_at: rollbackNow } });
+          console.log('[generateAIReport] 回滚首份免费:', openid);
+        } else if (reportQuotaSource === 'invite') {
+          await db
+            .collection(COLLECTIONS.USERS)
+            .where({ user_id: openid })
+            .update({
+              data: { invite_reward_credits: db.command.inc(1), updated_at: rollbackNow },
+            });
+          console.log('[generateAIReport] 回滚邀请奖励:', openid);
+        } else if (reportQuotaSource === 'points') {
+          const pRes = await db
+            .collection(COLLECTIONS.USER_POINTS)
+            .where({ user_id: openid })
+            .limit(1)
+            .get();
+          if (pRes.data && pRes.data.length > 0) {
+            await db
+              .collection(COLLECTIONS.USER_POINTS)
+              .doc(pRes.data[0]._id)
+              .update({
+                data: { balance: db.command.inc(1), updated_at: rollbackNow },
+              });
+            console.log('[generateAIReport] 回滚点数包:', openid);
+          }
+        }
+        // 标记失败订单为 closed（resolveReportOrder 创建的免费 PAID 单）
+        try {
+          await db
+            .collection(COLLECTIONS.ORDERS)
+            .doc(orderId)
+            .update({
+              data: {
+                status: ORDER_STATUS.CLOSED,
+                close_reason: 'report_generation_failed',
+                updated_at: rollbackNow,
+              },
+            });
+        } catch (closeErr) {
+          /* 订单可能不存在，忽略 */
+        }
+      } catch (rollbackErr) {
+        console.error('[generateAIReport] 免费额度回滚失败:', rollbackErr.message);
+      }
+    }
 
-   // 处理业务逻辑错误（带自定义 code）
-   if (error.code) {
+    // 处理业务逻辑错误（带自定义 code）
+    if (error.code) {
       return {
         code: error.code,
         msg: error.message,
-        data: error.existingReportId
-          ? { existing_report_id: error.existingReportId }
-          : {}
+        data: error.existingReportId ? { existing_report_id: error.existingReportId } : {},
       };
     }
 
@@ -636,13 +727,7 @@ exports.main = async (event, context) => {
     return {
       code: RESPONSE_CODE.SERVER_ERROR,
       msg: '报告生成失败，请稍后重试',
-      data: {
-      }
+      data: {},
     };
   }
 };
-
-
-
-
-

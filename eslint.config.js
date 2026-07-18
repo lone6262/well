@@ -4,29 +4,68 @@
 
 // --- 各运行环境 globals（不依赖 globals 包）---
 const nodeGlobals = {
-  require: 'readonly', module: 'readonly', exports: 'writable', process: 'readonly',
-  console: 'readonly', Buffer: 'readonly', global: 'writable', __dirname: 'readonly',
-  __filename: 'readonly', setImmediate: 'readonly', clearImmediate: 'readonly',
-  setTimeout: 'readonly', clearTimeout: 'readonly', setInterval: 'readonly',
-  clearInterval: 'readonly', URL: 'readonly', URLSearchParams: 'readonly',
-  queueMicrotask: 'readonly', TextEncoder: 'readonly', TextDecoder: 'readonly'
+  require: 'readonly',
+  module: 'readonly',
+  exports: 'writable',
+  process: 'readonly',
+  console: 'readonly',
+  Buffer: 'readonly',
+  global: 'writable',
+  __dirname: 'readonly',
+  __filename: 'readonly',
+  setImmediate: 'readonly',
+  clearImmediate: 'readonly',
+  setTimeout: 'readonly',
+  clearTimeout: 'readonly',
+  setInterval: 'readonly',
+  clearInterval: 'readonly',
+  URL: 'readonly',
+  URLSearchParams: 'readonly',
+  queueMicrotask: 'readonly',
+  TextEncoder: 'readonly',
+  TextDecoder: 'readonly',
 };
 
 const browserGlobals = {
-  window: 'readonly', document: 'readonly', localStorage: 'readonly',
-  sessionStorage: 'readonly', console: 'readonly', fetch: 'readonly', XMLHttpRequest: 'readonly',
-  URL: 'readonly', location: 'readonly', alert: 'readonly', confirm: 'readonly',
-  FormData: 'readonly', Blob: 'readonly', FileReader: 'readonly', navigator: 'readonly',
-  history: 'readonly', HTMLElement: 'readonly', Event: 'readonly', CustomEvent: 'readonly',
-  setTimeout: 'readonly', clearTimeout: 'readonly', setInterval: 'readonly',
-  clearInterval: 'readonly', requestAnimationFrame: 'readonly'
+  window: 'readonly',
+  document: 'readonly',
+  localStorage: 'readonly',
+  sessionStorage: 'readonly',
+  console: 'readonly',
+  fetch: 'readonly',
+  XMLHttpRequest: 'readonly',
+  URL: 'readonly',
+  location: 'readonly',
+  alert: 'readonly',
+  confirm: 'readonly',
+  FormData: 'readonly',
+  Blob: 'readonly',
+  FileReader: 'readonly',
+  navigator: 'readonly',
+  history: 'readonly',
+  HTMLElement: 'readonly',
+  Event: 'readonly',
+  CustomEvent: 'readonly',
+  setTimeout: 'readonly',
+  clearTimeout: 'readonly',
+  setInterval: 'readonly',
+  clearInterval: 'readonly',
+  requestAnimationFrame: 'readonly',
 };
 
 const miniprogramGlobals = {
-  wx: 'readonly', App: 'readonly', Page: 'readonly', Component: 'readonly',
-  Behavior: 'readonly', getCurrentPages: 'readonly', getApp: 'readonly',
+  wx: 'readonly',
+  App: 'readonly',
+  Page: 'readonly',
+  Component: 'readonly',
+  Behavior: 'readonly',
+  getCurrentPages: 'readonly',
+  getApp: 'readonly',
   // 小程序也使用 CommonJS
-  require: 'readonly', module: 'readonly', exports: 'writable', console: 'readonly'
+  require: 'readonly',
+  module: 'readonly',
+  exports: 'writable',
+  console: 'readonly',
 };
 
 // --- eslint:recommended 核心规则（无 @eslint/js 依赖时手动提供）---
@@ -52,7 +91,7 @@ const recommendedRules = {
   'use-isnan': 'error',
   'valid-typeof': 'error',
   'no-mixed-spaces-and-tabs': 'error',
-  'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }]
+  'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
 };
 
 module.exports = [
@@ -66,62 +105,62 @@ module.exports = [
       'cloudfunctions/*/node_modules/',
       'cloudfunctions/*/common/', // 各云函数 common/ 副本由 sync-common.sh 生成，源码见 cloudfunctions/common/
       'admin/dist/',
-      'admin/lib/'
-    ]
+      'admin/lib/',
+    ],
   },
   // 基础配置（默认按 Node 环境；各区域用 files 覆盖）
   {
     languageOptions: {
       ecmaVersion: 2020,
       sourceType: 'commonjs',
-      globals: { ...nodeGlobals }
+      globals: { ...nodeGlobals },
     },
     rules: {
       ...recommendedRules,
       'no-var': 'error',
       'prefer-const': 'warn',
       'no-console': 'warn',
-      'eqeqeq': ['error', 'always'],
-      'no-duplicate-imports': 'warn'
-    }
+      eqeqeq: ['error', 'always'],
+      'no-duplicate-imports': 'warn',
+    },
   },
   // 小程序前端：禁 console
   {
     files: ['miniprogram/**/*.js'],
     languageOptions: {
-      globals: { ...miniprogramGlobals }
+      globals: { ...miniprogramGlobals },
     },
     rules: {
-      'no-console': 'error'
-    }
+      'no-console': 'error',
+    },
   },
   // logger.js 是唯一允许 console 的前端文件
   {
     files: ['miniprogram/utils/logger.js'],
     rules: {
-      'no-console': 'off'
-    }
+      'no-console': 'off',
+    },
   },
   // 云函数：Node 环境，允许 console
   {
     files: ['cloudfunctions/**/*.js'],
     languageOptions: {
       sourceType: 'commonjs',
-      globals: { ...nodeGlobals }
+      globals: { ...nodeGlobals },
     },
     rules: {
-      'no-console': 'off'
-    }
+      'no-console': 'off',
+    },
   },
   // 管理后台：浏览器环境
   {
     files: ['admin/js/**/*.js'],
     languageOptions: {
       sourceType: 'script',
-      globals: { ...browserGlobals }
+      globals: { ...browserGlobals },
     },
     rules: {
-      'no-console': 'warn'
-    }
-  }
+      'no-console': 'warn',
+    },
+  },
 ];

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 管理员认证模块
  * 提供管理员 Token 验证功能，供所有管理端云函数使用
  */
@@ -42,10 +42,7 @@ function verifyAdminToken(token) {
       return false;
     }
 
-    const expectedSignature = crypto
-      .createHmac('sha256', secret)
-      .update(payloadStr)
-      .digest('hex');
+    const expectedSignature = crypto.createHmac('sha256', secret).update(payloadStr).digest('hex');
 
     // 使用恒定时间比较防止时序攻击（与 auth.js 保持一致）
     const sigBuf = Buffer.from(parts[1], 'hex');
@@ -83,14 +80,11 @@ function generateAdminToken() {
   const payload = {
     type: 'admin',
     timestamp: Date.now(),
-    expiresIn: 24 * 60 * 60 * 1000 // 24小时
+    expiresIn: 24 * 60 * 60 * 1000, // 24小时
   };
 
   const payloadStr = JSON.stringify(payload);
-  const signature = crypto
-    .createHmac('sha256', secret)
-    .update(payloadStr)
-    .digest('hex');
+  const signature = crypto.createHmac('sha256', secret).update(payloadStr).digest('hex');
 
   return Buffer.from(payloadStr).toString('base64') + '.' + signature;
 }
@@ -117,5 +111,5 @@ function validateAdminRequest(event) {
 module.exports = {
   verifyAdminToken,
   generateAdminToken,
-  validateAdminRequest
+  validateAdminRequest,
 };

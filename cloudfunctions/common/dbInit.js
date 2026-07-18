@@ -11,7 +11,7 @@
 
 const cloud = require('wx-server-sdk');
 cloud.init({
-  env: cloud.DYNAMIC_CURRENT_ENV
+  env: cloud.DYNAMIC_CURRENT_ENV,
 });
 
 const db = cloud.database();
@@ -23,12 +23,12 @@ const db = cloud.database();
  */
 async function initCollections() {
   const collections = [
-    'users',           // 用户表
-    'pets',            // 宠物表
+    'users', // 用户表
+    'pets', // 宠物表
     'symptom_records', // 自查记录表
-    'ai_cache',        // AI缓存表
-    'orders',          // 订单表
-    'hospitals'        // 医院表
+    'ai_cache', // AI缓存表
+    'orders', // 订单表
+    'hospitals', // 医院表
   ];
 
   console.log('开始创建数据库集合...');
@@ -38,24 +38,26 @@ async function initCollections() {
       // 尝试创建集合（通过插入临时数据）
       const tempData = {
         _temp: true,
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
       await db.collection(collectionName).add({
-        data: tempData
+        data: tempData,
       });
 
       // 删除临时数据
-      const { data } = await db.collection(collectionName).where({
-        _temp: true
-      }).get();
+      const { data } = await db
+        .collection(collectionName)
+        .where({
+          _temp: true,
+        })
+        .get();
 
       if (data.length > 0) {
         await db.collection(collectionName).doc(data[0]._id).remove();
       }
 
       console.log(`✅ 集合 ${collectionName} 创建成功`);
-
     } catch (error) {
       if (error.errCode === -1) {
         console.log(`⚠️  集合 ${collectionName} 已存在，跳过创建`);
@@ -80,52 +82,43 @@ async function createIndexes() {
   const indexes = [
     {
       collection: 'users',
-      indexes: [
-        { name: 'openid_index', keys: { openid: 1 }, unique: true }
-      ]
+      indexes: [{ name: 'openid_index', keys: { openid: 1 }, unique: true }],
     },
     {
       collection: 'pets',
-      indexes: [
-        { name: 'user_id_index', keys: { user_id: 1 } }
-      ]
+      indexes: [{ name: 'user_id_index', keys: { user_id: 1 } }],
     },
     {
       collection: 'symptom_records',
-      indexes: [
-        { name: 'user_id_created_index', keys: { user_id: 1, created_at: -1 } }
-      ]
+      indexes: [{ name: 'user_id_created_index', keys: { user_id: 1, created_at: -1 } }],
     },
     {
       collection: 'ai_cache',
       indexes: [
         { name: 'symptom_vector_index', keys: { symptom_vector: 1 } },
-        { name: 'expire_at_index', keys: { expire_at: 1 } }
-      ]
+        { name: 'expire_at_index', keys: { expire_at: 1 } },
+      ],
     },
     {
       collection: 'orders',
       indexes: [
         { name: 'user_id_index', keys: { user_id: 1 } },
-        { name: 'transaction_id_index', keys: { transaction_id: 1 } }
-      ]
+        { name: 'transaction_id_index', keys: { transaction_id: 1 } },
+      ],
     },
-    {
-      collection: 'point_transactions',
-      indexes: [
-        // 部分唯一索引：仅 order_id 非空时强制 (order_id, type) 唯一，防同一订单重复发放点数。
-        // 控制台建索引时需配 partialFilterExpression: { order_id: { $ne: "" } }
-        // （consume/refund 流水 order_id='' 不参与，否则空串互相冲突建不上）
-        { name: 'order_type_unique', keys: { order_id: 1, type: 1 }, unique: true }
-      ]
-    },
+    // point_transactions 的 (order_id, type) 部分唯一索引【不在本脚本自动创建】：
+    //   CloudBase createIndex 不支持 partialFilterExpression，直接建全唯一索引会让
+    //   consume/refund 等空 order_id 流水互相冲突、写入失败。
+    //   如需强化幂等（防同一订单重复发点数），请在云开发控制台手工建：
+    //   键 { order_id: 1, type: 1 }，唯一，partialFilterExpression: { order_id: { $ne: "" } }。
+    //   当前幂等由 activation-service / payCallback.creditPoints 的预查重保证，无索引亦安全。
     {
       collection: 'hospitals',
       indexes: [
         { name: 'location_index', keys: { location: '2dsphere' } },
-        { name: 'is_24h_index', keys: { is_24h: 1 } }
-      ]
-    }
+        { name: 'is_24h_index', keys: { is_24h: 1 } },
+      ],
+    },
   ];
 
   console.log('⚠️  请在云开发控制台手动创建以下索引：');
@@ -152,7 +145,7 @@ function setupPermissions() {
   console.log('   }');
 
   const collections = ['users', 'pets', 'symptom_records', 'ai_cache', 'orders', 'hospitals'];
-  collections.forEach(collection => {
+  collections.forEach((collection) => {
     console.log(`   📁 ${collection}`);
   });
 }
@@ -179,7 +172,6 @@ async function main() {
 
     console.log('\n✅ 数据库初始化脚本执行完成！');
     console.log('⚠️  请按照提示在控制台完成索引创建和权限设置。');
-
   } catch (error) {
     console.error('❌ 数据库初始化失败:', error);
   }
@@ -191,6 +183,6 @@ exports.main = async (event, context) => {
   return {
     code: 0,
     msg: '数据库初始化脚本执行完成',
-    data: {}
+    data: {},
   };
 };

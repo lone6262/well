@@ -3,7 +3,13 @@
 // 修复：S1 退款并发竞态保护（CAS 加锁）、W4 回滚额度防负数、W5 退款金额一致性校验
 const cloud = require('wx-server-sdk');
 const crypto = require('crypto');
-const { COLLECTIONS, RESPONSE_CODE, ORDER_STATUS, warmupConfig, SERVER_CONFIG } = require('./common/constants');
+const {
+  COLLECTIONS,
+  RESPONSE_CODE,
+  ORDER_STATUS,
+  warmupConfig,
+  SERVER_CONFIG,
+} = require('./common/constants');
 const { validateAdminRequest } = require('./common/admin-auth');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
@@ -23,7 +29,10 @@ exports.main = async (event, context) => {
     }
     const providedBuf = Buffer.from(adminSecret);
     const expectedBuf = Buffer.from(expectedSecret);
-    if (providedBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(providedBuf, expectedBuf)) {
+    if (
+      providedBuf.length !== expectedBuf.length ||
+      !crypto.timingSafeEqual(providedBuf, expectedBuf)
+    ) {
       return { code: RESPONSE_CODE.UNAUTHORIZED, msg: '管理员鉴权失败', data: {} };
     }
   }
@@ -47,36 +56,41 @@ exports.main = async (event, context) => {
 
     if (!approved) {
       // 拒绝退款：S1 CAS 原子更新 pending → rejected，防止与审批请求并发冲突
-      const rejectResult = await db.collection('refund_records')
+      const rejectResult = await db
+        .collection('refund_records')
         .where({ _id: refundId, status: 'pending' })
         .update({
           data: {
             status: 'rejected',
             reviewer: 'admin',
-            reviewed_at: new Date()
-          }
+            reviewed_at: new Date(),
+          },
         });
       if (!rejectResult.stats || rejectResult.stats.updated === 0) {
         return { code: RESPONSE_CODE.ERROR, msg: '退款记录不存在或已处理', data: {} };
       }
       // 恢复订单状态为已支付
-      await db.collection(COLLECTIONS.ORDERS).doc(refund.order_id).update({
-        data: { status: ORDER_STATUS.PAID, updated_at: new Date() }
-      });
+      await db
+        .collection(COLLECTIONS.ORDERS)
+        .doc(refund.order_id)
+        .update({
+          data: { status: ORDER_STATUS.PAID, updated_at: new Date() },
+        });
       return { code: RESPONSE_CODE.SUCCESS, msg: '退款已拒绝', data: {} };
     }
 
     // ===== S1 修复：CAS 加锁 — 原子地将 pending 改为 processing =====
     // 条件更新确保只有一个请求能抢到锁（status 仍为 pending 才成功），消除读-写竞态
-    const lockResult = await db.collection('refund_records')
+    const lockResult = await db
+      .collection('refund_records')
       .where({ _id: refundId, status: 'pending' })
       .update({
         data: {
           status: 'processing',
           reviewer: 'admin',
           processing_at: new Date(),
-          updated_at: new Date()
-        }
+          updated_at: new Date(),
+        },
       });
 
     if (!lockResult.stats || lockResult.stats.updated === 0) {
@@ -108,8 +122,13 @@ exports.main = async (event, context) => {
     // 读取支付配置，判断是否 mock 模式（与 createOrder/payCallback 统一逻辑）
     let isMockPay;
     try {
-      const payConfigDoc = await db.collection(COLLECTIONS.SYSTEM_CONFIG).doc('wechat_pay_config').get();
-      isMockPay = payConfigDoc.data ? payConfigDoc.data.mock_pay === true : (process.env.MOCK_PAY === 'true');
+      const payConfigDoc = await db
+        .collection(COLLECTIONS.SYSTEM_CONFIG)
+        .doc('wechat_pay_config')
+        .get();
+      isMockPay = payConfigDoc.data
+        ? payConfigDoc.data.mock_pay === true
+        : process.env.MOCK_PAY === 'true';
     } catch (cfgErr) {
       console.warn('[processRefund] 支付配置读取失败，回退环境变量 MOCK_PAY:', cfgErr.message);
       isMockPay = process.env.MOCK_PAY === 'true';
@@ -132,17 +151,18 @@ exports.main = async (event, context) => {
             params: {
               out_trade_no: order.out_trade_no,
               out_refund_no: 'WELL_RF_' + Date.now(),
-              amount: { refund: refund.amount, total: order.amount, currency: 'CNY' }
-            }
-          }
+              amount: { refund: refund.amount, total: order.amount, currency: 'CNY' },
+            },
+          },
         });
         const refundResult = refundRes.result || refundRes;
         if (!refundResult || refundResult.code !== 0) {
           throw new Error('微信退款失败: ' + (refundResult ? refundResult.msg : '未知错误'));
         }
-        refundTransactionId = (refundResult.data && refundResult.data.refund_id)
-          ? refundResult.data.refund_id
-          : 'refund_' + Date.now();
+        refundTransactionId =
+          refundResult.data && refundResult.data.refund_id
+            ? refundResult.data.refund_id
+            : 'refund_' + Date.now();
       } catch (refundError) {
         console.error('[processRefund] 退款失败:', refundError.message);
         // S1: 退款失败，恢复状态为 pending 以允许重试
@@ -155,23 +175,29 @@ exports.main = async (event, context) => {
     refundApiSucceeded = true;
 
     // 更新退款记录为 completed
-    await db.collection('refund_records').doc(refundId).update({
-      data: {
-        status: 'completed',
-        reviewer: 'admin',
-        reviewed_at: new Date(),
-        transaction_id: refundTransactionId
-      }
-    });
+    await db
+      .collection('refund_records')
+      .doc(refundId)
+      .update({
+        data: {
+          status: 'completed',
+          reviewer: 'admin',
+          reviewed_at: new Date(),
+          transaction_id: refundTransactionId,
+        },
+      });
 
     // 更新订单状态
-    await db.collection(COLLECTIONS.ORDERS).doc(refund.order_id).update({
-      data: {
-        status: ORDER_STATUS.REFUNDED,
-        refund_amount: _.inc(refund.amount),
-        updated_at: new Date()
-      }
-    });
+    await db
+      .collection(COLLECTIONS.ORDERS)
+      .doc(refund.order_id)
+      .update({
+        data: {
+          status: ORDER_STATUS.REFUNDED,
+          refund_amount: _.inc(refund.amount),
+          updated_at: new Date(),
+        },
+      });
 
     // 回滚用户资源
     await rollbackUserResources(order);
@@ -197,9 +223,8 @@ exports.main = async (event, context) => {
     return {
       code: RESPONSE_CODE.SUCCESS,
       msg: '退款成功',
-      data: { refundTransactionId, amount: refund.amount }
+      data: { refundTransactionId, amount: refund.amount },
     };
-
   } catch (error) {
     console.error('[processRefund] 失败:', error.message);
     // S1: 异常回滚状态——仅在退款资金尚未退还时恢复为 pending，允许重试；
@@ -216,7 +241,8 @@ exports.main = async (event, context) => {
 // S1 辅助：将退款记录从 processing 恢复为 pending（仅在退款资金未实际退还时调用，允许重试）
 async function restoreRefundPending(refundId) {
   try {
-    await db.collection('refund_records')
+    await db
+      .collection('refund_records')
       .where({ _id: refundId, status: 'processing' })
       .update({ data: { status: 'pending', updated_at: new Date() } });
   } catch (e) {
@@ -235,12 +261,18 @@ async function rollbackUserResources(order) {
   // 改为按 user_id 查询会员记录，与 closeExpiredOrders 对齐
   if (order.type === 'member') {
     try {
-      const mRes = await db.collection(COLLECTIONS.MEMBERS)
-        .where({ user_id: order.user_id }).limit(1).get();
+      const mRes = await db
+        .collection(COLLECTIONS.MEMBERS)
+        .where({ user_id: order.user_id })
+        .limit(1)
+        .get();
       if (mRes.data && mRes.data.length > 0) {
-        await db.collection(COLLECTIONS.MEMBERS).doc(mRes.data[0]._id).update({
-          data: { status: 'refunded', updated_at: new Date() }
-        });
+        await db
+          .collection(COLLECTIONS.MEMBERS)
+          .doc(mRes.data[0]._id)
+          .update({
+            data: { status: 'refunded', updated_at: new Date() },
+          });
       }
     } catch (e) {
       console.error('回滚会员失败:', e.message);
@@ -251,10 +283,15 @@ async function rollbackUserResources(order) {
   // 报告订单：回滚会员额度（按 user_id 查询；条件更新 report_credits_used > 0 防止负数）
   if (order.type === 'report' && metadata.quota_source === 'member') {
     try {
-      const mRes = await db.collection(COLLECTIONS.MEMBERS)
-        .where({ user_id: order.user_id, report_credits_used: _.gt(0) }).limit(1).get();
+      const mRes = await db
+        .collection(COLLECTIONS.MEMBERS)
+        .where({ user_id: order.user_id, report_credits_used: _.gt(0) })
+        .limit(1)
+        .get();
       if (mRes.data && mRes.data.length > 0) {
-        await db.collection(COLLECTIONS.MEMBERS).doc(mRes.data[0]._id)
+        await db
+          .collection(COLLECTIONS.MEMBERS)
+          .doc(mRes.data[0]._id)
           .update({ data: { report_credits_used: _.inc(-1), updated_at: new Date() } });
       }
     } catch (e) {
@@ -266,9 +303,12 @@ async function rollbackUserResources(order) {
   // 释放优惠券
   if (metadata.coupon_user_id) {
     try {
-      await db.collection('user_coupons').doc(metadata.coupon_user_id).update({
-        data: { status: 'unused', order_id: '', updated_at: new Date() }
-      });
+      await db
+        .collection('user_coupons')
+        .doc(metadata.coupon_user_id)
+        .update({
+          data: { status: 'unused', order_id: '', updated_at: new Date() },
+        });
     } catch (e) {
       console.error('释放优惠券失败:', e.message);
       failures.push({ step: 'release_coupon', error: e.message });
@@ -286,8 +326,8 @@ async function rollbackUserResources(order) {
           order_type: order.type,
           failures,
           status: 'pending',
-          created_at: new Date()
-        }
+          created_at: new Date(),
+        },
       });
       console.error('[processRefund] 部分资源回滚失败，已写入 rollback_failures 供补偿:', failures);
     } catch (logErr) {

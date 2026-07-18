@@ -17,14 +17,14 @@ Page({
     hotFoods: HOT_FOODS,
     results: [],
     loading: false,
-    searchTimer: null
+    searchTimer: null,
   },
 
-  onLoad: function() {
+  onLoad: function () {
     tracker.view(TOOL_NAME);
   },
 
-  onSearchInput: function(e) {
+  onSearchInput: function (e) {
     const value = e.detail.value;
     this.setData({ keyword: value });
 
@@ -33,7 +33,7 @@ Page({
       clearTimeout(this.data.searchTimer);
     }
     const self = this;
-    const timer = setTimeout(function() {
+    const timer = setTimeout(function () {
       if (value.trim()) {
         self.doSearch(value.trim());
       } else {
@@ -43,24 +43,24 @@ Page({
     self.setData({ searchTimer: timer });
   },
 
-  onSearchConfirm: function(e) {
+  onSearchConfirm: function (e) {
     const value = e.detail.value || this.data.keyword;
     if (value.trim()) {
       this.doSearch(value.trim());
     }
   },
 
-  clearSearch: function() {
+  clearSearch: function () {
     this.setData({ keyword: '', results: [] });
   },
 
-  searchHot: function(e) {
+  searchHot: function (e) {
     const name = e.currentTarget.dataset.name;
     this.setData({ keyword: name });
     this.doSearch(name);
   },
 
-  selectCategory: function(e) {
+  selectCategory: function (e) {
     const cat = e.currentTarget.dataset.cat;
     this.setData({ activeCategory: cat });
     if (cat) {
@@ -71,44 +71,50 @@ Page({
   },
 
   // 调用云函数搜索
-  doSearch: function(keyword) {
+  doSearch: function (keyword) {
     const self = this;
     self.setData({ loading: true });
 
     log.info('搜索食物:', keyword);
     tracker.use(TOOL_NAME, { keyword: keyword });
 
-    api.call('searchFoodSafety', { keyword: keyword, token: app.globalData.token }).then(function(res) {
-      if (res && res.code === 0 && res.data && res.data.foods) {
-        self.setData({ results: res.data.foods, loading: false });
-      } else {
+    api
+      .call('searchFoodSafety', { keyword: keyword, token: app.globalData.token })
+      .then(function (res) {
+        if (res && res.code === 0 && res.data && res.data.foods) {
+          self.setData({ results: res.data.foods, loading: false });
+        } else {
+          self.setData({ results: [], loading: false });
+        }
+      })
+      .catch(function (err) {
+        log.error('搜索食物失败:', err);
         self.setData({ results: [], loading: false });
-      }
-    }).catch(function(err) {
-      log.error('搜索食物失败:', err);
-      self.setData({ results: [], loading: false });
-    });
+      });
   },
 
-  doSearchByCategory: function(category) {
+  doSearchByCategory: function (category) {
     const self = this;
     self.setData({ loading: true });
 
-    api.call('searchFoodSafety', { category: category, pageSize: 50, token: app.globalData.token }).then(function(res) {
-      if (res && res.code === 0 && res.data && res.data.foods) {
-        self.setData({ results: res.data.foods, loading: false });
-      } else {
+    api
+      .call('searchFoodSafety', { category: category, pageSize: 50, token: app.globalData.token })
+      .then(function (res) {
+        if (res && res.code === 0 && res.data && res.data.foods) {
+          self.setData({ results: res.data.foods, loading: false });
+        } else {
+          self.setData({ results: [], loading: false });
+        }
+      })
+      .catch(function (err) {
+        log.error('分类查询失败:', err);
         self.setData({ results: [], loading: false });
-      }
-    }).catch(function(err) {
-      log.error('分类查询失败:', err);
-      self.setData({ results: [], loading: false });
-    });
+      });
   },
 
-  goToReport: function() {
+  goToReport: function () {
     tracker.toReport(TOOL_NAME);
     log.info('跳转症状自查');
     wx.switchTab({ url: '/pages/symptom/guide' });
-  }
+  },
 });

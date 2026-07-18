@@ -5,7 +5,7 @@ const { warmupConfig } = require('./common/constants');
 const { checkRateLimit } = require('./common/rate-limiter');
 
 cloud.init({
-  env: cloud.DYNAMIC_CURRENT_ENV
+  env: cloud.DYNAMIC_CURRENT_ENV,
 });
 
 const db = cloud.database();
@@ -33,9 +33,12 @@ exports.main = async (event) => {
     }
 
     // 查找或创建用户（使用user_id字段与其他云函数保持一致）
-    const userResult = await db.collection('users').where({
-      user_id: OPENID
-    }).get();
+    const userResult = await db
+      .collection('users')
+      .where({
+        user_id: OPENID,
+      })
+      .get();
 
     let userData;
     let isNewUser = false;
@@ -51,13 +54,13 @@ exports.main = async (event) => {
         updateTime: new Date(),
         isMember: false,
         lastLoginTime: new Date(),
-        loginCount: 1
+        loginCount: 1,
       };
 
       // H6: 并发安全 — catch 重复 key 错误后重新读取
       try {
         const addResult = await db.collection('users').add({
-          data: newUserData
+          data: newUserData,
         });
         userData = newUserData;
         userData._id = addResult._id;
@@ -82,16 +85,19 @@ exports.main = async (event) => {
       userData = {
         ...existingUser,
         lastLoginTime: updatedLastLoginTime,
-        loginCount: updatedLoginCount
+        loginCount: updatedLoginCount,
       };
 
-      await db.collection('users').doc(existingUser._id).update({
-        data: {
-          lastLoginTime: updatedLastLoginTime,
-          loginCount: updatedLoginCount,
-          updateTime: new Date()
-        }
-      });
+      await db
+        .collection('users')
+        .doc(existingUser._id)
+        .update({
+          data: {
+            lastLoginTime: updatedLastLoginTime,
+            loginCount: updatedLoginCount,
+            updateTime: new Date(),
+          },
+        });
 
       console.log('[silentLogin] login ok');
     }
@@ -109,18 +115,17 @@ exports.main = async (event) => {
         userInfo: {
           nickName: userData.nickName,
           avatarUrl: userData.avatarUrl,
-          isMember: userData.isMember
+          isMember: userData.isMember,
         },
-        isNewUser: isNewUser
-      }
+        isNewUser: isNewUser,
+      },
     };
-
   } catch (error) {
     console.error('[silentLogin] fail:', error.message);
     return {
       code: -1,
       msg: '登录失败，请稍后重试',
-      data: {}
+      data: {},
     };
   }
 };

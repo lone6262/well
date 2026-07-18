@@ -20,7 +20,7 @@ const {
   INITIAL_HOSPITALS,
   getInitialKnowledgeArticles,
   getInitialReportTemplates,
-  getInitialCouponTemplates
+  getInitialCouponTemplates,
 } = require('./seed-data');
 const FOOD_SAFETY_SEED = require('./food-safety-seed');
 
@@ -34,7 +34,8 @@ const db = cloud.database();
 async function resolveAdminSecret() {
   // 1. 优先从数据库 system_config 读取
   try {
-    const { data } = await db.collection('system_config')
+    const { data } = await db
+      .collection('system_config')
       .where({ key: 'admin_secret' })
       .limit(1)
       .get();
@@ -69,7 +70,8 @@ async function resolveAdminSecret() {
 async function persistAdminSecret(secret) {
   try {
     // 检查是否已存在
-    const { data } = await db.collection('system_config')
+    const { data } = await db
+      .collection('system_config')
       .where({ key: 'admin_secret' })
       .limit(1)
       .get();
@@ -78,7 +80,7 @@ async function persistAdminSecret(secret) {
       return;
     }
     await db.collection('system_config').add({
-      data: { key: 'admin_secret', value: secret, createdAt: new Date() }
+      data: { key: 'admin_secret', value: secret, createdAt: new Date() },
     });
     console.log('[dbInit] ✅ ADMIN_SECRET 已写入 system_config 集合');
   } catch (e) {
@@ -92,26 +94,32 @@ async function persistAdminSecret(secret) {
  */
 function buildSystemConfigSeed(event) {
   return [
-    { key: 'admin_secret',      value: event.adminSecret || '' },
-    { key: 'token_secret',      value: event.tokenSecret || '' },
-    { key: 'tencent_map_key',   value: event.tencentMapKey || '' },
-    { key: 'deepseek_api_key',  value: event.deepseekApiKey || '' },
+    { key: 'admin_secret', value: event.adminSecret || '' },
+    { key: 'token_secret', value: event.tokenSecret || '' },
+    { key: 'tencent_map_key', value: event.tencentMapKey || '' },
+    { key: 'deepseek_api_key', value: event.deepseekApiKey || '' },
     { key: 'deepseek_base_url', value: event.deepseekBaseUrl || 'https://api.deepseek.com' },
-    { key: 'deepseek_model',    value: event.deepseekModel || 'deepseek-chat' },
-    // 支付配置：mock_pay=true 走模拟支付（本地测试用），mock_pay=false 走真实微信支付
-    { _id: 'wechat_pay_config', mock_pay: true, description: '支付配置（mock_pay=true 模拟支付）', updated_at: new Date() },
-      // Phase 1.5: Feature Flags（命名与开发计划 V5 对齐）
-      {
-        key: 'feature_flags',
-        value: {
-          enable_tools: true,
-          enable_food_search: true,
-          enable_share_card: false,
-          enable_group: false,
-          enable_promotion: false
-        }
-      }
-    ];
+    { key: 'deepseek_model', value: event.deepseekModel || 'deepseek-chat' },
+    // 支付配置：默认 mock_pay=false（真实微信支付，安全默认）；本地测试传 event.mockPay=true 才开模拟
+    // 安全：原硬编码 mock_pay=true，首次初始化会让所有订单免单（零收入），故改为安全默认 + 显式开启
+    {
+      _id: 'wechat_pay_config',
+      mock_pay: event.mockPay === true,
+      description: '支付配置（mock_pay=true 仅本地测试模拟支付）',
+      updated_at: new Date(),
+    },
+    // Phase 1.5: Feature Flags（命名与开发计划 V5 对齐）
+    {
+      key: 'feature_flags',
+      value: {
+        enable_tools: true,
+        enable_food_search: true,
+        enable_share_card: false,
+        enable_group: false,
+        enable_promotion: false,
+      },
+    },
+  ];
 }
 
 async function main(configSeed) {
@@ -146,7 +154,7 @@ async function main(configSeed) {
       ['analytics_events', [], 'V1.5 埋点事件'],
       ['error_logs', [], 'V1.5 错误日志'],
       // V2.0 冷启动工具集合
-      ['food_safety', FOOD_SAFETY_SEED, '25条食物安全种子数据']
+      ['food_safety', FOOD_SAFETY_SEED, '25条食物安全种子数据'],
     ];
 
     for (const [name, data, label] of collections) {
@@ -164,7 +172,9 @@ async function main(configSeed) {
     console.log('\n=== 验证 users 集合 ===');
     try {
       const { data: usersData } = await db.collection('users').limit(1).get();
-      console.log(usersData.length > 0 ? '✅ users 集合已有数据' : '⚠️  users 集合为空，但应该已有用户数据');
+      console.log(
+        usersData.length > 0 ? '✅ users 集合已有数据' : '⚠️  users 集合为空，但应该已有用户数据'
+      );
       results.success.push('users');
     } catch (error) {
       console.log('⚠️  无法验证users集合:', error.message);
@@ -173,17 +183,28 @@ async function main(configSeed) {
     // 输出汇总
     console.log('\n=== 初始化结果汇总 ===');
     console.log(`✅ 成功初始化: ${results.success.length} 个集合`);
-    results.success.forEach(name => { console.log(`   ✓ ${name}`); });
+    results.success.forEach((name) => {
+      console.log(`   ✓ ${name}`);
+    });
 
     if (results.failed.length > 0) {
       console.log(`\n❌ 初始化失败: ${results.failed.length} 个集合`);
-      results.failed.forEach(item => { console.log(`   ✗ ${item.name}: ${item.error}`); });
+      results.failed.forEach((item) => {
+        console.log(`   ✗ ${item.name}: ${item.error}`);
+      });
     }
 
     // 数据验证
     console.log('\n=== 数据验证 ===');
     try {
-      const verifyList = ['hospitals', 'pets', 'symptom_records', 'knowledge_articles', 'report_templates', 'system_config'];
+      const verifyList = [
+        'hospitals',
+        'pets',
+        'symptom_records',
+        'knowledge_articles',
+        'report_templates',
+        'system_config',
+      ];
       for (const name of verifyList) {
         const count = (await db.collection(name).count()).total;
         console.log(`✅ ${name} 集合记录数: ${count}`);
@@ -200,12 +221,19 @@ async function main(configSeed) {
     return {
       code: RESPONSE_CODE.SUCCESS,
       msg: '数据库初始化完成',
-      data: { success: results.success, failed: results.failed, total: results.success.length + results.failed.length }
+      data: {
+        success: results.success,
+        failed: results.failed,
+        total: results.success.length + results.failed.length,
+      },
     };
-
   } catch (error) {
     console.error('❌ 数据库初始化失败:', error);
-    return { code: RESPONSE_CODE.SERVER_ERROR, msg: '数据库初始化失败', data: { results: results } };
+    return {
+      code: RESPONSE_CODE.SERVER_ERROR,
+      msg: '数据库初始化失败',
+      data: { results: results },
+    };
   }
 }
 
@@ -217,12 +245,29 @@ async function resetAllData(db, configSeed) {
 
   // 需要清空的集合（用户数据 + 缓存 + 日志）
   const userCollections = [
-    'users', 'pets', 'symptom_records', 'ai_cache',
-    'orders', 'members', 'invite_records', 'followup_records',
-    'rate_limits', 'audit_logs', 'hospitals', 'knowledge_articles', 'report_templates',
+    'users',
+    'pets',
+    'symptom_records',
+    'ai_cache',
+    'orders',
+    'members',
+    'invite_records',
+    'followup_records',
+    'rate_limits',
+    'audit_logs',
+    'hospitals',
+    'knowledge_articles',
+    'report_templates',
     // V1.5 新增
-    'user_points', 'point_transactions', 'user_coupons', 'coupons',
-    'refund_records', 'member_renew_log', 'bill_check_logs', 'analytics_events', 'error_logs'
+    'user_points',
+    'point_transactions',
+    'user_coupons',
+    'coupons',
+    'refund_records',
+    'member_renew_log',
+    'bill_check_logs',
+    'analytics_events',
+    'error_logs',
   ];
 
   const results = { cleared: [], failed: [] };
@@ -238,7 +283,7 @@ async function resetAllData(db, configSeed) {
           hasMore = false;
           continue;
         }
-        const removePromises = data.map(function(doc) {
+        const removePromises = data.map(function (doc) {
           return db.collection(name).doc(doc._id).remove();
         });
         await Promise.all(removePromises);
@@ -264,7 +309,14 @@ async function resetAllData(db, configSeed) {
   // 单独处理 system_config：保留密钥配置，删除其他
   try {
     const { data } = await db.collection('system_config').get();
-    const keysToKeep = ['admin_secret', 'token_secret', 'tencent_map_key', 'deepseek_api_key', 'deepseek_base_url', 'deepseek_model'];
+    const keysToKeep = [
+      'admin_secret',
+      'token_secret',
+      'tencent_map_key',
+      'deepseek_api_key',
+      'deepseek_base_url',
+      'deepseek_model',
+    ];
     for (const doc of data) {
       if (!keysToKeep.includes(doc.key)) {
         await db.collection('system_config').doc(doc._id).remove();
@@ -286,12 +338,12 @@ async function resetAllData(db, configSeed) {
     msg: '数据重置完成',
     data: {
       reset: results,
-      init: initResult.data
-    }
+      init: initResult.data,
+    },
   };
 }
 
-exports.main = async function(event, context) {
+exports.main = async function (event, context) {
   const providedSecret = event && event.adminSecret;
 
   // 1. 解析 ADMIN_SECRET：数据库优先，首次调用时用 event.adminSecret
@@ -303,20 +355,21 @@ exports.main = async function(event, context) {
     return {
       code: RESPONSE_CODE.ERROR,
       msg: '首次调用需传入 adminSecret，后续调用自动从数据库读取',
-      data: {}
+      data: {},
     };
   }
 
   // 2. 恒定时间比较鉴权
   const providedBuf = Buffer.from(providedSecret || '');
   const expectedBuf = Buffer.from(ADMIN_SECRET || '');
-  const valid = providedBuf.length === expectedBuf.length && crypto.timingSafeEqual(providedBuf, expectedBuf);
+  const valid =
+    providedBuf.length === expectedBuf.length && crypto.timingSafeEqual(providedBuf, expectedBuf);
   if (!valid) {
     console.error('[dbInit] adminSecret 验证失败');
     return {
       code: RESPONSE_CODE.ERROR,
       msg: 'Access denied: dbInit requires valid admin authorization',
-      data: {}
+      data: {},
     };
   }
 
@@ -326,7 +379,7 @@ exports.main = async function(event, context) {
     return {
       code: RESPONSE_CODE.ERROR,
       msg: '重置模式需要设置 confirm: true 以二次确认',
-      data: {}
+      data: {},
     };
   }
 

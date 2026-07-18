@@ -98,7 +98,7 @@ function renderPagination(containerId, pagination, callback) {
   container.innerHTML = html;
 
   // 绑定事件
-  container.querySelectorAll('.page-btn:not([disabled])').forEach(btn => {
+  container.querySelectorAll('.page-btn:not([disabled])').forEach((btn) => {
     btn.addEventListener('click', () => {
       const page = parseInt(btn.dataset.page);
       callback(page);
@@ -109,9 +109,11 @@ function renderPagination(containerId, pagination, callback) {
 const modalFocusState = {};
 
 function getFocusableElements(container) {
-  return Array.from(container.querySelectorAll(
-    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-  )).filter(element => element.offsetParent !== null);
+  return Array.from(
+    container.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )
+  ).filter((element) => element.offsetParent !== null);
 }
 
 function trapModalFocus(modal, event) {
@@ -151,7 +153,7 @@ function openModal(modalId) {
   }
 
   if (!modalFocusState[modalId + 'Keydown']) {
-    modalFocusState[modalId + 'Keydown'] = function(event) {
+    modalFocusState[modalId + 'Keydown'] = function (event) {
       if (event.key === 'Escape') {
         closeModal(modalId);
         return;
@@ -186,7 +188,7 @@ function closeModal(modalId) {
  */
 function switchTab(tabName) {
   // 更新导航状态
-  document.querySelectorAll('.nav-item').forEach(item => {
+  document.querySelectorAll('.nav-item').forEach((item) => {
     item.classList.remove('active');
     if (item.dataset.tab === tabName) {
       item.classList.add('active');
@@ -194,7 +196,7 @@ function switchTab(tabName) {
   });
 
   // 更新内容区域
-  document.querySelectorAll('.tab-content').forEach(content => {
+  document.querySelectorAll('.tab-content').forEach((content) => {
     content.classList.remove('active');
   });
   const targetContent = document.getElementById(`tab-${tabName}`);
@@ -215,7 +217,7 @@ function switchTab(tabName) {
     risk: '风控面板',
     foods: '食物管理',
     errorlogs: '错误日志',
-    settings: '系统设置'
+    settings: '系统设置',
   };
   document.getElementById('pageTitle').textContent = titles[tabName] || '管理后台';
 
@@ -291,26 +293,48 @@ async function initSettingsModule() {
       const config = result.data;
 
       // 填充报告价格设置
-      document.getElementById('priceFirstReport').value = parseFloat(config.prices.firstReportDisplay);
-      document.getElementById('priceStandardReport').value = parseFloat(config.prices.standardReportDisplay);
+      document.getElementById('priceFirstReport').value = parseFloat(
+        config.prices.firstReportDisplay
+      );
+      document.getElementById('priceStandardReport').value = parseFloat(
+        config.prices.standardReportDisplay
+      );
 
       // 填充个人会员价格设置
-      document.getElementById('priceMemberMonthly').value = parseFloat(config.prices.memberMonthlyDisplay);
-      document.getElementById('priceMemberYearly').value = parseFloat(config.prices.memberYearlyDisplay);
-      document.getElementById('priceRenewMonthly').value = parseFloat(config.prices.renewMonthlyDisplay);
-      document.getElementById('priceRenewYearly').value = parseFloat(config.prices.renewYearlyDisplay);
+      document.getElementById('priceMemberMonthly').value = parseFloat(
+        config.prices.memberMonthlyDisplay
+      );
+      document.getElementById('priceMemberYearly').value = parseFloat(
+        config.prices.memberYearlyDisplay
+      );
+      document.getElementById('priceRenewMonthly').value = parseFloat(
+        config.prices.renewMonthlyDisplay
+      );
+      document.getElementById('priceRenewYearly').value = parseFloat(
+        config.prices.renewYearlyDisplay
+      );
 
       // 填充家庭会员价格设置
-      document.getElementById('priceFamilyMonthly').value = parseFloat(config.prices.memberFamilyMonthlyDisplay);
-      document.getElementById('priceFamilyYearly').value = parseFloat(config.prices.memberFamilyYearlyDisplay);
-      document.getElementById('priceRenewFamilyMonthly').value = parseFloat(config.prices.renewFamilyMonthlyDisplay);
-      document.getElementById('priceRenewFamilyYearly').value = parseFloat(config.prices.renewFamilyYearlyDisplay);
+      document.getElementById('priceFamilyMonthly').value = parseFloat(
+        config.prices.memberFamilyMonthlyDisplay
+      );
+      document.getElementById('priceFamilyYearly').value = parseFloat(
+        config.prices.memberFamilyYearlyDisplay
+      );
+      document.getElementById('priceRenewFamilyMonthly').value = parseFloat(
+        config.prices.renewFamilyMonthlyDisplay
+      );
+      document.getElementById('priceRenewFamilyYearly').value = parseFloat(
+        config.prices.renewFamilyYearlyDisplay
+      );
 
       // 填充额度设置
       document.getElementById('creditsMonthlyReports').value = config.memberCredits.monthlyReports;
       document.getElementById('creditsYearlyReports').value = config.memberCredits.yearlyReports;
-      document.getElementById('creditsFamilyMonthlyReports').value = config.memberCredits.familyMonthlyReports;
-      document.getElementById('creditsFamilyYearlyReports').value = config.memberCredits.familyYearlyReports;
+      document.getElementById('creditsFamilyMonthlyReports').value =
+        config.memberCredits.familyMonthlyReports;
+      document.getElementById('creditsFamilyYearlyReports').value =
+        config.memberCredits.familyYearlyReports;
       document.getElementById('creditsTrialReports').value = config.memberCredits.trialReports;
 
       // 填充功能开关（Feature Flags）
@@ -335,23 +359,26 @@ async function initSettingsModule() {
  */
 async function saveConfig() {
   const settingsRoot = document.getElementById('tab-settings');
-  const validation = validateAndShow({
-    priceFirstReport: { number: true, min: 0, message: '首份报告价格不能小于 0' },
-    priceStandardReport: { number: true, min: 0, message: '标准报告价格不能小于 0' },
-    priceMemberMonthly: { number: true, min: 0, message: '个人月卡价格不能小于 0' },
-    priceMemberYearly: { number: true, min: 0, message: '个人年卡价格不能小于 0' },
-    priceRenewMonthly: { number: true, min: 0, message: '月卡续费价格不能小于 0' },
-    priceRenewYearly: { number: true, min: 0, message: '年卡续费价格不能小于 0' },
-    priceFamilyMonthly: { number: true, min: 0, message: '家庭月卡价格不能小于 0' },
-    priceFamilyYearly: { number: true, min: 0, message: '家庭年卡价格不能小于 0' },
-    priceRenewFamilyMonthly: { number: true, min: 0, message: '家庭月卡续费价格不能小于 0' },
-    priceRenewFamilyYearly: { number: true, min: 0, message: '家庭年卡续费价格不能小于 0' },
-    creditsMonthlyReports: { number: true, min: 0, message: '月卡额度不能小于 0' },
-    creditsYearlyReports: { number: true, min: 0, message: '年卡额度不能小于 0' },
-    creditsFamilyMonthlyReports: { number: true, min: 0, message: '家庭月卡额度不能小于 0' },
-    creditsFamilyYearlyReports: { number: true, min: 0, message: '家庭年卡额度不能小于 0' },
-    creditsTrialReports: { number: true, min: 0, message: '体验会员额度不能小于 0' }
-  }, { root: settingsRoot });
+  const validation = validateAndShow(
+    {
+      priceFirstReport: { number: true, min: 0, message: '首份报告价格不能小于 0' },
+      priceStandardReport: { number: true, min: 0, message: '标准报告价格不能小于 0' },
+      priceMemberMonthly: { number: true, min: 0, message: '个人月卡价格不能小于 0' },
+      priceMemberYearly: { number: true, min: 0, message: '个人年卡价格不能小于 0' },
+      priceRenewMonthly: { number: true, min: 0, message: '月卡续费价格不能小于 0' },
+      priceRenewYearly: { number: true, min: 0, message: '年卡续费价格不能小于 0' },
+      priceFamilyMonthly: { number: true, min: 0, message: '家庭月卡价格不能小于 0' },
+      priceFamilyYearly: { number: true, min: 0, message: '家庭年卡价格不能小于 0' },
+      priceRenewFamilyMonthly: { number: true, min: 0, message: '家庭月卡续费价格不能小于 0' },
+      priceRenewFamilyYearly: { number: true, min: 0, message: '家庭年卡续费价格不能小于 0' },
+      creditsMonthlyReports: { number: true, min: 0, message: '月卡额度不能小于 0' },
+      creditsYearlyReports: { number: true, min: 0, message: '年卡额度不能小于 0' },
+      creditsFamilyMonthlyReports: { number: true, min: 0, message: '家庭月卡额度不能小于 0' },
+      creditsFamilyYearlyReports: { number: true, min: 0, message: '家庭年卡额度不能小于 0' },
+      creditsTrialReports: { number: true, min: 0, message: '体验会员额度不能小于 0' },
+    },
+    { root: settingsRoot }
+  );
 
   if (!validation.valid) {
     showToast('请修正配置错误后再保存', 'error');
@@ -360,20 +387,35 @@ async function saveConfig() {
 
   const updates = {
     firstReport: Math.round(parseFloat(document.getElementById('priceFirstReport').value) * 100),
-    standardReport: Math.round(parseFloat(document.getElementById('priceStandardReport').value) * 100),
-    memberMonthly: Math.round(parseFloat(document.getElementById('priceMemberMonthly').value) * 100),
+    standardReport: Math.round(
+      parseFloat(document.getElementById('priceStandardReport').value) * 100
+    ),
+    memberMonthly: Math.round(
+      parseFloat(document.getElementById('priceMemberMonthly').value) * 100
+    ),
     memberYearly: Math.round(parseFloat(document.getElementById('priceMemberYearly').value) * 100),
     renewMonthly: Math.round(parseFloat(document.getElementById('priceRenewMonthly').value) * 100),
     renewYearly: Math.round(parseFloat(document.getElementById('priceRenewYearly').value) * 100),
-    memberFamilyMonthly: Math.round(parseFloat(document.getElementById('priceFamilyMonthly').value) * 100),
-    memberFamilyYearly: Math.round(parseFloat(document.getElementById('priceFamilyYearly').value) * 100),
-    renewFamilyMonthly: Math.round(parseFloat(document.getElementById('priceRenewFamilyMonthly').value) * 100),
-    renewFamilyYearly: Math.round(parseFloat(document.getElementById('priceRenewFamilyYearly').value) * 100),
+    memberFamilyMonthly: Math.round(
+      parseFloat(document.getElementById('priceFamilyMonthly').value) * 100
+    ),
+    memberFamilyYearly: Math.round(
+      parseFloat(document.getElementById('priceFamilyYearly').value) * 100
+    ),
+    renewFamilyMonthly: Math.round(
+      parseFloat(document.getElementById('priceRenewFamilyMonthly').value) * 100
+    ),
+    renewFamilyYearly: Math.round(
+      parseFloat(document.getElementById('priceRenewFamilyYearly').value) * 100
+    ),
     monthlyReports: parseInt(document.getElementById('creditsMonthlyReports').value, 10),
     yearlyReports: parseInt(document.getElementById('creditsYearlyReports').value, 10),
-    familyMonthlyReports: parseInt(document.getElementById('creditsFamilyMonthlyReports').value, 10),
+    familyMonthlyReports: parseInt(
+      document.getElementById('creditsFamilyMonthlyReports').value,
+      10
+    ),
     familyYearlyReports: parseInt(document.getElementById('creditsFamilyYearlyReports').value, 10),
-    trialReports: parseInt(document.getElementById('creditsTrialReports').value, 10)
+    trialReports: parseInt(document.getElementById('creditsTrialReports').value, 10),
   };
 
   // 功能开关（Feature Flags）— 作为独立配置项写入 system_config
@@ -410,7 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCloud();
 
   // 导航点击事件
-  document.querySelectorAll('.nav-item').forEach(item => {
+  document.querySelectorAll('.nav-item').forEach((item) => {
     item.addEventListener('click', (e) => {
       e.preventDefault();
       const tab = item.dataset.tab || item.getAttribute('href').substring(1);

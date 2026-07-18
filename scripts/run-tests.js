@@ -46,7 +46,10 @@ files.forEach((file) => {
   const res = spawnSync('node', [file], { cwd: ROOT, encoding: 'utf8' });
   // 解析最后一行 summary（形如 "xxx.test.js: 73/73 通过, 0 失败"）
   const lines = (res.stdout || '').split('\n').filter(Boolean);
-  const summaryLine = lines.slice().reverse().find((l) => /通过,\s*\d+\s*失败/.test(l));
+  const summaryLine = lines
+    .slice()
+    .reverse()
+    .find((l) => /通过,\s*\d+\s*失败/.test(l));
   let passed = 0;
   let failed = 0;
   if (summaryLine) {

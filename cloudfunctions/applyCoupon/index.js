@@ -52,15 +52,18 @@ exports.main = async (event, context) => {
       // discount_value 为「折」数：8 = 8 折（实付 80%），与 createOrder.autoSelectCoupon 口径一致
       // clamp 到 [0,10]，防止历史脏数据算出负折扣
       const zhe = Math.min(Math.max(coupon.discount_value || 10, 0), 10);
-      discount = Math.floor(orderAmount * (10 - zhe) / 10);
+      discount = Math.floor((orderAmount * (10 - zhe)) / 10);
     }
 
     const payAmount = Math.max(orderAmount - discount, 0);
 
     // 锁定券
-    await db.collection('user_coupons').doc(userCouponId).update({
-      data: { status: 'locked', order_id: '', updated_at: new Date() }
-    });
+    await db
+      .collection('user_coupons')
+      .doc(userCouponId)
+      .update({
+        data: { status: 'locked', order_id: '', updated_at: new Date() },
+      });
 
     return {
       success: true,
@@ -69,8 +72,8 @@ exports.main = async (event, context) => {
         discount,
         payAmount,
         couponName: coupon.name,
-        userCouponId
-      }
+        userCouponId,
+      },
     };
   } catch (error) {
     console.error('[applyCoupon] 失败:', error.message);

@@ -13,32 +13,36 @@
  */
 function enrichCoupons(coupons, orderPriceFen) {
   return (coupons || []).map(function (c) {
-    var discountFen = 0
-    var usable = true
+    var discountFen = 0;
+    var usable = true;
     if (c.minAmount && orderPriceFen < c.minAmount) {
-      usable = false
+      usable = false;
     } else if (c.discountType === 'fixed') {
-      discountFen = c.discountValue || 0
+      discountFen = c.discountValue || 0;
     } else if (c.discountType === 'percent') {
       // discountValue 为「折」数：8 = 8 折（实付 80%），clamp [0,10] 防历史脏数据
-      var zhe = Math.min(Math.max(c.discountValue || 10, 0), 10)
-      discountFen = Math.floor(orderPriceFen * (10 - zhe) / 10)
+      var zhe = Math.min(Math.max(c.discountValue || 10, 0), 10);
+      discountFen = Math.floor((orderPriceFen * (10 - zhe)) / 10);
     }
-    discountFen = Math.min(discountFen, orderPriceFen)
+    discountFen = Math.min(discountFen, orderPriceFen);
     return Object.assign({}, c, {
       discountFen: discountFen,
       discountDisplay: (discountFen / 100).toFixed(2),
-      usable: usable
-    })
-  })
+      usable: usable,
+    });
+  });
 }
 
 /** 从 enriched 列表里选折扣最大的可用券；无可用返回 ''（=不使用） */
 function pickBestCouponId(enriched) {
-  var usable = (enriched || []).filter(function (c) { return c.usable })
-  if (usable.length === 0) return ''
-  var best = usable.reduce(function (a, b) { return b.discountFen > a.discountFen ? b : a })
-  return best._id
+  var usable = (enriched || []).filter(function (c) {
+    return c.usable;
+  });
+  if (usable.length === 0) return '';
+  var best = usable.reduce(function (a, b) {
+    return b.discountFen > a.discountFen ? b : a;
+  });
+  return best._id;
 }
 
 /**
@@ -46,17 +50,19 @@ function pickBestCouponId(enriched) {
  * @returns {{coupons, selectedCouponId, couponDiscountFen, couponDiscountDisplay, finalPriceDisplay}}
  */
 function computeFinal(enriched, selectedCouponId, orderPriceFen) {
-  var sel = (enriched || []).filter(function (c) { return c._id === selectedCouponId })[0]
-  if (sel && !sel.usable) sel = null
-  var discountFen = sel ? sel.discountFen : 0
-  var payFen = Math.max(orderPriceFen - discountFen, 0)
+  var sel = (enriched || []).filter(function (c) {
+    return c._id === selectedCouponId;
+  })[0];
+  if (sel && !sel.usable) sel = null;
+  var discountFen = sel ? sel.discountFen : 0;
+  var payFen = Math.max(orderPriceFen - discountFen, 0);
   return {
     coupons: enriched,
     selectedCouponId: sel ? sel._id : '',
     couponDiscountFen: discountFen,
     couponDiscountDisplay: (discountFen / 100).toFixed(2),
-    finalPriceDisplay: (payFen / 100).toFixed(2)
-  }
+    finalPriceDisplay: (payFen / 100).toFixed(2),
+  };
 }
 
 /**
@@ -64,10 +70,12 @@ function computeFinal(enriched, selectedCouponId, orderPriceFen) {
  * @returns {string} 新的 selectedCouponId
  */
 function toggleSelect(currentSelectedId, id, enriched) {
-  if (!id) return ''
-  var c = (enriched || []).filter(function (x) { return x._id === id })[0]
-  if (!c || !c.usable) return currentSelectedId
-  return id === currentSelectedId ? '' : id
+  if (!id) return '';
+  var c = (enriched || []).filter(function (x) {
+    return x._id === id;
+  })[0];
+  if (!c || !c.usable) return currentSelectedId;
+  return id === currentSelectedId ? '' : id;
 }
 
 /**
@@ -83,18 +91,23 @@ function loadCoupons(token, orderType, orderPriceFen, onSuccess, onError) {
     name: 'getUserCoupons',
     data: { token: token, status: 'unused', orderType: orderType },
     success: function (res) {
-      if (!res.result || res.result.code !== 0) { onError && onError(); return }
-      var list = (res.result.data && res.result.data.coupons) || []
-      var enriched = enrichCoupons(list, orderPriceFen)
-      var selected = pickBestCouponId(enriched) // 默认预选最优
+      if (!res.result || res.result.code !== 0) {
+        onError && onError();
+        return;
+      }
+      var list = (res.result.data && res.result.data.coupons) || [];
+      var enriched = enrichCoupons(list, orderPriceFen);
+      var selected = pickBestCouponId(enriched); // 默认预选最优
       var snap = Object.assign(
         { coupons: enriched, hasCoupons: enriched.length > 0, selectedCouponId: selected },
         computeFinal(enriched, selected, orderPriceFen)
-      )
-      onSuccess && onSuccess(snap)
+      );
+      onSuccess && onSuccess(snap);
     },
-    fail: function () { onError && onError() }
-  })
+    fail: function () {
+      onError && onError();
+    },
+  });
 }
 
 module.exports = {
@@ -102,5 +115,5 @@ module.exports = {
   pickBestCouponId: pickBestCouponId,
   computeFinal: computeFinal,
   toggleSelect: toggleSelect,
-  loadCoupons: loadCoupons
-}
+  loadCoupons: loadCoupons,
+};

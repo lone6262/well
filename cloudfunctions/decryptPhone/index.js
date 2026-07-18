@@ -39,14 +39,16 @@ exports.main = async (event, context) => {
     const { OPENID } = cloud.getWXContext();
 
     const res = await cloud.getOpenData({
-      list: [cloudID]
+      list: [cloudID],
     });
 
     const phoneData = res.list[0];
 
     if (!phoneData || !phoneData.data || !phoneData.data.phoneNumber) {
       // 不序列化整个 res（可能含手机号），仅记录诊断信息
-      console.error('[decryptPhone] 解密结果异常: listLen=' + (res && res.list ? res.list.length : 0));
+      console.error(
+        '[decryptPhone] 解密结果异常: listLen=' + (res && res.list ? res.list.length : 0)
+      );
       return { code: RESPONSE_CODE.ERROR, msg: '手机号解密失败', data: {} };
     }
 
@@ -56,19 +58,23 @@ exports.main = async (event, context) => {
 
     // 4. 保存到 users 集合（幂等：更新或创建）
     const now = new Date();
-    const userResult = await db.collection(COLLECTIONS.USERS)
+    const userResult = await db
+      .collection(COLLECTIONS.USERS)
       .where({ user_id: OPENID })
       .limit(1)
       .get();
 
     if (userResult.data && userResult.data.length > 0) {
-      await db.collection(COLLECTIONS.USERS).doc(userResult.data[0]._id).update({
-        data: {
-          phoneNumber: purePhoneNumber,
-          phone_country_code: countryCode,
-          updated_at: now
-        }
-      });
+      await db
+        .collection(COLLECTIONS.USERS)
+        .doc(userResult.data[0]._id)
+        .update({
+          data: {
+            phoneNumber: purePhoneNumber,
+            phone_country_code: countryCode,
+            updated_at: now,
+          },
+        });
     } else {
       await db.collection(COLLECTIONS.USERS).add({
         data: {
@@ -79,8 +85,8 @@ exports.main = async (event, context) => {
           invite_reward_credits: 0,
           isMember: false,
           created_at: now,
-          updated_at: now
-        }
+          updated_at: now,
+        },
       });
     }
 
@@ -91,17 +97,16 @@ exports.main = async (event, context) => {
       msg: '绑定成功',
       data: {
         phoneNumber: purePhoneNumber,
-        countryCode: countryCode
-      }
+        countryCode: countryCode,
+      },
     };
-
   } catch (error) {
     // error.message 是异常诊断信息（非手机号），对它脱敏无意义且妨碍排查；仅手机号字段才脱敏
     console.error('[decryptPhone] 处理异常:', error.message, error.stack);
     return {
       code: RESPONSE_CODE.SERVER_ERROR,
       msg: '服务暂时不可用，请稍后再试',
-      data: {}
+      data: {},
     };
   }
 };

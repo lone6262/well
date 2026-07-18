@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 报告额度服务 (common/quota-service.js) 单元测试
  * TDD: RED → GREEN → REFACTOR
  *
@@ -66,7 +66,13 @@ function getPath(obj, path) {
 function matchDoc(doc, query) {
   for (const k of Object.keys(query || {})) {
     const qv = query[k];
-    if (qv !== null && qv !== undefined && typeof qv === 'object' && !Array.isArray(qv) && !(qv instanceof Date)) {
+    if (
+      qv !== null &&
+      qv !== undefined &&
+      typeof qv === 'object' &&
+      !Array.isArray(qv) &&
+      !(qv instanceof Date)
+    ) {
       continue; // command 操作符（neq/gt/lt/inc），mock 假定通过
     }
     if (getPath(doc, k) !== qv) return false;
@@ -101,7 +107,8 @@ function createQuotaMockDb(collections = {}, opts = {}) {
           get: async () => ({ data: filtered }),
           count: async () => ({ total: filtered.length }),
           update: async ({ data: patch }) => {
-            const updatedCount = opts.forceUpdateZero || filtered.length === 0 ? 0 : filtered.length;
+            const updatedCount =
+              opts.forceUpdateZero || filtered.length === 0 ? 0 : filtered.length;
             if (updatedCount > 0) filtered.forEach((d) => Object.assign(d, patch));
             updates.push({ collection: name, query, patch, updated: updatedCount });
             return { stats: { updated: updatedCount } };
@@ -628,9 +635,7 @@ async function run() {
   console.log('\n=== 27. deductQuota: 点数包扣减 + 流水记录 ===');
   await (async function testDeductPoints() {
     const db = createQuotaMockDb({
-      [COLLECTIONS.USER_POINTS]: [
-        { _id: 'p1', user_id: 'openid_p', balance: 5, total_used: 0 },
-      ],
+      [COLLECTIONS.USER_POINTS]: [{ _id: 'p1', user_id: 'openid_p', balance: 5, total_used: 0 }],
       [COLLECTIONS.POINT_TRANSACTIONS]: [],
     });
     const quotaInfo = { quota_source: 'points', points_record_id: 'p1', points_balance: 5 };
@@ -657,7 +662,11 @@ async function run() {
     const db = createQuotaMockDb({
       [COLLECTIONS.USERS]: [{ _id: 'u1', user_id: 'openid_r', first_report_used: true }],
     });
-    await rollbackQuota(db, 'openid_r', { quota_source: 'first_report', _deducted: true, user: { _id: 'u1' } });
+    await rollbackQuota(db, 'openid_r', {
+      quota_source: 'first_report',
+      _deducted: true,
+      user: { _id: 'u1' },
+    });
     const u = db._updates.find(
       (x) => x.collection === COLLECTIONS.USERS && x.patch && x.patch.first_report_used === false
     );
@@ -669,7 +678,11 @@ async function run() {
     const db = createQuotaMockDb({
       [COLLECTIONS.USERS]: [{ _id: 'u1', user_id: 'openid_ri', invite_reward_credits: 2 }],
     });
-    await rollbackQuota(db, 'openid_ri', { quota_source: 'invite', _deducted: true, user: { _id: 'u1' } });
+    await rollbackQuota(db, 'openid_ri', {
+      quota_source: 'invite',
+      _deducted: true,
+      user: { _id: 'u1' },
+    });
     const u = db._updates.find((x) => x.collection === COLLECTIONS.USERS);
     assert(!!u, '邀请回滚触发 USERS 更新');
     assert(!!u.patch.invite_reward_credits, '回滚 invite_reward_credits 含 inc 操作符');
@@ -680,7 +693,11 @@ async function run() {
     const db = createQuotaMockDb({
       [COLLECTIONS.MEMBERS]: [{ _id: 'm1', user_id: 'openid_rm', report_credits_used: 2 }],
     });
-    await rollbackQuota(db, 'openid_rm', { quota_source: 'member', _deducted: true, member: { _id: 'm1' } });
+    await rollbackQuota(db, 'openid_rm', {
+      quota_source: 'member',
+      _deducted: true,
+      member: { _id: 'm1' },
+    });
     const u = db._updates.find((x) => x.collection === COLLECTIONS.MEMBERS);
     assert(!!u, '会员回滚触发 MEMBERS 更新');
     assert(!!u.patch.report_credits_used, '回滚 report_credits_used 含 inc 操作符');
@@ -691,7 +708,11 @@ async function run() {
     const db = createQuotaMockDb({
       [COLLECTIONS.USER_POINTS]: [{ _id: 'p1', user_id: 'openid_rp', balance: 4, total_used: 1 }],
     });
-    await rollbackQuota(db, 'openid_rp', { quota_source: 'points', _deducted: true, points_record_id: 'p1' });
+    await rollbackQuota(db, 'openid_rp', {
+      quota_source: 'points',
+      _deducted: true,
+      points_record_id: 'p1',
+    });
     const u = db._updates.find((x) => x.collection === COLLECTIONS.USER_POINTS);
     assert(!!u, '点数回滚触发 USER_POINTS 更新');
     assert(!!u.patch.balance, '回滚 balance 含 inc 操作符');
@@ -707,7 +728,11 @@ async function run() {
     };
     let threw = false;
     try {
-      await rollbackQuota(db, 'openid_err', { quota_source: 'invite', _deducted: true, user: { _id: 'u1' } });
+      await rollbackQuota(db, 'openid_err', {
+        quota_source: 'invite',
+        _deducted: true,
+        user: { _id: 'u1' },
+      });
     } catch (e) {
       threw = true;
     }

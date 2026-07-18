@@ -12,26 +12,37 @@
  */
 
 // ===== 测试框架 =====
-let passed = 0, failed = 0;
+let passed = 0,
+  failed = 0;
 const errors = [];
 
 function assert(condition, message) {
-  if (condition) { passed++; }
-  else { failed++; errors.push('FAIL: ' + message); console.error('  ✗ ' + message); }
+  if (condition) {
+    passed++;
+  } else {
+    failed++;
+    errors.push('FAIL: ' + message);
+    console.error('  ✗ ' + message);
+  }
 }
 
 function assertEqual(actual, expected, message) {
-  if (JSON.stringify(actual) === JSON.stringify(expected)) { passed++; }
-  else {
+  if (JSON.stringify(actual) === JSON.stringify(expected)) {
+    passed++;
+  } else {
     failed++;
-    const msg = message + ' - 期望: ' + JSON.stringify(expected) + ', 实际: ' + JSON.stringify(actual);
+    const msg =
+      message + ' - 期望: ' + JSON.stringify(expected) + ', 实际: ' + JSON.stringify(actual);
     errors.push('FAIL: ' + msg);
     console.error('  ✗ ' + msg);
   }
 }
 
 function assertType(value, expectedType, message) {
-  assert(typeof value === expectedType, message + ' - 期望类型: ' + expectedType + ', 实际: ' + typeof value);
+  assert(
+    typeof value === expectedType,
+    message + ' - 期望类型: ' + expectedType + ', 实际: ' + typeof value
+  );
 }
 
 function assertGreaterThan(value, threshold, message) {
@@ -50,7 +61,7 @@ function summary(name) {
 
   if (failed > 0) {
     console.error('\n❌ 失败详情:');
-    errors.forEach(e => console.error('  ' + e));
+    errors.forEach((e) => console.error('  ' + e));
   }
 
   return failed === 0;
@@ -95,13 +106,21 @@ assertHasProperty(constants, 'ORDER_STATUS', 'ORDER_STATUS 应存在');
 assertType(constants.ORDER_STATUS, 'object', 'ORDER_STATUS 应为对象');
 assertHasProperty(constants.ORDER_STATUS, 'PENDING', 'ORDER_STATUS.PENDING 应存在');
 assertHasProperty(constants.ORDER_STATUS, 'PAID', 'ORDER_STATUS.PAID 应存在');
-assertHasProperty(constants.ORDER_STATUS, 'REFUND_REQUESTED', 'ORDER_STATUS.REFUND_REQUESTED 应存在');
+assertHasProperty(
+  constants.ORDER_STATUS,
+  'REFUND_REQUESTED',
+  'ORDER_STATUS.REFUND_REQUESTED 应存在'
+);
 assertHasProperty(constants.ORDER_STATUS, 'REFUNDED', 'ORDER_STATUS.REFUNDED 应存在');
 assertHasProperty(constants.ORDER_STATUS, 'FAILED', 'ORDER_STATUS.FAILED 应存在');
 assertHasProperty(constants.ORDER_STATUS, 'CLOSED', 'ORDER_STATUS.CLOSED 应存在');
 assertEqual(constants.ORDER_STATUS.PENDING, 'pending', 'PENDING 值应为 pending');
 assertEqual(constants.ORDER_STATUS.PAID, 'paid', 'PAID 值应为 paid');
-assertEqual(constants.ORDER_STATUS.REFUND_REQUESTED, 'refund_requested', 'REFUND_REQUESTED 值应为 refund_requested');
+assertEqual(
+  constants.ORDER_STATUS.REFUND_REQUESTED,
+  'refund_requested',
+  'REFUND_REQUESTED 值应为 refund_requested'
+);
 assertEqual(constants.ORDER_STATUS.REFUNDED, 'refunded', 'REFUNDED 值应为 refunded');
 assertEqual(constants.ORDER_STATUS.FAILED, 'failed', 'FAILED 值应为 failed');
 assertEqual(constants.ORDER_STATUS.CLOSED, 'closed', 'CLOSED 值应为 closed');
@@ -113,16 +132,40 @@ assertHasProperty(constants.ORDER_TYPES, 'REPORT', 'ORDER_TYPES.REPORT 应存在
 assertHasProperty(constants.ORDER_TYPES, 'MEMBER', 'ORDER_TYPES.MEMBER 应存在');
 assertHasProperty(constants.ORDER_TYPES, 'MEMBER_MONTHLY', 'ORDER_TYPES.MEMBER_MONTHLY 应存在');
 assertHasProperty(constants.ORDER_TYPES, 'MEMBER_YEARLY', 'ORDER_TYPES.MEMBER_YEARLY 应存在');
-assertHasProperty(constants.ORDER_TYPES, 'MEMBER_FAMILY_MONTHLY', 'ORDER_TYPES.MEMBER_FAMILY_MONTHLY 应存在');
-assertHasProperty(constants.ORDER_TYPES, 'MEMBER_FAMILY_YEARLY', 'ORDER_TYPES.MEMBER_FAMILY_YEARLY 应存在');
+assertHasProperty(
+  constants.ORDER_TYPES,
+  'MEMBER_FAMILY_MONTHLY',
+  'ORDER_TYPES.MEMBER_FAMILY_MONTHLY 应存在'
+);
+assertHasProperty(
+  constants.ORDER_TYPES,
+  'MEMBER_FAMILY_YEARLY',
+  'ORDER_TYPES.MEMBER_FAMILY_YEARLY 应存在'
+);
 assertHasProperty(constants.ORDER_TYPES, 'POINTS', 'ORDER_TYPES.POINTS 应存在');
 assertHasProperty(constants.ORDER_TYPES, 'BUNDLE', 'ORDER_TYPES.BUNDLE 应存在');
 assertEqual(constants.ORDER_TYPES.REPORT, 'report', 'REPORT 值应为 report');
 assertEqual(constants.ORDER_TYPES.MEMBER, 'member', 'MEMBER 值应为 member');
-assertEqual(constants.ORDER_TYPES.MEMBER_MONTHLY, 'member_monthly', 'MEMBER_MONTHLY 值应为 member_monthly');
-assertEqual(constants.ORDER_TYPES.MEMBER_YEARLY, 'member_yearly', 'MEMBER_YEARLY 值应为 member_yearly');
-assertEqual(constants.ORDER_TYPES.MEMBER_FAMILY_MONTHLY, 'member_family_monthly', 'MEMBER_FAMILY_MONTHLY 值应为 member_family_monthly');
-assertEqual(constants.ORDER_TYPES.MEMBER_FAMILY_YEARLY, 'member_family_yearly', 'MEMBER_FAMILY_YEARLY 值应为 member_family_yearly');
+assertEqual(
+  constants.ORDER_TYPES.MEMBER_MONTHLY,
+  'member_monthly',
+  'MEMBER_MONTHLY 值应为 member_monthly'
+);
+assertEqual(
+  constants.ORDER_TYPES.MEMBER_YEARLY,
+  'member_yearly',
+  'MEMBER_YEARLY 值应为 member_yearly'
+);
+assertEqual(
+  constants.ORDER_TYPES.MEMBER_FAMILY_MONTHLY,
+  'member_family_monthly',
+  'MEMBER_FAMILY_MONTHLY 值应为 member_family_monthly'
+);
+assertEqual(
+  constants.ORDER_TYPES.MEMBER_FAMILY_YEARLY,
+  'member_family_yearly',
+  'MEMBER_FAMILY_YEARLY 值应为 member_family_yearly'
+);
 assertEqual(constants.ORDER_TYPES.POINTS, 'points', 'POINTS 值应为 points');
 assertEqual(constants.ORDER_TYPES.BUNDLE, 'bundle', 'BUNDLE 值应为 bundle');
 
@@ -131,53 +174,106 @@ assertHasProperty(constants, 'COLLECTIONS', 'COLLECTIONS 应存在');
 assertType(constants.COLLECTIONS, 'object', 'COLLECTIONS 应为对象');
 
 // 基础集合
-const baseCollections = ['USERS', 'PETS', 'SYMPTOM_RECORDS', 'AI_CACHE', 'ORDERS', 'HOSPITALS', 'MEMBERS', 'KNOWLEDGE_ARTICLES', 'INVITE_RECORDS', 'FOLLOWUP_RECORDS', 'REPORT_TEMPLATES', 'SYSTEM_CONFIG'];
-baseCollections.forEach(function(col) {
+const baseCollections = [
+  'USERS',
+  'PETS',
+  'SYMPTOM_RECORDS',
+  'AI_CACHE',
+  'ORDERS',
+  'HOSPITALS',
+  'MEMBERS',
+  'KNOWLEDGE_ARTICLES',
+  'INVITE_RECORDS',
+  'FOLLOWUP_RECORDS',
+  'REPORT_TEMPLATES',
+  'SYSTEM_CONFIG',
+];
+baseCollections.forEach(function (col) {
   assertHasProperty(constants.COLLECTIONS, col, 'COLLECTIONS.' + col + ' 应存在');
 });
 
 // V1.5 新增集合
-const v15Collections = ['REFUND_RECORDS', 'USER_POINTS', 'POINT_TRANSACTIONS', 'USER_COUPONS', 'COUPONS', 'MEMBER_RENEW_LOG', 'BILL_CHECK_LOGS', 'ANALYTICS_EVENTS', 'ERROR_LOGS'];
-v15Collections.forEach(function(col) {
+const v15Collections = [
+  'REFUND_RECORDS',
+  'USER_POINTS',
+  'POINT_TRANSACTIONS',
+  'USER_COUPONS',
+  'COUPONS',
+  'MEMBER_RENEW_LOG',
+  'BILL_CHECK_LOGS',
+  'ANALYTICS_EVENTS',
+  'ERROR_LOGS',
+];
+v15Collections.forEach(function (col) {
   assertHasProperty(constants.COLLECTIONS, col, 'COLLECTIONS.' + col + ' (V1.5 新增) 应存在');
 });
 
 // 验证新增集合的值
-assertEqual(constants.COLLECTIONS.REFUND_RECORDS, 'refund_records', 'REFUND_RECORDS 值应为 refund_records');
+assertEqual(
+  constants.COLLECTIONS.REFUND_RECORDS,
+  'refund_records',
+  'REFUND_RECORDS 值应为 refund_records'
+);
 assertEqual(constants.COLLECTIONS.USER_POINTS, 'user_points', 'USER_POINTS 值应为 user_points');
-assertEqual(constants.COLLECTIONS.POINT_TRANSACTIONS, 'point_transactions', 'POINT_TRANSACTIONS 值应为 point_transactions');
+assertEqual(
+  constants.COLLECTIONS.POINT_TRANSACTIONS,
+  'point_transactions',
+  'POINT_TRANSACTIONS 值应为 point_transactions'
+);
 assertEqual(constants.COLLECTIONS.USER_COUPONS, 'user_coupons', 'USER_COUPONS 值应为 user_coupons');
 assertEqual(constants.COLLECTIONS.COUPONS, 'coupons', 'COUPONS 值应为 coupons');
-assertEqual(constants.COLLECTIONS.MEMBER_RENEW_LOG, 'member_renew_log', 'MEMBER_RENEW_LOG 值应为 member_renew_log');
-assertEqual(constants.COLLECTIONS.BILL_CHECK_LOGS, 'bill_check_logs', 'BILL_CHECK_LOGS 值应为 bill_check_logs');
-assertEqual(constants.COLLECTIONS.ANALYTICS_EVENTS, 'analytics_events', 'ANALYTICS_EVENTS 值应为 analytics_events');
+assertEqual(
+  constants.COLLECTIONS.MEMBER_RENEW_LOG,
+  'member_renew_log',
+  'MEMBER_RENEW_LOG 值应为 member_renew_log'
+);
+assertEqual(
+  constants.COLLECTIONS.BILL_CHECK_LOGS,
+  'bill_check_logs',
+  'BILL_CHECK_LOGS 值应为 bill_check_logs'
+);
+assertEqual(
+  constants.COLLECTIONS.ANALYTICS_EVENTS,
+  'analytics_events',
+  'ANALYTICS_EVENTS 值应为 analytics_events'
+);
 assertEqual(constants.COLLECTIONS.ERROR_LOGS, 'error_logs', 'ERROR_LOGS 值应为 error_logs');
 
 console.log('\n=== 6. PRICES 完整性 ===');
 assertHasProperty(constants, 'PRICES', 'PRICES 应存在');
 assertType(constants.PRICES, 'object', 'PRICES 应为对象');
 
-// AI 报告价格
-const reportPrices = ['FIRST_REPORT', 'STANDARD_REPORT'];
-reportPrices.forEach(function(key) {
+// AI 报告价格：FIRST_REPORT=0（首份免费，V1.5 商业化调整），STANDARD_REPORT 付费
+assertEqual(constants.PRICES.FIRST_REPORT, 0, 'FIRST_REPORT 应为 0（首份免费）');
+assertEqual(constants.PRICES.STANDARD_REPORT, 990, 'STANDARD_REPORT 应为 990 (分)');
+// 付费报告价格须为正数（首份免费不参与 >0 校验）
+['STANDARD_REPORT'].forEach(function (key) {
   assertHasProperty(constants.PRICES, key, 'PRICES.' + key + ' 应存在');
   assertType(constants.PRICES[key], 'number', 'PRICES.' + key + ' 应为数字');
   assertGreaterThan(constants.PRICES[key], 0, 'PRICES.' + key + ' 应为正数');
 });
-assertEqual(constants.PRICES.FIRST_REPORT, 100, 'FIRST_REPORT 应为 100 (分)');
-assertEqual(constants.PRICES.STANDARD_REPORT, 990, 'STANDARD_REPORT 应为 990 (分)');
 
 // 会员价格
-const memberPrices = ['MEMBER_MONTHLY', 'MEMBER_YEARLY', 'MEMBER_FAMILY_MONTHLY', 'MEMBER_FAMILY_YEARLY'];
-memberPrices.forEach(function(key) {
+const memberPrices = [
+  'MEMBER_MONTHLY',
+  'MEMBER_YEARLY',
+  'MEMBER_FAMILY_MONTHLY',
+  'MEMBER_FAMILY_YEARLY',
+];
+memberPrices.forEach(function (key) {
   assertHasProperty(constants.PRICES, key, 'PRICES.' + key + ' 应存在');
   assertType(constants.PRICES[key], 'number', 'PRICES.' + key + ' 应为数字');
   assertGreaterThan(constants.PRICES[key], 0, 'PRICES.' + key + ' 应为正数');
 });
 
 // 续费价格
-const renewPrices = ['RENEW_MONTHLY', 'RENEW_YEARLY', 'RENEW_FAMILY_MONTHLY', 'RENEW_FAMILY_YEARLY'];
-renewPrices.forEach(function(key) {
+const renewPrices = [
+  'RENEW_MONTHLY',
+  'RENEW_YEARLY',
+  'RENEW_FAMILY_MONTHLY',
+  'RENEW_FAMILY_YEARLY',
+];
+renewPrices.forEach(function (key) {
   assertHasProperty(constants.PRICES, key, 'PRICES.' + key + ' 应存在');
   assertType(constants.PRICES[key], 'number', 'PRICES.' + key + ' 应为数字');
   assertGreaterThan(constants.PRICES[key], 0, 'PRICES.' + key + ' 应为正数');
@@ -185,7 +281,7 @@ renewPrices.forEach(function(key) {
 
 // 点数包价格
 const pointsPrices = ['POINTS_PACK_3', 'POINTS_PACK_5'];
-pointsPrices.forEach(function(key) {
+pointsPrices.forEach(function (key) {
   assertHasProperty(constants.PRICES, key, 'PRICES.' + key + ' 应存在');
   assertType(constants.PRICES[key], 'number', 'PRICES.' + key + ' 应为数字');
   assertGreaterThan(constants.PRICES[key], 0, 'PRICES.' + key + ' 应为正数');
@@ -193,23 +289,37 @@ pointsPrices.forEach(function(key) {
 
 // 组合套餐价格
 const bundlePrices = ['BUNDLE_STARTER', 'BUNDLE_ESSENTIAL', 'BUNDLE_FAMILY'];
-bundlePrices.forEach(function(key) {
+bundlePrices.forEach(function (key) {
   assertHasProperty(constants.PRICES, key, 'PRICES.' + key + ' 应存在');
   assertType(constants.PRICES[key], 'number', 'PRICES.' + key + ' 应为数字');
   assertGreaterThan(constants.PRICES[key], 0, 'PRICES.' + key + ' 应为正数');
 });
 
 // 审核阈值
-assertHasProperty(constants.PRICES, 'MANUAL_REVIEW_THRESHOLD', 'PRICES.MANUAL_REVIEW_THRESHOLD 应存在');
+assertHasProperty(
+  constants.PRICES,
+  'MANUAL_REVIEW_THRESHOLD',
+  'PRICES.MANUAL_REVIEW_THRESHOLD 应存在'
+);
 assertType(constants.PRICES.MANUAL_REVIEW_THRESHOLD, 'number', 'MANUAL_REVIEW_THRESHOLD 应为数字');
-assertEqual(constants.PRICES.MANUAL_REVIEW_THRESHOLD, 9900, 'MANUAL_REVIEW_THRESHOLD 应为 9900 (分)');
+assertEqual(
+  constants.PRICES.MANUAL_REVIEW_THRESHOLD,
+  9900,
+  'MANUAL_REVIEW_THRESHOLD 应为 9900 (分)'
+);
 
 console.log('\n=== 7. MEMBER_CREDITS 完整性 ===');
 assertHasProperty(constants, 'MEMBER_CREDITS', 'MEMBER_CREDITS 应存在');
 assertType(constants.MEMBER_CREDITS, 'object', 'MEMBER_CREDITS 应为对象');
 
-const creditTypes = ['MONTHLY_REPORTS', 'YEARLY_REPORTS', 'FAMILY_MONTHLY_REPORTS', 'FAMILY_YEARLY_REPORTS', 'TRIAL_REPORTS'];
-creditTypes.forEach(function(key) {
+const creditTypes = [
+  'MONTHLY_REPORTS',
+  'YEARLY_REPORTS',
+  'FAMILY_MONTHLY_REPORTS',
+  'FAMILY_YEARLY_REPORTS',
+  'TRIAL_REPORTS',
+];
+creditTypes.forEach(function (key) {
   assertHasProperty(constants.MEMBER_CREDITS, key, 'MEMBER_CREDITS.' + key + ' 应存在');
   assertType(constants.MEMBER_CREDITS[key], 'number', 'MEMBER_CREDITS.' + key + ' 应为数字');
   assertGreaterThan(constants.MEMBER_CREDITS[key], 0, 'MEMBER_CREDITS.' + key + ' 应为正数');
@@ -226,7 +336,7 @@ assertHasProperty(constants, 'POINTS_PACKS', 'POINTS_PACKS 应存在');
 assertType(constants.POINTS_PACKS, 'object', 'POINTS_PACKS 应为对象');
 
 const packTypes = ['PACK_3', 'PACK_5'];
-packTypes.forEach(function(key) {
+packTypes.forEach(function (key) {
   assertHasProperty(constants.POINTS_PACKS, key, 'POINTS_PACKS.' + key + ' 应存在');
   const pack = constants.POINTS_PACKS[key];
   assertType(pack, 'object', 'POINTS_PACKS.' + key + ' 应为对象');
@@ -259,7 +369,7 @@ assertHasProperty(constants, 'BUNDLES', 'BUNDLES 应存在');
 assertType(constants.BUNDLES, 'object', 'BUNDLES 应为对象');
 
 const bundleTypes = ['STARTER', 'ESSENTIAL', 'FAMILY'];
-bundleTypes.forEach(function(key) {
+bundleTypes.forEach(function (key) {
   assertHasProperty(constants.BUNDLES, key, 'BUNDLES.' + key + ' 应存在');
   const bundle = constants.BUNDLES[key];
   assertType(bundle, 'object', 'BUNDLES.' + key + ' 应为对象');
@@ -295,8 +405,14 @@ console.log('\n=== 10. MEMBER_LIMITS 完整性 ===');
 assertHasProperty(constants, 'MEMBER_LIMITS', 'MEMBER_LIMITS 应存在');
 assertType(constants.MEMBER_LIMITS, 'object', 'MEMBER_LIMITS 应为对象');
 
-const limitKeys = ['MAX_PETS_PERSONAL', 'MAX_PETS_FAMILY', 'MAX_FAMILY_MEMBERS', 'TRIAL_DURATION_DAYS', 'TRIAL_COOLDOWN_DAYS'];
-limitKeys.forEach(function(key) {
+const limitKeys = [
+  'MAX_PETS_PERSONAL',
+  'MAX_PETS_FAMILY',
+  'MAX_FAMILY_MEMBERS',
+  'TRIAL_DURATION_DAYS',
+  'TRIAL_COOLDOWN_DAYS',
+];
+limitKeys.forEach(function (key) {
   assertHasProperty(constants.MEMBER_LIMITS, key, 'MEMBER_LIMITS.' + key + ' 应存在');
   assertType(constants.MEMBER_LIMITS[key], 'number', 'MEMBER_LIMITS.' + key + ' 应为数字');
   assertGreaterThan(constants.MEMBER_LIMITS[key], 0, 'MEMBER_LIMITS.' + key + ' 应为正数');
@@ -312,8 +428,15 @@ console.log('\n=== 11. INVITE_CONFIG 完整性 ===');
 assertHasProperty(constants, 'INVITE_CONFIG', 'INVITE_CONFIG 应存在');
 assertType(constants.INVITE_CONFIG, 'object', 'INVITE_CONFIG 应为对象');
 
-const inviteKeys = ['REWARD_CREDITS', 'TRIAL_THRESHOLD', 'TRIAL_DAYS', 'MAX_REWARDS_PER_MONTH', 'MAX_INVITES_PER_DAY', 'EXPIRE_DAYS'];
-inviteKeys.forEach(function(key) {
+const inviteKeys = [
+  'REWARD_CREDITS',
+  'TRIAL_THRESHOLD',
+  'TRIAL_DAYS',
+  'MAX_REWARDS_PER_MONTH',
+  'MAX_INVITES_PER_DAY',
+  'EXPIRE_DAYS',
+];
+inviteKeys.forEach(function (key) {
   assertHasProperty(constants.INVITE_CONFIG, key, 'INVITE_CONFIG.' + key + ' 应存在');
   assertType(constants.INVITE_CONFIG[key], 'number', 'INVITE_CONFIG.' + key + ' 应为数字');
   assertGreaterThan(constants.INVITE_CONFIG[key], 0, 'INVITE_CONFIG.' + key + ' 应为正数');
@@ -333,17 +456,23 @@ assert(Array.isArray(constants.VALID_SYMPTOM_IDS), 'VALID_SYMPTOM_IDS 应为数�
 assert(constants.VALID_SYMPTOM_SET instanceof Set, 'VALID_SYMPTOM_SET 应为 Set');
 
 // 验证 Set 大小等于数组长度
-assert(constants.VALID_SYMPTOM_SET.size === constants.VALID_SYMPTOM_IDS.length,
-  'VALID_SYMPTOM_SET.size (' + constants.VALID_SYMPTOM_SET.size + ') 应等于 VALID_SYMPTOM_IDS.length (' + constants.VALID_SYMPTOM_IDS.length + ')');
+assert(
+  constants.VALID_SYMPTOM_SET.size === constants.VALID_SYMPTOM_IDS.length,
+  'VALID_SYMPTOM_SET.size (' +
+    constants.VALID_SYMPTOM_SET.size +
+    ') 应等于 VALID_SYMPTOM_IDS.length (' +
+    constants.VALID_SYMPTOM_IDS.length +
+    ')'
+);
 
 // 验证所有 ID 都在 Set 中
-constants.VALID_SYMPTOM_IDS.forEach(function(id) {
+constants.VALID_SYMPTOM_IDS.forEach(function (id) {
   assert(constants.VALID_SYMPTOM_SET.has(id), 'VALID_SYMPTOM_SET 应包含症状 ID: ' + id);
 });
 
 // 验证已知的高风险症状ID存在
 const highRiskSymptoms = ['coma', 'bleeding', 'paralysis', 'collapse', 'cyanosis'];
-highRiskSymptoms.forEach(function(id) {
+highRiskSymptoms.forEach(function (id) {
   assert(constants.VALID_SYMPTOM_SET.has(id), 'VALID_SYMPTOM_SET 应包含高风险症状: ' + id);
 });
 
@@ -351,14 +480,29 @@ console.log('\n=== 13. SERVER_CONFIG 结构 ===');
 assertHasProperty(constants, 'SERVER_CONFIG', 'SERVER_CONFIG 应存在');
 assertType(constants.SERVER_CONFIG, 'object', 'SERVER_CONFIG 应为对象');
 
-const serverConfigKeys = ['TOKEN_SECRET', 'TENCENT_MAP_KEY', 'DEEPSEEK_API_KEY', 'DEEPSEEK_BASE_URL', 'DEEPSEEK_MODEL', 'ADMIN_SECRET'];
-serverConfigKeys.forEach(function(key) {
+const serverConfigKeys = [
+  'TOKEN_SECRET',
+  'TENCENT_MAP_KEY',
+  'DEEPSEEK_API_KEY',
+  'DEEPSEEK_BASE_URL',
+  'DEEPSEEK_MODEL',
+  'ADMIN_SECRET',
+];
+serverConfigKeys.forEach(function (key) {
   assertHasProperty(constants.SERVER_CONFIG, key, 'SERVER_CONFIG.' + key + ' 应存在');
 });
 
 // 验证默认值
-assertEqual(constants.SERVER_CONFIG.DEEPSEEK_BASE_URL, 'https://api.deepseek.com', 'DEEPSEEK_BASE_URL 应为 https://api.deepseek.com');
-assertEqual(constants.SERVER_CONFIG.DEEPSEEK_MODEL, 'deepseek-chat', 'DEEPSEEK_MODEL 应为 deepseek-chat');
+assertEqual(
+  constants.SERVER_CONFIG.DEEPSEEK_BASE_URL,
+  'https://api.deepseek.com',
+  'DEEPSEEK_BASE_URL 应为 https://api.deepseek.com'
+);
+assertEqual(
+  constants.SERVER_CONFIG.DEEPSEEK_MODEL,
+  'deepseek-chat',
+  'DEEPSEEK_MODEL 应为 deepseek-chat'
+);
 
 // 验证密钥默认为空（需要从数据库加载）
 assert(constants.SERVER_CONFIG.TOKEN_SECRET === '', 'TOKEN_SECRET 默认应为空字符串');
@@ -371,7 +515,7 @@ assertHasProperty(constants, 'TIME', 'TIME 应存在');
 assertType(constants.TIME, 'object', 'TIME 应为对象');
 
 const timeKeys = ['MINUTE', 'HOUR', 'DAY', 'WEEK', 'CACHE_5MIN', 'CACHE_30MIN'];
-timeKeys.forEach(function(key) {
+timeKeys.forEach(function (key) {
   assertHasProperty(constants.TIME, key, 'TIME.' + key + ' 应存在');
   assertType(constants.TIME[key], 'number', 'TIME.' + key + ' 应为数字');
   assertGreaterThan(constants.TIME[key], 0, 'TIME.' + key + ' 应为正数');
@@ -394,14 +538,14 @@ console.log('\n=== 16. V1.5 新增其他常量 ===');
 // MEMBER_STATUS
 assertHasProperty(constants, 'MEMBER_STATUS', 'MEMBER_STATUS 应存在');
 assertType(constants.MEMBER_STATUS, 'object', 'MEMBER_STATUS 应为对象');
-['ACTIVE', 'EXPIRED', 'CANCELLED'].forEach(function(key) {
+['ACTIVE', 'EXPIRED', 'CANCELLED'].forEach(function (key) {
   assertHasProperty(constants.MEMBER_STATUS, key, 'MEMBER_STATUS.' + key + ' 应存在');
 });
 
 // REPORT_SOURCE
 assertHasProperty(constants, 'REPORT_SOURCE', 'REPORT_SOURCE 应存在');
 assertType(constants.REPORT_SOURCE, 'object', 'REPORT_SOURCE 应为对象');
-['TEMPLATE', 'LLM', 'CACHE'].forEach(function(key) {
+['TEMPLATE', 'LLM', 'CACHE'].forEach(function (key) {
   assertHasProperty(constants.REPORT_SOURCE, key, 'REPORT_SOURCE.' + key + ' 应存在');
 });
 
@@ -413,7 +557,7 @@ assertEqual(constants.CACHE_TTL, 24 * 60 * 60 * 1000, 'CACHE_TTL 应为 24小时
 // INVITE_STATUS
 assertHasProperty(constants, 'INVITE_STATUS', 'INVITE_STATUS 应存在');
 assertType(constants.INVITE_STATUS, 'object', 'INVITE_STATUS 应为对象');
-['PENDING', 'REWARDED', 'EXPIRED'].forEach(function(key) {
+['PENDING', 'REWARDED', 'EXPIRED'].forEach(function (key) {
   assertHasProperty(constants.INVITE_STATUS, key, 'INVITE_STATUS.' + key + ' 应存在');
 });
 
@@ -425,21 +569,23 @@ assertEqual(constants.PAYMENT_TIMEOUT, 30, 'PAYMENT_TIMEOUT 应为 30 (分钟)')
 // AI_CONFIG
 assertHasProperty(constants, 'AI_CONFIG', 'AI_CONFIG 应存在');
 assertType(constants.AI_CONFIG, 'object', 'AI_CONFIG 应为对象');
-['TEMPERATURE', 'MAX_TOKENS', 'TIMEOUT_MS', 'API_PORT', 'CACHE_CLEANUP_PROBABILITY'].forEach(function(key) {
-  assertHasProperty(constants.AI_CONFIG, key, 'AI_CONFIG.' + key + ' 应存在');
-});
+['TEMPERATURE', 'MAX_TOKENS', 'TIMEOUT_MS', 'API_PORT', 'CACHE_CLEANUP_PROBABILITY'].forEach(
+  function (key) {
+    assertHasProperty(constants.AI_CONFIG, key, 'AI_CONFIG.' + key + ' 应存在');
+  }
+);
 
 // RANKING_CONFIG
 assertHasProperty(constants, 'RANKING_CONFIG', 'RANKING_CONFIG 应存在');
 assertType(constants.RANKING_CONFIG, 'object', 'RANKING_CONFIG 应为对象');
-['TOP_N', 'BATCH_SIZE', 'MAX_QUERY_LIMIT'].forEach(function(key) {
+['TOP_N', 'BATCH_SIZE', 'MAX_QUERY_LIMIT'].forEach(function (key) {
   assertHasProperty(constants.RANKING_CONFIG, key, 'RANKING_CONFIG.' + key + ' 应存在');
 });
 
 // RATE_LIMIT
 assertHasProperty(constants, 'RATE_LIMIT', 'RATE_LIMIT 应存在');
 assertType(constants.RATE_LIMIT, 'object', 'RATE_LIMIT 应为对象');
-['WINDOW_MS', 'MAX_REQUESTS', 'DAILY_MAX_INVITES'].forEach(function(key) {
+['WINDOW_MS', 'MAX_REQUESTS', 'DAILY_MAX_INVITES'].forEach(function (key) {
   assertHasProperty(constants.RATE_LIMIT, key, 'RATE_LIMIT.' + key + ' 应存在');
 });
 

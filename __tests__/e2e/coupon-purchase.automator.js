@@ -32,7 +32,10 @@ async function main() {
   // 断言默认预选最优券（折扣最大）
   const data1 = await pointsPage.data();
   console.assert(data1.selectedCouponId, '点数页应预选最优券');
-  console.assert(parseFloat(data1.finalPriceDisplay) < parseFloat(data1.pack3Display), '券后价应<原价');
+  console.assert(
+    parseFloat(data1.finalPriceDisplay) < parseFloat(data1.pack3Display),
+    '券后价应<原价'
+  );
 
   // 切到 5 次包 → 重算折扣
   await pointsPage.callMethod('selectPack', { currentTarget: { dataset: { pack: 'PACK_5' } } });

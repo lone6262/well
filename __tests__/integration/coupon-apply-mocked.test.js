@@ -18,14 +18,19 @@ let passed = 0,
 const errors = [];
 function assert(condition, message) {
   if (condition) passed++;
-  else { failed++; errors.push(`FAIL: ${message}`); console.error(`  ✗ ${message}`); }
+  else {
+    failed++;
+    errors.push(`FAIL: ${message}`);
+    console.error(`  ✗ ${message}`);
+  }
 }
 function assertEqual(actual, expected, message) {
   if (JSON.stringify(actual) === JSON.stringify(expected)) passed++;
   else {
     failed++;
     const msg = `${message} - 期望: ${JSON.stringify(expected)}, 实际: ${JSON.stringify(actual)}`;
-    errors.push(`FAIL: ${msg}`); console.error(`  ✗ ${msg}`);
+    errors.push(`FAIL: ${msg}`);
+    console.error(`  ✗ ${msg}`);
   }
 }
 
@@ -42,10 +47,24 @@ function resetFixtures() {
   state.updates = [];
   state.fixtures = {
     user_coupons: {
-      uc1: { _id: 'uc1', user_id: 'openid_test', status: 'unused', coupon_id: 'cp1', expire_at: FUTURE },
+      uc1: {
+        _id: 'uc1',
+        user_id: 'openid_test',
+        status: 'unused',
+        coupon_id: 'cp1',
+        expire_at: FUTURE,
+      },
     },
     coupons: {
-      cp1: { _id: 'cp1', is_active: true, type: 'points', min_amount: 0, discount_type: 'percent', discount_value: 8, name: '8折券' },
+      cp1: {
+        _id: 'cp1',
+        is_active: true,
+        type: 'points',
+        min_amount: 0,
+        discount_type: 'percent',
+        discount_value: 8,
+        name: '8折券',
+      },
     },
   };
 }
@@ -93,7 +112,10 @@ const applyCoupon = require(applyCouponPath);
 async function run() {
   console.log('\n=== 1. 主路径：percent 8折 → 计算并锁定 ===');
   resetFixtures();
-  let r = await applyCoupon.main({ userCouponId: 'uc1', orderAmount: 1000, orderType: 'points' }, {});
+  let r = await applyCoupon.main(
+    { userCouponId: 'uc1', orderAmount: 1000, orderType: 'points' },
+    {}
+  );
   assertEqual(r.success, true, '8折主路径 success');
   // 8折: floor(1000*2/10)=200
   assertEqual(r.data.discount, 200, '8折抵扣=200');
@@ -104,7 +126,10 @@ async function run() {
 
   console.log('\n=== 2. 主路径：fixed 固定减 ===');
   resetFixtures();
-  state.fixtures.coupons.cp1 = Object.assign({}, state.fixtures.coupons.cp1, { discount_type: 'fixed', discount_value: 500 });
+  state.fixtures.coupons.cp1 = Object.assign({}, state.fixtures.coupons.cp1, {
+    discount_type: 'fixed',
+    discount_value: 500,
+  });
   r = await applyCoupon.main({ userCouponId: 'uc1', orderAmount: 1000, orderType: 'points' }, {});
   assertEqual(r.success, true, 'fixed 主路径 success');
   assertEqual(r.data.discount, 500, 'fixed 抵扣=500');
