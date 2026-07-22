@@ -64,6 +64,19 @@ async function getVerifiedRecord(recordId, openid) {
     throw error;
   }
 
+  // V1.5.1: 优先读 record 级落库的报告正文 → 「查看历史报告」免扣费。
+  //   ai_cache 是症状级共享缓存（跨用户），带描述的报告会被 report-engine 跳过（ai_report_id=null），
+  //   原导致查看历史时误走「重新生成 + 扣费」。改为以 record 自身落库正文为准，命中即免扣费返回。
+  if (record.ai_report_content && record.ai_report_content.risk_summary) {
+    return {
+      alreadyExists: true,
+      content: record.ai_report_content,
+      source: 'cache',
+      cacheId: recordId,
+      risk_level: record.risk_level,
+    };
+  }
+
   if (record.has_ai_report && record.ai_report_id) {
     // 已有报告，从缓存读取
     const cacheResult = await db.collection(COLLECTIONS.AI_CACHE).doc(record.ai_report_id).get();
@@ -524,19 +537,22 @@ exports.main = async (event, context) => {
     // 4. 查询并验证宠物信息
     const pet = await getVerifiedPet(record.pet_id, openid);
 
-    // 4.5 解析订单与额度（必须在生成报告之前）
-    //     付费报告必须已有 PAID 订单（由 createOrder + 支付回调产生）；
-    //     优先级：邀请 > 首份免费 > 点数包 > 会员。免费来源在此扣额度并建 PAID 单；无单的付费来源直接拒绝，堵住白送。
-    const orderCtx = await resolveReportOrder(db, openid, recordId, dbPrices, dbCredits);
-    if (!orderCtx.ok) {
-      return {
-        code: RESPONSE_CODE.ERROR,
-        msg: orderCtx.msg,
-        data: orderCtx.data || {},
-      };
+    // 4.5 解析订单与额度：仅「首次生成」扣费
+    //     has_ai_report=true 表示该记录曾经生成过报告（用户已付过额度），查看/重生成一律免扣费；
+    //     ai_report_content 命中已在 getVerifiedRecord 提前返回，到这里说明无正文需重生成（老记录兜底）。
+    //     首次生成（has_ai_report=false）才走 resolveReportOrder：优先级 邀请 > 首份免费 > 点数包 > 会员。
+    if (!record.has_ai_report) {
+      const orderCtx = await resolveReportOrder(db, openid, recordId, dbPrices, dbCredits);
+      if (!orderCtx.ok) {
+        return {
+          code: RESPONSE_CODE.ERROR,
+          msg: orderCtx.msg,
+          data: orderCtx.data || {},
+        };
+      }
+      orderId = orderCtx.orderId;
+      reportQuotaSource = (orderCtx.data && orderCtx.data.quota_source) || 'unknown';
     }
-    orderId = orderCtx.orderId;
-    reportQuotaSource = (orderCtx.data && orderCtx.data.quota_source) || 'unknown';
 
     // 5. 构造 report-engine 所需参数
     const symptomRecord = {
@@ -550,6 +566,8 @@ exports.main = async (event, context) => {
     const reportResult = await reportEngine.generateReport(db, symptomRecord, pet);
 
     // 7. 更新症状记录标记
+    //    V1.5.1: 同时落库报告正文 ai_report_content，供「查看历史报告」免扣费回读
+    //    （ai_cache 症状级共享缓存对带描述的报告会跳过，无法靠 ai_report_id 回读）。
     await db
       .collection(COLLECTIONS.SYMPTOM_RECORDS)
       .doc(recordId)
@@ -557,6 +575,7 @@ exports.main = async (event, context) => {
         data: {
           has_ai_report: true,
           ai_report_id: reportResult.cacheId,
+          ai_report_content: reportResult.content,
         },
       });
 

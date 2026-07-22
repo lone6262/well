@@ -122,50 +122,28 @@ Page({
     }
   },
 
-  // 生成海报 - 优先使用服务端云函数，Canvas 降级
+  // 生成海报 - 取小程序码 + Canvas 绘制并导出 PNG（主路径）
+  // 说明：原服务端 generateSharePoster 返回 SVG，真机相册/预览 API 不支持 SVG 导致空白，
+  //       故统一走前端 Canvas 2d → canvasToTempFilePath 导出 PNG（真机可用）。
+  //       小程序码由 getInviteQrcode 云函数生成（带邀请码 scene），canvas drawImage 绘制；
+  //       码图获取失败则降级为纯文字海报。inviteCode/统计由 createInvite、getInviteStats 填充。
   generatePoster: function () {
     var self = this
     if (self.data.posterGenerating) return
-
     self.setData({ posterGenerating: true })
-
-    // 优先尝试服务端海报生成
+    // 先取小程序码 fileID（云函数生成并缓存），失败传 null 走文字降级
     wx.cloud.callFunction({
-      name: 'generateSharePoster',
-      data: {},
+      name: 'getInviteQrcode',
+      data: { inviteCode: self.data.inviteCode },
       success: function (res) {
-        if (res.result && res.result.code === 0 && res.result.data && res.result.data.posterBase64) {
-          // 服务端生成成功，保存邀请码到本地
-          var code = res.result.data.inviteCode
-          if (code) {
-            self.setData({ inviteCode: code })
-            app.globalData.currentInviteCode = code
-          }
-          // 下载 base64 图片到临时文件
-          var fs = wx.getFileSystemManager()
-          var filePath = wx.env.USER_DATA_PATH + '/share_poster_' + Date.now() + '.svg'
-          var base64Data = res.result.data.posterBase64.replace(/^data:image\/svg\+xml;base64,/, '')
-          fs.writeFile({
-            filePath: filePath,
-            data: base64Data,
-            encoding: 'base64',
-            success: function () {
-              self.setData({ posterGenerating: false })
-              self._saveOrPreviewPoster(filePath)
-            },
-            fail: function () {
-              // 文件写入失败，降级到 Canvas
-              self._generatePosterFallback()
-            }
-          })
-        } else {
-          // 服务端返回异常，降级到 Canvas
-          self._generatePosterFallback()
-        }
+        var fileId =
+          res.result && res.result.code === 0 && res.result.data && res.result.data.fileId
+            ? res.result.data.fileId
+            : null
+        self._generatePosterByCanvas(fileId)
       },
       fail: function () {
-        // 云函数调用失败，降级到 Canvas
-        self._generatePosterFallback()
+        self._generatePosterByCanvas(null)
       }
     })
   },
@@ -195,12 +173,14 @@ Page({
     })
   },
 
-  // Canvas 降级方案（原 generatePoster 逻辑）
-  _generatePosterFallback: function () {
+  // Canvas 绘制海报（主路径）：canvas 2d → drawImage 画小程序码 → canvasToTempFilePath 导出 PNG
+  // @param {string|null} qrFileId - 小程序码云文件 ID（getInviteQrcode 返回），null 则不画码（文字降级）
+  _generatePosterByCanvas: function (qrFileId) {
     var self = this
     var userInfo = app.globalData.userInfo || {}
     var nickname = (userInfo.nickName || userInfo.nickname || '宠物爱好者').substring(0, 20)
     var stats = self.data.stats
+    var trialThreshold = stats.trialThreshold || 3
 
     var query = wx.createSelectorQuery()
     query.select('#posterCanvas').fields({ node: true, size: true }).exec(function (res) {
@@ -266,31 +246,61 @@ Page({
       ctx.font = '22px sans-serif'
       ctx.fillStyle = '#ffd700'
       ctx.fillText('邀请好友，双方各得1次免费AI报告', 300, 340)
-      ctx.fillText('邀请3人，额外获得7天会员体验', 300, 380)
+      ctx.fillText('邀请' + trialThreshold + '人，额外获得7天会员体验', 300, 380)
 
-      // 底部提示
-      ctx.font = '18px sans-serif'
-      ctx.fillStyle = 'rgba(255,255,255,0.6)'
-      ctx.fillText('长按识别小程序码', 300, 620)
-
-      // 邀请码
+      // 邀请码（底部）
       ctx.font = '16px sans-serif'
+      ctx.fillStyle = 'rgba(255,255,255,0.8)'
       ctx.fillText('邀请码: ' + (self.data.inviteCode || ''), 300, 720)
 
-      // 延迟导出，确保绘制完成
-      setTimeout(function () {
-        wx.canvasToTempFilePath({
-          canvas: canvas,
-          success: function (res) {
-            self.setData({ posterGenerating: false })
-            self._saveOrPreviewPoster(res.tempFilePath)
+      // 统一导出入口：确保所有绘制（含异步码图）完成后再 canvasToTempFilePath
+      var exportPoster = function () {
+        setTimeout(function () {
+          wx.canvasToTempFilePath({
+            canvas: canvas,
+            success: function (r) {
+              self.setData({ posterGenerating: false })
+              self._saveOrPreviewPoster(r.tempFilePath)
+            },
+            fail: function () {
+              self.setData({ posterGenerating: false })
+              wx.showToast({ title: '海报生成失败', icon: 'none' })
+            }
+          })
+        }, 100)
+      }
+
+      // 绘制小程序码（canvas 2d 异步：getImageInfo 拿本地路径 → createImage → onload 后 drawImage）
+      if (qrFileId) {
+        wx.getImageInfo({
+          src: qrFileId,
+          success: function (imgInfo) {
+            var qrImg = canvas.createImage()
+            qrImg.onload = function () {
+              // 码 160×160 居中（亮点 y380 下方、邀请码 y720 上方的留白区）
+              ctx.drawImage(qrImg, 220, 420, 160, 160)
+              // 码下方提示
+              ctx.font = '18px sans-serif'
+              ctx.fillStyle = 'rgba(255,255,255,0.6)'
+              ctx.fillText('长按识别小程序码', 300, 610)
+              exportPoster()
+            }
+            qrImg.onerror = function () {
+              exportPoster()
+            }
+            qrImg.src = imgInfo.path
           },
           fail: function () {
-            self.setData({ posterGenerating: false })
-            wx.showToast({ title: '海报生成失败', icon: 'none' })
+            exportPoster()
           }
         })
-      }, 300)
+      } else {
+        // 无码降级：保留提示文案后导出
+        ctx.font = '18px sans-serif'
+        ctx.fillStyle = 'rgba(255,255,255,0.6)'
+        ctx.fillText('长按识别小程序码', 300, 610)
+        exportPoster()
+      }
     })
   },
 

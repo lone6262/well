@@ -43,10 +43,17 @@ Page({
     this.loadDailyKnowledge()
     this._syncFlags()
 
-    // Phase 4: 捕获邀请码
+    // Phase 4: 捕获邀请码（支持分享链接 invite_code 和小程序码 scene 两种入口）
     if (options && options.invite_code) {
       app.globalData.pendingInviteCode = options.invite_code
       log.info('捕获到邀请码: ***')
+    } else if (options && options.scene) {
+      // 小程序码扫码：scene 为 encodeURIComponent 编码的邀请码；仅认 16 位 hex 避免吞数字场景值
+      const sceneCode = decodeURIComponent(options.scene)
+      if (/^[0-9a-f]{16}$/.test(sceneCode)) {
+        app.globalData.pendingInviteCode = sceneCode
+        log.info('捕获到邀请码(小程序码): ***')
+      }
     }
 
     // 使用登录回调机制，确保登录完成后再加载数据
