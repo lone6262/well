@@ -162,7 +162,8 @@ async function cleanExpiredCache(db) {
  * @param {string} prompt - 用户提示词
  * @returns {string} AI 返回的文本
  */
-function callDeepSeekAPI(systemPrompt, userPrompt) {
+function callDeepSeekAPI(systemPrompt, userPrompt, options) {
+  options = options || {};
   const apiKey = SERVER_CONFIG.DEEPSEEK_API_KEY;
   const baseUrl = SERVER_CONFIG.DEEPSEEK_BASE_URL || 'https://api.deepseek.com';
   const model = SERVER_CONFIG.DEEPSEEK_MODEL || 'deepseek-chat';
@@ -172,22 +173,31 @@ function callDeepSeekAPI(systemPrompt, userPrompt) {
     return Promise.reject(new Error('DeepSeek API Key not configured'));
   }
 
-  const body = JSON.stringify({
+  const reqBody = {
     model: model,
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    temperature: 0.7,
-    max_tokens: 4000,
-    response_format: { type: 'json_object' },
-  });
+    temperature: options.temperature != null ? options.temperature : 0.7,
+    max_tokens: options.maxTokens != null ? options.maxTokens : 4000,
+  };
+  // responseFormat: null → 不设（纯文本，日记润色用）；undefined → 默认 JSON（报告用，保持原行为）；对象 → 透传
+  if (options.responseFormat === null) {
+    // 纯文本模式：不加 response_format
+  } else if (options.responseFormat !== undefined) {
+    reqBody.response_format = options.responseFormat;
+  } else {
+    reqBody.response_format = { type: 'json_object' };
+  }
+
+  const body = JSON.stringify(reqBody);
 
   // 解析 base URL 的 hostname 和 path
   const urlObj = new URL(baseUrl);
   const path = '/v1/chat/completions';
 
-  const options = {
+  const httpOptions = {
     hostname: urlObj.hostname,
     port: 443,
     path: path,
@@ -201,7 +211,7 @@ function callDeepSeekAPI(systemPrompt, userPrompt) {
   };
 
   return new Promise(function (resolve, reject) {
-    const req = https.request(options, function (res) {
+    const req = https.request(httpOptions, function (res) {
       let data = '';
       res.on('data', function (chunk) {
         data += chunk;
@@ -579,4 +589,5 @@ module.exports = {
   fillTemplate,
   generateReport,
   cleanExpiredCache,
+  callDeepSeekAPI,
 };

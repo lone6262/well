@@ -45,6 +45,7 @@ App({
       enable_share_card: false,
       enable_group: false,
       enable_promotion: false,
+      enable_diary: false,
     },
     // Phase 1.5: 用户来源标记（默认 direct=直接打开无参数；search/gzh/share/xhs 由 scene 与 query 识别）
     userSource: 'direct',
@@ -126,6 +127,25 @@ App({
 
     // 3. 启动链：云开发初始化 → 静默登录 → 首次启动检查
     this._startupSequence();
+  },
+
+  // V1.5.5: 每次显示（含热启动/切回前台）节流更新活跃时间，供日记生成活跃过滤
+  // 说明：silentLogin 仅冷启动触发，无法覆盖热启动，故用独立 onShow 打点
+  onShow: function () {
+    var now = Date.now();
+    if (this._lastTouchTs && now - this._lastTouchTs < 60000) return;
+    if (!this.globalData.cloudDevelopmentAvailable) return;
+    if (!this.globalData.openid || !this.globalData.token) return;
+    this._lastTouchTs = now;
+    try {
+      wx.cloud.callFunction({
+        name: 'touchUserActive',
+        data: {},
+        fail: function () {}
+      });
+    } catch (e) {
+      log.warn('touchUserActive 调用失败', e);
+    }
   },
 
   // Phase 1.5: 错误日志 — 未捕获异常自动上报

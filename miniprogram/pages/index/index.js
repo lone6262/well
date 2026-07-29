@@ -22,6 +22,7 @@ Page({
     showFollowupPopup: false,
     pendingFollowup: null,
     dailyKnowledge: null,
+    todayDiary: null,
     isMember: false,
     memberDaysRemaining: 0,
     // V2.0: 动态价格
@@ -33,7 +34,28 @@ Page({
   // 同步 feature flags 到 data（供 wxml wx:if 显隐入口）
   _syncFlags() {
     const ff = app.globalData.featureFlags || {}
-    this.setData({ flags: { enableTools: ff.enable_tools !== false } })
+    this.setData({
+      flags: {
+        enableTools: ff.enable_tools !== false,
+        enableDiary: ff.enable_diary === true
+      }
+    })
+  },
+
+  // V1.5.5: 加载今日宠物日记（首页陪伴卡）
+  loadPetDiary: function () {
+    dataLoader.loadPetDiary(this)
+  },
+
+  // V1.5.5: 跳转日记时间轴页（Phase 2 建成后生效，此前 fail 提示）
+  toDiaryDetail: function (e) {
+    var diaryId = e.currentTarget.dataset.id
+    wx.navigateTo({
+      url: '/pages/diary/index?diaryId=' + (diaryId || ''),
+      fail: function () {
+        wx.showToast({ title: '日记页未就绪', icon: 'none' })
+      }
+    })
   },
 
   onLoad(options) {
@@ -64,6 +86,7 @@ Page({
       self.loadMemberStatus()
       self.loadPrices()
       self._syncFlags()
+      self.loadPetDiary()
       self.lastLoadedOpenid = openid
     })
 

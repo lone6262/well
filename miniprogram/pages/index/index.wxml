@@ -164,6 +164,24 @@
     </view>
   </view>
 
+  <!-- AI 陪伴卡（今日宠物日记） -->
+  <view class="daily-card companion-card" bindtap="toDiaryDetail" data-id="{{todayDiary._id}}" wx:if="{{flags.enableDiary && todayDiary}}" hover-class="daily-card-active">
+    <view class="daily-card-bar companion-card-bar"></view>
+    <view class="daily-card-body">
+      <view class="daily-card-top">
+        <view class="daily-card-badge">
+          <image class="daily-card-badge-icon" src="/images/icons/paw.svg" mode="aspectFit" aria-label="日记" />
+          <text class="daily-card-badge-label">{{todayDiary.petName}}今天想告诉你</text>
+        </view>
+        <view class="daily-card-link">
+          <text class="daily-card-link-text">查看全部</text>
+          <text class="daily-card-link-arrow">›</text>
+        </view>
+      </view>
+      <text class="daily-card-title companion-card-text">{{todayDiary.content}}</text>
+    </view>
+  </view>
+
   <!-- 宠物健康状态卡片 -->
   <view class="health-section">
     <view class="section-header">

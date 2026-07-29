@@ -280,7 +280,7 @@ function loadDailyKnowledge(pageCtx) {
 
   wx.cloud.callFunction({
     name: 'getKnowledgeList',
-    data: { page: 1, pageSize: 1 },
+    data: { featured: true, page: 1, pageSize: 1 },
     success: function(res) {
       if (res.result && res.result.code === 0) {
         let articles = res.result.data.articles || res.result.data.list || []
@@ -357,11 +357,42 @@ function checkPendingFollowups(pageCtx) {
   })
 }
 
+function loadPetDiary(pageCtx) {
+  if (!app.globalData.cloudDevelopmentAvailable) return
+
+  wx.cloud.callFunction({
+    name: 'getPetDiary',
+    data: { page: 1, pageSize: 1, onlyToday: true },
+    success: function(res) {
+      if (res.result && res.result.code === 0) {
+        var diaries = (res.result.data && res.result.data.diaries) || []
+        if (diaries.length > 0) {
+          var d = diaries[0]
+          pageCtx.setData({
+            todayDiary: {
+              _id: d._id,
+              content: d.content,
+              petName: d.pet_name || '毛孩子'
+            }
+          })
+        } else {
+          pageCtx.setData({ todayDiary: null })
+        }
+      }
+    },
+    fail: function() {
+      // 接口异常隐藏日记卡，不阻塞首页
+      pageCtx.setData({ todayDiary: null })
+    }
+  })
+}
+
 module.exports = {
   loadUserInfo: loadUserInfo,
   loadPetList: loadPetList,
   loadNearbyHospitals: loadNearbyHospitals,
   loadDailyKnowledge: loadDailyKnowledge,
   loadMemberStatus: loadMemberStatus,
-  checkPendingFollowups: checkPendingFollowups
+  checkPendingFollowups: checkPendingFollowups,
+  loadPetDiary: loadPetDiary
 }

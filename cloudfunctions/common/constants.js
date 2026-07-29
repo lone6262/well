@@ -78,6 +78,7 @@ const COLLECTIONS = {
   BILL_CHECK_LOGS: 'bill_check_logs',
   ANALYTICS_EVENTS: 'analytics_events',
   ERROR_LOGS: 'error_logs',
+  PET_MOMENTS: 'pet_moments',
 };
 
 // API响应码
@@ -455,6 +456,9 @@ const CONFIG_KEY_MAP = {
   deepseek_base_url: 'DEEPSEEK_BASE_URL',
   deepseek_model: 'DEEPSEEK_MODEL',
   admin_secret: 'ADMIN_SECRET',
+  content_push_secret: 'CONTENT_PUSH_SECRET',
+  diary_template_id: 'DIARY_TEMPLATE_ID',
+  diary_rollout_percent: 'DIARY_ROLLOUT_PERCENT',
 };
 
 // SERVER_CONFIG 初始全空 — 依赖 warmupConfig(db) 从数据库填充
@@ -465,6 +469,9 @@ const SERVER_CONFIG = {
   DEEPSEEK_BASE_URL: 'https://api.deepseek.com',
   DEEPSEEK_MODEL: 'deepseek-chat',
   ADMIN_SECRET: '',
+  CONTENT_PUSH_SECRET: '',
+  DIARY_TEMPLATE_ID: '',
+  DIARY_ROLLOUT_PERCENT: 0,
 };
 
 // 是否已从数据库加载过配置

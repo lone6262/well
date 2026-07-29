@@ -674,6 +674,20 @@
   color: var(--text-tertiary);
 }
 
+/* === AI 陪伴卡（日记）— 复用 daily-card 结构，bar 配色区分 === */
+
+.companion-card-bar {
+  background: var(--color-info);
+}
+
+.companion-card-text {
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: var(--line-height-relaxed);
+  margin-bottom: 0;
+}
+
 /* === 健康提示卡片（降级） === */
 
 .tip-card {

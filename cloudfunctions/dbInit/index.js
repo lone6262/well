@@ -108,6 +108,10 @@ function buildSystemConfigSeed(event) {
       description: '支付配置（mock_pay=true 仅本地测试模拟支付）',
       updated_at: new Date(),
     },
+    // V1.5.5: 日记功能配置（content_push_secret 线上单独随机写入，此处默认空）
+    { key: 'content_push_secret', value: event.contentPushSecret || '' },
+    { key: 'diary_template_id', value: event.diaryTemplateId || '' },
+    { key: 'diary_rollout_percent', value: Number(event.diaryRolloutPercent) || 0 },
     // Phase 1.5: Feature Flags（命名与开发计划 V5 对齐）
     {
       key: 'feature_flags',
@@ -117,6 +121,7 @@ function buildSystemConfigSeed(event) {
         enable_share_card: false,
         enable_group: false,
         enable_promotion: false,
+        enable_diary: false,
       },
     },
   ];

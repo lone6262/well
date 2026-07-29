@@ -86,7 +86,8 @@ exports.main = async (event, context) => {
         avatar: pet.avatar || '',
         createdAt: pet.created_at,
         healthStatus: healthStatus,
-        healthStatusText: getHealthStatusText(healthStatus)
+        healthStatusText: getHealthStatusText(healthStatus),
+        personalityTags: pet.personality_tags || []
       };
     });
 

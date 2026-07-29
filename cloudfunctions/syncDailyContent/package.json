@@ -1,0 +1,9 @@
+{
+  "name": "syncDailyContent",
+  "version": "1.0.0",
+  "description": "内容工厂推送当日科普文章云函数",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}
