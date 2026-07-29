@@ -42,6 +42,7 @@ function mapPetFromCloud(pet) {
     vaccineDate: pet.vaccineDate || '',
     dewormDate: pet.dewormDate || '',
     avatar: pet.avatar || '',
+    personalityTags: pet.personality_tags || pet.personalityTags || [],
     createdAt: pet.createdAt || '',
     updatedAt: pet.updatedAt || ''
   }

@@ -125,6 +125,40 @@
   background: var(--color-success);
 }
 
+.section-dot.personality {
+  background: var(--brand-accent);
+}
+
+/* === 性格标签 chip === */
+.tag-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.tag-chip {
+  padding: 12rpx 28rpx;
+  border-radius: var(--radius-full);
+  background: transparent;
+  border: 1rpx solid var(--border-color);
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.tag-chip.active {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+
+.tag-chip-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.tag-chip.active .tag-chip-text {
+  color: var(--bg-card);
+}
+
 .section-text {
   font-size: var(--font-size-base);
   font-weight: 600;

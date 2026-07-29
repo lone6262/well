@@ -344,6 +344,30 @@
         </view>
       </view>
 
+      <!-- 性格标签（影响日记风格） -->
+      <view class="form-section-modern">
+        <view class="section-title-modern">
+          <view class="section-dot personality"></view>
+          <text class="section-text">性格标签</text>
+        </view>
+        <view class="form-group-modern">
+          <view class="form-label-modern">
+            <text class="label-text">选择 1-2 个性格</text>
+            <text class="label-optional">选填</text>
+          </view>
+          <view class="tag-chip-row">
+            <view class="tag-chip {{formData.personalityTags.indexOf('粘人') !== -1 ? 'active' : ''}}" bindtap="toggleTag" data-tag="粘人"><text class="tag-chip-text">粘人</text></view>
+            <view class="tag-chip {{formData.personalityTags.indexOf('贪吃') !== -1 ? 'active' : ''}}" bindtap="toggleTag" data-tag="贪吃"><text class="tag-chip-text">贪吃</text></view>
+            <view class="tag-chip {{formData.personalityTags.indexOf('活泼') !== -1 ? 'active' : ''}}" bindtap="toggleTag" data-tag="活泼"><text class="tag-chip-text">活泼</text></view>
+            <view class="tag-chip {{formData.personalityTags.indexOf('高冷') !== -1 ? 'active' : ''}}" bindtap="toggleTag" data-tag="高冷"><text class="tag-chip-text">高冷</text></view>
+            <view class="tag-chip {{formData.personalityTags.indexOf('胆小') !== -1 ? 'active' : ''}}" bindtap="toggleTag" data-tag="胆小"><text class="tag-chip-text">胆小</text></view>
+            <view class="tag-chip {{formData.personalityTags.indexOf('温顺') !== -1 ? 'active' : ''}}" bindtap="toggleTag" data-tag="温顺"><text class="tag-chip-text">温顺</text></view>
+            <view class="tag-chip {{formData.personalityTags.indexOf('调皮') !== -1 ? 'active' : ''}}" bindtap="toggleTag" data-tag="调皮"><text class="tag-chip-text">调皮</text></view>
+            <view class="tag-chip {{formData.personalityTags.indexOf('慵懒') !== -1 ? 'active' : ''}}" bindtap="toggleTag" data-tag="慵懒"><text class="tag-chip-text">慵懒</text></view>
+          </view>
+        </view>
+      </view>
+
       <!-- 健康记录 -->
       <view class="form-section-modern">
         <view class="section-title-modern">

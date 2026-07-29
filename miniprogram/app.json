@@ -9,6 +9,7 @@
     "pages/pet/profile",
     "pages/user/index",
     "pages/user/records",
+    "pages/diary/index",
     "pages/knowledge/list",
     "pages/knowledge/detail",
     "pages/ai-report/index",

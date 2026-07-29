@@ -1,0 +1,50 @@
+<!--宠物日记时间轴-->
+<view class="diary-page">
+
+  <view class="page-header">
+    <view class="header-back" bindtap="goBack">
+      <text class="back-arrow">←</text>
+    </view>
+    <text class="header-title">宠物日记</text>
+    <text class="header-count">共{{diaries.length}}条</text>
+  </view>
+
+  <state-view
+    wx:if="{{loading}}"
+    type="loading"
+    title="正在加载日记..."
+  />
+
+  <view class="diary-list" wx:if="{{!loading}}">
+    <view class="diary-card" wx:for="{{diaries}}" wx:key="_id">
+      <view class="card-top">
+        <text class="diary-pet-name">{{item.pet_name}}的一天</text>
+        <text class="diary-date">{{item.dateText}}</text>
+      </view>
+      <text class="diary-content">{{item.content}}</text>
+      <view class="card-bottom">
+        <button class="diary-share-btn" open-type="share" data-id="{{item._id}}">转发给朋友</button>
+        <view class="diary-poster-btn" bindtap="shareDiaryImage" data-id="{{item._id}}">生成海报</view>
+      </view>
+    </view>
+
+    <state-view
+      wx:if="{{diaries.length === 0}}"
+      type="empty"
+      icon="paw"
+      title="还没有日记"
+      description="明天就会有啦~"
+    />
+
+    <view class="diary-footer" wx:if="{{diaries.length > 0}}">
+      <text class="diary-footer-text">明天还会有新日记哦~</text>
+    </view>
+  </view>
+
+  <!-- 海报预览 -->
+  <view class="share-preview-mask" wx:if="{{showShareImage}}" bindtap="closeShareImage">
+    <image class="share-preview-img" src="{{shareImageBase64}}" mode="widthFix" show-menu-by-longpress="true" />
+    <text class="share-preview-tip">长按图片保存到相册</text>
+  </view>
+
+</view>

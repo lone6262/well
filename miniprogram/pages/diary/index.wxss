@@ -1,0 +1,159 @@
+/* 宠物日记时间轴 — Warm Professionalism */
+.diary-page {
+  min-height: 100vh;
+  background: var(--bg-secondary);
+}
+
+/* === 顶部标题栏 === */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx var(--spacing-lg);
+  padding-top: calc(20rpx + env(safe-area-inset-top));
+  background: var(--bg-card);
+  border-bottom: 1rpx solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+}
+
+.header-back {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-arrow {
+  font-size: var(--font-size-lg);
+  color: var(--text-primary);
+}
+
+.header-title {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.header-count {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+}
+
+/* === 日记列表 === */
+.diary-list {
+  padding: var(--spacing-md);
+}
+
+.diary-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+  box-shadow: var(--shadow-xs);
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.diary-pet-name {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--brand-primary);
+}
+
+.diary-date {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+}
+
+.diary-content {
+  display: block;
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  line-height: var(--line-height-relaxed);
+  margin-bottom: var(--spacing-md);
+}
+
+/* === 卡片底部操作 === */
+.card-bottom {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  padding-top: 16rpx;
+  border-top: 1rpx solid var(--border-light);
+}
+
+.diary-share-btn {
+  margin: 0;
+  padding: 8rpx 24rpx;
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  background: transparent;
+  color: var(--brand-primary);
+  border: 1rpx solid var(--brand-primary);
+  border-radius: var(--radius-full);
+}
+
+.diary-share-btn::after {
+  border: none;
+}
+
+.diary-poster-btn {
+  padding: 8rpx 24rpx;
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  background: var(--brand-primary);
+  color: var(--bg-card);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+}
+
+.diary-poster-btn:active {
+  opacity: 0.85;
+}
+
+/* === 底部引导 === */
+.diary-footer {
+  padding: var(--spacing-lg) 0 var(--spacing-xl);
+  text-align: center;
+}
+
+.diary-footer-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+}
+
+/* === 海报预览 === */
+.share-preview-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal, 1000);
+  padding: 60rpx;
+}
+
+.share-preview-img {
+  width: 80%;
+  border-radius: var(--radius-lg);
+}
+
+.share-preview-tip {
+  margin-top: 32rpx;
+  font-size: var(--font-size-sm);
+  color: rgba(255, 255, 255, 0.8);
+}

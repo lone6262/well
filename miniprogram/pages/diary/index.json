@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "宠物日记",
+  "usingComponents": {
+    "state-view": "/components/state-view/state-view"
+  }
+}

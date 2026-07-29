@@ -12,7 +12,8 @@ function createDefaultFormData() {
     gender: 'male',
     vaccineDate: '',
     dewormDate: '',
-    avatar: ''
+    avatar: '',
+    personalityTags: []
   }
 }
 
@@ -26,7 +27,8 @@ function buildFormDataFromPet(pet) {
     gender: pet.gender || 'male',
     vaccineDate: pet.vaccineDate || '',
     dewormDate: pet.dewormDate || '',
-    avatar: pet.avatar || ''
+    avatar: pet.avatar || '',
+    personalityTags: pet.personalityTags || pet.personality_tags || []
   }
 }
 
@@ -76,6 +78,7 @@ function buildSubmitData(formData, options) {
     vaccineDate: formData.vaccineDate || '',
     dewormDate: formData.dewormDate || '',
     avatar: formData.avatar || '',
+    personality_tags: Array.isArray(formData.personalityTags) ? formData.personalityTags.slice(0, 2) : [],
     token: options.token || ''
   }
 

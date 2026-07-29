@@ -206,6 +206,22 @@ Page({
     this._clearFieldError('type')
   },
 
+  toggleTag: function(e) {
+    const tag = e.currentTarget.dataset.tag
+    const tags = (this.data.formData.personalityTags || []).slice()
+    const idx = tags.indexOf(tag)
+    if (idx === -1) {
+      if (tags.length >= 2) {
+        wx.showToast({ title: '最多选2个', icon: 'none' })
+        return
+      }
+      tags.push(tag)
+    } else {
+      tags.splice(idx, 1)
+    }
+    formHandler.setFormField(this, 'personalityTags', tags)
+  },
+
   onNameInput: function(e) {
     formHandler.setFormField(this, 'name', e.detail.value)
     if (this.data.formErrors.name) {

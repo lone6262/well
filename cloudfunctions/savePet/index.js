@@ -31,6 +31,7 @@ exports.main = async (event, context) => {
     vaccineDate = '',
     dewormDate = '',
     avatar = '',
+    personality_tags = [],
     token
   } = event;
 
@@ -146,6 +147,7 @@ exports.main = async (event, context) => {
       vaccine_date: vaccineDate || null,
       deworm_date: dewormDate || null,
       avatar: avatar || '', // 新增头像字段
+      personality_tags: Array.isArray(personality_tags) ? personality_tags.slice(0, 2) : [],
       updated_at: new Date()
     };
 
