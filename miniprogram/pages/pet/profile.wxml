@@ -1,4 +1,15 @@
 <!--现代化宠物档案页面 - 强制刷新版本-->
+<!--
+  WXS：性格标签选中态判断。
+  微信小程序 WXML 数据绑定不支持调用对象方法（如 array.indexOf），
+  故用 WXS 包一层 includes()，否则 active class 永不生效（点了不变色）。
+-->
+<wxs module="p">
+function includes(arr, v) {
+  return (arr || []).indexOf(v) !== -1;
+}
+module.exports = { includes: includes };
+</wxs>
 <view class="profile-page">
 
   <!-- 顶部标题区域 -->
@@ -356,14 +367,14 @@
             <text class="label-optional">选填</text>
           </view>
           <view class="tag-chip-row">
-            <view class="tag-chip {{formData.personalityTags.indexOf('粘人') !== -1 ? 'active' : ''}}" bindtap="toggleTag" data-tag="粘人"><text class="tag-chip-text">粘人</text></view>
-            <view class="tag-chip {{formData.personalityTags.indexOf('贪吃') !== -1 ? 'active' : ''}}" bindtap="toggleTag" data-tag="贪吃"><text class="tag-chip-text">贪吃</text></view>
-            <view class="tag-chip {{formData.personalityTags.indexOf('活泼') !== -1 ? 'active' : ''}}" bindtap="toggleTag" data-tag="活泼"><text class="tag-chip-text">活泼</text></view>
-            <view class="tag-chip {{formData.personalityTags.indexOf('高冷') !== -1 ? 'active' : ''}}" bindtap="toggleTag" data-tag="高冷"><text class="tag-chip-text">高冷</text></view>
-            <view class="tag-chip {{formData.personalityTags.indexOf('胆小') !== -1 ? 'active' : ''}}" bindtap="toggleTag" data-tag="胆小"><text class="tag-chip-text">胆小</text></view>
-            <view class="tag-chip {{formData.personalityTags.indexOf('温顺') !== -1 ? 'active' : ''}}" bindtap="toggleTag" data-tag="温顺"><text class="tag-chip-text">温顺</text></view>
-            <view class="tag-chip {{formData.personalityTags.indexOf('调皮') !== -1 ? 'active' : ''}}" bindtap="toggleTag" data-tag="调皮"><text class="tag-chip-text">调皮</text></view>
-            <view class="tag-chip {{formData.personalityTags.indexOf('慵懒') !== -1 ? 'active' : ''}}" bindtap="toggleTag" data-tag="慵懒"><text class="tag-chip-text">慵懒</text></view>
+            <view class="tag-chip {{p.includes(formData.personalityTags, '粘人') ? 'active' : ''}}" bindtap="toggleTag" data-tag="粘人"><text class="tag-chip-text">粘人</text></view>
+            <view class="tag-chip {{p.includes(formData.personalityTags, '贪吃') ? 'active' : ''}}" bindtap="toggleTag" data-tag="贪吃"><text class="tag-chip-text">贪吃</text></view>
+            <view class="tag-chip {{p.includes(formData.personalityTags, '活泼') ? 'active' : ''}}" bindtap="toggleTag" data-tag="活泼"><text class="tag-chip-text">活泼</text></view>
+            <view class="tag-chip {{p.includes(formData.personalityTags, '高冷') ? 'active' : ''}}" bindtap="toggleTag" data-tag="高冷"><text class="tag-chip-text">高冷</text></view>
+            <view class="tag-chip {{p.includes(formData.personalityTags, '胆小') ? 'active' : ''}}" bindtap="toggleTag" data-tag="胆小"><text class="tag-chip-text">胆小</text></view>
+            <view class="tag-chip {{p.includes(formData.personalityTags, '温顺') ? 'active' : ''}}" bindtap="toggleTag" data-tag="温顺"><text class="tag-chip-text">温顺</text></view>
+            <view class="tag-chip {{p.includes(formData.personalityTags, '调皮') ? 'active' : ''}}" bindtap="toggleTag" data-tag="调皮"><text class="tag-chip-text">调皮</text></view>
+            <view class="tag-chip {{p.includes(formData.personalityTags, '慵懒') ? 'active' : ''}}" bindtap="toggleTag" data-tag="慵懒"><text class="tag-chip-text">慵懒</text></view>
           </view>
         </view>
       </view>
