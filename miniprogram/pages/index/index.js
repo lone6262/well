@@ -58,6 +58,17 @@ Page({
     })
   },
 
+  // V1.5.5: 首页「宠物日记」瓷砖常驻入口 → 日记时间轴页
+  // 与 toDiaryDetail 区别：不依赖今日有无日记，rollout=0 / 新用户也能进（落地空状态 + 订阅按钮）
+  goToDiary: function () {
+    wx.navigateTo({
+      url: '/pages/diary/index',
+      fail: function () {
+        wx.showToast({ title: '日记页未就绪', icon: 'none' })
+      }
+    })
+  },
+
   onLoad(options) {
     log.info('首页加载')
     this.loadUserInfo()

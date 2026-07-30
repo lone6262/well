@@ -161,6 +161,17 @@
           <text class="tile-desc">追踪恢复情况</text>
         </view>
       </view>
+
+      <!-- 宠物日记（V1.5.5 常驻入口，仅看 enable_diary 开关，不依赖今日有无日记） -->
+      <view class="tile tile-accent-primary" bindtap="goToDiary" hover-class="tile-pressed" aria-label="宠物日记" wx:if="{{flags.enableDiary}}">
+        <view class="tile-icon-wrap">
+          <image class="tile-icon" src="/images/icons/paw.svg" mode="aspectFit" aria-label="宠物日记" />
+        </view>
+        <view class="tile-content">
+          <text class="tile-title">宠物日记</text>
+          <text class="tile-desc">毛孩子的每一天</text>
+        </view>
+      </view>
     </view>
   </view>
 
