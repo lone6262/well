@@ -9,6 +9,7 @@ cloud.init({
 });
 
 const db = cloud.database();
+const _ = db.command;
 
 /**
  * 保存用户资料云函数
@@ -52,6 +53,29 @@ exports.main = async (event, context) => {
         };
       }
       return { code: RESPONSE_CODE.NOT_FOUND, msg: '用户不存在', data: {} };
+    }
+
+    // 日记订阅配额累加（Phase 3 §6.1）
+    // 前端 wx.requestSubscribeMessage 用户 accept 后调用此 action
+    // 一次性订阅：每次 accept → diary_subscribe_quota +1，generatePetDiary 发送时 -1
+    if (action === 'diary_subscribe_accept') {
+      if (!openid) {
+        return { code: RESPONSE_CODE.UNAUTHORIZED, msg: '用户未登录', data: {} };
+      }
+      try {
+        const subResult = await db.collection(COLLECTIONS.USERS).where({ user_id: openid }).limit(1).get();
+        if (!subResult.data.length) {
+          return { code: RESPONSE_CODE.NOT_FOUND, msg: '用户不存在', data: {} };
+        }
+        await db.collection(COLLECTIONS.USERS).doc(subResult.data[0]._id).update({
+          data: { diary_subscribe_quota: _.inc(1) }
+        });
+        console.log('日记订阅配额 +1，user:', openid);
+        return { code: RESPONSE_CODE.SUCCESS, msg: '订阅成功', data: {} };
+      } catch (e) {
+        console.error('diary_subscribe_accept 失败:', e);
+        return { code: RESPONSE_CODE.SERVER_ERROR, msg: '订阅失败', data: {} };
+      }
     }
 
     console.log('=== 保存用户资料 ===');

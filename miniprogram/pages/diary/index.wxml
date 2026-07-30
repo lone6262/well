@@ -38,6 +38,12 @@
 
     <view class="diary-footer" wx:if="{{diaries.length > 0}}">
       <text class="diary-footer-text">明天还会有新日记哦~</text>
+      <button class="diary-subscribe-btn" bindtap="onSubscribeDiary">开启明天提醒</button>
+    </view>
+
+    <!-- 空状态也可订阅，引导首条日记提醒 -->
+    <view class="diary-footer" wx:if="{{diaries.length === 0}}">
+      <button class="diary-subscribe-btn" bindtap="onSubscribeDiary">开启明天提醒</button>
     </view>
   </view>
 

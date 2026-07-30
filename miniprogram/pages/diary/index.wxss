@@ -131,6 +131,24 @@
   color: var(--text-tertiary);
 }
 
+.diary-subscribe-btn {
+  margin: 24rpx auto 0;
+  padding: 16rpx 48rpx;
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+  background: var(--brand-primary);
+  color: var(--bg-card);
+  border-radius: var(--radius-full);
+}
+
+.diary-subscribe-btn::after {
+  border: none;
+}
+
+.diary-subscribe-btn:active {
+  opacity: 0.85;
+}
+
 /* === 海报预览 === */
 .share-preview-mask {
   position: fixed;

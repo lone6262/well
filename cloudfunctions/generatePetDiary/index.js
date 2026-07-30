@@ -178,21 +178,56 @@ async function generateForPet(pet, aiEnabled) {
     throw e;
   }
 
-  // 订阅消息（Phase 1 配额默认 0 直接 return；Phase 3 完善配额机制）
-  await trySendDiarySubscribe(userId, content);
+  // 订阅消息（Phase 3 §6.2：配额>0 才发送，按 send 返回码校准配额）
+  await trySendDiarySubscribe(userId, pet, content);
   return { ok: true };
 }
 
-// Phase 1 stub：配额机制（多触点累加 + 按返回码校准）在 Phase 3 完善
-async function trySendDiarySubscribe(userId, content) {
+// Phase 3 §6.2：发送日记订阅消息 + 按返回码校准配额
+// 微信一次性订阅：一次授权=一次发送配额；配额>0 才尝试，发送成功 -1，43101 归零
+async function trySendDiarySubscribe(userId, pet, content) {
+  let docId = null;
   try {
+    const templateId = SERVER_CONFIG.DIARY_TEMPLATE_ID;
+    if (!templateId) return; // 模板未配置，静默
     const u = await db.collection(COLLECTIONS.USERS).where({ user_id: userId }).limit(1).get();
     if (!u.data || u.data.length === 0) return;
+    docId = u.data[0]._id;
     const quota = u.data[0].diary_subscribe_quota || 0;
-    if (quota <= 0) return;
-    // TODO Phase 3: cloud.openapi.subscribeMessage.send + 配额 -1 / 失败(43101)归零
+    if (quota <= 0) return; // 无配额不调用 openapi（省配额查询）
+
+    await cloud.openapi.subscribeMessage.send({
+      touser: userId,
+      templateId: templateId,
+      page: 'pages/index/index',
+      // thing1=宠物名+标题, thing2=日记摘要（≤20字，thing 类型上限）
+      data: {
+        thing1: { value: ((pet && pet.name) || '毛孩子') + '的今日日记' },
+        thing2: { value: (content || '').substring(0, 20) }
+      }
+    });
+    // 发送成功 → 配额 -1
+    await db
+      .collection(COLLECTIONS.USERS)
+      .doc(docId)
+      .update({ data: { diary_subscribe_quota: _.inc(-1) } });
+    logger.info('日记订阅消息已发送 userId=' + userId + ' 配额-1');
   } catch (e) {
-    // 静默
+    const code = e && e.errCode;
+    if (code === 43101 && docId) {
+      // 用户未订阅 / 配额耗尽 → 归零校准
+      try {
+        await db
+          .collection(COLLECTIONS.USERS)
+          .doc(docId)
+          .update({ data: { diary_subscribe_quota: 0 } });
+      } catch (_) {
+        /* 静默 */
+      }
+      logger.info('日记订阅配额耗尽(43101) userId=' + userId + ' → 归零');
+    } else {
+      logger.warn('日记订阅发送失败 userId=' + userId + ' errCode=' + code + ' msg=' + (e && e.message));
+    }
   }
 }
 

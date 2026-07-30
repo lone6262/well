@@ -1,6 +1,7 @@
 // 宠物日记时间轴页
 const logger = require('../../utils/logger.js')
 const log = logger.child('DiaryPage')
+const subscribe = require('../../utils/subscribe-diary.js')
 let app = getApp()
 
 Page({
@@ -122,6 +123,11 @@ Page({
 
   closeShareImage: function() {
     this.setData({ showShareImage: false })
+  },
+
+  // 开启明日日记提醒（用户点击触发，合规；accept → 服务端配额 +1）
+  onSubscribeDiary: function() {
+    subscribe.requestDiarySubscribe(app)
   },
 
   goBack: function() {
