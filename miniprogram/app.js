@@ -310,6 +310,13 @@ App({
               var flags = typeof raw === 'string' ? JSON.parse(raw) : raw || {};
               self.globalData.featureFlags = Object.assign({}, self.globalData.featureFlags, flags);
               log.info('Feature Flags 加载成功:', self.globalData.featureFlags);
+              // V1.5.5: flag 异步加载晚于首页首屏 _syncFlags，完成后通知栈顶页面重刷，
+              // 否则 flags.enableDiary 等会停在默认 false，导致瓷砖/陪伴卡 wx:if 漏显
+              var pages = getCurrentPages();
+              var topPage = pages[pages.length - 1];
+              if (topPage && typeof topPage._syncFlags === 'function') {
+                topPage._syncFlags();
+              }
             }
           },
           fail: function (err) {

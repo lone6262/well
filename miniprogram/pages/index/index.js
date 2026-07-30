@@ -112,6 +112,9 @@ Page({
   onShow() {
     const self = this
 
+    // V1.5.5: 兜底同步 flags（_loadFeatureFlags 异步完成晚于首屏 _syncFlags 时，回首页补刷入口显隐）
+    self._syncFlags()
+
     // 检查宠物数据更新标记
     if (app.globalData.petsUpdated) {
       self.loadPetList()
