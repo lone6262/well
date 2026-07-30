@@ -77,7 +77,12 @@ function createRecordList(records, petId, type) {
     })
 
   if (type === 'report') {
-    list = list.filter(function(record) { return record.hasAiReport && record.aiReportId })
+    // hasAiReport=true 即表示该自查记录曾生成过 AI 报告。
+    // aiReportId 对"带症状描述"的报告合法为空（report-engine 跳过症状级共享缓存，
+    // 见 generateAIReport 注释），报告内容靠 recordId 重生成展示，不应作为过滤条件。
+    // 此处须与 loadRecordCounts 的 reportCount 口径一致（仅看 hasAiReport），
+    // 否则会出现角标显示 N 条、点进弹框却为空的不一致。
+    list = list.filter(function(record) { return record.hasAiReport })
   }
 
   return list
